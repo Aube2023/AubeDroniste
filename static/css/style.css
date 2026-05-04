@@ -802,6 +802,20 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   align-self: center;
   animation: zone-ping 2s ease-in-out infinite;
 }
+.eco-grid > a.portal {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.eco-grid > a.portal .pre { color: var(--amber); }
+.eco-grid > a.portal::after {
+  content: "PORTAIL";
+  margin-left: auto;
+  font: 700 9px/1 var(--mono); letter-spacing: .18em;
+  color: var(--amber);
+  align-self: center;
+}
+.eco-grid > a.portal:hover { color: var(--amber); }
 
 .footer-line {
   padding: 24px 32px 36px;
