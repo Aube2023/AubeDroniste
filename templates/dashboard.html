@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Cockpit — AubeDroniste{% endblock %}
+{% block content %}
+
+<section class="cockpit-banner">
+  <div>
+    <span class="eyebrow">Espace pilote</span>
+    <h1>Bonjour, {{ current_user.full_name.split(' ')[0] }}.</h1>
+    <div class="meta">
+      <strong>F-{{ '%04d' % current_user.id }}{{ (current_user.full_name|first)|upper }}</strong>
+      · {{ current_user.email }}
+      · rôle <strong>{{ current_user.role }}</strong>
+      {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
+      {% if unread %} · <strong>{{ unread }}</strong> message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% endif %}
+    </div>
+  </div>
+  <div class="cockpit-actions">
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
+    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Mon profil pilote</a>{% endif %}
+    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Devenir droniste</a>{% endif %}
+  </div>
+</section>
+
+<div class="cockpit-grid">
+  {% if is_pilot and my_pilot_profile %}
+  <div class="cockpit-tile">
+    <span class="label">Profil pilote</span>
+    <h2>{{ my_pilot_profile.headline or "Compléter mon accroche →" }}</h2>
+    <span class="num-big">
+      {% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★{% else %}—{% endif %}
+    </span>
+    <div class="mini-profile" style="margin-top: 8px;">
+      <div class="row"><span>Disponibilité</span><strong>{% if my_pilot_profile.is_available %}En vol{% else %}Au sol{% endif %}</strong></div>
+      <div class="row"><span>Tarif horaire</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}sur devis{% endif %}</strong></div>
+      <div class="row"><span>Rayon</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
+      <div class="row"><span>Brevets</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
+      <div class="row"><span>Aéronefs</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
+    </div>
+    <div class="footnote"><a href="{{ url_for('pilot_edit') }}">Compléter →</a></div>
+  </div>
+  {% endif %}
+
+  {% if is_client %}
+  <div class="cockpit-tile">
+    <span class="label">Mes missions publiées</span>
+    <h2>Missions {{ my_missions|length }}</h2>
+    <span class="num-big">{{ my_missions|selectattr('status','equalto','open')|list|length }}</span>
+    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
+      en attente de pilote
+    </div>
+    <div class="footnote">
+      {% set assigned = my_missions|selectattr('status','equalto','assigned')|list|length %}
+      {% set done = my_missions|selectattr('status','equalto','done')|list|length %}
+      {{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_pilot %}
+  <div class="cockpit-tile">
+    <span class="label">Mes offres</span>
+    <h2>Soumissions {{ my_bids|length }}</h2>
+    <span class="num-big">{{ my_bids|selectattr('my_bid_status','equalto','pending')|list|length }}</span>
+    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
+      en attente de réponse
+    </div>
+    <div class="footnote">
+      {% set acc = my_bids|selectattr('my_bid_status','equalto','accepted')|list|length %}
+      {{ acc }} acceptée{{ 's' if acc > 1 else '' }}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="cockpit-tile">
+    <span class="label">Mes réservations</span>
+    <h2>Bookings {{ my_bookings|length }}</h2>
+    <span class="num-big">{{ my_bookings|selectattr('status','equalto','scheduled')|list|length + my_bookings|selectattr('status','equalto','in_progress')|list|length }}</span>
+    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
+      en cours
+    </div>
+    <div class="footnote">
+      {{ my_bookings|selectattr('status','equalto','completed')|list|length }} terminée{{ 's' if my_bookings|selectattr('status','equalto','completed')|list|length > 1 else '' }}
+    </div>
+  </div>
+</div>
+
+{% if is_client and my_missions %}
+<section class="section" style="margin: 48px 0 32px;">
+  <div class="row-between" style="align-items: end;">
+    <div><span class="eyebrow">Mes missions</span><h2>Tableau personnel</h2></div>
+    <a href="{{ url_for('mission_create') }}" class="ghost">+ Publier une nouvelle mission</a>
+  </div>
+  <div class="grid-cards">
+    {% for m in my_missions %}
+    <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
+      <div class="header">
+        <span class="tag">{{ mission_label(m.mission_type) }}</span>
+        <span class="tag tag-{{ m.status }}">{{ m.status }}</span>
+      </div>
+      <h3>{{ m.title }}</h3>
+      <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
+      <div class="footer">
+        <span><strong>{{ m.bid_count }}</strong> offre{{ 's' if m.bid_count > 1 else '' }}</span>
+        <span>{{ m.created_at[:10] }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if is_pilot and my_bids %}
+<section class="section" style="margin: 48px 0 32px;">
+  <span class="eyebrow">Mes offres</span>
+  <h2>Soumissions actives</h2>
+  <div class="grid-cards">
+    {% for m in my_bids %}
+    <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
+      <div class="header">
+        <span class="tag">{{ mission_label(m.mission_type) }}</span>
+        <span class="tag tag-{{ m.my_bid_status }}">offre {{ m.my_bid_status }}</span>
+      </div>
+      <h3>{{ m.title }}</h3>
+      <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
+      <div class="footer">
+        <span class="price">{{ m.my_bid_price|int }} {{ m.currency }}</span>
+        <span>{{ m.created_at[:10] }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if my_bookings %}
+<section class="section" style="margin: 48px 0 32px;">
+  <span class="eyebrow">Mes réservations</span>
+  <h2>Carnet de bord</h2>
+  <div class="grid-cards">
+    {% for b in my_bookings %}
+    <a class="mission-card" href="{{ url_for('booking_detail', booking_id=b.id) }}">
+      <div class="header">
+        <span class="tag">{{ mission_label(b.mission_type) }}</span>
+        <span class="tag tag-{{ b.status }}">{{ b.status }}</span>
+      </div>
+      <h3>{{ b.mission_title }}</h3>
+      <div class="coords">
+        {% if current_user.id == b.client_user_id %}avec {{ b.pilot_name }}{% else %}pour {{ b.client_name }}{% endif %}
+      </div>
+      <div class="footer">
+        <span class="price">{{ b.agreed_price|int }} {{ b.currency }}</span>
+        <span>réservation #{{ b.id }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if not (is_client and my_missions) and not (is_pilot and my_bids) and not my_bookings %}
+<section class="card" style="text-align: center; padding: 64px 32px;">
+  <span class="eyebrow" style="justify-content: center;">Bienvenue à bord</span>
+  <h2 style="margin: 12px 0;">Votre cockpit est vide pour l'instant.</h2>
+  <p class="muted lead" style="margin: 0 auto 24px;">Publiez une mission ou complétez votre profil pilote pour entrer dans la rotation.</p>
+  <div class="cta-row" style="justify-content: center;">
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
+    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}Compléter mon profil{% else %}Devenir droniste{% endif %}</a>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

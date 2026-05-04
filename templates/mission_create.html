@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Publier une mission — AubeDroniste{% endblock %}
+{% block content %}
+
+<section class="auth-split">
+  <aside class="auth-aside">
+    <span class="eyebrow">Plan de vol</span>
+    <h1>Décrivez la mission, <em>les pilotes feront leur offre</em>.</h1>
+    <p class="lead muted">
+      Plus votre brief est précis, plus les soumissions sont fiables. Cinq minutes
+      maintenant, c'est trois jours de gagnés sur la coordination.
+    </p>
+    <ul class="checklist">
+      <li>Indiquez un cadre budgétaire — même large — pour filtrer les bons profils.</li>
+      <li>Précisez les coordonnées GPS si le site est isolé : c'est le b.a.-ba aviation.</li>
+      <li>Mentionnez les contraintes locales (ZRT, zone protégée, NOTAM en cours).</li>
+      <li>Déclarez les exigences techniques : RTK, thermique, charge utile, RC pro.</li>
+      <li>Vous pouvez modifier ou annuler tant que la mission n'est pas attribuée.</li>
+    </ul>
+  </aside>
+
+  <form method="post" class="auth-form section-form">
+    <h2>Publier une mission</h2>
+
+    <section class="numbered-section">
+      <h3>L'essentiel</h3>
+      <p class="muted">Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d'un riad à Marrakech ».</p>
+      <label>Titre de la mission
+        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="Captation aérienne d'un mariage à Sidi Bou Said">
+      </label>
+      <label>Type
+        <select name="mission_type" required>
+          {% for code, lbl in mission_types %}<option value="{{ code }}" {% if form.get('mission_type')==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Brief détaillé
+        <textarea name="description" rows="6" required placeholder="Contexte, livrables attendus, plages horaires, contraintes d'accès, références visuelles…">{{ form.get('description','') }}</textarea>
+      </label>
+    </section>
+
+    <section class="numbered-section">
+      <h3>Localisation</h3>
+      <p class="muted">Le pays sert au filtrage. Les coordonnées GPS aident les pilotes à estimer leur déplacement.</p>
+      <div class="grid-2">
+        <label>Pays
+          <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Maroc">
+          <datalist id="countries">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
+        </label>
+        <label>Ville
+          <input name="city" value="{{ form.get('city','') }}" placeholder="Marrakech">
+        </label>
+        <label>Région ou département
+          <input name="region" value="{{ form.get('region','') }}" placeholder="Marrakech-Safi">
+        </label>
+        <label>Adresse / point de RDV
+          <input name="address" value="{{ form.get('address','') }}" placeholder="Riad Yasmine, Médina">
+        </label>
+      </div>
+      <div class="geo-row">
+        <div class="geo-input grid-2">
+          <label>Latitude<input name="lat" type="number" step="any" value="{{ form.get('lat','') }}" placeholder="31.6295"></label>
+          <label>Longitude<input name="lng" type="number" step="any" value="{{ form.get('lng','') }}" placeholder="-7.9811"></label>
+        </div>
+        <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
+      </div>
+    </section>
+
+    <section class="numbered-section">
+      <h3>Budget &amp; planning</h3>
+      <p class="muted">Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer.</p>
+      <div class="grid-3">
+        <label>Budget min
+          <input name="budget_min" type="number" step="0.01" value="{{ form.get('budget_min','') }}" placeholder="600">
+        </label>
+        <label>Budget max
+          <input name="budget_max" type="number" step="0.01" value="{{ form.get('budget_max','') }}" placeholder="1100">
+        </label>
+        <label>Devise
+          <select name="currency">
+            {% for c in currencies %}<option value="{{ c }}" {% if form.get('currency')==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Durée estimée (h)
+          <input name="duration_hours" type="number" step="0.5" value="{{ form.get('duration_hours','') }}" placeholder="3">
+        </label>
+        <label>Date / heure de début
+          <input name="start_date" type="datetime-local" value="{{ form.get('start_date','') }}">
+        </label>
+        <label>Date / heure de fin
+          <input name="end_date" type="datetime-local" value="{{ form.get('end_date','') }}">
+        </label>
+      </div>
+    </section>
+
+    <section class="numbered-section">
+      <h3>Exigences techniques</h3>
+      <p class="muted">Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.</p>
+      <div class="grid-3">
+        <label class="check"><input type="checkbox" name="is_urgent" value="1"> Mission urgente</label>
+        <label class="check"><input type="checkbox" name="requires_insurance" value="1"> RC pro requise</label>
+      </div>
+
+      <h3 style="font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-top: 24px;">Capacités drone</h3>
+      <div class="chips" style="margin-top: 8px;">
+        {% for cap in drone_capabilities %}
+        <label class="chip-check"><input type="checkbox" name="requires_capabilities" value="{{ cap }}"> {{ cap }}</label>
+        {% endfor %}
+      </div>
+
+      <h3 style="font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-top: 24px;">Brevets exigés</h3>
+      <div class="chips" style="margin-top: 8px;">
+        {% for code, lbl in licence_authorities %}
+        <label class="chip-check"><input type="checkbox" name="requires_certifications" value="{{ code }}"> {{ lbl }}</label>
+        {% endfor %}
+      </div>
+    </section>
+
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">Publier la mission</button>
+    <div class="form-foot">
+      <span class="small muted">Vous pourrez modifier ou annuler tant qu'aucune offre n'est acceptée.</span>
+    </div>
+  </form>
+</section>
+
+{% endblock %}

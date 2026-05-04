@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Connexion — AubeDroniste{% endblock %}
+{% block content %}
+
+<section class="auth-split">
+  <aside class="auth-aside">
+    <span class="eyebrow">Retour en cabine</span>
+    <h1>Bonjour, <em>commandant</em>.</h1>
+    <p class="lead muted">
+      Vos identifiants AubeDroniste vous donnent aussi accès à tous les services
+      <a href="https://aubeetoilee.com">L'Aube Étoilée</a> — un seul compte pour
+      tout l'écosystème.
+    </p>
+    <ul class="checklist">
+      <li>Authentification partagée @aubemail.com.</li>
+      <li>Aucun mot de passe stocké en clair, sessions signées côté serveur.</li>
+      <li>Vous pouvez gérer plusieurs rôles depuis un seul espace.</li>
+    </ul>
+  </aside>
+
+  <form method="post" class="auth-form">
+    <h2>Connexion</h2>
+    <input type="hidden" name="next" value="{{ next_url }}">
+
+    <fieldset class="fieldset-block">
+      <legend>Identifiants</legend>
+      <label>Identifiant ou compte AubeMail
+        <input name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>Mot de passe
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+    </fieldset>
+
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">Entrer en cabine</button>
+    <div class="form-foot">
+      <span class="small">Pas encore inscrit ? <a href="{{ url_for('register') }}">Rejoindre le réseau</a></span>
+    </div>
+  </form>
+</section>
+
+{% endblock %}

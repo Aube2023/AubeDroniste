@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}{{ pilot.full_name }} — AubeDroniste{% endblock %}
+{% block content %}
+
+<section class="flightbook-hero">
+  <div class="flightbook-band">
+    <div class="avatar big">{{ pilot.full_name[:1] }}</div>
+    <div>
+      <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (pilot.full_name|first)|upper }} · CDB</span>
+      <h1>{{ pilot.full_name }} {% if pilot.is_verified %}<span class="badge verified" style="vertical-align: middle;">vérifié</span>{% endif %}</h1>
+      <div class="loc">
+        {{ pilot.country or '—' }}{% if pilot.city %} · {{ pilot.city }}{% endif %}
+        {% if pilot.lat and pilot.lng %} · {{ '%.4f'|format(pilot.lat) }}, {{ '%.4f'|format(pilot.lng) }}{% endif %}
+      </div>
+      {% if pilot.headline %}
+      <p class="serif-italic" style="margin-top: 16px; font-size: 1.2rem; color: var(--ink-soft); max-width: 56ch;">
+        « {{ pilot.headline }} »
+      </p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="stat-rail">
+    <div>
+      <span class="v">{% if pilot.rating.count %}{{ '%.1f' % pilot.rating.avg }}<span style="color: var(--amber);"> ★</span>{% else %}—{% endif %}</span>
+      <span class="k">Note · {{ pilot.rating.count }} avis</span>
+    </div>
+    <div>
+      <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> ans</span></span>
+      <span class="k">Expérience</span>
+    </div>
+    <div>
+      <span class="v">{% if pilot.hourly_rate %}{{ pilot.hourly_rate|int }}{% else %}—{% endif %}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ pilot.p_currency or '' }}/h</span></span>
+      <span class="k">Tarif horaire</span>
+    </div>
+    <div>
+      <span class="v">{{ pilot.travel_radius_km or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> km</span></span>
+      <span class="k">Rayon</span>
+    </div>
+    <div>
+      <span class="v" style="color: {% if pilot.is_available %}var(--teal){% else %}var(--ink-dim){% endif %};">
+        {% if pilot.is_available %}EN VOL{% else %}AU SOL{% endif %}
+      </span>
+      <span class="k">Statut</span>
+    </div>
+  </div>
+</section>
+
+{% if pilot.bio %}
+<div class="card">
+  <span class="eyebrow">Note du pilote</span>
+  <p style="font-family: var(--serif); font-size: 1.15rem; line-height: 1.65; color: var(--ink-soft); margin: 0;">{{ pilot.bio }}</p>
+</div>
+{% endif %}
+
+<div class="grid-2">
+  <div class="card">
+    <span class="eyebrow">Spécialités opérationnelles</span>
+    <ul class="chips" style="margin: 16px 0;">
+      {% for s in pilot.specialties %}
+        <li class="tag">{{ mission_label(s) }}</li>
+      {% else %}
+        <li class="muted">Spécialités non renseignées.</li>
+      {% endfor %}
+    </ul>
+
+    <h3 style="margin-top: 24px;">Territoires opérés</h3>
+    <ul class="chips" style="margin: 6px 0;">
+      {% for t in pilot.territories %}
+        <li class="tag">{{ t.country }}{% if t.region %} · {{ t.region }}{% endif %}</li>
+      {% else %}
+        <li class="muted">{{ pilot.country or '—' }}</li>
+      {% endfor %}
+    </ul>
+
+    {% if pilot.languages %}
+    <h3 style="margin-top: 24px;">Langues parlées</h3>
+    <div class="muted mono" style="text-transform: uppercase; letter-spacing: .12em; font-size: 13px;">
+      {{ pilot.languages.replace(',', ' · ') }}
+    </div>
+    {% endif %}
+
+    {% if pilot.insurance %}
+    <h3 style="margin-top: 24px;">Couverture RC pro</h3>
+    <div class="muted small">
+      <span class="tag tag-ok">Assuré</span>
+      {% if pilot.insurance_company %}<br><span class="mono" style="text-transform: uppercase; letter-spacing: .1em; font-size: 11px;">{{ pilot.insurance_company }}</span>{% endif %}
+      {% if pilot.insurance_policy %}<span class="mono" style="font-size: 11px;"> · n° {{ pilot.insurance_policy }}</span>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if pilot.portfolio_url %}
+    <h3 style="margin-top: 24px;">Portfolio externe</h3>
+    <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <span class="eyebrow">Brevets &amp; qualifications</span>
+    <div class="patches" style="margin-top: 12px;">
+      {% for c in pilot.certifications %}
+      <div class="patch">
+        <div class="patch-shield">{{ (c.authority[:3])|upper }}</div>
+        <div>
+          <span class="title">{{ c.title }}</span>
+          <span class="meta">
+            {{ auth_label(c.authority) }}
+            {% if c.reference %} · n° {{ c.reference }}{% endif %}
+            {% if c.issued_at %} · délivré {{ c.issued_at }}{% endif %}
+            {% if c.expires_at %} → expire {{ c.expires_at }}{% endif %}
+          </span>
+        </div>
+        {% if c.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+      </div>
+      {% else %}
+        <p class="muted">Aucun brevet déclaré pour le moment.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<section class="card">
+  <div class="row-between" style="align-items: end; margin-bottom: 14px;">
+    <div>
+      <span class="eyebrow">Flotte personnelle</span>
+      <h2 style="font-size: 1.6rem; margin: 0;">Aéronefs déclarés</h2>
+    </div>
+    <span class="muted mono" style="font-size: 12px; text-transform: uppercase; letter-spacing: .12em;">
+      {{ pilot.drones|length }} appareil{{ 's' if pilot.drones|length > 1 else '' }}
+    </span>
+  </div>
+  <div class="fleet-grid">
+    {% for d in pilot.drones %}
+    <div class="fleet-card">
+      <span class="cat">{{ drone_label(d.category) }}</span>
+      <span class="model">{{ (d.brand or '—') }} {{ d.model or '' }}</span>
+      <div class="specs">
+        {% if d.weight_g %}<span><strong>{{ d.weight_g }}</strong>g</span>{% endif %}
+        {% if d.flight_time_min %}<span><strong>{{ d.flight_time_min }}</strong>min vol</span>{% endif %}
+        {% if d.max_payload_g %}<span><strong>{{ d.max_payload_g }}</strong>g charge</span>{% endif %}
+        {% if d.serial_number %}<span>S/N <strong>{{ d.serial_number[:8] }}</strong></span>{% endif %}
+      </div>
+      {% if d.capabilities %}
+      <div class="caps">
+        {% for cap in d.capabilities %}<span class="tag">{{ cap }}</span>{% endfor %}
+      </div>
+      {% endif %}
+      {% if d.notes %}<p class="muted small" style="margin: 4px 0 0;">{{ d.notes }}</p>{% endif %}
+    </div>
+    {% else %}
+    <p class="muted">Flotte non déclarée.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <span class="eyebrow">Retours d'expérience</span>
+  <h2 style="font-size: 1.6rem; margin: 4px 0 18px;">Avis des clients</h2>
+  {% for r in reviews %}
+  <div class="review-quote">
+    <div class="stars">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
+    <q>{{ r.comment or "« — pas de commentaire écrit — »" }}</q>
+    <cite>{{ r.author_name }} · {{ r.created_at[:10] }}</cite>
+  </div>
+  {% else %}
+  <p class="muted">Pas encore d'avis. Soyez le premier à recommander ce pilote.</p>
+  {% endfor %}
+</section>
+
+{% endblock %}

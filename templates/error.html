@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Erreur {{ code }} — AubeDroniste{% endblock %}
+{% block content %}
+<div class="card form-card">
+  <h1>{{ code }}</h1>
+  <p>{{ message }}</p>
+  <a href="{{ url_for('index') }}" class="cta">Retour à l'accueil</a>
+</div>
+{% endblock %}

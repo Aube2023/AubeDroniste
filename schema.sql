@@ -1,0 +1,208 @@
+-- AubeDroniste - schema SQLite
+-- Marketplace dronistes <-> clients
+
+PRAGMA journal_mode=WAL;
+PRAGMA foreign_keys=ON;
+
+-- Comptes (un compte peut etre client, droniste ou les deux)
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,           -- compte PAM
+    email         TEXT NOT NULL UNIQUE,           -- @aubemail.com
+    full_name     TEXT NOT NULL,
+    phone         TEXT,
+    country       TEXT,
+    city          TEXT,
+    lat           REAL,
+    lng           REAL,
+    role          TEXT NOT NULL DEFAULT 'client', -- 'client' | 'droniste' | 'both'
+    avatar_path   TEXT,
+    bio           TEXT,
+    is_verified   INTEGER NOT NULL DEFAULT 0,
+    is_admin      INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    last_seen_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_users_country ON users(country);
+CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
+
+-- Profil droniste etendu
+CREATE TABLE IF NOT EXISTS pilot_profiles (
+    user_id           INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    headline          TEXT,                       -- accroche courte
+    years_experience  INTEGER NOT NULL DEFAULT 0,
+    hourly_rate       REAL,                       -- tarif horaire
+    daily_rate        REAL,                       -- tarif journee
+    currency          TEXT NOT NULL DEFAULT 'EUR',
+    travel_radius_km  INTEGER NOT NULL DEFAULT 50,
+    accepts_remote    INTEGER NOT NULL DEFAULT 0, -- accepte missions hors zone
+    insurance         INTEGER NOT NULL DEFAULT 0, -- assure RC pro
+    insurance_company TEXT,
+    insurance_policy  TEXT,
+    is_available      INTEGER NOT NULL DEFAULT 1,
+    languages         TEXT,                       -- "fr,ar,en"
+    portfolio_url     TEXT,
+    accepts_urgent    INTEGER NOT NULL DEFAULT 0,
+    updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Formations / certifications du pilote
+CREATE TABLE IF NOT EXISTS pilot_certifications (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    authority      TEXT NOT NULL,                 -- DGAC / EASA / TC / FAA ...
+    title          TEXT NOT NULL,                 -- "STS-01", "Part 107", "Avance"
+    reference      TEXT,                          -- numero
+    issued_at      TEXT,
+    expires_at     TEXT,
+    document_path  TEXT,                          -- copie scan
+    is_verified    INTEGER NOT NULL DEFAULT 0,    -- valide par l'admin
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cert_pilot ON pilot_certifications(pilot_user_id);
+
+-- Drones du pilote
+CREATE TABLE IF NOT EXISTS pilot_drones (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category       TEXT NOT NULL,                 -- micro/loisir/pro_camera/...
+    brand          TEXT,
+    model          TEXT,
+    serial_number  TEXT,
+    weight_g       INTEGER,
+    max_payload_g  INTEGER,
+    flight_time_min INTEGER,
+    capabilities   TEXT,                          -- CSV: "camera_4k,thermique,..."
+    photo_path     TEXT,
+    notes          TEXT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_drone_pilot ON pilot_drones(pilot_user_id);
+
+-- Specialites du pilote (repete les codes MISSION_TYPES)
+CREATE TABLE IF NOT EXISTS pilot_specialties (
+    pilot_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mission_type   TEXT NOT NULL,
+    PRIMARY KEY (pilot_user_id, mission_type)
+);
+
+-- Pays autorises a operer (un pilote peut etre licencie dans plusieurs pays)
+CREATE TABLE IF NOT EXISTS pilot_territories (
+    pilot_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    country        TEXT NOT NULL,
+    region         TEXT,
+    PRIMARY KEY (pilot_user_id, country, region)
+);
+
+-- Missions publiees par les clients
+CREATE TABLE IF NOT EXISTS missions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title           TEXT NOT NULL,
+    description     TEXT NOT NULL,
+    mission_type    TEXT NOT NULL,
+    country         TEXT NOT NULL,
+    region          TEXT,
+    city            TEXT,
+    lat             REAL,
+    lng             REAL,
+    address         TEXT,
+    budget_min      REAL,
+    budget_max      REAL,
+    currency        TEXT NOT NULL DEFAULT 'EUR',
+    duration_hours  REAL,
+    start_date      TEXT,
+    end_date        TEXT,
+    is_urgent       INTEGER NOT NULL DEFAULT 0,
+    requires_insurance INTEGER NOT NULL DEFAULT 0,
+    requires_certifications TEXT,                 -- CSV codes
+    requires_capabilities   TEXT,                 -- CSV (thermique, RTK, ...)
+    status          TEXT NOT NULL DEFAULT 'open',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_mission_country ON missions(country);
+CREATE INDEX IF NOT EXISTS idx_mission_type    ON missions(mission_type);
+CREATE INDEX IF NOT EXISTS idx_mission_status  ON missions(status);
+CREATE INDEX IF NOT EXISTS idx_mission_geo     ON missions(lat, lng);
+
+-- Enchere d'un pilote sur une mission
+CREATE TABLE IF NOT EXISTS bids (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    mission_id      INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    pilot_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    price           REAL NOT NULL,
+    currency        TEXT NOT NULL DEFAULT 'EUR',
+    eta_hours       REAL,
+    message         TEXT,
+    status          TEXT NOT NULL DEFAULT 'pending',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (mission_id, pilot_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_bid_mission ON bids(mission_id);
+CREATE INDEX IF NOT EXISTS idx_bid_pilot   ON bids(pilot_user_id);
+
+-- Reservation issue d'une enchere acceptee
+CREATE TABLE IF NOT EXISTS bookings (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    mission_id      INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    bid_id          INTEGER NOT NULL REFERENCES bids(id) ON DELETE CASCADE,
+    client_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pilot_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    agreed_price    REAL NOT NULL,
+    currency        TEXT NOT NULL DEFAULT 'EUR',
+    platform_fee    REAL NOT NULL DEFAULT 0,
+    scheduled_at    TEXT,
+    status          TEXT NOT NULL DEFAULT 'scheduled',
+    completed_at    TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_booking_pilot  ON bookings(pilot_user_id);
+CREATE INDEX IF NOT EXISTS idx_booking_client ON bookings(client_user_id);
+
+-- Avis bidirectionnels
+CREATE TABLE IF NOT EXISTS reviews (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id      INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    author_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating          INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (booking_id, author_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_review_target ON reviews(target_user_id);
+
+-- Messagerie simple par mission (client <-> pilote)
+CREATE TABLE IF NOT EXISTS messages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    mission_id      INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    sender_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body            TEXT NOT NULL,
+    read_at         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_msg_mission ON messages(mission_id);
+CREATE INDEX IF NOT EXISTS idx_msg_recipient ON messages(recipient_user_id);
+
+-- Sessions
+CREATE TABLE IF NOT EXISTS sessions (
+    sid          TEXT PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at   TEXT NOT NULL,
+    user_agent   TEXT,
+    ip           TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sess_user ON sessions(user_id);
+
+-- Audit minimal
+CREATE TABLE IF NOT EXISTS audit_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    action      TEXT NOT NULL,
+    target      TEXT,
+    payload     TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);

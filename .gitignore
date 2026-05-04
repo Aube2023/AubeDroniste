@@ -1,0 +1,32 @@
+# Bases de données SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Secrets dev (mots de passe locaux fallback)
+.dev_passwords
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.pytest_cache/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Uploads (généré au runtime)
+static/uploads/
+
+# Logs
+*.log
+nohup.out

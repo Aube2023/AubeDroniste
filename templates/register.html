@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Rejoindre — AubeDroniste{% endblock %}
+{% block content %}
+
+<section class="auth-split">
+  <aside class="auth-aside">
+    <span class="eyebrow">Rejoindre le réseau</span>
+    <h1>Embarquez dans <em>l'équipage</em>.</h1>
+    <p class="lead muted">
+      Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul
+      compte AubeDroniste. Bascule entre les rôles à tout moment depuis votre espace.
+    </p>
+    <ul class="checklist">
+      <li>Compte unique pour publier <em>et</em> piloter, sans abonnement.</li>
+      <li>Vos brevets et certifications mis en avant — DGAC, EASA, TC, FAA, ASECNA.</li>
+      <li>Recherche géolocalisée dans la francophonie : France, Maghreb, Québec, Afrique de l'Ouest.</li>
+      <li>Commission plateforme uniquement sur missions livrées (30 %).</li>
+      <li>Auth partagée avec l'écosystème <a href="https://aubeetoilee.com">L'Aube Étoilée</a>.</li>
+    </ul>
+  </aside>
+
+  <form method="post" class="auth-form">
+    <h2>Créer mon compte</h2>
+
+    <fieldset class="fieldset-block">
+      <legend>Mon rôle au décollage</legend>
+      <div class="role-cards">
+        {% set sel = request.args.get('role','client') %}
+        <label>
+          <input type="radio" name="role" value="client" {% if sel=='client' %}checked{% endif %}>
+          <span class="role-card">
+            <span class="icon">▴ Client</span>
+            <span class="name">Je cherche un pilote</span>
+            <span class="desc">Je publie des missions et je sélectionne mon droniste.</span>
+          </span>
+        </label>
+        <label>
+          <input type="radio" name="role" value="droniste" {% if sel=='droniste' %}checked{% endif %}>
+          <span class="role-card">
+            <span class="icon">▴ Pilote</span>
+            <span class="name">Je suis droniste</span>
+            <span class="desc">Je présente mes brevets, ma flotte et je soumissionne.</span>
+          </span>
+        </label>
+        <label>
+          <input type="radio" name="role" value="both" {% if sel=='both' %}checked{% endif %}>
+          <span class="role-card">
+            <span class="icon">▴ Mixte</span>
+            <span class="name">Les deux</span>
+            <span class="desc">Je commande et j'opère selon les jours.</span>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset-block">
+      <legend>Identité</legend>
+      <div class="grid-2">
+        <label>Nom et prénom
+          <input name="full_name" required placeholder="ex. Sophie Tremblay">
+        </label>
+        <label>Identifiant
+          <input name="username" required minlength="3" pattern="[a-z0-9_.\-]{3,32}" placeholder="sophie.tremblay">
+        </label>
+        <label>Mot de passe
+          <input type="password" name="password" required minlength="6" autocomplete="new-password">
+        </label>
+        <label>Confirmer le mot de passe
+          <input type="password" name="confirm" required minlength="6" autocomplete="new-password">
+        </label>
+        <label>Téléphone
+          <input name="phone" type="tel" placeholder="+212 6 …">
+        </label>
+        <label style="display: flex; flex-direction: column; justify-content: center;">
+          <span class="muted small mono" style="text-transform: uppercase; letter-spacing: .14em;">Email AubeMail</span>
+          <span class="serif-italic" style="color: var(--ink-soft);">{{ '<identifiant>@aubemail.com' }}</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset-block">
+      <legend>Base d'opération</legend>
+      <div class="grid-2">
+        <label>Pays
+          <input name="country" list="countries" placeholder="ex. Maroc">
+          <datalist id="countries">
+            {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}
+          </datalist>
+        </label>
+        <label>Ville
+          <input name="city" placeholder="ex. Casablanca">
+        </label>
+      </div>
+      <div class="geo-row">
+        <div class="geo-input grid-2">
+          <label>Latitude<input name="lat" type="number" step="any" placeholder="33.5731"></label>
+          <label>Longitude<input name="lng" type="number" step="any" placeholder="-7.5898"></label>
+        </div>
+        <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
+      </div>
+    </fieldset>
+
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">Créer mon compte</button>
+    <div class="form-foot">
+      <span class="small">Déjà membre ? <a href="{{ url_for('login') }}">Connexion</a></span>
+      <span class="small muted">Vous pouvez compléter votre profil pilote après l'inscription.</span>
+    </div>
+  </form>
+</section>
+
+{% endblock %}

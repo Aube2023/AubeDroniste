@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Pilotes — AubeDroniste{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Annuaire pilote</span>
+  <h1>Trouver un droniste.</h1>
+  <p class="lead muted">{{ pilots|length }} pilote(s) correspondent à votre filtrage.</p>
+</div>
+
+<form method="get" class="filters card">
+  <div class="grid-3">
+    <label>Pays
+      <select name="country">
+        <option value="">— tous —</option>
+        {% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Ville<input name="city" value="{{ params.city }}"></label>
+    <label>Spécialité
+      <select name="mission_type">
+        <option value="">— toutes —</option>
+        {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Capacité drone
+      <select name="capability">
+        <option value="">— toutes —</option>
+        {% for cap in drone_capabilities %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Note minimale
+      <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
+    </label>
+    <label>Rayon (km)
+      <input name="radius_km" type="number" min="1" max="500" value="{{ params.radius_km }}">
+    </label>
+    <label>Latitude<input name="lat" type="number" step="any" value="{{ params.lat or '' }}"></label>
+    <label>Longitude<input name="lng" type="number" step="any" value="{{ params.lng or '' }}"></label>
+    <label class="check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> Disponibles uniquement</label>
+  </div>
+  <div class="row-between" style="margin-top: 20px;">
+    <button type="button" class="ghost" onclick="useMyLocation()">⌖ Pré-remplir avec ma position</button>
+    <button class="cta" type="submit">Filtrer</button>
+  </div>
+</form>
+
+<div class="grid-cards">
+  {% for p in pilots %}
+  <a class="pilot-card" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+    <div class="strip">
+      <span class="callsign">F-{{ '%04d' % p.id }}{{ (p.full_name|first)|upper }}</span>
+      <span class="fh">
+        {% if p.distance_km is not none %}≈ {{ p.distance_km }} km · {% endif %}
+        {% if p.rating.count %}{{ p.rating.count }} avis{% else %}nouveau{% endif %}
+      </span>
+    </div>
+    <div class="body">
+      <div class="avatar">{{ p.full_name[:1] }}</div>
+      <div>
+        <div class="name">{{ p.full_name }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
+        <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
+        <div class="headline">« {{ p.headline or "Disponible pour vos prises de vue." }} »</div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
+      <span>{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}sur devis{% endif %}</span>
+    </div>
+  </a>
+  {% else %}
+    <div class="card" style="grid-column: 1/-1;">
+      <p class="muted">Aucun pilote ne correspond. Essayez d'élargir le rayon ou de retirer un filtre.</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

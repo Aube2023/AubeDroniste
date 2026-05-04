@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AubeDroniste — Le réseau des pilotes de drone francophones{% endblock %}</title>
+  <meta name="description" content="AubeDroniste met en relation dronistes certifiés et clients à travers la francophonie. Photo, cartographie RTK, inspection thermique, agriculture, événementiel.">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+  <script>
+    // Anti-FOUC : applique le thème avant le rendu
+    (function () {
+      try {
+        var saved = localStorage.getItem('aube-theme');
+        var sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        var theme = saved || sys;
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a href="{{ url_for('index') }}" class="brand">
+    <span class="glyph"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="36" height="36"></span>
+    <span>
+      <b>Aube</b>Droniste
+      <small>Réseau pilote · FR</small>
+    </span>
+  </a>
+  <nav class="topnav">
+    <a href="{{ url_for('pilots_search') }}">Pilotes</a>
+    <a href="{{ url_for('missions_search') }}">Missions</a>
+    {% if current_user %}
+      <a href="{{ url_for('mission_create') }}" class="cta">Publier une mission</a>
+      <a href="{{ url_for('dashboard') }}">Espace</a>
+      <form method="post" action="{{ url_for('logout') }}" class="inline">
+        <button class="ghost" type="submit">Quitter</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('login') }}">Connexion</a>
+      <a href="{{ url_for('register') }}" class="cta">Rejoindre</a>
+    {% endif %}
+    <a id="zone-pill" class="zone-pill" href="#" title="Filtrer autour de votre position">
+      <span class="ping"></span>
+      <span class="zone-label">Ma zone</span>
+    </a>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Basculer le thème">
+      <span class="dot"></span>
+      <span class="label-dark">Nuit</span>
+      <span class="label-light">Aube</span>
+    </button>
+  </nav>
+</header>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+    <div class="flashes">
+      {% for cat, m in msgs %}
+        <div class="flash flash-{{ cat }}">{{ m }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main class="page">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <section class="eco-section">
+    <div class="eco-header">
+      <span class="eyebrow">L'écosystème L'Aube Étoilée</span>
+      <strong>Tout en français, tout chez vous.</strong>
+      <span class="muted">{{ now().year }} · 15 services · auth partagée</span>
+    </div>
+    <nav class="eco-grid" aria-label="Services L'Aube Étoilée">
+      <a href="https://messenger.aubeetoilee.com"><span class="pre">Aube</span>Messenger</a>
+      <a href="https://mail.aubeetoilee.com"><span class="pre">Aube</span>Mail</a>
+      <a href="https://maps.aubeetoilee.com"><span class="pre">Aube</span>Maps</a>
+      <a href="https://agenda.aubeetoilee.com"><span class="pre">Aube</span>Agenda</a>
+      <a href="https://docs.aubeetoilee.com"><span class="pre">Aube</span>Docs</a>
+      <a href="https://forms.aubeetoilee.com"><span class="pre">Aube</span>Forms</a>
+      <a href="https://slides.aubeetoilee.com"><span class="pre">Aube</span>Slides</a>
+      <a href="https://drive.aubeetoilee.com"><span class="pre">Aube</span>Drive</a>
+      <a href="https://finances.aubeetoilee.com"><span class="pre">Aube</span>Finances</a>
+      <a href="https://data.aubeetoilee.com"><span class="pre">Aube</span>Data</a>
+      <a href="https://format.aubeetoilee.com"><span class="pre">Aube</span>Format</a>
+      <a href="https://meteo.aubeetoilee.com"><span class="pre">Aube</span>Météo</a>
+      <a href="https://news.aubeetoilee.com"><span class="pre">Aube</span>News</a>
+      <a href="https://livre.aubeetoilee.com"><span class="pre">Aube</span>Livre</a>
+      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span>Droniste</a>
+    </nav>
+  </section>
+  <div class="footer-line">
+    <div>
+      <strong>AubeDroniste</strong> · Une marque de
+      <a href="https://aubeetoilee.com">L'Aube Étoilée</a>
+      · Auth partagée @aubemail.com
+    </div>
+    <div class="dim">{{ now().year }} — Édité depuis Montréal · Casablanca · Paris</div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

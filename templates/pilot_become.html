@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Devenir droniste — AubeDroniste{% endblock %}
+{% block content %}
+<div class="card form-card">
+  <h1>Devenez droniste sur AubeDroniste</h1>
+  <p>Activez votre profil pilote pour recevoir des missions près de chez vous, mettre en avant vos formations (DGAC, EASA, Transport Canada, FAA, ASECNA…) et votre flotte.</p>
+  <ul>
+    <li>Profil avec photos, drones, certifications</li>
+    <li>Recherche géolocalisée par pays/ville</li>
+    <li>Encaissement à la mission terminée (commission 30%)</li>
+    <li>Système d'avis bidirectionnel</li>
+  </ul>
+  <form method="post">
+    <input type="hidden" name="become_pilot" value="1">
+    <button class="cta" type="submit">Activer mon profil droniste</button>
+  </form>
+</div>
+{% endblock %}

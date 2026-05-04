@@ -1,0 +1,7 @@
+{
+  "include": ["."],
+  "extraPaths": ["."],
+  "reportMissingImports": "none",
+  "reportReturnType": "warning",
+  "pythonVersion": "3.11"
+}

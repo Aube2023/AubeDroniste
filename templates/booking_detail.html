@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Réservation #{{ booking.id }} — AubeDroniste{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="row-between">
+    <div>
+      <h1>{{ booking.mission_title }}</h1>
+      <div class="muted">Client : {{ booking.client_name }} · Pilote : {{ booking.pilot_name }} · {{ booking.country }}, {{ booking.city or '' }}</div>
+    </div>
+    <div class="price big">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
+  </div>
+  <ul class="badges">
+    <li>Statut : <span class="tag tag-{{ booking.status }}">{{ booking.status }}</span></li>
+    <li>Commission : {{ booking.platform_fee }} {{ booking.currency }}</li>
+    {% if booking.scheduled_at %}<li>Prévu : {{ booking.scheduled_at }}</li>{% endif %}
+    {% if booking.completed_at %}<li>Terminé : {{ booking.completed_at }}</li>{% endif %}
+  </ul>
+
+  <form method="post" action="{{ url_for('booking_status', booking_id=booking.id) }}">
+    <label>Mettre à jour le statut
+      <select name="status">
+        <option value="scheduled">scheduled</option>
+        <option value="in_progress">in_progress</option>
+        <option value="completed">completed</option>
+        <option value="cancelled">cancelled</option>
+      </select>
+    </label>
+    <button class="cta" type="submit">Mettre à jour</button>
+  </form>
+</div>
+
+<section class="card">
+  <h2>Messagerie de mission</h2>
+  <div class="chat">
+    {% for m in thread %}
+    <div class="msg {% if m.sender_user_id == current_user.id %}msg-mine{% endif %}">
+      <div class="muted small">{{ m.created_at }}</div>
+      <div>{{ m.body }}</div>
+    </div>
+    {% else %}<p class="muted">Pas encore de messages.</p>{% endfor %}
+  </div>
+  <form method="post" action="{{ url_for('mission_message', mission_id=booking.mission_id) }}">
+    <input type="hidden" name="peer_id" value="{{ peer_id }}">
+    <textarea name="body" rows="2" required placeholder="Votre message…"></textarea>
+    <button class="cta" type="submit">Envoyer</button>
+  </form>
+</section>
+
+{% if booking.status == 'completed' %}
+<section class="card">
+  <h2>Laisser un avis</h2>
+  <form method="post" action="{{ url_for('booking_review', booking_id=booking.id) }}">
+    <label>Note
+      <select name="rating">
+        {% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ★</option>{% endfor %}
+      </select>
+    </label>
+    <label>Commentaire<textarea name="comment" rows="3"></textarea></label>
+    <button class="cta" type="submit">Publier l'avis</button>
+  </form>
+</section>
+{% endif %}
+
+{% endblock %}

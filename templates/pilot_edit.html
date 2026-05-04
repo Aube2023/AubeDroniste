@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Mon profil droniste — AubeDroniste{% endblock %}
+{% block content %}
+<h1>Mon profil droniste</h1>
+
+<form method="post" class="card">
+  <h2>Identité & zone</h2>
+  <div class="grid-2">
+    <label>Nom complet<input value="{{ current_user.full_name }}" disabled></label>
+    <label>Téléphone<input name="phone" value="{{ profile.phone or '' }}"></label>
+    <label>Pays
+      <input name="country" list="countries" value="{{ profile.country or '' }}">
+      <datalist id="countries">
+        {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}
+      </datalist>
+    </label>
+    <label>Ville<input name="city" value="{{ profile.city or '' }}"></label>
+    <label>Latitude<input name="lat" type="number" step="any" value="{{ profile.lat or '' }}"></label>
+    <label>Longitude<input name="lng" type="number" step="any" value="{{ profile.lng or '' }}"></label>
+  </div>
+
+  <h2>Présentation</h2>
+  <label>Accroche courte<input name="headline" value="{{ profile.headline or '' }}" maxlength="120"></label>
+  <label>Bio<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
+
+  <h2>Tarifs & disponibilité</h2>
+  <div class="grid-3">
+    <label>Années d'expérience<input name="years_experience" type="number" min="0" value="{{ profile.years_experience or 0 }}"></label>
+    <label>Tarif horaire<input name="hourly_rate" type="number" step="0.01" value="{{ profile.hourly_rate or '' }}"></label>
+    <label>Tarif journée<input name="daily_rate" type="number" step="0.01" value="{{ profile.daily_rate or '' }}"></label>
+    <label>Devise
+      <select name="currency">
+        {% for c in currencies %}<option value="{{ c }}" {% if profile.p_currency==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Rayon de déplacement (km)<input name="travel_radius_km" type="number" min="0" value="{{ profile.travel_radius_km or 50 }}"></label>
+    <label>Langues<input name="languages" value="{{ profile.languages or '' }}" placeholder="fr,ar,en"></label>
+  </div>
+  <div class="grid-3">
+    <label class="check"><input type="checkbox" name="is_available" value="1" {% if profile.is_available %}checked{% endif %}> Disponible</label>
+    <label class="check"><input type="checkbox" name="accepts_remote" value="1" {% if profile.accepts_remote %}checked{% endif %}> Missions hors zone</label>
+    <label class="check"><input type="checkbox" name="accepts_urgent" value="1" {% if profile.accepts_urgent %}checked{% endif %}> Missions urgentes</label>
+  </div>
+
+  <h2>Assurance RC pro</h2>
+  <div class="grid-3">
+    <label class="check"><input type="checkbox" name="insurance" value="1" {% if profile.insurance %}checked{% endif %}> Assuré</label>
+    <label>Compagnie<input name="insurance_company" value="{{ profile.insurance_company or '' }}"></label>
+    <label>N° police<input name="insurance_policy" value="{{ profile.insurance_policy or '' }}"></label>
+  </div>
+
+  <h2>Spécialités</h2>
+  <div class="chips check-grid">
+    {% for code, lbl in mission_types %}
+    <label class="chip-check"><input type="checkbox" name="specialties" value="{{ code }}" {% if code in profile.specialties %}checked{% endif %}> {{ lbl }}</label>
+    {% endfor %}
+  </div>
+
+  <h2>Territoires opérés (en plus du pays principal)</h2>
+  <div id="territories">
+    {% for t in profile.territories %}
+    <div class="row-territory">
+      <input name="territory_country" placeholder="Pays" value="{{ t.country }}">
+      <input name="territory_region" placeholder="Région (optionnel)" value="{{ t.region or '' }}">
+    </div>
+    {% endfor %}
+    <div class="row-territory">
+      <input name="territory_country" placeholder="Pays">
+      <input name="territory_region" placeholder="Région (optionnel)">
+    </div>
+  </div>
+  <button type="button" class="ghost" onclick="addTerritory()">+ Ajouter un territoire</button>
+
+  <label>URL portfolio<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
+
+  <button class="cta" type="submit">Enregistrer le profil</button>
+</form>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Mes formations / licences</h2>
+    {% for c in profile.certifications %}
+    <div class="cert row-between">
+      <div>
+        <strong>{{ c.title }}</strong> — {{ auth_label(c.authority) }}
+        {% if c.is_verified %}<span class="tag tag-ok">vérifié</span>{% endif %}
+        <div class="muted small">{{ c.reference or '' }}{% if c.issued_at %} · {{ c.issued_at }}{% endif %}{% if c.expires_at %} → {{ c.expires_at }}{% endif %}</div>
+      </div>
+      <form method="post" action="{{ url_for('pilot_delete_certification', cert_id=c.id) }}">
+        <button class="ghost danger" type="submit">supprimer</button>
+      </form>
+    </div>
+    {% else %}<p class="muted">Aucune.</p>{% endfor %}
+
+    <form method="post" action="{{ url_for('pilot_add_certification') }}" enctype="multipart/form-data">
+      <h3>Ajouter une formation</h3>
+      <div class="grid-2">
+        <label>Autorité
+          <select name="authority">
+            {% for code, lbl in licence_authorities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Intitulé<input name="title" required placeholder="STS-01, A2, Avancé…"></label>
+        <label>Référence / N°<input name="reference"></label>
+        <label>Délivrée le<input name="issued_at" type="date"></label>
+        <label>Expire le<input name="expires_at" type="date"></label>
+        <label>Justificatif (PDF/JPG)<input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+      </div>
+      <button class="cta" type="submit">Ajouter</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Mes drones</h2>
+    {% for d in profile.drones %}
+    <div class="drone row-between">
+      <div>
+        <strong>{{ d.brand }} {{ d.model }}</strong> — {{ drone_label(d.category) }}
+        <div class="muted small">
+          {% if d.weight_g %}{{ d.weight_g }} g{% endif %}
+          {% if d.flight_time_min %} · {{ d.flight_time_min }} min{% endif %}
+          {% if d.capabilities %} · {{ d.capabilities|join(', ') }}{% endif %}
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('pilot_delete_drone', drone_id=d.id) }}">
+        <button class="ghost danger" type="submit">supprimer</button>
+      </form>
+    </div>
+    {% else %}<p class="muted">Aucun drone enregistré.</p>{% endfor %}
+
+    <form method="post" action="{{ url_for('pilot_add_drone') }}" enctype="multipart/form-data">
+      <h3>Ajouter un drone</h3>
+      <div class="grid-2">
+        <label>Catégorie
+          <select name="category">
+            {% for code, lbl in drone_categories %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Marque<input name="brand"></label>
+        <label>Modèle<input name="model"></label>
+        <label>N° série<input name="serial_number"></label>
+        <label>Poids (g)<input name="weight_g" type="number"></label>
+        <label>Charge utile max (g)<input name="max_payload_g" type="number"></label>
+        <label>Autonomie (min)<input name="flight_time_min" type="number"></label>
+        <label>Photo<input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
+      </div>
+      <h4>Capacités</h4>
+      <div class="chips check-grid">
+        {% for cap in drone_capabilities %}
+        <label class="chip-check"><input type="checkbox" name="capabilities" value="{{ cap }}"> {{ cap }}</label>
+        {% endfor %}
+      </div>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <button class="cta" type="submit">Ajouter le drone</button>
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function addTerritory() {
+  const wrap = document.getElementById('territories');
+  const div = document.createElement('div');
+  div.className = 'row-territory';
+  div.innerHTML = '<input name="territory_country" placeholder="Pays"><input name="territory_region" placeholder="Région (optionnel)">';
+  wrap.appendChild(div);
+}
+</script>
+{% endblock %}
