@@ -50,23 +50,80 @@ MISSION_STATUS = ("open", "assigned", "in_progress", "done", "cancelled")
 BID_STATUS = ("pending", "accepted", "rejected", "withdrawn")
 BOOKING_STATUS = ("scheduled", "in_progress", "completed", "cancelled", "disputed")
 
-# Types de missions (FR)
+# Types de missions (FR) — calque sur l'offre reelle des marches francais
+# (DGAC) et canadien (Transport Canada). Les codes restent stables : seuls
+# les libelles peuvent etre traduits via i18n. Backward-compat conservee
+# pour photo / video / immobilier / mariage / evenement / mapping / 3d /
+# inspection / agriculture / btp / surveillance / livraison / recherche /
+# formation / autre.
 MISSION_TYPES = [
-    ("photo",        "Photographie aerienne"),
-    ("video",        "Video aerienne / clip"),
-    ("immobilier",   "Immobilier (visite, prises de vues)"),
-    ("mariage",      "Mariage / evenement prive"),
-    ("evenement",    "Evenement public / sport"),
-    ("mapping",      "Cartographie / orthophoto"),
-    ("3d",           "Modelisation 3D / photogrammetrie"),
-    ("inspection",   "Inspection technique (toiture, panneaux, eolienne)"),
-    ("agriculture",  "Agriculture (NDVI, epandage, suivi parcelle)"),
-    ("btp",          "BTP / suivi de chantier"),
-    ("surveillance", "Surveillance / securite privee"),
-    ("livraison",    "Livraison (charges legeres)"),
-    ("recherche",    "Recherche & sauvetage"),
-    ("formation",    "Formation / accompagnement vol"),
-    ("autre",        "Autre"),
+    # ----- Médias & cinéma -----
+    ("photo",          "Photographie aérienne"),
+    ("video",          "Vidéo aérienne / clip"),
+    ("cinema",         "Cinéma & FPV (cascades, racing)"),
+    ("reportage",      "Reportage / documentaire"),
+    ("mariage",        "Mariage / événement privé"),
+    ("evenement",      "Événement public / sport"),
+
+    # ----- Immobilier & patrimoine -----
+    ("immobilier",     "Immobilier résidentiel & commercial"),
+    ("patrimoine",     "Patrimoine & monuments historiques"),
+
+    # ----- Cartographie & mesure -----
+    ("mapping",        "Cartographie / orthophoto (RTK / PPK)"),
+    ("3d",             "Modélisation 3D / photogrammétrie"),
+    ("topographie",    "Topographie & levés de terrain"),
+    ("volumes",        "Mesure de volumes (stocks, carrières)"),
+
+    # ----- Inspection technique -----
+    ("inspection",     "Inspection technique (général)"),
+    ("toiture",        "Inspection toiture & façade"),
+    ("ouvrage_art",    "Inspection ouvrages d'art (ponts, viaducs)"),
+    ("eolienne",       "Inspection éolienne"),
+    ("photovoltaique", "Inspection panneaux solaires"),
+    ("ligne_ht",       "Inspection lignes électriques HT"),
+    ("pipeline",       "Inspection pipelines / oléoducs"),
+    ("ferroviaire",    "Inspection ferroviaire"),
+    ("industriel",     "Inspection industrielle (silos, cheminées)"),
+    ("thermographie",  "Thermographie énergétique / bâtiment"),
+
+    # ----- Construction & BTP -----
+    ("btp",            "BTP / suivi de chantier"),
+
+    # ----- Agriculture & foresterie -----
+    ("agriculture",    "Agriculture (NDVI, suivi parcelle)"),
+    ("epandage",       "Pulvérisation & épandage agricole"),
+    ("foresterie",     "Foresterie & inventaire forestier"),
+    ("feux_foret",     "Détection / suivi feux de forêt"),
+
+    # ----- Sécurité & urgence -----
+    ("surveillance",   "Surveillance / sécurité privée"),
+    ("sdis",           "Sécurité civile / SDIS / pompiers"),
+    ("recherche",      "Recherche & sauvetage (SAR)"),
+    ("sinistre",       "Constat d'assurance / sinistre"),
+
+    # ----- Environnement -----
+    ("environnement",  "Suivi environnemental / pollution"),
+
+    # ----- Logistique & autres -----
+    ("livraison",      "Livraison (charges légères)"),
+    ("formation",      "Formation / accompagnement vol"),
+    ("autre",          "Autre / sur mesure"),
+]
+
+# Groupes pour l'affichage en optgroup / sections de chips
+MISSION_TYPE_GROUPS = [
+    ("Médias & cinéma",          ["photo", "video", "cinema", "reportage", "mariage", "evenement"]),
+    ("Immobilier & patrimoine",  ["immobilier", "patrimoine"]),
+    ("Cartographie & mesure",    ["mapping", "3d", "topographie", "volumes"]),
+    ("Inspection technique",     ["inspection", "toiture", "ouvrage_art", "eolienne",
+                                  "photovoltaique", "ligne_ht", "pipeline", "ferroviaire",
+                                  "industriel", "thermographie"]),
+    ("Construction & BTP",       ["btp"]),
+    ("Agriculture & foresterie", ["agriculture", "epandage", "foresterie", "feux_foret"]),
+    ("Sécurité & urgence",       ["surveillance", "sdis", "recherche", "sinistre"]),
+    ("Environnement",            ["environnement"]),
+    ("Logistique & autres",      ["livraison", "formation", "autre"]),
 ]
 
 # Types de drones (catalogue)

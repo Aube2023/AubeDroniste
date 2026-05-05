@@ -104,12 +104,22 @@ def _label(pairs, code, fallback=""):
     return fallback or code
 
 
+def _mission_label(code: str) -> str:
+    """Libelle d'un type de mission, traduit via i18n si dispo (cle mission.<code>)."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    key = f"mission.{code}"
+    if i18n._T.get(key):
+        return i18n.t(key, lang=lang)
+    return _label(MISSION_TYPES, code, code)
+
+
 @app.context_processor
 def _inject_helpers():
     return {
-        "mission_label": lambda c: _label(MISSION_TYPES, c, c),
+        "mission_label": _mission_label,
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
+        "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
     }
 
 
