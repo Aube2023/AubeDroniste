@@ -476,6 +476,11 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         (mission_id, bid_id),
     )
     update_mission_status(mission_id, "assigned")
+    # Statut explicite : en attente de paiement client
+    db.execute(
+        "UPDATE bookings SET status='pending_payment' WHERE id=?",
+        (booking_id,),
+    )
     db.execute(
         "INSERT INTO audit_log (user_id, action, target, payload) "
         "VALUES (?, 'accept_bid', ?, ?)",
@@ -778,3 +783,199 @@ def near_geo(lat: float, lng: float, radius_km: int = 100, limit: int = 10) -> d
 ALL_MISSION_STATUS = MISSION_STATUS
 ALL_BID_STATUS = BID_STATUS
 ALL_BOOKING_STATUS = BOOKING_STATUS
+
+
+# ===========================================================================
+# Stripe / Paiement / Escrow
+# ===========================================================================
+
+import re
+
+from config import MESSAGE_BANNED_PATTERNS
+
+
+_BANNED_RX = [re.compile(p, re.IGNORECASE) for p in MESSAGE_BANNED_PATTERNS]
+
+
+def message_passes_filter(body: str, booking_funded: bool) -> tuple:
+    """Si la mission n'est pas encore fundee, on bloque les coordonnees externes.
+
+    Retourne (ok: bool, reason: str|None).
+    """
+    if booking_funded:
+        return (True, None)
+    for rx in _BANNED_RX:
+        if rx.search(body or ""):
+            return (False, "Coordonnees externes interdites avant paiement de la mission.")
+    return (True, None)
+
+
+def set_pilot_stripe_account(user_id: int, account_id: str,
+                             charges_enabled: bool = False,
+                             payouts_enabled: bool = False):
+    db.execute(
+        "UPDATE pilot_profiles SET stripe_account_id=?, "
+        "stripe_charges_enabled=?, stripe_payouts_enabled=? WHERE user_id=?",
+        (account_id, 1 if charges_enabled else 0,
+         1 if payouts_enabled else 0, user_id),
+    )
+
+
+def update_pilot_stripe_status(user_id: int, charges_enabled: bool,
+                               payouts_enabled: bool):
+    db.execute(
+        "UPDATE pilot_profiles SET stripe_charges_enabled=?, "
+        "stripe_payouts_enabled=? WHERE user_id=?",
+        (1 if charges_enabled else 0, 1 if payouts_enabled else 0, user_id),
+    )
+
+
+def get_pilot_stripe_account(user_id: int) -> Optional[str]:
+    row = db.fetchone(
+        "SELECT stripe_account_id FROM pilot_profiles WHERE user_id=?",
+        (user_id,),
+    )
+    return row["stripe_account_id"] if row else None
+
+
+def attach_payment_session(booking_id: int, session_id: str):
+    db.execute(
+        "UPDATE bookings SET stripe_session_id=? WHERE id=?",
+        (session_id, booking_id),
+    )
+
+
+def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None):
+    """Le client a paye. Booking en escrow (`funded`)."""
+    db.execute(
+        "UPDATE bookings SET status='funded', paid_at=datetime('now'), "
+        "stripe_payment_intent_id=COALESCE(?, stripe_payment_intent_id) "
+        "WHERE id=? AND status IN ('pending_payment', 'in_progress')",
+        (payment_intent_id, booking_id),
+    )
+    # Notifie le pilote que la mission est financée
+    booking = get_booking(booking_id)
+    if booking:
+        try:
+            import mailer
+            pilot = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?",
+                                (booking["pilot_user_id"],))
+            client = db.fetchone("SELECT id, full_name FROM users WHERE id=?",
+                                 (booking["client_user_id"],))
+            if pilot and client:
+                mailer.send(
+                    to=pilot["email"],
+                    subject="Mission financée — vous pouvez décoller",
+                    template="booking_funded",
+                    context={"pilot": dict(pilot), "client": dict(client),
+                             "booking": booking},
+                )
+        except Exception:
+            pass
+
+
+def confirm_completion(booking_id: int, by_user: int) -> bool:
+    """Le client confirme la livraison. Declenche le Transfer Stripe au pilote."""
+    booking = get_booking(booking_id)
+    if not booking or booking["client_user_id"] != by_user:
+        return False
+    if booking["status"] not in ("funded", "in_progress"):
+        return False
+
+    # Recupere l'account Stripe du pilote
+    pilot_acc = get_pilot_stripe_account(booking["pilot_user_id"])
+    if not pilot_acc:
+        return False
+
+    pilot_amount = booking["agreed_price"] - booking["platform_fee"]
+    import payments
+    transfer_id = payments.release_to_pilot(
+        booking_id=booking["id"],
+        pilot_amount=pilot_amount,
+        currency=booking["currency"],
+        pilot_account_id=pilot_acc,
+    )
+
+    db.execute(
+        "UPDATE bookings SET status='completed', completed_at=datetime('now'), "
+        "released_at=datetime('now'), stripe_transfer_id=? WHERE id=?",
+        (transfer_id, booking_id),
+    )
+    update_mission_status(booking["mission_id"], "done")
+
+    # Email "vous avez ete paye" au pilote
+    try:
+        import mailer
+        pilot = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?",
+                            (booking["pilot_user_id"],))
+        client = db.fetchone("SELECT id, full_name FROM users WHERE id=?",
+                             (booking["client_user_id"],))
+        if pilot and client:
+            mailer.send(
+                to=pilot["email"],
+                subject="Paiement libéré — votre mission est terminée",
+                template="payout_done",
+                context={"pilot": dict(pilot), "client": dict(client),
+                         "booking": booking,
+                         "amount_pilot": pilot_amount,
+                         "amount_total": booking["agreed_price"],
+                         "fee": booking["platform_fee"]},
+            )
+    except Exception:
+        pass
+    return True
+
+
+def open_dispute(booking_id: int, by_user: int, reason: str = "") -> bool:
+    booking = get_booking(booking_id)
+    if not booking or by_user not in (booking["client_user_id"], booking["pilot_user_id"]):
+        return False
+    if booking["status"] in ("completed", "refunded", "cancelled"):
+        return False
+    db.execute(
+        "UPDATE bookings SET status='disputed', dispute_reason=? WHERE id=?",
+        ((reason or "")[:1000], booking_id),
+    )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'dispute_open', ?, ?)",
+        (by_user, f"booking:{booking_id}",
+         json.dumps({"reason": (reason or "")[:200]})),
+    )
+    return True
+
+
+def refund_booking(booking_id: int, amount: Optional[float] = None,
+                   admin_user: Optional[int] = None) -> bool:
+    """Refund total ou partiel. Si amount=None, refund full."""
+    booking = get_booking(booking_id)
+    if not booking or booking["status"] not in ("funded", "disputed", "in_progress"):
+        return False
+    if not booking.get("stripe_payment_intent_id"):
+        return False
+    import payments
+    ok = payments.refund_payment(
+        booking["stripe_payment_intent_id"],
+        amount=amount,
+        currency=booking["currency"],
+        reason=f"booking:{booking_id}:admin:{admin_user}",
+    )
+    if ok:
+        db.execute(
+            "UPDATE bookings SET status='refunded', refunded_at=datetime('now') WHERE id=?",
+            (booking_id,),
+        )
+        update_mission_status(booking["mission_id"], "cancelled")
+    return ok
+
+
+def stale_funded_bookings(days: int) -> list:
+    """Bookings `funded` ou `in_progress` non confirmes depuis N jours.
+    Le client a paye mais n'a pas valide -> auto-release au pilote."""
+    rows = db.fetchall(
+        "SELECT id FROM bookings WHERE status IN ('funded','in_progress') "
+        "AND paid_at IS NOT NULL "
+        "AND datetime(paid_at) < datetime('now', '-' || ? || ' days')",
+        (days,),
+    )
+    return [r["id"] for r in rows]

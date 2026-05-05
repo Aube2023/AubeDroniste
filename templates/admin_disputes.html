@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Litiges en cours — AubeDroniste admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Médiation</span>
+  <h1>Litiges en cours.</h1>
+  <p class="lead muted">{{ disputes|length }} réservation(s) en attente de médiation.</p>
+</div>
+
+{% for d in disputes %}
+<div class="card">
+  <div class="row-between" style="align-items: start;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">{{ d.mission_title }}</h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        Booking #{{ d.id }} · {{ d.client_name }} ↔ {{ d.pilot_name }}
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <div class="price big">{{ d.agreed_price|int }} {{ d.currency }}</div>
+      <span class="tag tag-disputed">disputed</span>
+    </div>
+  </div>
+
+  {% if d.dispute_reason %}
+  <p class="serif-italic" style="background: var(--paper-3); padding: 14px 18px; border-left: 3px solid var(--signal); margin: 14px 0;">
+    « {{ d.dispute_reason }} »
+  </p>
+  {% endif %}
+
+  <div class="row-between" style="margin-top: 18px;">
+    <a href="{{ url_for('booking_detail', booking_id=d.id) }}" class="ghost">Ouvrir le dossier →</a>
+    <form method="post" action="{{ url_for('admin_refund', booking_id=d.id) }}" style="display: flex; gap: 8px;">
+      <input name="amount" type="number" step="0.01" placeholder="Montant ou vide = total" style="width: 200px;">
+      <button class="ghost danger" type="submit" onclick="return confirm('Confirmer le remboursement ?')">Refund</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<p class="muted">Aucun litige en cours. Bonne nouvelle.</p>
+{% endfor %}
+
+{% endblock %}

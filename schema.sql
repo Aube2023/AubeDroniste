@@ -43,6 +43,10 @@ CREATE TABLE IF NOT EXISTS pilot_profiles (
     languages         TEXT,                       -- "fr,ar,en"
     portfolio_url     TEXT,
     accepts_urgent    INTEGER NOT NULL DEFAULT 0,
+    -- Stripe Connect Express (rempli a l'onboarding)
+    stripe_account_id      TEXT,                  -- "acct_..." ou "acct_fake_..."
+    stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
+    stripe_payouts_enabled INTEGER NOT NULL DEFAULT 0,
     updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -153,8 +157,16 @@ CREATE TABLE IF NOT EXISTS bookings (
     currency        TEXT NOT NULL DEFAULT 'EUR',
     platform_fee    REAL NOT NULL DEFAULT 0,
     scheduled_at    TEXT,
-    status          TEXT NOT NULL DEFAULT 'scheduled',
+    status          TEXT NOT NULL DEFAULT 'pending_payment',
     completed_at    TEXT,
+    -- Stripe escrow trace
+    stripe_payment_intent_id TEXT,
+    stripe_session_id        TEXT,
+    stripe_transfer_id       TEXT,
+    paid_at                  TEXT,    -- date de capture du paiement
+    released_at              TEXT,    -- date de transfer au pilote
+    refunded_at              TEXT,
+    dispute_reason           TEXT,
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_booking_pilot  ON bookings(pilot_user_id);

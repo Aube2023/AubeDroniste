@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Onboarding Stripe (mode démo) — AubeDroniste{% endblock %}
+{% block content %}
+
+<div class="card form-card" style="max-width: 640px;">
+  <span class="eyebrow">Mode démo · Stripe non configuré</span>
+  <h1>Onboarding pilote Stripe — simulation</h1>
+  <p class="muted">
+    En production, vous seriez redirigé vers le formulaire Stripe Connect Express
+    où vous fournissez votre identité, votre IBAN et votre statut fiscal.
+    Stripe valide en 24-48 h, vous pouvez ensuite encaisser des missions.
+  </p>
+
+  <div class="card" style="background: var(--paper-3); margin: 18px 0;">
+    <strong>Compte de démo :</strong>
+    <code class="mono">{{ account_id }}</code>
+    <p class="muted small">Aucune vérification réelle n'est effectuée. Le compte est marqué comme actif pour permettre de tester le flow de paiement.</p>
+  </div>
+
+  <h3>Étapes Stripe en production</h3>
+  <ol class="muted">
+    <li>Pièce d'identité (photo + selfie)</li>
+    <li>IBAN + nom du titulaire</li>
+    <li>Statut juridique : auto-entrepreneur, société, particulier</li>
+    <li>Adresse fiscale + déclaration TVA si applicable</li>
+    <li>Vérification Stripe (24-48 h)</li>
+  </ol>
+
+  <a href="{{ url_for('stripe_return') }}" class="cta cta-big" style="display: block; text-align: center; margin-top: 24px;">
+    ✓ Simuler la fin de l'onboarding
+  </a>
+</div>
+
+{% endblock %}

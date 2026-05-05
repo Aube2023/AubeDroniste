@@ -1,0 +1,33 @@
+AUBEDRONISTE — PAIEMENT LIBÉRÉ / PAYOUT RELEASED
+================================================
+
+[FR]
+Vous avez été payé.
+
+{{ client.full_name }} a validé la mission « {{ booking.mission_title }} ».
+Stripe transfère votre part vers votre compte bancaire (1-3 jours ouvrés).
+
+Mission totale  : {{ amount_total|int }} {{ booking.currency }}
+Commission 30%  : −{{ fee|int }} {{ booking.currency }}
+Net pilote      : {{ amount_pilot|int }} {{ booking.currency }}
+
+Merci d'avoir volé avec nous,
+L'équipage AubeDroniste
+
+------------------------------------------------------------
+
+[EN]
+You've been paid.
+
+{{ client.full_name }} confirmed mission "{{ booking.mission_title }}".
+Stripe is transferring your share to your bank account (1-3 business days).
+
+Mission total  : {{ amount_total|int }} {{ booking.currency }}
+Platform 30%   : −{{ fee|int }} {{ booking.currency }}
+Net to you     : {{ amount_pilot|int }} {{ booking.currency }}
+
+Thank you for flying with us,
+The AubeDroniste crew
+
+------------------------------------------------------------
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

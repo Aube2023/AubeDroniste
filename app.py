@@ -16,9 +16,11 @@ from flask import (
 import auth
 import db
 import i18n
+import payments
 import services
 from config import (
     ALLOWED_DOC_EXT,
+    AUTO_RELEASE_DAYS,
     CURRENCIES,
     DEFAULT_CURRENCY,
     DEFAULT_SEARCH_RADIUS_KM,
@@ -32,6 +34,7 @@ from config import (
     PORT,
     SECRET_KEY,
     SESSION_COOKIE_NAME,
+    STRIPE_PUBLISHABLE_KEY,
     UPLOAD_DIR,
 )
 
@@ -94,6 +97,9 @@ def _inject_globals():
         "t": lambda key, **kwargs: i18n.t(key, lang=getattr(g, "lang", i18n.DEFAULT), **kwargs),
         "lang": getattr(g, "lang", i18n.DEFAULT),
         "supported_langs": i18n.SUPPORTED,
+        # Stripe
+        "stripe_mode": payments.banner_mode(),
+        "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
     }
 
 
@@ -636,6 +642,20 @@ def mission_message(mission_id):
     peer = _to_int(request.form.get("peer_id"))
     body = (request.form.get("body") or "").strip()
     if peer and body:
+        # Filtre anti-bypass : avant que la mission ne soit fundee, on bloque
+        # les coordonnees externes (email, tel, whatsapp, etc).
+        booking = db.fetchone(
+            "SELECT status FROM bookings WHERE mission_id=? "
+            "AND (client_user_id=? OR pilot_user_id=?) ORDER BY id DESC LIMIT 1",
+            (mission_id, g.user["id"], g.user["id"]),
+        )
+        funded = booking and booking["status"] in (
+            "funded", "in_progress", "completed", "disputed"
+        )
+        ok, reason = services.message_passes_filter(body, bool(funded))
+        if not ok:
+            flash(reason or "Message bloqué.", "error")
+            return redirect(request.referrer or url_for("dashboard"))
         services.send_message(
             mission_id=mission_id,
             sender_user_id=g.user["id"],
@@ -643,6 +663,196 @@ def mission_message(mission_id):
             body=body,
         )
     return redirect(request.referrer or url_for("dashboard"))
+
+
+# ---------------------------------------------------------------------------
+# Stripe Connect — onboarding pilote
+# ---------------------------------------------------------------------------
+
+@app.route("/espace/droniste/stripe", methods=["GET", "POST"])
+@auth.login_required
+def stripe_onboard():
+    user = g.user
+    if user["role"] not in ("droniste", "both"):
+        abort(403)
+    profile = services.get_pilot_profile(user["id"])
+    account_id = profile.get("stripe_account_id") if profile else None
+    if not account_id:
+        account_id, url = payments.create_pilot_account(user)
+        services.set_pilot_stripe_account(user["id"], account_id)
+    else:
+        url = payments.fresh_onboarding_link(account_id)
+    return redirect(url)
+
+
+@app.route("/stripe/return")
+@auth.login_required
+def stripe_return():
+    user = g.user
+    profile = services.get_pilot_profile(user["id"])
+    if profile and profile.get("stripe_account_id"):
+        st = payments.get_pilot_status(profile["stripe_account_id"])
+        services.update_pilot_stripe_status(
+            user["id"], st["charges_enabled"], st["payouts_enabled"]
+        )
+        if st["charges_enabled"]:
+            flash("Compte Stripe activé. Vous pouvez accepter des missions payées.", "success")
+        else:
+            flash("Compte Stripe en attente de validation. Revenez plus tard.", "info")
+    return redirect(url_for("pilot_edit"))
+
+
+@app.route("/stripe/fake-onboarding/<account_id>")
+@auth.login_required
+def stripe_fake_onboarding(account_id):
+    """Page interne qui simule l'onboarding Stripe en mode FAKE."""
+    if not payments.is_fake():
+        abort(404)
+    return render_template("stripe_fake_onboarding.html", account_id=account_id)
+
+
+# ---------------------------------------------------------------------------
+# Stripe — paiement client
+# ---------------------------------------------------------------------------
+
+@app.route("/reservations/<int:booking_id>/payer", methods=["GET", "POST"])
+@auth.login_required
+def booking_pay(booking_id):
+    booking = services.get_booking(booking_id)
+    if not booking or booking["client_user_id"] != g.user["id"]:
+        abort(403)
+    if booking["status"] != "pending_payment":
+        flash(f"Cette réservation n'est plus à payer (statut : {booking['status']}).", "info")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])
+    if not pilot_acc:
+        flash("Le pilote n'a pas finalisé son inscription Stripe — il a été notifié.", "error")
+        # On peut lui envoyer un mail de relance (TODO)
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    session_id, url = payments.create_checkout_session(
+        booking_id=booking["id"],
+        amount=booking["agreed_price"],
+        currency=booking["currency"],
+        mission_title=booking.get("mission_title", "Mission AubeDroniste"),
+        client_email=g.user["email"],
+    )
+    services.attach_payment_session(booking_id, session_id)
+    return redirect(url)
+
+
+@app.route("/stripe/fake-checkout/<int:booking_id>", methods=["GET", "POST"])
+@auth.login_required
+def stripe_fake_checkout(booking_id):
+    """Page de paiement simulé en mode FAKE."""
+    if not payments.is_fake():
+        abort(404)
+    booking = services.get_booking(booking_id)
+    if not booking or booking["client_user_id"] != g.user["id"]:
+        abort(403)
+    if request.method == "POST":
+        # Simule un paiement réussi
+        services.mark_booking_funded(
+            booking_id,
+            payment_intent_id=f"pi_fake_{booking_id}",
+        )
+        flash("Paiement simulé reçu. Mission financée.", "success")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    return render_template("stripe_fake_checkout.html", booking=booking)
+
+
+@app.route("/stripe/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.data
+    signature = request.headers.get("Stripe-Signature", "")
+    event = payments.parse_webhook(payload, signature)
+    if not event:
+        return ("bad signature", 400)
+
+    etype = event["type"] if isinstance(event, dict) else event.type
+
+    if etype == "checkout.session.completed":
+        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
+        bid = obj.get("metadata", {}).get("booking_id") if isinstance(obj, dict) else obj.metadata.get("booking_id")
+        pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
+        if bid:
+            services.mark_booking_funded(int(bid), payment_intent_id=str(pi_id) if pi_id else None)
+
+    elif etype == "account.updated":
+        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
+        acc_id = obj.get("id") if isinstance(obj, dict) else obj.id
+        ce = bool(obj.get("charges_enabled") if isinstance(obj, dict) else obj.charges_enabled)
+        pe = bool(obj.get("payouts_enabled") if isinstance(obj, dict) else obj.payouts_enabled)
+        if acc_id:
+            row = db.fetchone(
+                "SELECT user_id FROM pilot_profiles WHERE stripe_account_id=?",
+                (acc_id,),
+            )
+            if row:
+                services.update_pilot_stripe_status(row["user_id"], ce, pe)
+
+    elif etype == "charge.refunded":
+        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
+        pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
+        if pi_id:
+            db.execute(
+                "UPDATE bookings SET status='refunded', refunded_at=datetime('now') "
+                "WHERE stripe_payment_intent_id=?",
+                (str(pi_id),),
+            )
+    return ("ok", 200)
+
+
+# ---------------------------------------------------------------------------
+# Confirmation client / dispute / refund
+# ---------------------------------------------------------------------------
+
+@app.route("/reservations/<int:booking_id>/valider", methods=["POST"])
+@auth.login_required
+def booking_confirm(booking_id):
+    if services.confirm_completion(booking_id, g.user["id"]):
+        flash("Mission validée. Le pilote a été payé.", "success")
+    else:
+        flash("Impossible de valider la mission (statut ou droits).", "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/reservations/<int:booking_id>/dispute", methods=["POST"])
+@auth.login_required
+def booking_dispute_open(booking_id):
+    reason = (request.form.get("reason") or "").strip()
+    if services.open_dispute(booking_id, g.user["id"], reason):
+        flash("Litige ouvert. L'équipe AubeDroniste prend contact sous 48 h.", "info")
+    else:
+        flash("Impossible d'ouvrir un litige sur cette réservation.", "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/admin/reservations/<int:booking_id>/refund", methods=["POST"])
+@auth.admin_required
+def admin_refund(booking_id):
+    amount = _to_float(request.form.get("amount"))
+    if services.refund_booking(booking_id, amount=amount, admin_user=g.user["id"]):
+        flash("Remboursement effectué.", "success")
+    else:
+        flash("Refund échoué.", "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/admin/disputes")
+@auth.admin_required
+def admin_disputes():
+    rows = db.fetchall(
+        "SELECT b.*, m.title AS mission_title, "
+        "       cu.full_name AS client_name, pu.full_name AS pilot_name "
+        "FROM bookings b "
+        "JOIN missions m ON m.id=b.mission_id "
+        "JOIN users cu ON cu.id=b.client_user_id "
+        "JOIN users pu ON pu.id=b.pilot_user_id "
+        "WHERE b.status='disputed' ORDER BY b.id DESC"
+    )
+    return render_template("admin_disputes.html", disputes=[dict(r) for r in rows])
 
 
 # ---------------------------------------------------------------------------
@@ -701,6 +911,14 @@ def _403(_e):
 @app.errorhandler(413)
 def _413(_e):
     return render_template("error.html", code=413, message=f"Fichier trop lourd (max {MAX_UPLOAD_MB} Mo)."), 413
+
+
+@app.context_processor
+def _inject_payments():
+    """Expose des helpers paiement pour les templates."""
+    return {
+        "auto_release_days": AUTO_RELEASE_DAYS,
+    }
 
 
 # ---------------------------------------------------------------------------

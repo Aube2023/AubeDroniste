@@ -1,0 +1,49 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Paiement libéré / Payout released — {{ booking.mission_title or "AubeDroniste" }}{% endblock %}
+{% block preview %}Vous venez d'être payé · You've just been paid.{% endblock %}
+
+{% block content %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">FR — Paiement libéré</div>
+  <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Vous avez été payé.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    <strong>{{ client.full_name }}</strong> a validé la mission. Stripe vient de transférer votre part vers votre compte bancaire (délai habituel : 1 à 3 jours ouvrés selon votre banque).
+  </p>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0;border:1px solid #e3ded1;">
+    <tr><td style="padding:14px 18px;border-bottom:1px solid #efece2;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Montant total mission</div>
+      <div style="font:500 16px/1 Georgia,serif;color:#15181f;">{{ amount_total|int }} {{ booking.currency }}</div>
+    </td></tr>
+    <tr><td style="padding:14px 18px;border-bottom:1px solid #efece2;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Commission AubeDroniste 30%</div>
+      <div style="font:500 14px/1 'Helvetica Neue',Arial,sans-serif;color:#6b6f7a;">−&nbsp;{{ fee|int }} {{ booking.currency }}</div>
+    </td></tr>
+    <tr><td style="padding:16px 18px;background:#fbfaf6;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#1e6f5e;text-transform:uppercase;margin-bottom:4px;">Net pilote</div>
+      <div style="font:700 24px/1 Georgia,serif;color:#1e6f5e;">{{ amount_pilot|int }} {{ booking.currency }}</div>
+    </td></tr>
+  </table>
+
+  <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:18px 0 0;">
+    Merci d'avoir volé avec nous,<br><em>L'équipage AubeDroniste</em>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:18px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">EN — Payout released</div>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    <strong>{{ client.full_name }}</strong> confirmed the mission. Stripe has just transferred your share to your bank account (typically 1-3 business days depending on your bank).
+  </p>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0;">
+    Net to you: <strong>{{ amount_pilot|int }} {{ booking.currency }}</strong>
+    (mission {{ amount_total|int }} {{ booking.currency }} − 30% platform fee {{ fee|int }} {{ booking.currency }})
+  </p>
+</td></tr>
+</table>
+{% endblock %}

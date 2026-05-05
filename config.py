@@ -48,7 +48,15 @@ PLATFORM_FEE_PCT = 30.0
 # Statuts
 MISSION_STATUS = ("open", "assigned", "in_progress", "done", "cancelled")
 BID_STATUS = ("pending", "accepted", "rejected", "withdrawn")
-BOOKING_STATUS = ("scheduled", "in_progress", "completed", "cancelled", "disputed")
+BOOKING_STATUS = (
+    "pending_payment",  # bid accepte, en attente paiement client
+    "funded",           # client a paye, fonds en escrow plateforme
+    "in_progress",      # pilote en operation
+    "completed",        # client a valide, fonds libérés au pilote
+    "cancelled",        # annulee avant paiement
+    "disputed",         # mediation en cours
+    "refunded",         # remboursee au client
+)
 
 # Types de missions (FR) — calque sur l'offre reelle des marches francais
 # (DGAC) et canadien (Transport Canada). Les codes restent stables : seuls
@@ -159,6 +167,31 @@ LICENCE_AUTHORITIES = [
     ("ASECNA",   "ASECNA (Afrique de l'Ouest)"),
     ("OFAC",     "OFAC (Suisse)"),
     ("autre",    "Autre / declarative"),
+]
+
+# --- Stripe Connect ---------------------------------------------------------
+# Si STRIPE_SECRET_KEY est vide, l'app fonctionne en "fake mode" :
+# l'onboarding genere un account_id "acct_fake_<uid>", le paiement passe
+# par une page interne qui simule la reussite. Permet de demoler le flow
+# de bout en bout sans clé Stripe. En prod, poser ces 3 variables d'env :
+#   STRIPE_SECRET_KEY=sk_live_...
+#   STRIPE_PUBLISHABLE_KEY=pk_live_...
+#   STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "").strip()
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
+STRIPE_LIVE_MODE       = STRIPE_SECRET_KEY.startswith("sk_live_")
+STRIPE_FAKE_MODE       = not STRIPE_SECRET_KEY  # mode demo sans cle
+
+# Auto-libération si le client n'a pas validé après ce delai (jours)
+AUTO_RELEASE_DAYS = int(os.environ.get("AUBEDRONISTE_AUTO_RELEASE_DAYS", "7"))
+
+# Filtre anti-bypass : regex bloquees dans la messagerie avant `funded`
+MESSAGE_BANNED_PATTERNS = [
+    r"[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}",          # email
+    r"(?:\+\d{1,3}[\s.-]?)?(?:\(\d{1,4}\)[\s.-]?)?\d{2,4}(?:[\s.-]?\d{2,4}){2,4}",  # tel
+    r"\b(?:whatsapp|telegram|signal|wechat|instagram|insta|messenger|fb)\b",
+    r"\b(?:wa\.me|t\.me|m\.me|ig|@\w{3,})\b",
 ]
 
 # Pays vedettes pour le selecteur (le reste reste libre)

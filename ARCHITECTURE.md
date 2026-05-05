@@ -161,6 +161,70 @@ Composants éditoriaux clés :
 
 ---
 
+## Paiements (Stripe Connect Express)
+
+`payments.py` est une couche fine au-dessus du SDK Stripe officiel. Elle
+fonctionne en deux modes :
+
+- **FAKE** (par défaut, sans clé) : tous les appels Stripe sont simulés.
+  L'onboarding redirige vers `/stripe/fake-onboarding/<id>`, le paiement
+  vers `/stripe/fake-checkout/<booking>`. Permet de tester le flow de
+  bout en bout sans configurer Stripe.
+- **TEST / LIVE** (avec `STRIPE_SECRET_KEY`) : appels réels au SDK Stripe.
+
+### Modèle métier : escrow
+
+```
+1. Client accepte une enchère     → bookings.status = pending_payment
+2. Client paie (Stripe Checkout)  → bookings.status = funded
+   (webhook checkout.session.completed)
+3. Pilote livre, client valide    → Stripe.Transfer(70 %) vers pilote
+   (POST /reservations/<id>/valider) → bookings.status = completed
+4. Auto-release J+7               → idem si client absent
+   (cron scripts/release_stale_bookings.py)
+```
+
+### Commission
+
+`config.py:PLATFORM_FEE_PCT = 30.0`. Calculée à `accept_bid` et stockée
+dans `bookings.platform_fee`. Le `Transfer` au pilote utilise
+`agreed_price - platform_fee`. La plateforme garde la diff.
+
+### Onboarding pilote
+
+- `GET /espace/droniste/stripe` → crée un compte Connect Express et
+  redirige vers l'URL d'onboarding Stripe (KYC)
+- `GET /stripe/return` → après onboarding, vérifie le statut Stripe et
+  met à jour `pilot_profiles.stripe_charges_enabled / payouts_enabled`
+- Webhook `account.updated` → idem en push depuis Stripe
+
+### Anti-bypass
+
+Avant `bookings.status = funded` :
+- Email pilote non visible côté public
+- Messages filtrés via `services.message_passes_filter()` (regex sur
+  email, téléphone, WhatsApp/Telegram/IG, etc., défini dans
+  `config.MESSAGE_BANNED_PATTERNS`)
+
+### Dispute & refund
+
+- `POST /reservations/<id>/dispute` → bookings.status = disputed,
+  notification admin (TODO email)
+- `GET /admin/disputes` (admin only) → liste des litiges
+- `POST /admin/reservations/<id>/refund` → Stripe Refund total ou partiel
+
+### Webhooks
+
+`POST /stripe/webhook` traite :
+- `checkout.session.completed` → marque booking funded
+- `account.updated` → MAJ statut pilote
+- `charge.refunded` → marque booking refunded
+
+En prod : configurer dans le Stripe dashboard, copier le webhook secret
+dans `STRIPE_WEBHOOK_SECRET`.
+
+---
+
 ## Variables d'environnement (toutes optionnelles en dev)
 
 | Var | Défaut | Effet |
@@ -176,6 +240,10 @@ Composants éditoriaux clés :
 | `SMTP_FROM` | `no-reply@aubeetoilee.com` | expéditeur |
 | `SMTP_FROM_NAME` | `AubeDroniste` | nom expéditeur |
 | `SMTP_TLS` | 1 | STARTTLS |
+| `STRIPE_SECRET_KEY` | (vide=fake) | `sk_test_...` ou `sk_live_...` |
+| `STRIPE_PUBLISHABLE_KEY` | (vide) | `pk_test_...` |
+| `STRIPE_WEBHOOK_SECRET` | (vide) | `whsec_...` (depuis Stripe dashboard) |
+| `AUBEDRONISTE_AUTO_RELEASE_DAYS` | 7 | délai auto-release escrow |
 
 ---
 

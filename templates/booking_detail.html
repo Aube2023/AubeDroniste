@@ -2,36 +2,147 @@
 {% block title %}Réservation #{{ booking.id }} — AubeDroniste{% endblock %}
 {% block content %}
 
-<div class="card">
-  <div class="row-between">
-    <div>
-      <h1>{{ booking.mission_title }}</h1>
-      <div class="muted">Client : {{ booking.client_name }} · Pilote : {{ booking.pilot_name }} · {{ booking.country }}, {{ booking.city or '' }}</div>
-    </div>
-    <div class="price big">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
-  </div>
-  <ul class="badges">
-    <li>Statut : <span class="tag tag-{{ booking.status }}">{{ booking.status }}</span></li>
-    <li>Commission : {{ booking.platform_fee }} {{ booking.currency }}</li>
-    {% if booking.scheduled_at %}<li>Prévu : {{ booking.scheduled_at }}</li>{% endif %}
-    {% if booking.completed_at %}<li>Terminé : {{ booking.completed_at }}</li>{% endif %}
-  </ul>
+{% set is_client = current_user.id == booking.client_user_id %}
+{% set is_pilot  = current_user.id == booking.pilot_user_id %}
+{% set funded    = booking.status in ('funded','in_progress','completed','disputed') %}
+{% set platform_fee = booking.platform_fee or 0 %}
+{% set pilot_amount = booking.agreed_price - platform_fee %}
 
-  <form method="post" action="{{ url_for('booking_status', booking_id=booking.id) }}">
-    <label>Mettre à jour le statut
-      <select name="status">
-        <option value="scheduled">scheduled</option>
-        <option value="in_progress">in_progress</option>
-        <option value="completed">completed</option>
-        <option value="cancelled">cancelled</option>
-      </select>
-    </label>
-    <button class="cta" type="submit">Mettre à jour</button>
-  </form>
+<div class="card">
+  <div class="row-between" style="align-items: start;">
+    <div>
+      <span class="eyebrow">Réservation #{{ booking.id }}</span>
+      <h1>{{ booking.mission_title }}</h1>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        {{ booking.country }}{% if booking.city %} · {{ booking.city }}{% endif %} ·
+        {{ mission_label(booking.mission_type) }}
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <div class="price big">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
+      <span class="tag tag-{{ booking.status }}" style="margin-top: 6px;">{{ booking.status }}</span>
+    </div>
+  </div>
+
+  <div class="stat-rail" style="margin-top: 22px;">
+    <div>
+      <span class="v">{{ pilot_amount|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
+      <span class="k">Net pilote (70%)</span>
+    </div>
+    <div>
+      <span class="v">{{ platform_fee|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
+      <span class="k">Commission Aube (30%)</span>
+    </div>
+    <div>
+      <span class="v" style="font-size: 1.1rem;">
+        {% if is_client %}{{ booking.pilot_name }}{% else %}{{ booking.client_name }}{% endif %}
+      </span>
+      <span class="k">{% if is_client %}Pilote{% else %}Client{% endif %}</span>
+    </div>
+    <div>
+      <span class="v" style="font-size: 1rem;">{{ booking.created_at[:10] }}</span>
+      <span class="k">Réservée le</span>
+    </div>
+    {% if booking.paid_at %}
+    <div>
+      <span class="v" style="font-size: 1rem;">{{ booking.paid_at[:10] }}</span>
+      <span class="k">Payée le</span>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
+{# ============ Boutons d'action contextuels ============ #}
+
+{% if booking.status == 'pending_payment' and is_client %}
+<div class="card" style="border-left: 3px solid var(--amber);">
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Action requise — Régler la mission</h2>
+  <p class="muted">
+    Votre offre est acceptée. Pour confirmer la réservation, payez la mission. Les fonds restent en escrow chez AubeDroniste jusqu'à votre validation finale.
+  </p>
+  <div class="cta-row">
+    <a href="{{ url_for('booking_pay', booking_id=booking.id) }}" class="cta cta-big">⚡ Payer {{ booking.agreed_price|int }} {{ booking.currency }}</a>
+    {% if stripe_mode == 'FAKE' %}
+    <span class="muted small mono" style="align-self: center;">Mode démo · Stripe non configuré</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if booking.status == 'pending_payment' and is_pilot %}
+<div class="card" style="border-left: 3px solid var(--gold);">
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">En attente du paiement client</h2>
+  <p class="muted">
+    Votre offre a été acceptée. Le client doit régler la mission pour qu'elle soit confirmée. Vous serez notifié dès que c'est fait.
+  </p>
+</div>
+{% endif %}
+
+{% if booking.status == 'funded' and is_client %}
+<div class="card" style="border-left: 3px solid var(--teal);">
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Mission financée — En attente de livraison</h2>
+  <p class="muted">
+    Le pilote a {{ auto_release_days }} jours pour livrer. À réception des rushs, validez la mission pour libérer les fonds. Sans action de votre part, les fonds seront automatiquement libérés au pilote au bout de {{ auto_release_days }} jours.
+  </p>
+  <form method="post" action="{{ url_for('booking_confirm', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Valider la livraison ? Les fonds seront libérés au pilote.')">
+    <button class="cta cta-big" type="submit">✓ Valider la mission terminée</button>
+  </form>
+  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige sur cette mission ?')">
+    <input type="hidden" name="reason" value="">
+    <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
+  </form>
+</div>
+{% endif %}
+
+{% if booking.status == 'funded' and is_pilot %}
+<div class="card" style="border-left: 3px solid var(--teal);">
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">Mission payée — Vous pouvez décoller 🛫</h2>
+  <p class="muted">
+    Les fonds sont en escrow chez AubeDroniste. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
+  </p>
+  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige ?')">
+    <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
+  </form>
+</div>
+{% endif %}
+
+{% if booking.status == 'completed' %}
+<div class="card" style="border-left: 3px solid var(--teal);">
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">✓ Mission livrée &amp; soldée</h2>
+  <p class="muted">
+    {% if booking.released_at %}Fonds libérés le {{ booking.released_at[:10] }} ·{% endif %}
+    Net pilote : <strong>{{ pilot_amount|int }} {{ booking.currency }}</strong>
+    · Commission Aube : {{ platform_fee|int }} {{ booking.currency }}
+  </p>
+</div>
+{% endif %}
+
+{% if booking.status == 'disputed' %}
+<div class="card" style="border-left: 3px solid var(--signal);">
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">⚠ Litige en cours</h2>
+  <p class="muted">L'équipe AubeDroniste va vous contacter sous 48 h pour médiation. Les fonds restent bloqués en escrow.</p>
+  {% if booking.dispute_reason %}
+  <p class="serif-italic" style="background: var(--paper-3); padding: 12px 16px; border-left: 2px solid var(--signal);">« {{ booking.dispute_reason }} »</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if booking.status == 'refunded' %}
+<div class="card">
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">↩ Mission remboursée</h2>
+  <p class="muted">Le client a été remboursé{% if booking.refunded_at %} le {{ booking.refunded_at[:10] }}{% endif %}.</p>
+</div>
+{% endif %}
+
+{# ============ Messagerie ============ #}
+
 <section class="card">
-  <h2>Messagerie de mission</h2>
+  <h2 style="font-size: 1.3rem;">Messagerie de mission</h2>
+  {% if not funded %}
+  <p class="muted small">
+    🔒 <strong>Avant paiement</strong> : les coordonnées externes (email, téléphone, réseaux sociaux) sont bloquées dans la messagerie pour protéger les deux parties. Cette restriction est levée dès que le client a payé.
+  </p>
+  {% endif %}
   <div class="chat">
     {% for m in thread %}
     <div class="msg {% if m.sender_user_id == current_user.id %}msg-mine{% endif %}">
@@ -40,16 +151,18 @@
     </div>
     {% else %}<p class="muted">Pas encore de messages.</p>{% endfor %}
   </div>
-  <form method="post" action="{{ url_for('mission_message', mission_id=booking.mission_id) }}">
+  <form method="post" action="{{ url_for('mission_message', mission_id=booking.mission_id) }}" style="margin-top: 12px;">
     <input type="hidden" name="peer_id" value="{{ peer_id }}">
     <textarea name="body" rows="2" required placeholder="Votre message…"></textarea>
     <button class="cta" type="submit">Envoyer</button>
   </form>
 </section>
 
+{# ============ Avis ============ #}
+
 {% if booking.status == 'completed' %}
 <section class="card">
-  <h2>Laisser un avis</h2>
+  <h2 style="font-size: 1.3rem;">Laisser un avis</h2>
   <form method="post" action="{{ url_for('booking_review', booking_id=booking.id) }}">
     <label>Note
       <select name="rating">

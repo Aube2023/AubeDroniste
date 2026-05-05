@@ -4,6 +4,11 @@ Jinja2>=3.1
 Werkzeug>=3.0
 python-pam>=2.0; sys_platform != "darwin"
 
+# Stripe Connect (paiement marketplace)
+# AubeDroniste fonctionne en "fake mode" sans la cle ; ce package est requis
+# pour activer le vrai paiement.
+stripe>=8.0
+
 # Production-only (decommenter / installer separement)
 # gunicorn>=21.0
 # pytest>=8.0  # pour la suite de tests

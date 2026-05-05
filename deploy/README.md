@@ -41,6 +41,32 @@ SMTP_PASSWORD=<mdp>
 SMTP_FROM=no-reply@aubeetoilee.com
 SMTP_FROM_NAME=AubeDroniste
 SMTP_TLS=1
+
+# Stripe Connect (sans cle = mode FAKE pour demo)
+STRIPE_SECRET_KEY=sk_live_xxxxxxxx
+STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxx
+```
+
+### Stripe Connect en prod
+
+1. Sur **stripe.com → Settings → Connect** : activer Connect, choisir
+   "platform" et le branding (logo, nom AubeDroniste).
+2. Récupérer les clés API dans **Developers → API keys**.
+3. Créer un endpoint webhook dans **Developers → Webhooks** pointant
+   vers `https://droniste.aubeetoilee.com/stripe/webhook`. Cocher les
+   events :
+   - `checkout.session.completed`
+   - `account.updated`
+   - `charge.refunded`
+4. Copier le webhook signing secret dans `STRIPE_WEBHOOK_SECRET`.
+
+### Cron auto-release (escrow J+7)
+
+Ajouter au crontab du user `aube` :
+
+```cron
+0 4 * * * /srv/aubedroniste/.venv/bin/python /srv/aubedroniste/scripts/release_stale_bookings.py >> /var/log/aubedroniste/auto_release.log 2>&1
 ```
 
 ## 4. systemd
