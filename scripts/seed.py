@@ -60,55 +60,18 @@ def seed():
                 )
             needed.append((uid, username, role, country))
 
-        # Profils dronistes
+        # Profils dronistes : on cree juste les comptes et la dispo par defaut.
+        # Le pilote rempli lui-meme : headline, brevets, drones, specialites,
+        # tarifs, langues, assurance, etc. via /espace/droniste.
+        # On laisse les fiches vides exprès pour rester proche de la realite
+        # d'un nouveau marketplace : profil progressivement complete par les
+        # utilisateurs eux-memes.
         pilots = [(u, c) for (u, _, r, c) in needed if r == "droniste"]
-        for i, (uid, country) in enumerate(pilots):
-            services.upsert_pilot_profile(
-                uid,
-                headline=[
-                    "Specialiste cinema aerien",
-                    "Cartographie RTK + inspection",
-                    "Mariages, evenements, immobilier",
-                    "Agriculture de precision",
-                    "Inspection thermique & 3D",
-                ][i % 5],
-                years_experience=2 + i,
-                hourly_rate=80 + i * 15,
-                daily_rate=400 + i * 80,
-                currency="EUR" if country in ("France",) else (
-                    "CAD" if country == "Canada" else "MAD" if country == "Maroc" else "EUR"
-                ),
-                travel_radius_km=80 + i * 20,
-                accepts_remote=1 if i % 2 == 0 else 0,
-                insurance=1,
-                insurance_company="MAIF Drones" if i % 2 == 0 else "Allianz Pro",
-                is_available=1,
-                languages="fr,ar,en" if country in ("Maroc", "Algerie", "Tunisie") else "fr,en",
-                accepts_urgent=1 if i % 2 else 0,
-            )
-            services.set_pilot_specialties(uid, [
-                ["video", "mariage", "evenement"],
-                ["mapping", "3d", "inspection"],
-                ["immobilier", "photo", "video"],
-                ["agriculture", "mapping"],
-                ["inspection", "btp", "surveillance"],
-            ][i % 5])
+        for uid, country in pilots:
+            # Marque le pilote comme disponible et ajoute son pays comme
+            # territoire d'operation principal — c'est le seul pre-remplissage.
+            services.upsert_pilot_profile(uid, is_available=1)
             services.set_pilot_territories(uid, [{"country": country, "region": ""}])
-
-            services.add_certification(
-                uid, authority="DGAC" if country == "France" else "EASA",
-                title="STS-01" if i % 2 == 0 else "Open A2",
-                reference=f"{country[:3].upper()}-{1000+i}",
-                issued_at="2024-09-01",
-            )
-            services.add_drone(
-                uid,
-                category="pro_camera" if i % 2 == 0 else "rtk",
-                brand="DJI", model=["Mavic 3 Pro", "Matrice 350 RTK", "Air 3"][i % 3],
-                weight_g=950 + i * 100,
-                flight_time_min=45,
-                capabilities=["camera_4k", "thermique"] if i % 2 else ["camera_4k", "rtk"],
-            )
 
         # Quelques missions ouvertes
         clients = [(u, c) for (u, _, r, c) in needed if r == "client"]
