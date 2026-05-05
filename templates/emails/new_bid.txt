@@ -26,4 +26,4 @@ Quoted    : {{ bid.price|int }} {{ bid.currency }}
 Review the bid: {{ site_url }}/missions/{{ mission.id }}
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubeDroniste · {{ year }} · drone.aubeetoilee.com

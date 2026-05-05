@@ -22,4 +22,4 @@ funds will be released as soon as the client confirms delivery.
 Open: {{ site_url }}/reservations/{{ booking.id }}
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubeDroniste · {{ year }} · drone.aubeetoilee.com
