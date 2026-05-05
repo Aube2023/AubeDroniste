@@ -1,4 +1,7 @@
-# Bases de données SQLite
+# Donnees runtime (DB, uploads, mail dev)
+data/
+
+# Bases de données SQLite (au cas ou)
 *.db
 *.db-journal
 *.db-wal

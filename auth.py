@@ -184,7 +184,8 @@ def normalize_email(username: str, email: Optional[str]) -> str:
 def create_user(*, username: str, password: str, full_name: str,
                 role: str = "client", country: Optional[str] = None,
                 city: Optional[str] = None, phone: Optional[str] = None,
-                lat: Optional[float] = None, lng: Optional[float] = None) -> int:
+                lat: Optional[float] = None, lng: Optional[float] = None,
+                send_welcome_email: bool = True) -> int:
     email = normalize_email(username, None)
     cur = db.execute(
         "INSERT INTO users (username, email, full_name, phone, country, city, lat, lng, role) "
@@ -198,4 +199,13 @@ def create_user(*, username: str, password: str, full_name: str,
             "INSERT INTO pilot_profiles (user_id) VALUES (?)",
             (user_id,),
         )
+    if send_welcome_email:
+        try:
+            import mailer
+            mailer.send_welcome({
+                "id": user_id, "username": username.lower().strip(),
+                "email": email, "full_name": full_name.strip(), "role": role,
+            })
+        except Exception:  # email ne doit jamais bloquer l'inscription
+            pass
     return user_id

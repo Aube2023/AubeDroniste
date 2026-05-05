@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}AubeDroniste — Le réseau des pilotes de drone francophones{% endblock %}</title>
-  <meta name="description" content="AubeDroniste met en relation dronistes certifiés et clients à travers la francophonie. Photo, cartographie RTK, inspection thermique, agriculture, événementiel.">
+  <title>{% block title %}AubeDroniste — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}{% endblock %}</title>
+  <meta name="description" content="{{ 'AubeDroniste met en relation dronistes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'AubeDroniste connects certified drone pilots and clients across the francophonie.' }}">
+  <link rel="alternate" hreflang="fr" href="/lang/fr">
+  <link rel="alternate" hreflang="en" href="/lang/en">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
   <script>
     // Anti-FOUC : applique le thème avant le rendu
@@ -25,30 +27,36 @@
     <span class="glyph"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="36" height="36"></span>
     <span>
       <b>Aube</b>Droniste
-      <small>Réseau pilote · FR</small>
+      <small>{{ t('nav.brand_sub') }}</small>
     </span>
   </a>
   <nav class="topnav">
-    <a href="{{ url_for('pilots_search') }}">Pilotes</a>
-    <a href="{{ url_for('missions_search') }}">Missions</a>
+    <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a>
+    <a href="{{ url_for('missions_search') }}">{{ t('nav.missions') }}</a>
     {% if current_user %}
-      <a href="{{ url_for('mission_create') }}" class="cta">Publier une mission</a>
-      <a href="{{ url_for('dashboard') }}">Espace</a>
+      <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
+      <a href="{{ url_for('dashboard') }}">{{ t('nav.dashboard') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline">
-        <button class="ghost" type="submit">Quitter</button>
+        <button class="ghost" type="submit">{{ t('nav.logout') }}</button>
       </form>
     {% else %}
-      <a href="{{ url_for('login') }}">Connexion</a>
-      <a href="{{ url_for('register') }}" class="cta">Rejoindre</a>
+      <a href="{{ url_for('login') }}">{{ t('nav.login') }}</a>
+      <a href="{{ url_for('register') }}" class="cta">{{ t('nav.register') }}</a>
     {% endif %}
-    <a id="zone-pill" class="zone-pill" href="#" title="Filtrer autour de votre position">
+    <a id="zone-pill" class="zone-pill" href="#" title="{{ t('nav.zone') }}">
       <span class="ping"></span>
-      <span class="zone-label">Ma zone</span>
+      <span class="zone-label">{{ t('nav.zone') }}</span>
     </a>
-    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Basculer le thème">
+    <div class="lang-switch">
+      {% for code in supported_langs %}
+        <a href="{{ url_for('set_lang', code=code) }}?next={{ request.path }}"
+           class="{{ 'on' if code == lang else '' }}">{{ code|upper }}</a>
+      {% endfor %}
+    </div>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Theme">
       <span class="dot"></span>
-      <span class="label-dark">Nuit</span>
-      <span class="label-light">Aube</span>
+      <span class="label-dark">{{ t('nav.theme_dark') }}</span>
+      <span class="label-light">{{ t('nav.theme_light') }}</span>
     </button>
   </nav>
 </header>
@@ -70,9 +78,9 @@
 <footer class="footer">
   <section class="eco-section">
     <div class="eco-header">
-      <span class="eyebrow">L'écosystème L'Aube Étoilée</span>
-      <strong>Tout en français, tout chez vous.</strong>
-      <span class="muted">{{ now().year }} · 15 services · auth partagée</span>
+      <span class="eyebrow">{{ t('footer.eco_eyebrow') }}</span>
+      <strong>{{ t('footer.eco_tagline') }}</strong>
+      <span class="muted">{{ t('footer.eco_meta', year=now().year) }}</span>
     </div>
     <nav class="eco-grid" aria-label="Services L'Aube Étoilée">
       <a href="https://inter.aubeetoilee.com" class="portal"><span class="pre">L'Aube</span>Inter</a>
@@ -95,11 +103,9 @@
   </section>
   <div class="footer-line">
     <div>
-      <strong>AubeDroniste</strong> · Une marque de
-      <a href="https://aubeetoilee.com">L'Aube Étoilée</a>
-      · Auth partagée @aubemail.com
+      <strong>AubeDroniste</strong> · {{ t('footer.tagline') }}
     </div>
-    <div class="dim">{{ now().year }} — Édité depuis Montréal · Casablanca · Paris</div>
+    <div class="dim">{{ now().year }} — {{ t('footer.cities') }}</div>
   </div>
 </footer>
 

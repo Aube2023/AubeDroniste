@@ -1,0 +1,29 @@
+[Unit]
+Description=AubeDroniste — marketplace dronistes francophones
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aube
+Group=aube
+WorkingDirectory=/srv/aubedroniste
+EnvironmentFile=/etc/aubedroniste.env
+ExecStart=/srv/aubedroniste/.venv/bin/gunicorn \
+  --workers 2 \
+  --threads 4 \
+  --bind 127.0.0.1:5034 \
+  --access-logfile - \
+  --error-logfile  - \
+  wsgi:app
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=600
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aubedroniste /var/log/aubedroniste
+
+[Install]
+WantedBy=multi-user.target

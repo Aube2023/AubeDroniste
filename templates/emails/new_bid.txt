@@ -1,0 +1,29 @@
+AUBEDRONISTE — NOUVELLE OFFRE / NEW BID
+=======================================
+
+[FR]
+{{ pilot.full_name }} vient de soumissionner sur votre mission.
+
+Mission : {{ mission.title }}
+Lieu    : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
+Tarif   : {{ bid.price|int }} {{ bid.currency }}
+{% if bid.eta_hours %}Délai   : {{ bid.eta_hours }} h
+{% endif %}{% if bid.message %}Message : « {{ bid.message }} »
+{% endif %}
+Voir l'offre : {{ site_url }}/missions/{{ mission.id }}
+
+------------------------------------------------------------
+
+[EN]
+{{ pilot.full_name }} just placed a bid on your mission.
+
+Mission   : {{ mission.title }}
+Location  : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
+Quoted    : {{ bid.price|int }} {{ bid.currency }}
+{% if bid.eta_hours %}Lead time : {{ bid.eta_hours }} h
+{% endif %}{% if bid.message %}Message   : "{{ bid.message }}"
+{% endif %}
+Review the bid: {{ site_url }}/missions/{{ mission.id }}
+
+------------------------------------------------------------
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

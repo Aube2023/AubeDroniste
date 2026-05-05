@@ -1,0 +1,12 @@
+# Activation de l'auth PAM pour le user `aube`.
+# AubeDroniste delegue la verification du mot de passe a /etc/pam.d/login,
+# meme service que SSH. Le code utilise python-pam (pam.authenticate).
+#
+# Verifier que le user qui fait tourner gunicorn appartient au groupe `shadow`
+# OU que pam_unix.so est configure pour autoriser la lecture sans privileges
+# (pam_unix.conf, voir man pam_unix).
+#
+# Sur Debian/Ubuntu, les comptes systeme @aubemail.com sont declares dans
+# /etc/passwd + /etc/shadow et partages entre tous les services Aube.
+# Ne jamais reset un mot de passe PAM cote AubeDroniste : ils sont gérés
+# par AubeMail / le panneau admin central.

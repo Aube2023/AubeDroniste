@@ -1,0 +1,39 @@
+AUBEDRONISTE — DÉCOLLAGE / CLEARED FOR TAKEOFF
+==============================================
+
+[FR]
+Votre offre a été acceptée — bravo !
+
+Mission         : {{ mission.title }}
+Client          : {{ client.full_name }}
+Lieu            : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
+
+Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}
+Commission 30%  : {{ booking.platform_fee }} {{ booking.currency }}
+Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
+
+Réservation : {{ site_url }}/reservations/{{ booking.id }}
+
+Prochaine étape : ouvrez la messagerie pour caler la logistique
+(lieu, accès, restrictions de vol, livrables).
+
+------------------------------------------------------------
+
+[EN]
+Your bid has been accepted — congratulations!
+
+Mission       : {{ mission.title }}
+Client        : {{ client.full_name }}
+Location      : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
+
+Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}
+Platform fee  : {{ booking.platform_fee }} {{ booking.currency }} (30%)
+You receive   : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
+
+Booking: {{ site_url }}/reservations/{{ booking.id }}
+
+Next step: open the messaging to coordinate logistics
+(meeting point, site access, flight restrictions, deliverables).
+
+------------------------------------------------------------
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

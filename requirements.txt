@@ -3,3 +3,7 @@ itsdangerous>=2.1
 Jinja2>=3.1
 Werkzeug>=3.0
 python-pam>=2.0; sys_platform != "darwin"
+
+# Production-only (decommenter / installer separement)
+# gunicorn>=21.0
+# pytest>=8.0  # pour la suite de tests

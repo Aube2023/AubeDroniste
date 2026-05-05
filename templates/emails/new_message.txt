@@ -1,0 +1,21 @@
+AUBEDRONISTE — NOUVEAU MESSAGE / NEW MESSAGE
+============================================
+
+[FR]
+{{ sender.full_name }} vous a écrit dans la mission « {{ mission.title }} ».
+
+> {{ body }}
+
+Répondre : {{ site_url }}/missions/{{ mission.id }}
+
+------------------------------------------------------------
+
+[EN]
+{{ sender.full_name }} wrote you in mission "{{ mission.title }}".
+
+> {{ body }}
+
+Reply: {{ site_url }}/missions/{{ mission.id }}
+
+------------------------------------------------------------
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

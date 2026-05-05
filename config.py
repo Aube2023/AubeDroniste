@@ -6,13 +6,22 @@ services Aube. SQLite local pour demarrer ; PostgreSQL possible plus tard.
 """
 import os
 
-PORT = 5034
-HOST = "0.0.0.0"
+PORT = int(os.environ.get("AUBEDRONISTE_PORT", "5034"))
+HOST = os.environ.get("AUBEDRONISTE_HOST", "0.0.0.0")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "aubedroniste.db")
-UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Toutes les donnees runtime (DB, uploads, mail dev) vivent dans data/
+# pour separer code (versionne) et etat (gitignore).
+DATA_DIR = os.environ.get("AUBEDRONISTE_DATA", os.path.join(BASE_DIR, "data"))
+DB_PATH = os.path.join(DATA_DIR, "aubedroniste.db")
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+MAIL_DUMP_DIR = os.path.join(DATA_DIR, "mail")
+
+# URL publique du site (utilisee dans les emails et metas)
+SITE_URL = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
+
+for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
+    os.makedirs(_d, exist_ok=True)
 
 SECRET_KEY = os.environ.get("AUBEDRONISTE_SECRET", "change-me-in-prod-aubedroniste-2026")
 SESSION_COOKIE_NAME = "aubedroniste_sid"

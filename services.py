@@ -388,6 +388,11 @@ def list_missions_by_pilot(pilot_user_id: int) -> list:
 def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
               currency: str = DEFAULT_CURRENCY, eta_hours: Optional[float] = None,
               message: str = "") -> int:
+    # On regarde si c'est une nouvelle enchere (pas un update) avant l'INSERT
+    is_new = not db.fetchone(
+        "SELECT 1 FROM bids WHERE mission_id=? AND pilot_user_id=?",
+        (mission_id, pilot_user_id),
+    )
     cur = db.execute(
         "INSERT INTO bids (mission_id, pilot_user_id, price, currency, eta_hours, message) "
         "VALUES (?, ?, ?, ?, ?, ?) "
@@ -396,7 +401,33 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
         "  eta_hours=excluded.eta_hours, message=excluded.message, status='pending'",
         (mission_id, pilot_user_id, price, currency, eta_hours, message),
     )
-    return cur.lastrowid or 0
+    bid_id = cur.lastrowid or 0
+    if is_new:
+        try:
+            import mailer
+            client = db.fetchone(
+                "SELECT u.id, u.email, u.full_name FROM users u "
+                "JOIN missions m ON m.client_user_id=u.id WHERE m.id=?",
+                (mission_id,),
+            )
+            mission = db.fetchone(
+                "SELECT id, title, country, city FROM missions WHERE id=?",
+                (mission_id,),
+            )
+            pilot = db.fetchone(
+                "SELECT id, full_name FROM users WHERE id=?",
+                (pilot_user_id,),
+            )
+            if client and mission and pilot:
+                mailer.send_new_bid(
+                    client=dict(client), mission=dict(mission),
+                    bid={"price": price, "currency": currency,
+                         "eta_hours": eta_hours, "message": message},
+                    pilot=dict(pilot),
+                )
+        except Exception:
+            pass  # email ne bloque jamais
+    return bid_id
 
 
 def list_bids(mission_id: int) -> list:
@@ -451,6 +482,27 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         (client_user_id, f"mission:{mission_id}",
          json.dumps({"booking": booking_id, "bid": bid_id})),
     )
+    # Notification email au pilote choisi
+    try:
+        import mailer
+        pilot = db.fetchone(
+            "SELECT id, email, full_name FROM users WHERE id=?",
+            (bid["pilot_user_id"],),
+        )
+        client = db.fetchone(
+            "SELECT id, full_name FROM users WHERE id=?", (client_user_id,),
+        )
+        if pilot and client:
+            mailer.send_bid_accepted(
+                pilot=dict(pilot),
+                mission={"id": mission_id, "title": mission["title"],
+                         "country": mission["country"], "city": mission["city"]},
+                booking={"id": booking_id, "agreed_price": bid["price"],
+                         "currency": bid["currency"], "platform_fee": fee},
+                client=dict(client),
+            )
+    except Exception:
+        pass
     return booking_id
 
 
@@ -570,6 +622,36 @@ def send_message(*, mission_id: int, sender_user_id: int,
         "VALUES (?, ?, ?, ?)",
         (mission_id, sender_user_id, recipient_user_id, body),
     )
+    # Notification email — throttle simple : pas plus d'un par destinataire
+    # toutes les 5 minutes pour la meme mission, sinon on spamme.
+    try:
+        recent = db.fetchone(
+            "SELECT 1 FROM messages WHERE mission_id=? AND recipient_user_id=? "
+            "AND read_at IS NULL "
+            "AND datetime(created_at) > datetime('now', '-5 minutes') "
+            "AND id <> last_insert_rowid()",
+            (mission_id, recipient_user_id),
+        )
+        if recent:
+            return  # un message lui a deja ete envoye recemment, on n'en notifie pas un autre
+        import mailer
+        sender = db.fetchone(
+            "SELECT id, full_name FROM users WHERE id=?", (sender_user_id,),
+        )
+        recipient = db.fetchone(
+            "SELECT id, email, full_name FROM users WHERE id=?",
+            (recipient_user_id,),
+        )
+        mission = db.fetchone(
+            "SELECT id, title FROM missions WHERE id=?", (mission_id,),
+        )
+        if sender and recipient and mission:
+            mailer.send_new_message(
+                recipient=dict(recipient), sender=dict(sender),
+                mission=dict(mission), body=body,
+            )
+    except Exception:
+        pass
 
 
 def thread(mission_id: int, user_id: int, peer_id: int) -> list:

@@ -3,203 +3,170 @@
 
 <section class="hero">
   <div class="hero-text">
-    <span class="eyebrow">Réseau pilote francophone — depuis 2026</span>
-    <h1>Le ciel n'a pas de frontière.<br>Vos pilotes <em>non plus</em>.</h1>
-    <p class="lead">
-      AubeDroniste met en relation des dronistes certifiés (DGAC, EASA, Transport Canada, FAA, ASECNA) avec les commanditaires qui en ont besoin — du tournage de mariage à la cartographie RTK d'un chantier en Afrique de l'Ouest. Sans intermédiaire, en français, partout.
-    </p>
+    <span class="eyebrow">{{ t('home.eyebrow') }}</span>
+    <h1>{{ t('home.h1_a') }}<br>{{ t('home.h1_b') }} <em>{{ t('home.h1_b_em') }}</em></h1>
+    <p class="lead">{{ t('home.lead') }}</p>
     <div class="cta-row">
-      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta cta-big">Publier une mission</a>
-      <a href="{{ url_for('register') }}?role=droniste" class="ghost">Inscrire mon brevet de pilote →</a>
+      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta cta-big">{{ t('home.cta_publish') }}</a>
+      <a href="{{ url_for('register') }}?role=droniste" class="ghost">{{ t('home.cta_pilot') }}</a>
     </div>
   </div>
   <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}">
-    <h2>Trouver un pilote</h2>
-    <label>Pays
+    <h2>{{ t('home.search_title') }}</h2>
+    <label>{{ t('home.search_country') }}
       <select name="country">
-        <option value="">Toutes destinations</option>
+        <option value="">{{ t('home.search_country_any') }}</option>
         {% for c in featured_countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
       </select>
     </label>
-    <label>Ville ou repère
-      <input name="city" placeholder="Casablanca · Lyon · Montréal">
+    <label>{{ t('home.search_city') }}
+      <input name="city" placeholder="{{ t('home.search_city_ph') }}">
     </label>
-    <label>Spécialité
+    <label>{{ t('home.search_type') }}
       <select name="mission_type">
-        <option value="">Toutes spécialités</option>
+        <option value="">{{ t('home.search_type_any') }}</option>
         {% for code, lbl in mission_types %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
       </select>
     </label>
-    <button class="cta" type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">Lancer la recherche</button>
+    <button class="cta" type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">{{ t('home.search_btn') }}</button>
   </form>
 </section>
 
 <div class="notam-strip">
-  <div><div class="num">{{ stats.pilots }}</div><div class="lbl">Pilotes en piste</div></div>
-  <div><div class="num">{{ stats.open_missions }}</div><div class="lbl">Missions ouvertes</div></div>
-  <div><div class="num">{{ stats.countries }}</div><div class="lbl">Pays couverts</div></div>
-  <div><div class="num">{{ stats.completed_bookings }}</div><div class="lbl">Vols livrés</div></div>
+  <div><div class="num">{{ stats.pilots }}</div><div class="lbl">{{ t('home.notam.pilots') }}</div></div>
+  <div><div class="num">{{ stats.open_missions }}</div><div class="lbl">{{ t('home.notam.missions') }}</div></div>
+  <div><div class="num">{{ stats.countries }}</div><div class="lbl">{{ t('home.notam.countries') }}</div></div>
+  <div><div class="num">{{ stats.completed_bookings }}</div><div class="lbl">{{ t('home.notam.completed') }}</div></div>
 </div>
 
 <div class="ticker">
   <div class="ticker-track">
     {% for i in range(2) %}
       {% for m in latest_missions %}
-        <span class="item"><strong>{{ mission_label(m.mission_type) }}</strong> · {{ m.city or m.country }} · {% if m.budget_max %}≈{{ m.budget_max|int }}{% endif %} {{ m.currency }}{% if m.is_urgent %} · ⚠ urgent{% endif %}</span>
+        <span class="item"><strong>{{ mission_label(m.mission_type) }}</strong> · {{ m.city or m.country }} · {% if m.budget_max %}≈{{ m.budget_max|int }}{% endif %} {{ m.currency }}{% if m.is_urgent %} · ⚠ {{ t('common.urgent') }}{% endif %}</span>
       {% endfor %}
-      {% if not latest_missions %}
-        <span class="item">Aucune mission en cours · soyez le premier à publier</span>
-      {% endif %}
     {% endfor %}
   </div>
 </div>
 
 <section class="nearby-block" id="nearby">
   <div>
-    <h2>Trouvez ce qui vole près de vous.</h2>
-    <p class="lead">Avec votre permission, on identifie les pilotes et les missions dans un rayon de 100 km. Aucune donnée stockée côté plateforme — tout reste dans votre navigateur.</p>
+    <h2>{{ t('home.nearby.title') }}</h2>
+    <p class="lead">{{ t('home.nearby.lead') }}</p>
   </div>
   <div class="actions">
-    <button type="button" class="cta" onclick="findNearMe()">⌖ Activer ma zone</button>
-    <a class="ghost" href="{{ url_for('pilots_search') }}">Voir tous les pilotes</a>
-  </div>
-</section>
-
-<section class="section">
-  <div class="row-between" style="align-items: end; margin-bottom: 14px;">
-    <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">Carte des opérations</span>
-      <h2>Le réseau, par pays.</h2>
-    </div>
-    <a href="{{ url_for('pilots_search') }}" class="ghost">Annuaire complet →</a>
-  </div>
-  <p class="muted" style="max-width: 60ch;">
-    Cliquez un pays pour filtrer pilotes et missions de cette zone.
-    Du Maghreb au Québec, en passant par l'Hexagone et l'Afrique de l'Ouest.
-  </p>
-  <div class="country-grid">
-    {% for c in country_breakdown %}
-    <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
-      <div class="country-name">{{ c.country }}</div>
-      <div class="country-stats">
-        <strong>{{ c.pilots }}</strong> pilote{{ 's' if c.pilots > 1 else '' }} ·
-        <strong>{{ c.missions }}</strong> mission{{ 's' if c.missions > 1 else '' }} ouverte{{ 's' if c.missions > 1 else '' }}
-      </div>
-      <span class="arrow">→</span>
-    </a>
-    {% else %}
-    <div class="country-tile" style="grid-column: 1/-1;">
-      <div class="country-name">Soyez le premier pays.</div>
-      <div class="country-stats">Inscrivez-vous pour ouvrir la première escale du réseau.</div>
-    </div>
-    {% endfor %}
+    <button type="button" class="cta" onclick="findNearMe()">{{ t('home.nearby.cta') }}</button>
+    <a class="ghost" href="{{ url_for('pilots_search') }}">{{ t('home.nearby.alt') }}</a>
   </div>
 </section>
 
 <section class="section">
   <div class="section-header">
-    <span class="eyebrow">Comment on opère</span>
-    <h2>Un canevas, quatre escales.</h2>
-    <p class="muted">De la dépose d'une mission à la livraison du média, le parcours est cousu pour que vous gardiez la main — qu'on soit client pressé ou pilote en escale.</p>
+    <span class="eyebrow">{{ t('home.steps.eyebrow') }}</span>
+    <h2>{{ t('home.steps.h') }}</h2>
+    <p class="muted">{{ t('home.steps.lead') }}</p>
   </div>
   <div class="steps">
-    <div class="step">
-      <h3>Vous décrivez le besoin.</h3>
-      <p class="muted">Type, lieu, fenêtre de tir, contraintes (RTK, thermique, RC pro). Cinq champs, deux minutes.</p>
-    </div>
-    <div class="step">
-      <h3>Les pilotes locaux soumettent.</h3>
-      <p class="muted">Tarif chiffré, délai, message personnalisé. Vous comparez à la lumière de leurs avis et brevets.</p>
-    </div>
-    <div class="step">
-      <h3>Vous validez. La mission décolle.</h3>
-      <p class="muted">Acceptation = réservation. Messagerie privée pour caler logistique, NOTAM et accès au site.</p>
-    </div>
-    <div class="step">
-      <h3>Livraison, paiement, avis.</h3>
-      <p class="muted">Le pilote livre les rushs. Vous validez, l'argent file, chacun laisse une note. Commission plateforme : 30 %.</p>
-    </div>
+    <div class="step"><h3>{{ t('home.step1.h') }}</h3><p class="muted">{{ t('home.step1.p') }}</p></div>
+    <div class="step"><h3>{{ t('home.step2.h') }}</h3><p class="muted">{{ t('home.step2.p') }}</p></div>
+    <div class="step"><h3>{{ t('home.step3.h') }}</h3><p class="muted">{{ t('home.step3.p') }}</p></div>
+    <div class="step"><h3>{{ t('home.step4.h') }}</h3><p class="muted">{{ t('home.step4.p') }}</p></div>
   </div>
 </section>
 
 <section class="section">
   <div class="row-between" style="align-items: end; margin-bottom: 24px;">
     <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">En piste cette semaine</span>
-      <h2>Pilotes que l'on suit.</h2>
+      <span class="eyebrow">{{ t('home.featured.eyebrow') }}</span>
+      <h2>{{ t('home.featured.h') }}</h2>
     </div>
-    <a href="{{ url_for('pilots_search') }}" class="ghost">Voir tous les pilotes →</a>
+    <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.featured.all') }}</a>
   </div>
   <div class="grid-cards">
     {% for p in featured_pilots %}
     <a class="pilot-card" href="{{ url_for('pilot_detail', user_id=p.id) }}">
       <div class="strip">
         <span class="callsign">F-{{ '%04d' % p.id }}{{ (p.full_name|first)|upper }}</span>
-        <span class="fh">{% if p.rating.count %}{{ p.rating.count }} avis{% else %}nouveau{% endif %}</span>
+        <span class="fh">{% if p.rating.count %}{{ t('common.reviews', n=p.rating.count) }}{% else %}{{ t('common.new_pilot') }}{% endif %}</span>
       </div>
       <div class="body">
         <div class="avatar">{{ p.full_name[:1] }}</div>
         <div>
-          <div class="name">{{ p.full_name }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
+          <div class="name">{{ p.full_name }} {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
           <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
-          <div class="headline">« {{ p.headline or "Disponible pour vos prises de vue." }} »</div>
+          <div class="headline">« {{ p.headline or '' }} »</div>
         </div>
       </div>
       <div class="foot">
         <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
-        <span>{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}sur devis{% endif %}</span>
+        <span>{% if p.hourly_rate %}{{ t('common.per_hour', amount=p.hourly_rate|int, currency=p.p_currency) }}{% else %}{{ t('common.no_quote') }}{% endif %}</span>
       </div>
     </a>
-    {% else %}
-      <p class="muted">Pas encore de pilotes en piste. <a href="{{ url_for('register') }}?role=droniste">Soyez le premier à décoller.</a></p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="row-between" style="align-items: end; margin-bottom: 14px;">
+    <div class="section-header" style="margin: 0;">
+      <span class="eyebrow">{{ t('home.map.eyebrow') }}</span>
+      <h2>{{ t('home.map.h') }}</h2>
+    </div>
+    <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.map.all') }}</a>
+  </div>
+  <p class="muted" style="max-width: 60ch;">{{ t('home.map.lead') }}</p>
+  <div class="country-grid">
+    {% for c in country_breakdown %}
+    <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
+      <div class="country-name">{{ c.country }}</div>
+      <div class="country-stats">
+        <strong>{{ c.pilots }}</strong> {{ 'pilote' if lang == 'fr' else 'pilot' }}{{ 's' if c.pilots > 1 else '' }} ·
+        <strong>{{ c.missions }}</strong> {{ 'mission' if lang == 'fr' else 'mission' }}{{ 's' if c.missions > 1 else '' }}
+      </div>
+      <span class="arrow">→</span>
+    </a>
     {% endfor %}
   </div>
 </section>
 
 <section class="section" style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 56px; align-items: start;">
   <div>
-    <span class="eyebrow">Manifeste</span>
-    <h2 style="font-size: clamp(1.8rem, 3.4vw, 2.6rem);">Un pilote n'est pas un freelance jetable.</h2>
-    <p class="muted">
-      Sur AubeDroniste, votre brevet, votre flotte et vos heures de vol comptent autant que votre tarif. Les autorités (DGAC, EASA, TC, FAA, ASECNA) sont mises en avant ; les amateurs aussi, à leur juste place.
-    </p>
-    <p class="muted">
-      Et nous ne facturons que sur les missions livrées. Pas d'abonnement, pas de pop-up.
-    </p>
+    <span class="eyebrow">{{ t('home.manifesto.eyebrow') }}</span>
+    <h2 style="font-size: clamp(1.8rem, 3.4vw, 2.6rem);">{{ t('home.manifesto.h') }}</h2>
+    <p class="muted">{{ t('home.manifesto.p1') }}</p>
+    <p class="muted">{{ t('home.manifesto.p2') }}</p>
   </div>
   <div class="pullquote">
-    <q>Avant Aube, on cherchait des dronistes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi — toutes avec des brevets vérifiés.</q>
-    <cite>— Imane C., productrice — Tunis</cite>
+    <q>{{ t('home.manifesto.quote') }}</q>
+    <cite>{{ t('home.manifesto.cite') }}</cite>
   </div>
 </section>
 
 <section class="section">
   <div class="row-between" style="align-items: end; margin-bottom: 24px;">
     <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">Tableau des départs</span>
-      <h2>Missions qui cherchent un pilote.</h2>
+      <span class="eyebrow">{{ t('home.dep.eyebrow') }}</span>
+      <h2>{{ t('home.dep.h') }}</h2>
     </div>
-    <a href="{{ url_for('missions_search') }}" class="ghost">Voir toutes les missions →</a>
+    <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('home.dep.all') }}</a>
   </div>
   <div class="grid-cards">
     {% for m in latest_missions %}
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        {% if m.is_urgent %}<span class="tag tag-urgent">⚡ urgent</span>{% endif %}
+        {% if m.is_urgent %}<span class="tag tag-urgent">⚡ {{ t('common.urgent') }}</span>{% endif %}
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
       <div class="footer">
         <span>
-          {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}sur devis{% endif %}
+          {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}{{ t('common.no_quote') }}{% endif %}
           {{ m.currency if m.budget_min or m.budget_max else '' }}
         </span>
         <span>{{ m.created_at[:10] }}</span>
       </div>
     </a>
-    {% else %}
-      <p class="muted">Aucune mission ouverte. <a href="{{ url_for('mission_create') if current_user else url_for('register') }}">Publiez la première</a>.</p>
     {% endfor %}
   </div>
 </section>

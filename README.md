@@ -18,7 +18,10 @@ Auth partagée `@aubemail.com` (PAM en prod, fallback dev local sur macOS).
 | Stockage | SQLite (WAL) — facile à passer à PostgreSQL |
 | Auth | PAM partagée (Linux) + fallback dev (`.dev_passwords`) |
 | Frontend | Templates Jinja + CSS « Aube » + JS vanilla |
-| API | JSON (`/api/dronistes`, `/api/missions`, `/api/stats`) |
+| Langues | **FR + EN** (sélecteur topbar, cookie `aube_lang`) |
+| Thèmes | **Aube (clair) + Nuit (sombre)** — toggle topbar |
+| Mailer | SMTP en prod, dump `.eml` local en dev |
+| API | JSON (`/api/dronistes`, `/api/missions`, `/api/near`, `/api/country-breakdown`, `/api/stats`) |
 | Port | **5034** |
 | Domaine prod prévu | `droniste.aubeetoilee.com` |
 
@@ -133,6 +136,30 @@ static/js/app.js       useMyLocation()
 static/img/logo.svg    logo drone schématique
 run.sh            venv + deps + démarre
 ```
+
+## Documentation pour développeurs
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — flux internes, conventions, hooks
+- [`deploy/README.md`](deploy/README.md) — procédure de mise en production
+- [`tests/`](tests/) — `pytest -q` pour la suite de smoke tests
+
+## Tester l'envoi d'emails
+
+En dev (sans SMTP configuré), les emails sont écrits dans `data/mail/*.eml` :
+
+```bash
+python scripts/send_test_email.py welcome demo@aubemail.com
+python scripts/send_test_email.py new_bid demo@aubemail.com
+python scripts/send_test_email.py bid_accepted demo@aubemail.com
+python scripts/send_test_email.py new_message demo@aubemail.com
+
+# Inspecter le résultat :
+ls -la data/mail/
+open data/mail/*.eml      # ouverture dans Mail.app sur macOS
+```
+
+Configurer un vrai SMTP via les variables d'env `SMTP_HOST`, `SMTP_PORT`, etc.
+(voir [`ARCHITECTURE.md`](ARCHITECTURE.md#variables-d-environnement)).
 
 ## Roadmap (non livré)
 

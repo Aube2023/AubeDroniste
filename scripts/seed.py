@@ -6,7 +6,9 @@ un compte demo existe deja.
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+sys.path.insert(0, ROOT)
 
 import auth
 import db
@@ -54,6 +56,7 @@ def seed():
                 uid = auth.create_user(
                     username=username, password=pwd, full_name=name,
                     role=role, country=country, city=city, lat=lat, lng=lng,
+                    send_welcome_email=False,
                 )
             needed.append((uid, username, role, country))
 

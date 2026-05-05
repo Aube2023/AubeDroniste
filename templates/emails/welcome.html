@@ -1,0 +1,77 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Bienvenue / Welcome — AubeDroniste{% endblock %}
+{% block preview %}Votre compte est créé · Your account is ready.{% endblock %}
+
+{% block content %}
+{% set first = user.full_name.split(' ')[0] %}
+
+{# ============== FR ============== #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR — Bienvenue</div>
+  <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Bienvenue à bord, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    Votre compte AubeDroniste est créé. Voici votre identifiant de connexion :
+  </p>
+  <div style="margin:18px 0;padding:14px 18px;border:1px solid #e3ded1;background:#fbfaf6;font:500 14px/1 'Courier New',Courier,monospace;color:#15181f;letter-spacing:0.04em;">
+    {{ user.email }}
+  </div>
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if user.role == 'client' %}
+    En tant que client, vous pouvez dès maintenant publier votre première mission, comparer les pilotes près de chez vous et choisir celui qui répond exactement à votre brief.
+    {% elif user.role == 'droniste' %}
+    En tant que droniste, complétez votre carnet de vol : ajoutez vos brevets (DGAC, EASA, Transport Canada, FAA, ASECNA) et votre flotte. Plus votre fiche est complète, plus les clients vous font confiance.
+    {% else %}
+    Vous avez activé le double rôle : publiez vos missions de drone <em>et</em> soumissionnez sur celles des autres. Une seule fiche, deux entrées.
+    {% endif %}
+  </p>
+  <p style="margin:28px 0;">
+    <a href="{{ site_url }}/espace" style="display:inline-block;background:#b87519;color:#ffffff;padding:14px 26px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;letter-spacing:0.02em;">
+      Accéder à mon espace
+    </a>
+  </p>
+  <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:0;">
+    À bientôt en cabine,<br>
+    <em>L'équipage AubeDroniste</em>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;">
+  <div style="height:1px;background:#e3ded1;margin:24px 0;"></div>
+</td></tr>
+
+{# ============== EN ============== #}
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN — Welcome</div>
+  <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Welcome aboard, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    Your AubeDroniste account has been created. Here is your sign-in identifier:
+  </p>
+  <div style="margin:18px 0;padding:14px 18px;border:1px solid #e3ded1;background:#fbfaf6;font:500 14px/1 'Courier New',Courier,monospace;color:#15181f;letter-spacing:0.04em;">
+    {{ user.email }}
+  </div>
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if user.role == 'client' %}
+    As a client, you can now post your first mission, compare pilots near you and pick the one who matches your brief exactly.
+    {% elif user.role == 'droniste' %}
+    As a drone pilot, complete your flight book: add your licenses (DGAC, EASA, Transport Canada, FAA, ASECNA) and your fleet. The more complete your card, the more trust you earn.
+    {% else %}
+    You've enabled both roles: post your missions <em>and</em> bid on others'. One profile, two doors.
+    {% endif %}
+  </p>
+  <p style="margin:28px 0;">
+    <a href="{{ site_url }}/espace" style="display:inline-block;background:#b87519;color:#ffffff;padding:14px 26px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;letter-spacing:0.02em;">
+      Open my dashboard
+    </a>
+  </p>
+  <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:0;">
+    See you in the cockpit,<br>
+    <em>The AubeDroniste crew</em>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

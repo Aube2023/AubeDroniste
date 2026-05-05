@@ -960,6 +960,31 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   50% { opacity: 1; transform: scale(1.2); }
 }
 
+/* ============ Sélecteur de langue ============ */
+
+.lang-switch {
+  display: inline-flex; gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.lang-switch a {
+  padding: 7px 10px;
+  font: 600 11px/1 var(--mono);
+  letter-spacing: .1em;
+  color: var(--ink-dim);
+  text-decoration: none;
+  border-right: 1px solid var(--rule);
+  background: transparent;
+  transition: background .12s, color .12s;
+}
+.lang-switch a:last-child { border-right: 0; }
+.lang-switch a:hover { color: var(--amber); }
+.lang-switch a.on {
+  background: var(--amber);
+  color: var(--cta-fg);
+}
+
 /* ============ Theme toggle ============ */
 
 .theme-toggle {

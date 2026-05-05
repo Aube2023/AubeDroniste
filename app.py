@@ -15,6 +15,7 @@ from flask import (
 
 import auth
 import db
+import i18n
 import services
 from config import (
     ALLOWED_DOC_EXT,
@@ -74,6 +75,7 @@ def _teardown(exc):
 @app.before_request
 def _attach():
     auth.attach_user()
+    g.lang = i18n.resolve_lang()
 
 
 @app.context_processor
@@ -88,6 +90,10 @@ def _inject_globals():
         "currencies": CURRENCIES,
         "default_currency": DEFAULT_CURRENCY,
         "now": lambda: datetime.now(timezone.utc),
+        # i18n
+        "t": lambda key, **kwargs: i18n.t(key, lang=getattr(g, "lang", i18n.DEFAULT), **kwargs),
+        "lang": getattr(g, "lang", i18n.DEFAULT),
+        "supported_langs": i18n.SUPPORTED,
     }
 
 
@@ -127,6 +133,24 @@ def _to_int(v, default=None):
 
 def _to_bool(v):
     return str(v).lower() in {"1", "true", "on", "yes", "oui"}
+
+
+# ---------------------------------------------------------------------------
+# Selecteur de langue
+# ---------------------------------------------------------------------------
+
+@app.route("/lang/<code>")
+def set_lang(code):
+    if code not in i18n.SUPPORTED:
+        abort(404)
+    next_url = request.args.get("next") or request.referrer or url_for("index")
+    resp = make_response(redirect(next_url))
+    resp.set_cookie(
+        i18n.COOKIE, code,
+        max_age=i18n.COOKIE_MAX_AGE,
+        httponly=False, samesite="Lax",
+    )
+    return resp
 
 
 # ---------------------------------------------------------------------------
