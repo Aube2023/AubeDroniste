@@ -89,16 +89,19 @@
   </div>
 
   <h2>Territoires opérés (en plus du pays principal)</h2>
+  <p class="muted small">Les lignes vides seront ignorées à l'enregistrement.</p>
   <div id="territories">
     {% for t in profile.territories %}
     <div class="row-territory">
       <input name="territory_country" placeholder="Pays" value="{{ t.country }}">
       <input name="territory_region" placeholder="Région (optionnel)" value="{{ t.region or '' }}">
+      <button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>
     </div>
     {% endfor %}
     <div class="row-territory">
       <input name="territory_country" placeholder="Pays">
       <input name="territory_region" placeholder="Région (optionnel)">
+      <button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>
     </div>
   </div>
   <button type="button" class="ghost" onclick="addTerritory()">+ Ajouter un territoire</button>
@@ -199,8 +202,24 @@ function addTerritory() {
   const wrap = document.getElementById('territories');
   const div = document.createElement('div');
   div.className = 'row-territory';
-  div.innerHTML = '<input name="territory_country" placeholder="Pays"><input name="territory_region" placeholder="Région (optionnel)">';
+  div.innerHTML =
+    '<input name="territory_country" placeholder="Pays">' +
+    '<input name="territory_region" placeholder="Région (optionnel)">' +
+    '<button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>';
   wrap.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function removeTerritory(btn) {
+  const row = btn.closest('.row-territory');
+  if (!row) return;
+  const wrap = document.getElementById('territories');
+  // Garde au moins une ligne (vide) pour permettre l'ajout
+  if (wrap.children.length <= 1) {
+    row.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+    return;
+  }
+  row.remove();
 }
 </script>
 {% endblock %}
