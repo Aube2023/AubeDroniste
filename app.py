@@ -296,7 +296,7 @@ def mission_detail(mission_id):
 @security.rate_limit(per_minute=4, per_hour=15)
 def register():
     if request.method == "POST":
-        username = (request.form.get("username") or "").strip().lower()
+        username = auth.normalize_username(request.form.get("username") or "")
         password = request.form.get("password") or ""
         confirm = request.form.get("confirm") or ""
         full_name = (request.form.get("full_name") or "").strip()
@@ -348,7 +348,7 @@ def login():
         fallback=url_for("dashboard"),
     )
     if request.method == "POST":
-        username = (request.form.get("username") or "").strip().lower()
+        username = auth.normalize_username(request.form.get("username") or "")
         password = request.form.get("password") or ""
         if not auth.authenticate(username, password):
             flash("Identifiants invalides.", "error")

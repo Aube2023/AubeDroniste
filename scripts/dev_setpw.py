@@ -28,7 +28,7 @@ def main() -> int:
         print(__doc__)
         return 1
 
-    username = sys.argv[1].strip().lower()
+    username = auth.normalize_username(sys.argv[1])
     if not username:
         print("Username vide.", file=sys.stderr)
         return 2

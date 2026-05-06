@@ -189,13 +189,21 @@ def admin_required(view):
 # Inscription
 # ---------------------------------------------------------------------------
 
+def normalize_username(raw: str) -> str:
+    """Accepte 'nicolas' ou 'nicolas@aubemail.com' -> retourne 'nicolas'."""
+    s = (raw or "").strip().lower()
+    if "@" in s:
+        s = s.split("@", 1)[0]
+    return s
+
+
 def normalize_email(username: str, email: Optional[str]) -> str:
     """Force le domaine @aubemail.com (memoire feedback_email_domain)."""
     if email and "@" in email:
         local = email.split("@", 1)[0]
     else:
         local = username
-    return f"{local}@{EMAIL_DOMAIN}"
+    return f"{local.strip().lower()}@{EMAIL_DOMAIN}"
 
 
 class AubeMailRequiredError(Exception):
