@@ -63,7 +63,7 @@ for arg in "$@"; do
 done
 
 # ----- Helpers d'affichage ---------------------------------------------------
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
+RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; YELLOW=$'\033[1;33m'; CYAN=$'\033[0;36m'; NC=$'\033[0m'
 STEP=0
 log()    { printf "${CYAN}[%2d]${NC} %s\n" "$STEP" "$*"; }
 ok()     { printf "    ${GREEN}✓${NC} %s\n" "$*"; }
