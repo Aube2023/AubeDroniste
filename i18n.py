@@ -77,8 +77,8 @@ _T = {
                            "en": "{year} · 15 services · shared auth"},
     "footer.tagline":     {"fr": "Une marque de L'Aube Étoilée · Auth partagée @aubemail.com",
                            "en": "A brand of L'Aube Étoilée · Shared @aubemail.com auth"},
-    "footer.cities":      {"fr": "Édité depuis Montréal · Casablanca · Paris",
-                           "en": "Crafted in Montréal · Casablanca · Paris"},
+    "footer.cities":      {"fr": "Édité depuis Montréal",
+                           "en": "Crafted in Montréal"},
 
     # ---- Landing
     "home.eyebrow":     {"fr": "Réseau pilote francophone — depuis 2026",
