@@ -173,7 +173,8 @@ fi
 log "Installation des dépendances (incluant gunicorn)"
 run "sudo -u $APP_USER \"$INSTALL_DIR/.venv/bin/pip\" install --quiet --upgrade pip"
 run "sudo -u $APP_USER \"$INSTALL_DIR/.venv/bin/pip\" install --quiet -r \"$INSTALL_DIR/requirements.txt\" gunicorn"
-ok "Python $(\"$INSTALL_DIR/.venv/bin/python\" --version 2>&1) prêt."
+PY_VER=$("$INSTALL_DIR/.venv/bin/python" --version 2>&1 || echo "?")
+ok "Python $PY_VER prêt."
 
 # =============================================================================
 #  6. Fichier d environnement
