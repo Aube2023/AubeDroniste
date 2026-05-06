@@ -29,13 +29,26 @@ _signer = URLSafeSerializer(SECRET_KEY, salt="aubedroniste-sid")
 # ---------------------------------------------------------------------------
 
 def _pam_authenticate(username: str, password: str) -> bool:
-    """Tente PAM si dispo (Linux). Sur macOS le module n'est pas installe."""
+    """Authentification PAM via le service `aube` (partage entre tous les
+    services L'Aube Etoilee). Le service `aube` est defini dans
+    /etc/pam.d/aube et ne fait que auth+account via pam_unix, sans check
+    de shell — donc tolere les comptes /usr/sbin/nologin (cas typique des
+    boites mail AubeMail).
+
+    Sur macOS / dev : le module pam n'est pas installe, on retourne False
+    et l'auth bascule sur le fallback dev_passwords.
+    """
     try:
         import pam  # type: ignore
     except Exception:
         return False
     try:
-        return pam.authenticate(username, password, service="login")
+        # API moderne (python-pam >= 2.0)
+        if hasattr(pam, "PamAuthenticator"):
+            p = pam.PamAuthenticator()
+            return bool(p.authenticate(username, password, service="aube"))
+        # API legacy (python-pam 1.x)
+        return bool(pam.authenticate(username, password, service="aube"))
     except Exception:
         return False
 
