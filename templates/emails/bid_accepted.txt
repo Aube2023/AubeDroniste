@@ -36,4 +36,4 @@ Next step: open the messaging to coordinate logistics
 (meeting point, site access, flight restrictions, deliverables).
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · drone.aubeetoilee.com
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

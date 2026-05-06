@@ -1,6 +1,6 @@
 # Déploiement AubeDroniste
 
-Cible : un sous-domaine `drone.aubeetoilee.com`, derrière nginx + Let's Encrypt,
+Cible : un sous-domaine `droniste.aubeetoilee.com`, derrière nginx + Let's Encrypt,
 avec gunicorn comme serveur d'application et systemd pour le cycle de vie.
 
 ## 1. Prérequis
@@ -31,7 +31,7 @@ AUBEDRONISTE_PORT=5034
 AUBEDRONISTE_HOST=127.0.0.1
 AUBEDRONISTE_DATA=/var/lib/aubedroniste
 AUBEDRONISTE_SECRET=<secret long aleatoire>
-SITE_URL=https://drone.aubeetoilee.com
+SITE_URL=https://droniste.aubeetoilee.com
 
 # SMTP transactionnel
 SMTP_HOST=smtp.aubemail.com
@@ -54,7 +54,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxx
    "platform" et le branding (logo, nom AubeDroniste).
 2. Récupérer les clés API dans **Developers → API keys**.
 3. Créer un endpoint webhook dans **Developers → Webhooks** pointant
-   vers `https://drone.aubeetoilee.com/stripe/webhook`. Cocher les
+   vers `https://droniste.aubeetoilee.com/stripe/webhook`. Cocher les
    events :
    - `checkout.session.completed`
    - `account.updated`
@@ -86,14 +86,14 @@ Copier `nginx.conf.example` dans `/etc/nginx/sites-available/aubedroniste`,
 créer le symlink dans `sites-enabled`, recharger, puis :
 
 ```bash
-sudo certbot --nginx -d drone.aubeetoilee.com
+sudo certbot --nginx -d droniste.aubeetoilee.com
 ```
 
 ## 6. Test post-déploiement
 
 ```bash
-curl -s https://drone.aubeetoilee.com/api/stats | jq
-curl -s https://drone.aubeetoilee.com/api/country-breakdown | jq '.[:3]'
+curl -s https://droniste.aubeetoilee.com/api/stats | jq
+curl -s https://droniste.aubeetoilee.com/api/country-breakdown | jq '.[:3]'
 ```
 
 ## 7. Backups
@@ -107,7 +107,7 @@ curl -s https://drone.aubeetoilee.com/api/country-breakdown | jq '.[:3]'
 ## 8. Monitoring
 
 Inscrire l'URL dans **AubeStatus** (port 5021) :
-- endpoint : `https://drone.aubeetoilee.com/api/stats`
+- endpoint : `https://droniste.aubeetoilee.com/api/stats`
 - intervalle : 60 s
 
 ## 9. Mise à jour

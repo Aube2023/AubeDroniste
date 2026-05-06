@@ -23,7 +23,7 @@ Auth partagée `@aubemail.com` (PAM en prod, fallback dev local sur macOS).
 | Mailer | SMTP en prod, dump `.eml` local en dev |
 | API | JSON (`/api/dronistes`, `/api/missions`, `/api/near`, `/api/country-breakdown`, `/api/stats`) |
 | Port | **5034** |
-| Domaine prod prévu | `drone.aubeetoilee.com` |
+| Domaine prod prévu | `droniste.aubeetoilee.com` |
 
 ## Démarrage
 

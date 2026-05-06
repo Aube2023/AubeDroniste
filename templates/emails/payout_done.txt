@@ -30,4 +30,4 @@ Thank you for flying with us,
 The AubeDroniste crew
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · drone.aubeetoilee.com
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com

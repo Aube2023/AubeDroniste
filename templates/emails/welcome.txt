@@ -36,5 +36,5 @@ See you in the cockpit,
 The AubeDroniste crew
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · drone.aubeetoilee.com
+AubeDroniste · {{ year }} · droniste.aubeetoilee.com
 A brand of L'Aube Étoilée · Shared @aubemail.com auth
