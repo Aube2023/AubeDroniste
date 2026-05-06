@@ -32,6 +32,7 @@
   <div class="row-between" style="margin-top: 18px;">
     <a href="{{ url_for('booking_detail', booking_id=d.id) }}" class="ghost">Ouvrir le dossier →</a>
     <form method="post" action="{{ url_for('admin_refund', booking_id=d.id) }}" style="display: flex; gap: 8px;">
+        {{ csrf_input() }}
       <input name="amount" type="number" step="0.01" placeholder="Montant ou vide = total" style="width: 200px;">
       <button class="ghost danger" type="submit" onclick="return confirm('Confirmer le remboursement ?')">Refund</button>
     </form>

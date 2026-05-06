@@ -85,9 +85,11 @@
     Le pilote a {{ auto_release_days }} jours pour livrer. À réception des rushs, validez la mission pour libérer les fonds. Sans action de votre part, les fonds seront automatiquement libérés au pilote au bout de {{ auto_release_days }} jours.
   </p>
   <form method="post" action="{{ url_for('booking_confirm', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Valider la livraison ? Les fonds seront libérés au pilote.')">
+        {{ csrf_input() }}
     <button class="cta cta-big" type="submit">✓ Valider la mission terminée</button>
   </form>
   <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige sur cette mission ?')">
+        {{ csrf_input() }}
     <input type="hidden" name="reason" value="">
     <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
   </form>
@@ -101,6 +103,7 @@
     Les fonds sont en escrow chez AubeDroniste. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
   </p>
   <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige ?')">
+        {{ csrf_input() }}
     <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
   </form>
 </div>
@@ -152,6 +155,7 @@
     {% else %}<p class="muted">Pas encore de messages.</p>{% endfor %}
   </div>
   <form method="post" action="{{ url_for('mission_message', mission_id=booking.mission_id) }}" style="margin-top: 12px;">
+        {{ csrf_input() }}
     <input type="hidden" name="peer_id" value="{{ peer_id }}">
     <textarea name="body" rows="2" required placeholder="Votre message…"></textarea>
     <button class="cta" type="submit">Envoyer</button>
@@ -164,6 +168,7 @@
 <section class="card">
   <h2 style="font-size: 1.3rem;">Laisser un avis</h2>
   <form method="post" action="{{ url_for('booking_review', booking_id=booking.id) }}">
+        {{ csrf_input() }}
     <label>Note
       <select name="rating">
         {% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ★</option>{% endfor %}

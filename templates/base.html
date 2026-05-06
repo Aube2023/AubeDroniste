@@ -37,6 +37,7 @@
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
       <a href="{{ url_for('dashboard') }}">{{ t('nav.dashboard') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline">
+        {{ csrf_input() }}
         <button class="ghost" type="submit">{{ t('nav.logout') }}</button>
       </form>
     {% else %}

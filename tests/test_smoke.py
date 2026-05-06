@@ -90,6 +90,27 @@ def test_404(client):
     assert r.status_code == 404
 
 
+def test_security_headers(client):
+    r = client.get("/")
+    assert r.headers.get("X-Frame-Options") == "DENY"
+    assert r.headers.get("X-Content-Type-Options") == "nosniff"
+    assert "Content-Security-Policy" in r.headers
+    assert "Referrer-Policy" in r.headers
+    csp = r.headers.get("Content-Security-Policy", "")
+    assert "frame-ancestors 'none'" in csp
+
+
+def test_csrf_required_outside_testing(client):
+    """En mode non-testing, un POST sans token doit echouer."""
+    from app import app
+    app.config["TESTING"] = False
+    try:
+        r = client.post("/inscription", data={"username": "x"})
+        assert r.status_code == 403
+    finally:
+        app.config["TESTING"] = True
+
+
 def test_register_creates_user_and_dumps_email(client):
     """Inscription valide = welcome email dumpé sur disque (pas de SMTP en test)."""
     from config import MAIL_DUMP_DIR

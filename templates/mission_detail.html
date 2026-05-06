@@ -31,6 +31,7 @@
 
   {% if current_user and current_user.id == mission.client_user_id and mission.status == 'open' %}
   <form method="post" action="{{ url_for('mission_close', mission_id=mission.id) }}" onsubmit="return confirm('Annuler cette mission ?')">
+        {{ csrf_input() }}
     <button class="ghost danger" type="submit">Annuler la mission</button>
   </form>
   {% endif %}
@@ -41,6 +42,7 @@
   <span class="eyebrow">Soumissionner</span>
   <h2>{% if has_my_bid %}Mettre à jour mon offre{% else %}Faire une offre sur cette mission{% endif %}</h2>
   <form method="post" action="{{ url_for('bid_place', mission_id=mission.id) }}">
+        {{ csrf_input() }}
     <div class="grid-3">
       <label>Mon prix<input name="price" type="number" step="0.01" required></label>
       <label>Devise
@@ -86,11 +88,13 @@
 
     {% if current_user and current_user.id == mission.client_user_id and mission.status == 'open' and b.status == 'pending' %}
     <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}" style="margin-top: 14px;">
+        {{ csrf_input() }}
       <button class="cta" type="submit">Accepter cette offre</button>
     </form>
     {% endif %}
     {% if current_user and current_user.id == b.pilot_user_id and b.status == 'pending' %}
     <form method="post" action="{{ url_for('bid_withdraw', bid_id=b.id) }}" style="margin-top: 14px;">
+        {{ csrf_input() }}
       <button class="ghost" type="submit">Retirer mon offre</button>
     </form>
     {% endif %}

@@ -28,6 +28,7 @@
   </p>
 
   <form method="post" action="{{ url_for('stripe_fake_checkout', booking_id=booking.id) }}">
+        {{ csrf_input() }}
     <button type="submit" class="cta cta-big" style="width: 100%; justify-content: center;">
       ⚡ Simuler un paiement réussi
     </button>

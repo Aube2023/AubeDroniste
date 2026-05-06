@@ -110,7 +110,29 @@ Inscrire l'URL dans **AubeStatus** (port 5021) :
 - endpoint : `https://droniste.aubeetoilee.com/api/stats`
 - intervalle : 60 s
 
-## 9. Mise à jour
+## 9. Check-list sécurité avant ouverture publique
+
+- [ ] `AUBEDRONISTE_SECRET` posé (généré via `python -c "import secrets; print(secrets.token_urlsafe(48))"`)
+- [ ] `SITE_URL=https://droniste.aubeetoilee.com` (avec `https://` — sinon HSTS et cookies `secure` ne s'activent pas)
+- [ ] Cert Let's Encrypt valide (`curl -I https://droniste.aubeetoilee.com/`)
+- [ ] `FLASK_DEBUG` **non posé** (debug = exécution de code à distance)
+- [ ] User systemd `aube` non-root, `chmod 600 /etc/aubedroniste.env`
+- [ ] `.dev_passwords` **n'est pas** sur le serveur (vérifier avec `find /srv/aubedroniste -name .dev_passwords`)
+- [ ] PAM activé : `getent passwd <user>` retourne le user AubeMail
+- [ ] Stripe LIVE configuré, webhook posé avec son `whsec_...`
+- [ ] `curl -I https://droniste.aubeetoilee.com/` retourne `Strict-Transport-Security`, `X-Frame-Options: DENY`, CSP
+- [ ] `curl -X POST https://droniste.aubeetoilee.com/inscription` retourne **403** (CSRF refusé)
+- [ ] `nmap -sV droniste.aubeetoilee.com` : seuls 80 + 443 publics (5034 reste sur 127.0.0.1)
+- [ ] Logs nginx ne contiennent pas de mots de passe (`grep -i password /var/log/nginx/access.log`)
+
+### Générer un AUBEDRONISTE_SECRET solide
+
+```bash
+python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
+# colle dans /etc/aubedroniste.env
+```
+
+## 10. Mise à jour
 
 ```bash
 cd /srv/aubedroniste

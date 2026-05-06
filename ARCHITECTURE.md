@@ -225,6 +225,70 @@ dans `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
+## Sécurité
+
+`security.py` centralise toutes les protections. Activées automatiquement
+sur l'app via `before_request` / `after_request` hooks.
+
+### CSRF
+- Token de 32 octets stocké en session (`session["_csrf"]`).
+- Validé sur tous les `POST/PUT/DELETE/PATCH` sauf `/stripe/webhook`
+  (signature Stripe distincte).
+- Templates : `{{ csrf_input() }}` rend automatiquement le hidden input.
+  Présent dans tous les `<form method="post">` (21 occurrences).
+- Bypass automatique en mode `TESTING=True` (les tests pytest).
+
+### Rate limiting
+- Token bucket en mémoire, par IP + endpoint.
+- Routes durcies :
+  - `/connexion` : 8/min, 40/h
+  - `/inscription` : 4/min, 15/h
+  - `/missions/<id>/enchere` : 20/min, 100/h
+  - `/missions/<id>/messages` : 30/min, 300/h
+  - `/reservations/<id>/payer` : 10/min, 50/h
+- Réponse 429 dépassé.
+- Single-process : si on passe à plusieurs workers gunicorn, migrer
+  vers Redis ou similar.
+
+### En-têtes HTTP sortants
+- `X-Frame-Options: DENY` (anti-clickjacking)
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: geolocation=(self), camera=(), microphone=()`
+- `Content-Security-Policy` : autorise Google Fonts + Stripe (js, frames,
+  api, checkout). `frame-ancestors 'none'` (anti-clickjacking renforcé).
+- `Strict-Transport-Security: max-age=31536000` (uniquement si SITE_URL
+  est en HTTPS).
+
+### Cookies de session
+- `httpOnly=True` (anti-XSS)
+- `secure=True` automatique si SITE_URL commence par `https://`
+- `SameSite=Lax` (anti-CSRF de niveau 2, surtout pour cross-site)
+- Lifetime 30 jours
+
+### Protection redirection ouverte
+- `security.safe_next(url, fallback)` accepte uniquement les URL
+  relatives ou de même host. Utilisé sur `/connexion` (`?next=`).
+
+### Validation de configuration prod
+- `security.assert_production_ready(app)` au boot :
+  - Refuse `AUBEDRONISTE_SECRET=change-me-in-prod-...` en prod (raise)
+  - Warn si SITE_URL n'est pas HTTPS
+  - Bypassé si `FLASK_DEBUG=1` ou macOS
+
+### Audit
+- Table `audit_log` (user_id, action, target, payload JSON, timestamp).
+- Helper `security.audit(...)`. Utilisé sur les opérations sensibles
+  (accept_bid, dispute, refund).
+
+### À surveiller / améliorations possibles
+- Pas de 2FA (TOTP) — à ajouter si on prend de la valeur transactionnelle
+- Pas de lockout après N échecs de login (rate limit suffit pour démarrer)
+- Pas de CAPTCHA sur `/inscription` — à ajouter si spam
+- Logs : pas de PII dans les logs (mots de passe non loggés ✓, tokens non loggés ✓)
+
+---
+
 ## Variables d'environnement (toutes optionnelles en dev)
 
 | Var | Défaut | Effet |

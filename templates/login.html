@@ -19,6 +19,7 @@
   </aside>
 
   <form method="post" class="auth-form">
+        {{ csrf_input() }}
     <h2>Connexion</h2>
     <input type="hidden" name="next" value="{{ next_url }}">
 

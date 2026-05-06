@@ -17,6 +17,7 @@ import auth
 import db
 import i18n
 import payments
+import security
 import services
 from config import (
     ALLOWED_DOC_EXT,
@@ -50,6 +51,18 @@ SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_MB * 1024 * 1024
+app.config["SITE_URL"] = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
+
+# Cookies durcis : httpOnly toujours, secure si HTTPS, SameSite=Lax
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=app.config["SITE_URL"].startswith("https://"),
+    SESSION_COOKIE_SAMESITE="Lax",
+    PERMANENT_SESSION_LIFETIME=60 * 60 * 24 * 30,  # 30 jours
+)
+
+# Refuse la cle SECRET par defaut en prod
+security.assert_production_ready(app)
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +94,16 @@ def _attach():
     g.lang = i18n.resolve_lang()
 
 
+@app.before_request
+def _csrf_check():
+    security.validate_csrf()
+
+
+@app.after_request
+def _security_headers(resp):
+    return security.apply_security_headers(resp)
+
+
 @app.context_processor
 def _inject_globals():
     return {
@@ -100,6 +123,9 @@ def _inject_globals():
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
+        # CSRF
+        "csrf_token": security.csrf_token,
+        "csrf_input": security.csrf_input,
     }
 
 
@@ -267,6 +293,7 @@ def mission_detail(mission_id):
 # ---------------------------------------------------------------------------
 
 @app.route("/inscription", methods=["GET", "POST"])
+@security.rate_limit(per_minute=4, per_hour=15)
 def register():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip().lower()
@@ -314,8 +341,12 @@ def register():
 
 
 @app.route("/connexion", methods=["GET", "POST"])
+@security.rate_limit(per_minute=8, per_hour=40)
 def login():
-    next_url = request.args.get("next") or request.form.get("next") or url_for("dashboard")
+    next_url = security.safe_next(
+        request.args.get("next") or request.form.get("next"),
+        fallback=url_for("dashboard"),
+    )
     if request.method == "POST":
         username = (request.form.get("username") or "").strip().lower()
         password = request.form.get("password") or ""
@@ -563,6 +594,7 @@ def mission_close(mission_id):
 
 @app.route("/missions/<int:mission_id>/enchere", methods=["POST"])
 @auth.login_required
+@security.rate_limit(per_minute=20, per_hour=100)
 def bid_place(mission_id):
     if g.user["role"] not in ("droniste", "both"):
         flash("Seuls les dronistes peuvent soumissionner.", "error")
@@ -655,6 +687,7 @@ def booking_review(booking_id):
 
 @app.route("/missions/<int:mission_id>/messages", methods=["POST"])
 @auth.login_required
+@security.rate_limit(per_minute=30, per_hour=300)
 def mission_message(mission_id):
     peer = _to_int(request.form.get("peer_id"))
     body = (request.form.get("body") or "").strip()
@@ -734,6 +767,7 @@ def stripe_fake_onboarding(account_id):
 
 @app.route("/reservations/<int:booking_id>/payer", methods=["GET", "POST"])
 @auth.login_required
+@security.rate_limit(per_minute=10, per_hour=50)
 def booking_pay(booking_id):
     booking = services.get_booking(booking_id)
     if not booking or booking["client_user_id"] != g.user["id"]:

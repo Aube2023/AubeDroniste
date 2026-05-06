@@ -24,6 +24,8 @@ for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 
 SECRET_KEY = os.environ.get("AUBEDRONISTE_SECRET", "change-me-in-prod-aubedroniste-2026")
+# La validation de production (refuse la cle par defaut hors dev) est faite
+# dans security.assert_production_ready() au demarrage de l'app.
 SESSION_COOKIE_NAME = "aubedroniste_sid"
 SESSION_LIFETIME_DAYS = 30
 

@@ -12,6 +12,7 @@
     <li>Système d'avis bidirectionnel</li>
   </ul>
   <form method="post">
+        {{ csrf_input() }}
     <input type="hidden" name="become_pilot" value="1">
     <button class="cta" type="submit">Activer mon profil droniste</button>
   </form>

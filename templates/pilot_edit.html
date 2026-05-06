@@ -35,6 +35,7 @@
 </section>
 
 <form method="post" class="card">
+        {{ csrf_input() }}
   <h2>Identité & zone</h2>
   <div class="grid-2">
     <label>Nom complet<input value="{{ current_user.full_name }}" disabled></label>
@@ -118,12 +119,14 @@
         <div class="muted small">{{ c.reference or '' }}{% if c.issued_at %} · {{ c.issued_at }}{% endif %}{% if c.expires_at %} → {{ c.expires_at }}{% endif %}</div>
       </div>
       <form method="post" action="{{ url_for('pilot_delete_certification', cert_id=c.id) }}">
+        {{ csrf_input() }}
         <button class="ghost danger" type="submit">supprimer</button>
       </form>
     </div>
     {% else %}<p class="muted">Aucune.</p>{% endfor %}
 
     <form method="post" action="{{ url_for('pilot_add_certification') }}" enctype="multipart/form-data">
+        {{ csrf_input() }}
       <h3>Ajouter une formation</h3>
       <div class="grid-2">
         <label>Autorité
@@ -154,12 +157,14 @@
         </div>
       </div>
       <form method="post" action="{{ url_for('pilot_delete_drone', drone_id=d.id) }}">
+        {{ csrf_input() }}
         <button class="ghost danger" type="submit">supprimer</button>
       </form>
     </div>
     {% else %}<p class="muted">Aucun drone enregistré.</p>{% endfor %}
 
     <form method="post" action="{{ url_for('pilot_add_drone') }}" enctype="multipart/form-data">
+        {{ csrf_input() }}
       <h3>Ajouter un drone</h3>
       <div class="grid-2">
         <label>Catégorie
