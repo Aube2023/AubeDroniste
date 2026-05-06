@@ -16,6 +16,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
+# En prod Linux, charger /etc/aubedroniste.env si present (systemd le fait
+# pour le service mais pas pour les scripts standalone).
+ENV_FILE = "/etc/aubedroniste.env"
+if os.path.exists(ENV_FILE) and os.access(ENV_FILE, os.R_OK):
+    with open(ENV_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            os.environ.setdefault(k.strip(), v.strip())
+
 from app import app  # noqa: E402
 import mailer        # noqa: E402
 
