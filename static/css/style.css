@@ -680,7 +680,15 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 .chip-check input { margin: 0; accent-color: var(--amber); }
 
 .row-territory {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0;
+  display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; margin: 6px 0;
+  align-items: center;
+}
+.row-remove {
+  width: 36px; height: 36px;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  line-height: 1;
 }
 
 /* ============ Ticker missions (homepage) ============ */
