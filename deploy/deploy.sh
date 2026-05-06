@@ -124,7 +124,13 @@ if ! id "$APP_USER" >/dev/null 2>&1; then
     log "Création du user $APP_USER (sans shell login, home /var/lib/$APP_USER)"
     run "useradd --system --create-home --home-dir /var/lib/$APP_USER --shell /usr/sbin/nologin $APP_USER"
 fi
-ok "User $APP_USER existe."
+# Ajout au groupe `shadow` : indispensable pour que pam_unix.so puisse
+# lire /etc/shadow et valider les mots de passe AubeMail (PAM service `aube`).
+if ! id -nG "$APP_USER" | grep -qw shadow; then
+    log "Ajout de $APP_USER au groupe shadow (lecture /etc/shadow pour PAM)"
+    run "usermod -aG shadow $APP_USER"
+fi
+ok "User $APP_USER existe (groupes: $(id -nG $APP_USER 2>/dev/null || echo '?'))."
 
 # =============================================================================
 #  3. Répertoires
