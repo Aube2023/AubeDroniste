@@ -292,10 +292,19 @@ def register():
             flash("Cet identifiant est deja pris.", "error")
             return render_template("register.html")
 
-        user_id = auth.create_user(
-            username=username, password=password, full_name=full_name,
-            role=role, country=country, city=city, phone=phone, lat=lat, lng=lng,
-        )
+        try:
+            user_id = auth.create_user(
+                username=username, password=password, full_name=full_name,
+                role=role, country=country, city=city, phone=phone, lat=lat, lng=lng,
+            )
+        except auth.AubeMailRequiredError:
+            flash(
+                "Ce compte n'existe pas dans AubeMail. Créez-le d'abord sur "
+                "<a href='https://mail.aubeetoilee.com'>mail.aubeetoilee.com</a>, "
+                "puis revenez ici pour compléter votre profil pilote.",
+                "error",
+            )
+            return render_template("register.html")
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=60 * 60 * 24 * 30)
@@ -313,10 +322,18 @@ def login():
         if not auth.authenticate(username, password):
             flash("Identifiants invalides.", "error")
             return render_template("login.html", next_url=next_url)
+        # Si le compte AubeMail existe mais pas encore le profil AubeDroniste,
+        # on le cree a la volee — cas d'un user qui se cree sur AubeMail
+        # puis vient ici pour la 1ere fois.
         row = db.fetchone("SELECT id FROM users WHERE username=?", (username,))
         if not row:
-            flash("Compte inconnu.", "error")
-            return render_template("login.html", next_url=next_url)
+            email = auth.normalize_email(username, None)
+            cur = db.execute(
+                "INSERT INTO users (username, email, full_name, role) "
+                "VALUES (?, ?, ?, 'client')",
+                (username, email, username),
+            )
+            row = {"id": cur.lastrowid}
         token = auth.create_session(row["id"], request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(next_url))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=60 * 60 * 24 * 30)

@@ -40,6 +40,23 @@ def _pam_authenticate(username: str, password: str) -> bool:
         return False
 
 
+def system_user_exists(username: str) -> bool:
+    """Verifie qu'un compte systeme (= compte AubeMail) existe.
+
+    Sur Linux prod, tous les services Aube partagent /etc/passwd via PAM.
+    Un compte cree dans AubeMail apparait donc immediatement ici.
+    Sur macOS / dev, on retourne True (le fallback dev gere tout).
+    """
+    if not sys.platform.startswith("linux"):
+        return True
+    try:
+        import pwd
+        pwd.getpwnam(username)
+        return True
+    except (KeyError, ImportError):
+        return False
+
+
 # Fallback dev : on stocke un hash dans la table users sous champ
 # `username`-style (bio reutilise pour eviter migration). En prod (Linux),
 # PAM gere les mdp et on ne touche jamais a /etc/shadow.
@@ -181,19 +198,34 @@ def normalize_email(username: str, email: Optional[str]) -> str:
     return f"{local}@{EMAIL_DOMAIN}"
 
 
+class AubeMailRequiredError(Exception):
+    """Le compte systeme (PAM/AubeMail) n'existe pas en prod."""
+
+
 def create_user(*, username: str, password: str, full_name: str,
                 role: str = "client", country: Optional[str] = None,
                 city: Optional[str] = None, phone: Optional[str] = None,
                 lat: Optional[float] = None, lng: Optional[float] = None,
                 send_welcome_email: bool = True) -> int:
+    """Cree le profil AubeDroniste local. En prod Linux, exige que le compte
+    AubeMail (= compte systeme PAM) existe au prealable — l'inscription au
+    sens credentiel se fait sur AubeMail, pas ici. Si le compte systeme est
+    absent, leve `AubeMailRequiredError`.
+    """
+    username = username.lower().strip()
+    if sys.platform.startswith("linux") and not system_user_exists(username):
+        raise AubeMailRequiredError(username)
     email = normalize_email(username, None)
     cur = db.execute(
         "INSERT INTO users (username, email, full_name, phone, country, city, lat, lng, role) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (username.lower().strip(), email, full_name.strip(), phone, country, city, lat, lng, role),
+        (username, email, full_name.strip(), phone, country, city, lat, lng, role),
     )
     user_id = cur.lastrowid
-    set_dev_password(username.lower().strip(), password)
+    # Fallback dev uniquement (macOS) : on garde un mdp local pour la demo.
+    # En prod Linux, le mdp est gere par PAM/AubeMail — on n'y touche jamais.
+    if not sys.platform.startswith("linux"):
+        set_dev_password(username, password)
     if role in ("droniste", "both"):
         db.execute(
             "INSERT INTO pilot_profiles (user_id) VALUES (?)",
