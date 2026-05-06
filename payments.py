@@ -249,21 +249,27 @@ def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
 # ---------------------------------------------------------------------------
 
 def parse_webhook(payload: bytes, signature: str):
-    """Verifie la signature et retourne l'event Stripe (dict-like)."""
+    """Verifie la signature et retourne l'event Stripe (dict-like).
+
+    En mode FAKE (pas de cle Stripe) : on accepte le JSON brut. Sinon, on
+    EXIGE STRIPE_WEBHOOK_SECRET — sans secret, le webhook est REFUSE pour
+    eviter qu'un attaquant POST des events falsifies marquant des
+    bookings comme `funded`.
+    """
     s = _stripe()
     if s is None:
-        # En mode fake on accepte tel quel un JSON brut (utile pour scripts/)
+        # Mode fake : on accepte le JSON brut (utile pour scripts/tests)
         import json
         try:
             return json.loads(payload)
         except Exception:
             return None
     if not STRIPE_WEBHOOK_SECRET:
-        log.warning("STRIPE_WEBHOOK_SECRET vide ; on n'authentifie pas le webhook")
-        try:
-            return s.Event.construct_from(__import__("json").loads(payload), s.api_key)
-        except Exception:
-            return None
+        log.error(
+            "REFUSE webhook : STRIPE_WEBHOOK_SECRET vide en mode Stripe live/test. "
+            "Configure-le dans le dashboard Stripe puis dans /etc/aubedroniste.env."
+        )
+        return None
     try:
         return s.Webhook.construct_event(payload, signature, STRIPE_WEBHOOK_SECRET)
     except Exception as exc:

@@ -243,9 +243,12 @@ def create_user(*, username: str, password: str, full_name: str,
         try:
             import mailer
             mailer.send_welcome({
-                "id": user_id, "username": username.lower().strip(),
+                "id": user_id, "username": username,
                 "email": email, "full_name": full_name.strip(), "role": role,
             })
-        except Exception:  # email ne doit jamais bloquer l'inscription
-            pass
+        except Exception as exc:  # email ne doit jamais bloquer l'inscription
+            import logging
+            logging.getLogger("aubedroniste.auth").warning(
+                "welcome email failed for user_id=%s : %s", user_id, exc,
+            )
     return user_id

@@ -5,7 +5,10 @@ voir les requetes a plat. Les fonctions retournent des dicts (sqlite3.Row
 converti) pour rester serialisables JSON.
 """
 import json
+import logging
 from typing import Iterable, Optional
+
+log = logging.getLogger("aubedroniste.services")
 
 import db
 from config import (
@@ -425,8 +428,8 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
                          "eta_hours": eta_hours, "message": message},
                     pilot=dict(pilot),
                 )
-        except Exception:
-            pass  # email ne bloque jamais
+        except Exception as exc:
+            log.warning("email new_bid failed for mission=%s : %s", mission_id, exc)
     return bid_id
 
 
@@ -448,7 +451,12 @@ def list_bids(mission_id: int) -> list:
 
 def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
     """Accepte une enchere : cree booking, ferme les autres encheres,
-    passe la mission en 'assigned'. Retourne booking_id."""
+    passe la mission en 'assigned'. Retourne booking_id.
+
+    Atomic : si 2 clients du meme compte (ou refresh en double-clic)
+    acceptent simultanement, l'UPDATE conditionnel ne reussit qu'une
+    seule fois — le 2e appel leve ValueError.
+    """
     bid = db.fetchone("SELECT * FROM bids WHERE id=? AND mission_id=?", (bid_id, mission_id))
     mission = db.fetchone(
         "SELECT * FROM missions WHERE id=? AND client_user_id=?",
@@ -458,6 +466,16 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         raise LookupError("enchere ou mission introuvable")
     if mission["status"] != "open":
         raise ValueError(f"mission deja {mission['status']}")
+    # Verrou atomique : on tente de passer la mission en 'assigned'
+    # uniquement si elle est encore 'open'. Si rowcount=0, c'est qu'un
+    # autre processus a deja accepte une enchere -> on refuse.
+    cur_lock = db.execute(
+        "UPDATE missions SET status='assigned', updated_at=datetime('now') "
+        "WHERE id=? AND client_user_id=? AND status='open'",
+        (mission_id, client_user_id),
+    )
+    if cur_lock.rowcount == 0:
+        raise ValueError("mission deja attribuee (race detectee)")
     fee = round(bid["price"] * PLATFORM_FEE_PCT / 100.0, 2)
     cur = db.execute(
         "INSERT INTO bookings "
@@ -475,7 +493,7 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         "UPDATE bids SET status='rejected' WHERE mission_id=? AND id<>?",
         (mission_id, bid_id),
     )
-    update_mission_status(mission_id, "assigned")
+    # mission deja 'assigned' via le verrou plus haut.
     # Statut explicite : en attente de paiement client
     db.execute(
         "UPDATE bookings SET status='pending_payment' WHERE id=?",
@@ -506,8 +524,8 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
                          "currency": bid["currency"], "platform_fee": fee},
                 client=dict(client),
             )
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("email bid_accepted failed for booking=%s : %s", booking_id, exc)
     return booking_id
 
 
@@ -655,8 +673,8 @@ def send_message(*, mission_id: int, sender_user_id: int,
                 recipient=dict(recipient), sender=dict(sender),
                 mission=dict(mission), body=body,
             )
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("email hook failed: %s", exc)
 
 
 def thread(mission_id: int, user_id: int, peer_id: int) -> list:
@@ -921,8 +939,8 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
                          "amount_total": booking["agreed_price"],
                          "fee": booking["platform_fee"]},
             )
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("email hook failed: %s", exc)
     return True
 
 

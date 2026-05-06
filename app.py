@@ -211,6 +211,7 @@ def index():
 
 
 @app.route("/api/near")
+@security.rate_limit(per_minute=60, per_hour=600)
 def api_near():
     lat = _to_float(request.args.get("lat"))
     lng = _to_float(request.args.get("lng"))
@@ -221,8 +222,9 @@ def api_near():
 
 
 @app.route("/api/country-breakdown")
+@security.rate_limit(per_minute=60, per_hour=600)
 def api_country_breakdown():
-    return jsonify(services.country_breakdown(int(request.args.get("limit", 50))))
+    return jsonify(services.country_breakdown(_api_limit(50)))
 
 
 @app.route("/dronistes")
@@ -910,7 +912,16 @@ def admin_disputes():
 # API JSON
 # ---------------------------------------------------------------------------
 
+# Limite anti-DoS sur les endpoints de listing
+API_MAX_LIMIT = 100
+
+
+def _api_limit(default: int) -> int:
+    return min(max(_to_int(request.args.get("limit"), default) or default, 1), API_MAX_LIMIT)
+
+
 @app.route("/api/dronistes")
+@security.rate_limit(per_minute=60, per_hour=600)
 def api_pilots():
     pilots = services.search_pilots(
         country=request.args.get("country", "").strip(),
@@ -922,11 +933,13 @@ def api_pilots():
         radius_km=_to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
         min_rating=_to_float(request.args.get("min_rating"), 0) or 0,
         only_available=_to_bool(request.args.get("only_available", "1")),
+        limit=_api_limit(50),
     )
     return jsonify({"count": len(pilots), "pilots": pilots})
 
 
 @app.route("/api/missions")
+@security.rate_limit(per_minute=60, per_hour=600)
 def api_missions():
     missions = services.search_missions(
         country=request.args.get("country", "").strip(),
@@ -936,11 +949,13 @@ def api_missions():
         lng=_to_float(request.args.get("lng")),
         radius_km=_to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
         only_urgent=_to_bool(request.args.get("only_urgent", "0")),
+        limit=_api_limit(100),
     )
     return jsonify({"count": len(missions), "missions": missions})
 
 
 @app.route("/api/stats")
+@security.rate_limit(per_minute=60, per_hour=600)
 def api_stats():
     return jsonify(services.public_stats())
 
