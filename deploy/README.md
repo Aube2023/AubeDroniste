@@ -3,14 +3,82 @@
 Cible : un sous-domaine `droniste.aubeetoilee.com`, derrière nginx + Let's Encrypt,
 avec gunicorn comme serveur d'application et systemd pour le cycle de vie.
 
-## 1. Prérequis
+## 🚀 Installation en une commande (recommandé)
+
+Sur ton serveur Debian/Ubuntu fraîchement créé :
+
+```bash
+# 1. DNS pointe déjà droniste.aubeetoilee.com vers ton IP (record A)
+# 2. Sur le serveur :
+curl -fsSL https://raw.githubusercontent.com/Aube2023/AubeDroniste/main/deploy/deploy.sh -o /tmp/deploy.sh
+sudo bash /tmp/deploy.sh
+```
+
+Ça fait **tout** : user système, dépendances, clone, venv, env file avec
+secret aléatoire, DB, systemd, nginx, SSL Let's Encrypt, cron auto-release,
+cron backup, healthcheck final.
+
+Le script est **idempotent** — re-lance-le après `git pull` ou si tu
+modifies un fichier de config, il convergera vers l'état attendu.
+
+### Variables d'environnement honorées
+
+| Variable | Défaut | À surcharger ? |
+|---|---|---|
+| `DOMAIN` | `droniste.aubeetoilee.com` | si autre domaine |
+| `APP_USER` | `aube` | si user existant |
+| `INSTALL_DIR` | `/srv/aubedroniste` | rare |
+| `DATA_DIR` | `/var/lib/aubedroniste` | rare |
+| `ADMIN_EMAIL` | `no-reply@aubeetoilee.com` | pour Let's Encrypt |
+| `BRANCH` | `main` | pour staging |
+
+Exemple :
+```bash
+sudo DOMAIN=staging.aubeetoilee.com BRANCH=develop bash deploy/deploy.sh
+```
+
+### Après la première installation
+
+L'env file `/etc/aubedroniste.env` est créé avec les SMTP et Stripe **vides**.
+L'app démarre déjà (mode FAKE Stripe + emails dumpés sur disque), mais
+tu dois remplir :
+
+```bash
+sudo nano /etc/aubedroniste.env
+# remplir SMTP_HOST, SMTP_USER, SMTP_PASSWORD
+# remplir STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+sudo systemctl restart aubedroniste
+```
+
+### Mises à jour
+
+```bash
+sudo bash /srv/aubedroniste/deploy/update.sh
+```
+
+Pull, réinstalle deps si requirements.txt a bougé, restart, healthcheck.
+
+### Vérification
+
+```bash
+sudo bash /srv/aubedroniste/deploy/healthcheck.sh
+```
+
+12 contrôles : systemd, nginx, DNS, HTTPS, cert, headers de sécurité, CSRF,
+env file, dev_passwords absent, cron, DB.
+
+---
+
+## Installation manuelle (si tu préfères contrôler chaque étape)
+
+### 1. Prérequis
 
 - Linux (Debian/Ubuntu testé), Python 3.11+
 - Un user système non-root pour faire tourner l'app (ex. `aube`)
 - nginx + certbot installés
 - Compte SMTP (Postmark, Mailjet, AubeMail interne, ou OVH)
 
-## 2. Installation
+### 2. Installation pas-à-pas
 
 ```bash
 sudo mkdir -p /srv/aubedroniste
