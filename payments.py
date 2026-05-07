@@ -150,6 +150,10 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
 
     Retourne (session_id, redirect_url). En mode fake, retourne une URL locale
     qui simule le paiement.
+
+    IDEMPOTENCY : la cle `booking-{id}-checkout` garantit que si le client
+    fait double-clic ou si le navigateur retry la requete, Stripe retourne
+    LA MEME session au lieu d'en creer une 2eme. Anti double-debit.
     """
     s = _stripe()
     success_url = f"{SITE_URL}/reservations/{booking_id}?payment=success"
@@ -177,7 +181,10 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
         metadata={"booking_id": str(booking_id)},
         success_url=success_url,
         cancel_url=cancel_url,
+        idempotency_key=f"booking-{booking_id}-checkout",
     )
+    log.info("checkout session %s pour booking=%s (%d cents %s)",
+             session.id, booking_id, amount_cents, currency.upper())
     return session.id, session.url
 
 
@@ -204,6 +211,10 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
 
     Le `pilot_amount` est le brut DESTINE au pilote (i.e. agreed_price -
     platform_fee). Retourne l'ID du transfer Stripe ou un fake.
+
+    IDEMPOTENCY : `booking-{id}-release` empeche un double-versement au
+    pilote si le client clique 2x sur 'Valider la mission' ou si l'auto-
+    release J+7 tape en parallele d'une validation manuelle.
     """
     s = _stripe()
     if s is None:
@@ -216,7 +227,10 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
             destination=pilot_account_id,
             transfer_group=f"booking_{booking_id}",
             metadata={"booking_id": str(booking_id)},
+            idempotency_key=f"booking-{booking_id}-release",
         )
+        log.info("transfer %s pour booking=%s (%d cents %s vers %s)",
+                 tr.id, booking_id, amount_cents, currency.upper(), pilot_account_id)
         return tr.id
     except Exception as exc:
         log.error("release_to_pilot(booking=%s) -> %s", booking_id, exc)
@@ -229,15 +243,29 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
 
 def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
                    currency: str = "EUR", reason: str = "") -> bool:
-    """Rembourse tout ou partie. Si `amount` est None, refund total."""
+    """Rembourse tout ou partie. Si `amount` est None, refund total.
+
+    IDEMPOTENCY : la cle inclut le payment_intent_id ET le montant pour
+    autoriser refunds partiels successifs (50€ puis encore 30€) sans que
+    Stripe les confonde. Un meme refund (meme PI, meme montant) reste
+    idempotent.
+    """
     s = _stripe()
     if s is None:
         return True
     try:
-        kwargs = {"payment_intent": payment_intent_id, "metadata": {"reason": reason[:200]}}
-        if amount is not None:
-            kwargs["amount"] = int(round(float(amount) * 100))
+        amt_cents = int(round(float(amount) * 100)) if amount is not None else None
+        kwargs = {
+            "payment_intent": payment_intent_id,
+            "metadata": {"reason": reason[:200]},
+            "idempotency_key": f"refund-{payment_intent_id}-{amt_cents or 'full'}",
+        }
+        if amt_cents is not None:
+            kwargs["amount"] = amt_cents
         s.Refund.create(**kwargs)
+        log.info("refund %s (%s) pour PI=%s",
+                 amt_cents if amt_cents else "full",
+                 currency.upper(), payment_intent_id)
         return True
     except Exception as exc:
         log.error("refund_payment(%s) -> %s", payment_intent_id, exc)

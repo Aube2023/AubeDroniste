@@ -70,17 +70,42 @@ def system_user_exists(username: str) -> bool:
         return False
 
 
-# Fallback dev : on stocke un hash dans la table users sous champ
-# `username`-style (bio reutilise pour eviter migration). En prod (Linux),
-# PAM gere les mdp et on ne touche jamais a /etc/shadow.
+# Fallback dev : on stocke un hash dans .dev_passwords (gitignore, chmod 600).
+# En prod (Linux), PAM gere les mdp et on ne touche jamais a /etc/shadow.
+#
+# Format des lignes : `<username>:<scheme>:<salt_hex>:<hash_hex>`
+#   - scheme = "scrypt"  (nouveau, defaut)
+#   - scheme = "sha256"  (legacy, lecture seule, re-hash automatique au prochain login)
 _DEV_HASH_FILE = os.path.join(os.path.dirname(__file__), ".dev_passwords")
 
+# Parametres scrypt : ~50ms de hash, 16 MiB de RAM par tentative -> bruteforce
+# 10 000x plus cher que SHA-256 si .dev_passwords leak.
+_SCRYPT_N = 2 ** 14   # 16384
+_SCRYPT_R = 8
+_SCRYPT_P = 1
+_SCRYPT_DKLEN = 32
 
-def _dev_hash(password: str, salt: str) -> str:
-    return hashlib.sha256(f"{salt}:{password}".encode("utf-8")).hexdigest()
+
+def _scrypt_hash(password: str, salt: bytes) -> str:
+    h = hashlib.scrypt(
+        password=password.encode("utf-8"),
+        salt=salt,
+        n=_SCRYPT_N, r=_SCRYPT_R, p=_SCRYPT_P, dklen=_SCRYPT_DKLEN,
+    )
+    return h.hex()
+
+
+def _sha256_hash(password: str, salt_hex: str) -> str:
+    """Legacy SHA-256+sel — uniquement pour lire l'ancien format."""
+    return hashlib.sha256(f"{salt_hex}:{password}".encode("utf-8")).hexdigest()
 
 
 def _dev_load() -> dict:
+    """Retourne {username: (scheme, salt_hex, hash_hex)}.
+
+    Tolere l'ancien format `username:salt:sha256` (3 champs) ET le nouveau
+    `username:scheme:salt:hash` (4 champs).
+    """
     out = {}
     if not os.path.exists(_DEV_HASH_FILE):
         return out
@@ -89,29 +114,58 @@ def _dev_load() -> dict:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            parts = line.split(":", 2)
-            if len(parts) == 3:
-                out[parts[0]] = (parts[1], parts[2])
+            parts = line.split(":", 3)
+            if len(parts) == 4:
+                out[parts[0]] = (parts[1], parts[2], parts[3])
+            elif len(parts) == 3:
+                # legacy : on injecte scheme=sha256
+                out[parts[0]] = ("sha256", parts[1], parts[2])
     return out
 
 
+def _dev_save_all(rows: dict):
+    """Reecrit le fichier complet (overwrite atomique via tmp + rename)."""
+    tmp = _DEV_HASH_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        for u, (scheme, salt, h) in rows.items():
+            f.write(f"{u}:{scheme}:{salt}:{h}\n")
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, _DEV_HASH_FILE)  # atomic
+
+
 def _dev_save(username: str, password: str):
-    salt = secrets.token_hex(8)
-    hashed = _dev_hash(password, salt)
+    """Hash le mdp avec scrypt et l'ecrit dans .dev_passwords."""
+    salt = secrets.token_bytes(16)
+    hashed = _scrypt_hash(password, salt)
     rows = _dev_load()
-    rows[username] = (salt, hashed)
-    with open(_DEV_HASH_FILE, "w", encoding="utf-8") as f:
-        for u, (s, h) in rows.items():
-            f.write(f"{u}:{s}:{h}\n")
-    os.chmod(_DEV_HASH_FILE, 0o600)
+    rows[username] = ("scrypt", salt.hex(), hashed)
+    _dev_save_all(rows)
 
 
 def _dev_check(username: str, password: str) -> bool:
+    """Verifie le mdp contre .dev_passwords. Si l'entree est en SHA-256 legacy
+    ET que le mdp matche, on re-hash en scrypt automatiquement (silent upgrade).
+    """
     rows = _dev_load()
     if username not in rows:
         return False
-    salt, want = rows[username]
-    return hmac.compare_digest(_dev_hash(password, salt), want)
+    scheme, salt_hex, want = rows[username]
+
+    if scheme == "scrypt":
+        try:
+            got = _scrypt_hash(password, bytes.fromhex(salt_hex))
+        except ValueError:
+            return False
+        return hmac.compare_digest(got, want)
+
+    if scheme == "sha256":
+        ok = hmac.compare_digest(_sha256_hash(password, salt_hex), want)
+        if ok:
+            # Migration silencieuse vers scrypt
+            _dev_save(username, password)
+        return ok
+
+    return False
 
 
 def authenticate(username: str, password: str) -> bool:

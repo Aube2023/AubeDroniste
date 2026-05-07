@@ -207,13 +207,23 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
                   limit: int = 50) -> list:
+    # PERF : on JOIN un agregat de reviews dans la requete principale au
+    # lieu d'appeler pilot_rating() N fois en Python (avant : 1 + N requetes,
+    # maintenant : 1 seule).
     q = [
         "SELECT u.id, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
         "       u.is_verified, u.avatar_path, u.bio, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
-        "       p.travel_radius_km, p.is_available, p.insurance, p.languages "
+        "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
+        "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
+        "       COALESCE(r.review_count, 0) AS rating_count "
         "FROM users u "
         "JOIN pilot_profiles p ON p.user_id = u.id "
+        "LEFT JOIN ("
+        "  SELECT target_user_id, AVG(rating) AS avg_rating, "
+        "         COUNT(*) AS review_count "
+        "  FROM reviews GROUP BY target_user_id"
+        ") r ON r.target_user_id = u.id "
         "WHERE u.role IN ('droniste', 'both')",
     ]
     args: list = []
@@ -241,6 +251,10 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
             "             WHERE d.pilot_user_id=u.id AND ',' || d.capabilities || ',' LIKE ?)"
         )
         args.append(f"%,{capability},%")
+    if min_rating > 0:
+        # filtre note minimum directement en SQL (LEFT JOIN garantit 0 si pas de reviews)
+        q.append("AND COALESCE(r.avg_rating, 0.0) >= ?")
+        args.append(float(min_rating))
     q.append("ORDER BY u.is_verified DESC, p.is_available DESC LIMIT ?")
     args.append(limit)
     rows = [dict(r) for r in db.fetchall(" ".join(q), args)]
@@ -254,9 +268,12 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                 continue
         else:
             r["distance_km"] = None
-        r["rating"] = pilot_rating(r["id"])
-        if r["rating"]["avg"] < min_rating:
-            continue
+        # rating est deja dans r["rating_avg"] / r["rating_count"] — on
+        # construit l'objet attendu par les callers.
+        r["rating"] = {
+            "avg": round(float(r.pop("rating_avg") or 0.0), 2),
+            "count": int(r.pop("rating_count") or 0),
+        }
         enriched.append(r)
     if lat is not None and lng is not None:
         enriched.sort(key=lambda x: (x.get("distance_km") or 1e9))
@@ -725,10 +742,17 @@ def public_stats() -> dict:
 
 
 def featured_pilots(limit: int = 6) -> list:
+    """Pilotes vedettes, avec rating folde dans la requete principale (1 query)."""
     rows = db.fetchall(
         "SELECT u.id, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
-        "       p.headline, p.hourly_rate, p.currency AS p_currency "
+        "       p.headline, p.hourly_rate, p.currency AS p_currency, "
+        "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
+        "       COALESCE(r.review_count, 0) AS rating_count "
         "FROM users u JOIN pilot_profiles p ON p.user_id=u.id "
+        "LEFT JOIN ("
+        "  SELECT target_user_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count "
+        "  FROM reviews GROUP BY target_user_id"
+        ") r ON r.target_user_id = u.id "
         "WHERE u.role IN ('droniste','both') AND p.is_available=1 "
         "ORDER BY u.is_verified DESC, datetime(u.last_seen_at) DESC LIMIT ?",
         (limit,),
@@ -736,7 +760,10 @@ def featured_pilots(limit: int = 6) -> list:
     out = []
     for r in rows:
         d = dict(r)
-        d["rating"] = pilot_rating(d["id"])
+        d["rating"] = {
+            "avg": round(float(d.pop("rating_avg") or 0.0), 2),
+            "count": int(d.pop("rating_count") or 0),
+        }
         out.append(d)
     return out
 

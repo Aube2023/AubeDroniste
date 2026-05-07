@@ -367,9 +367,17 @@ def login():
                 (username, email, username),
             )
             row = {"id": cur.lastrowid}
+        # Rotation de session : on nettoie tout etat anonyme (CSRF token, etc)
+        # avant de poser la nouvelle session authentifiee. Defense anti session
+        # fixation : un token CSRF qui aurait fuite avant le login devient
+        # inutilisable.
+        from flask import session as flask_session
+        flask_session.clear()
         token = auth.create_session(row["id"], request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(next_url))
-        resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=60 * 60 * 24 * 30)
+        resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
+                        secure=app.config.get("SESSION_COOKIE_SECURE", False),
+                        max_age=60 * 60 * 24 * 30)
         return resp
     return render_template("login.html", next_url=next_url)
 
