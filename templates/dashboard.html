@@ -95,7 +95,7 @@
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        <span class="tag tag-{{ m.status }}">{{ m.status }}</span>
+        <span class="tag tag-{{ m.status }}">{{ status_label(m.status) }}</span>
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
@@ -118,7 +118,7 @@
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        <span class="tag tag-{{ m.my_bid_status }}">offre {{ m.my_bid_status }}</span>
+        <span class="tag tag-{{ m.my_bid_status }}">offre {{ status_label(m.my_bid_status) }}</span>
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
@@ -141,7 +141,7 @@
     <a class="mission-card" href="{{ url_for('booking_detail', booking_id=b.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(b.mission_type) }}</span>
-        <span class="tag tag-{{ b.status }}">{{ b.status }}</span>
+        <span class="tag tag-{{ b.status }}">{{ status_label(b.status) }}</span>
       </div>
       <h3>{{ b.mission_title }}</h3>
       <div class="coords">

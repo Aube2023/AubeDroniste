@@ -147,11 +147,13 @@ def _mission_label(code: str) -> str:
 
 @app.context_processor
 def _inject_helpers():
+    from i18n import status_label
     return {
         "mission_label": _mission_label,
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
         "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
+        "status_label": status_label,
     }
 
 

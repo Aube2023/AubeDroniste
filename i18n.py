@@ -295,4 +295,27 @@ _T = {
                                     "en": "Your bid was accepted — « {title} »"},
     "email.new_message.subject":  {"fr": "Nouveau message — {title}",
                                     "en": "New message — {title}"},
+
+    # ---- Statuts (mission / bid / booking) — affichés dans les .tag
+    "status.open":            {"fr": "ouverte",        "en": "open"},
+    "status.assigned":        {"fr": "attribuée",      "en": "assigned"},
+    "status.in_progress":     {"fr": "en cours",       "en": "in progress"},
+    "status.done":            {"fr": "terminée",       "en": "done"},
+    "status.cancelled":       {"fr": "annulée",        "en": "cancelled"},
+    "status.pending":         {"fr": "en attente",     "en": "pending"},
+    "status.accepted":        {"fr": "acceptée",       "en": "accepted"},
+    "status.rejected":        {"fr": "refusée",        "en": "rejected"},
+    "status.withdrawn":       {"fr": "retirée",        "en": "withdrawn"},
+    "status.pending_payment": {"fr": "paiement en attente", "en": "pending payment"},
+    "status.funded":          {"fr": "payée",          "en": "funded"},
+    "status.completed":       {"fr": "terminée",       "en": "completed"},
+    "status.disputed":        {"fr": "en litige",      "en": "disputed"},
+    "status.refunded":        {"fr": "remboursée",     "en": "refunded"},
 }
+
+
+def status_label(code: str, lang: Optional[str] = None) -> str:
+    """Label localise pour les status mission/bid/booking. Fallback : code brut."""
+    if not code:
+        return ""
+    return t(f"status.{code}", lang=lang)

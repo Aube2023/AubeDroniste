@@ -20,7 +20,7 @@
     </div>
     <div style="text-align: right;">
       <div class="price big">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
-      <span class="tag tag-{{ booking.status }}" style="margin-top: 6px;">{{ booking.status }}</span>
+      <span class="tag tag-{{ booking.status }}" style="margin-top: 6px;">{{ status_label(booking.status) }}</span>
     </div>
   </div>
 

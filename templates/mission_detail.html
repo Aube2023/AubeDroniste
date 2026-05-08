@@ -5,7 +5,7 @@
 <div class="mission-brief">
   <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
     <span class="tag">{{ mission_label(mission.mission_type) }}</span>
-    <span class="tag tag-{{ mission.status }}">{{ mission.status }}</span>
+    <span class="tag tag-{{ mission.status }}">{{ status_label(mission.status) }}</span>
     {% if mission.is_urgent %}<span class="tag tag-urgent">⚡ urgent</span>{% endif %}
   </div>
   <h1>{{ mission.title }}</h1>
@@ -87,7 +87,7 @@
         </div>
         <div style="text-align: right;">
           <div class="price big">{{ b.price|int }} <span style="font-size: .6em; color: var(--ink-dim);">{{ b.currency }}</span></div>
-          <span class="tag tag-{{ b.status }}" style="margin-top: 6px;">{{ b.status }}</span>
+          <span class="tag tag-{{ b.status }}" style="margin-top: 6px;">{{ status_label(b.status) }}</span>
         </div>
       </div>
       {% if b.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ b.eta_hours }} h</div>{% endif %}
@@ -113,7 +113,7 @@
         </div>
         <div style="text-align: right;">
           <div class="price big">{{ my_bid.price|int }} <span style="font-size: .6em; color: var(--ink-dim);">{{ my_bid.currency }}</span></div>
-          <span class="tag tag-{{ my_bid.status }}" style="margin-top: 6px;">{{ my_bid.status }}</span>
+          <span class="tag tag-{{ my_bid.status }}" style="margin-top: 6px;">{{ status_label(my_bid.status) }}</span>
         </div>
       </div>
       {% if my_bid.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ my_bid.eta_hours }} h</div>{% endif %}
