@@ -276,17 +276,22 @@ def mission_detail(mission_id):
     if not mission:
         abort(404)
     user = getattr(g, "user", None)
-    has_my_bid = False
-    if user:
-        my = db.fetchone(
-            "SELECT 1 FROM bids WHERE mission_id=? AND pilot_user_id=?",
-            (mission_id, user["id"]),
-        )
-        has_my_bid = bool(my)
+    all_bids = mission.get("bids") or []
+    is_client = bool(user and user["id"] == mission["client_user_id"])
+    my_bid = None
+    if user and not is_client:
+        for b in all_bids:
+            if b["pilot_user_id"] == user["id"]:
+                my_bid = b
+                break
+    has_my_bid = my_bid is not None
     return render_template(
         "mission_detail.html",
         mission=mission,
         has_my_bid=has_my_bid,
+        is_client=is_client,
+        my_bid=my_bid,
+        bid_count=len(all_bids),
     )
 
 

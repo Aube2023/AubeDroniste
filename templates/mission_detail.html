@@ -62,44 +62,89 @@
   <div class="row-between" style="align-items: end;">
     <div>
       <span class="eyebrow">Offres reçues</span>
-      <h2>{{ mission.bids|length }} pilote(s) ont répondu.</h2>
+      <h2>{{ bid_count }} pilote(s) ont répondu.</h2>
     </div>
   </div>
-  {% for b in mission.bids %}
-  <div class="card" style="margin: 12px 0;">
-    <div class="row-between" style="align-items: start;">
-      <div>
-        <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-weight: 600;">
-          {{ b.pilot_name }}
-        </a>
-        {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
-        <div class="muted small mono" style="margin-top: 4px;">
-          ★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})
-          {% if b.pilot_city or b.pilot_country %} · {{ b.pilot_city or '' }}{% if b.pilot_city and b.pilot_country %}, {% endif %}{{ b.pilot_country or '' }}{% endif %}
+
+  {% if bid_count == 0 %}
+    <p class="muted">Aucune offre pour le moment. Soyez le premier pilote à répondre.</p>
+  {% endif %}
+
+  {% if is_client %}
+    {# Client (auteur de la mission) — voit le détail complet de chaque offre #}
+    {% for b in mission.bids %}
+    <div class="card" style="margin: 12px 0;">
+      <div class="row-between" style="align-items: start;">
+        <div>
+          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-weight: 600;">
+            {{ b.pilot_name }}
+          </a>
+          {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+          <div class="muted small mono" style="margin-top: 4px;">
+            ★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})
+            {% if b.pilot_city or b.pilot_country %} · {{ b.pilot_city or '' }}{% if b.pilot_city and b.pilot_country %}, {% endif %}{{ b.pilot_country or '' }}{% endif %}
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="price big">{{ b.price|int }} <span style="font-size: .6em; color: var(--ink-dim);">{{ b.currency }}</span></div>
+          <span class="tag tag-{{ b.status }}" style="margin-top: 6px;">{{ b.status }}</span>
         </div>
       </div>
-      <div style="text-align: right;">
-        <div class="price big">{{ b.price|int }} <span style="font-size: .6em; color: var(--ink-dim);">{{ b.currency }}</span></div>
-        <span class="tag tag-{{ b.status }}" style="margin-top: 6px;">{{ b.status }}</span>
-      </div>
-    </div>
-    {% if b.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ b.eta_hours }} h</div>{% endif %}
-    {% if b.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 10px;">« {{ b.message }} »</p>{% endif %}
+      {% if b.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ b.eta_hours }} h</div>{% endif %}
+      {% if b.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 10px;">« {{ b.message }} »</p>{% endif %}
 
-    {% if current_user and current_user.id == mission.client_user_id and mission.status == 'open' and b.status == 'pending' %}
-    <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}" style="margin-top: 14px;">
-        {{ csrf_input() }}
-      <button class="cta" type="submit">Accepter cette offre</button>
-    </form>
+      {% if mission.status == 'open' and b.status == 'pending' %}
+      <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}" style="margin-top: 14px;">
+          {{ csrf_input() }}
+        <button class="cta" type="submit">Accepter cette offre</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+  {% else %}
+    {# Pilote ou visiteur — résumé Upwork-style : noms seulement, pas de prix/message #}
+    {% if has_my_bid %}
+    <div class="card" style="margin: 12px 0; border-left: 3px solid var(--ink);">
+      <span class="eyebrow">Mon offre</span>
+      <div class="row-between" style="align-items: start; margin-top: 6px;">
+        <div>
+          <span style="font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-weight: 600;">{{ my_bid.pilot_name }}</span>
+        </div>
+        <div style="text-align: right;">
+          <div class="price big">{{ my_bid.price|int }} <span style="font-size: .6em; color: var(--ink-dim);">{{ my_bid.currency }}</span></div>
+          <span class="tag tag-{{ my_bid.status }}" style="margin-top: 6px;">{{ my_bid.status }}</span>
+        </div>
+      </div>
+      {% if my_bid.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ my_bid.eta_hours }} h</div>{% endif %}
+      {% if my_bid.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 10px;">« {{ my_bid.message }} »</p>{% endif %}
+      {% if my_bid.status == 'pending' %}
+      <form method="post" action="{{ url_for('bid_withdraw', bid_id=my_bid.id) }}" style="margin-top: 14px;">
+          {{ csrf_input() }}
+        <button class="ghost" type="submit">Retirer mon offre</button>
+      </form>
+      {% endif %}
+    </div>
     {% endif %}
-    {% if current_user and current_user.id == b.pilot_user_id and b.status == 'pending' %}
-    <form method="post" action="{{ url_for('bid_withdraw', bid_id=b.id) }}" style="margin-top: 14px;">
-        {{ csrf_input() }}
-      <button class="ghost" type="submit">Retirer mon offre</button>
-    </form>
+
+    {% set others = mission.bids | rejectattr('pilot_user_id', 'equalto', (current_user.id if current_user else 0)) | list %}
+    {% if others %}
+    <div class="card" style="margin: 12px 0;">
+      <span class="eyebrow">Autres pilotes en lice</span>
+      <ul class="bid-roster" style="list-style: none; padding: 0; margin: 10px 0 0;">
+        {% for b in others %}
+        <li style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ink-dim-bg, rgba(0,0,0,.06));">
+          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); color: var(--ink); font-weight: 600; text-decoration: none;">{{ b.pilot_name }}</a>
+          {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+          {% if b.pilot_rating.count > 0 %}<span class="muted small mono">★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="muted small" style="margin-top: 10px;">Les détails des offres (prix, délai, message) ne sont visibles que par l'auteur de la mission.</p>
+    </div>
     {% endif %}
-  </div>
-  {% else %}<p class="muted">Aucune offre pour le moment. Soyez le premier pilote à répondre.</p>{% endfor %}
+
+  {% endif %}
 </section>
 
 {% endblock %}
