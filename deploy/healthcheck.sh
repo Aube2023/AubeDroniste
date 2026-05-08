@@ -103,12 +103,12 @@ if [[ -f "$ENV_FILE" ]]; then
     else
         check_fail "Env file : $ENV_FILE chmod $PERMS (attendu 600 ou 640)"
     fi
-    if grep -q "^AUBEDRONISTE_SECRET=$" "$ENV_FILE" 2>/dev/null; then
-        check_fail "Env file : AUBEDRONISTE_SECRET vide"
-    elif grep -q "AUBEDRONISTE_SECRET=change-me" "$ENV_FILE" 2>/dev/null; then
-        check_fail "Env file : AUBEDRONISTE_SECRET = valeur par défaut !"
+    if grep -q "^AUBEPILOT_SECRET=$" "$ENV_FILE" 2>/dev/null; then
+        check_fail "Env file : AUBEPILOT_SECRET vide"
+    elif grep -q "AUBEPILOT_SECRET=change-me" "$ENV_FILE" 2>/dev/null; then
+        check_fail "Env file : AUBEPILOT_SECRET = valeur par défaut !"
     else
-        check_ok "Env file : AUBEDRONISTE_SECRET défini"
+        check_ok "Env file : AUBEPILOT_SECRET défini"
     fi
     if grep -q "^STRIPE_SECRET_KEY=$" "$ENV_FILE" 2>/dev/null; then
         check_warn "Stripe : pas de clé (mode FAKE actif)"

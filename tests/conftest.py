@@ -14,6 +14,6 @@ sys.path.insert(0, ROOT)
 def isolated_data_dir():
     """Place DATA_DIR dans un temp dir avant l'import de l'app."""
     tmp = tempfile.mkdtemp(prefix="aubepilot-test-")
-    os.environ["AUBEDRONISTE_DATA"] = tmp
+    os.environ["AUBEPILOT_DATA"] = tmp
     yield tmp
     # Pas de cleanup : pytest peut vouloir relire les eml dumps

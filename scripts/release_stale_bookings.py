@@ -4,7 +4,7 @@ A executer en cron quotidien :
 
     0 4 * * * /srv/aubepilot/.venv/bin/python /srv/aubepilot/scripts/release_stale_bookings.py
 
-Le client a 7 jours (configurable via AUBEDRONISTE_AUTO_RELEASE_DAYS) pour
+Le client a 7 jours (configurable via AUBEPILOT_AUTO_RELEASE_DAYS) pour
 valider la mission. Apres ce delai, on libere automatiquement les fonds
 au pilote pour eviter qu'il soit bloque par un client absent.
 
@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-# En prod, charger /etc/aubepilot.env (sinon AUBEDRONISTE_SECRET manque)
+# En prod, charger /etc/aubepilot.env (sinon AUBEPILOT_SECRET manque)
 ENV_FILE = "/etc/aubepilot.env"
 if os.path.exists(ENV_FILE) and os.access(ENV_FILE, os.R_OK):
     with open(ENV_FILE) as f:

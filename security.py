@@ -209,7 +209,7 @@ def assert_production_ready(app):
     secret = app.secret_key
     if not secret or secret == DEFAULT_SECRET:
         raise RuntimeError(
-            "AUBEDRONISTE_SECRET non defini en prod. Genere une cle "
+            "AUBEPILOT_SECRET non defini en prod. Genere une cle "
             "(python -c 'import secrets; print(secrets.token_urlsafe(48))') "
             "et expose-la via la variable d'environnement."
         )

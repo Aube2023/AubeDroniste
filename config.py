@@ -6,13 +6,13 @@ services Aube. SQLite local pour demarrer ; PostgreSQL possible plus tard.
 """
 import os
 
-PORT = int(os.environ.get("AUBEDRONISTE_PORT", "5034"))
-HOST = os.environ.get("AUBEDRONISTE_HOST", "0.0.0.0")
+PORT = int(os.environ.get("AUBEPILOT_PORT", "5034"))
+HOST = os.environ.get("AUBEPILOT_HOST", "0.0.0.0")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Toutes les donnees runtime (DB, uploads, mail dev) vivent dans data/
 # pour separer code (versionne) et etat (gitignore).
-DATA_DIR = os.environ.get("AUBEDRONISTE_DATA", os.path.join(BASE_DIR, "data"))
+DATA_DIR = os.environ.get("AUBEPILOT_DATA", os.path.join(BASE_DIR, "data"))
 DB_PATH = os.path.join(DATA_DIR, "aubepilot.db")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 MAIL_DUMP_DIR = os.path.join(DATA_DIR, "mail")
@@ -23,7 +23,7 @@ SITE_URL = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 
-SECRET_KEY = os.environ.get("AUBEDRONISTE_SECRET", "change-me-in-prod-aubepilot-2026")
+SECRET_KEY = os.environ.get("AUBEPILOT_SECRET", "change-me-in-prod-aubepilot-2026")
 # La validation de production (refuse la cle par defaut hors dev) est faite
 # dans security.assert_production_ready() au demarrage de l'app.
 SESSION_COOKIE_NAME = "aubepilot_sid"
@@ -186,7 +186,7 @@ STRIPE_LIVE_MODE       = STRIPE_SECRET_KEY.startswith("sk_live_")
 STRIPE_FAKE_MODE       = not STRIPE_SECRET_KEY  # mode demo sans cle
 
 # Auto-libération si le client n'a pas validé après ce delai (jours)
-AUTO_RELEASE_DAYS = int(os.environ.get("AUBEDRONISTE_AUTO_RELEASE_DAYS", "7"))
+AUTO_RELEASE_DAYS = int(os.environ.get("AUBEPILOT_AUTO_RELEASE_DAYS", "7"))
 
 # Filtre anti-bypass : regex bloquees dans la messagerie avant `funded`
 MESSAGE_BANNED_PATTERNS = [

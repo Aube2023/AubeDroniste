@@ -24,7 +24,7 @@
 #    3. Répertoires (install, data, log, backup) + permissions
 #    4. Code       (git clone ou pull)
 #    5. Python     (venv + pip install -r requirements.txt + gunicorn)
-#    6. Env file   (génère AUBEDRONISTE_SECRET, écrit /etc/aubepilot.env)
+#    6. Env file   (génère AUBEPILOT_SECRET, écrit /etc/aubepilot.env)
 #    7. Database   (init schema.sql si absent)
 #    8. systemd    (copie unit, enable, start)
 #    9. nginx      (copie conf, enable, reload)
@@ -189,16 +189,16 @@ ok "Python $PY_VER prêt."
 step "Fichier d'environnement \`$ENV_FILE\`"
 
 if [[ ! -f "$ENV_FILE" ]]; then
-    log "Génération de $ENV_FILE avec un AUBEDRONISTE_SECRET aléatoire"
+    log "Génération de $ENV_FILE avec un AUBEPILOT_SECRET aléatoire"
     SECRET=$("$INSTALL_DIR/.venv/bin/python" -c 'import secrets; print(secrets.token_urlsafe(48))')
     run "cat > \"$ENV_FILE\" <<EOF
 # AubePilot — production environment
 # Généré par deploy.sh le \$(date -Iseconds)
 
-AUBEDRONISTE_HOST=127.0.0.1
-AUBEDRONISTE_PORT=$PORT
-AUBEDRONISTE_DATA=$DATA_DIR
-AUBEDRONISTE_SECRET=$SECRET
+AUBEPILOT_HOST=127.0.0.1
+AUBEPILOT_PORT=$PORT
+AUBEPILOT_DATA=$DATA_DIR
+AUBEPILOT_SECRET=$SECRET
 SITE_URL=https://$DOMAIN
 
 # --- SMTP transactionnel (à remplir) ---
@@ -216,7 +216,7 @@ STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
 
 # Auto-libération escrow (jours sans validation client)
-AUBEDRONISTE_AUTO_RELEASE_DAYS=7
+AUBEPILOT_AUTO_RELEASE_DAYS=7
 EOF"
     run "chmod 600 \"$ENV_FILE\""
     run "chown root:$APP_USER \"$ENV_FILE\""
@@ -236,7 +236,7 @@ if [[ ! -f "$DATA_DIR/aubepilot.db" ]]; then
     log "Initialisation du schéma SQLite"
     run "sudo -u $APP_USER \"$INSTALL_DIR/.venv/bin/python\" -c \"
 import os, sys
-os.environ.setdefault('AUBEDRONISTE_DATA', '$DATA_DIR')
+os.environ.setdefault('AUBEPILOT_DATA', '$DATA_DIR')
 sys.path.insert(0, '$INSTALL_DIR')
 import db
 db.init_schema('$INSTALL_DIR/schema.sql')

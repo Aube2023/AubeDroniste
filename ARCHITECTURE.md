@@ -272,7 +272,7 @@ sur l'app via `before_request` / `after_request` hooks.
 
 ### Validation de configuration prod
 - `security.assert_production_ready(app)` au boot :
-  - Refuse `AUBEDRONISTE_SECRET=change-me-in-prod-...` en prod (raise)
+  - Refuse `AUBEPILOT_SECRET=change-me-in-prod-...` en prod (raise)
   - Warn si SITE_URL n'est pas HTTPS
   - Bypassé si `FLASK_DEBUG=1` ou macOS
 
@@ -293,10 +293,10 @@ sur l'app via `before_request` / `after_request` hooks.
 
 | Var | Défaut | Effet |
 |---|---|---|
-| `AUBEDRONISTE_PORT` | 5034 | port HTTP |
-| `AUBEDRONISTE_HOST` | 0.0.0.0 | bind |
-| `AUBEDRONISTE_DATA` | `./data` | DB + uploads + mail dump |
-| `AUBEDRONISTE_SECRET` | dev | clé itsdangerous, **changer en prod** |
+| `AUBEPILOT_PORT` | 5034 | port HTTP |
+| `AUBEPILOT_HOST` | 0.0.0.0 | bind |
+| `AUBEPILOT_DATA` | `./data` | DB + uploads + mail dump |
+| `AUBEPILOT_SECRET` | dev | clé itsdangerous, **changer en prod** |
 | `SITE_URL` | `http://localhost:5034` | utilisé dans les liens d'emails |
 | `SMTP_HOST` | (vide) | si vide, dump local |
 | `SMTP_PORT` | 587 | |
@@ -307,7 +307,7 @@ sur l'app via `before_request` / `after_request` hooks.
 | `STRIPE_SECRET_KEY` | (vide=fake) | `sk_test_...` ou `sk_live_...` |
 | `STRIPE_PUBLISHABLE_KEY` | (vide) | `pk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | (vide) | `whsec_...` (depuis Stripe dashboard) |
-| `AUBEDRONISTE_AUTO_RELEASE_DAYS` | 7 | délai auto-release escrow |
+| `AUBEPILOT_AUTO_RELEASE_DAYS` | 7 | délai auto-release escrow |
 
 ---
 
@@ -319,7 +319,7 @@ pytest -q
 ```
 
 Les tests utilisent `tests/conftest.py:isolated_data_dir` qui place
-`AUBEDRONISTE_DATA` dans `/tmp` avant l'import de l'app — la DB de prod
+`AUBEPILOT_DATA` dans `/tmp` avant l'import de l'app — la DB de prod
 n'est jamais touchée.
 
 ---

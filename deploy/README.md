@@ -95,10 +95,10 @@ sudo -u aube .venv/bin/python scripts/seed.py   # (optionnel) données démo
 Créer `/etc/aubepilot.env` (chmod 600) :
 
 ```ini
-AUBEDRONISTE_PORT=5034
-AUBEDRONISTE_HOST=127.0.0.1
-AUBEDRONISTE_DATA=/var/lib/aubepilot
-AUBEDRONISTE_SECRET=<secret long aleatoire>
+AUBEPILOT_PORT=5034
+AUBEPILOT_HOST=127.0.0.1
+AUBEPILOT_DATA=/var/lib/aubepilot
+AUBEPILOT_SECRET=<secret long aleatoire>
 SITE_URL=https://pilot.aubeetoilee.com
 
 # SMTP transactionnel
@@ -180,7 +180,7 @@ Inscrire l'URL dans **AubeStatus** (port 5021) :
 
 ## 9. Check-list sécurité avant ouverture publique
 
-- [ ] `AUBEDRONISTE_SECRET` posé (généré via `python -c "import secrets; print(secrets.token_urlsafe(48))"`)
+- [ ] `AUBEPILOT_SECRET` posé (généré via `python -c "import secrets; print(secrets.token_urlsafe(48))"`)
 - [ ] `SITE_URL=https://pilot.aubeetoilee.com` (avec `https://` — sinon HSTS et cookies `secure` ne s'activent pas)
 - [ ] Cert Let's Encrypt valide (`curl -I https://pilot.aubeetoilee.com/`)
 - [ ] `FLASK_DEBUG` **non posé** (debug = exécution de code à distance)
@@ -193,7 +193,7 @@ Inscrire l'URL dans **AubeStatus** (port 5021) :
 - [ ] `nmap -sV pilot.aubeetoilee.com` : seuls 80 + 443 publics (5034 reste sur 127.0.0.1)
 - [ ] Logs nginx ne contiennent pas de mots de passe (`grep -i password /var/log/nginx/access.log`)
 
-### Générer un AUBEDRONISTE_SECRET solide
+### Générer un AUBEPILOT_SECRET solide
 
 ```bash
 python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
