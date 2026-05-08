@@ -3,22 +3,6 @@
 {% block content %}
 
 <section class="auth-split">
-  <aside class="auth-aside">
-    <span class="eyebrow">Plan de vol</span>
-    <h1>Décrivez la mission, <em>les pilotes feront leur offre</em>.</h1>
-    <p class="lead muted">
-      Plus votre brief est précis, plus les soumissions sont fiables. Cinq minutes
-      maintenant, c'est trois jours de gagnés sur la coordination.
-    </p>
-    <ul class="checklist">
-      <li>Indiquez un cadre budgétaire — même large — pour filtrer les bons profils.</li>
-      <li>Précisez les coordonnées GPS si le site est isolé : c'est le b.a.-ba aviation.</li>
-      <li>Mentionnez les contraintes locales (ZRT, zone protégée, NOTAM en cours).</li>
-      <li>Déclarez les exigences techniques : RTK, thermique, charge utile, RC pro.</li>
-      <li>Vous pouvez modifier ou annuler tant que la mission n'est pas attribuée.</li>
-    </ul>
-  </aside>
-
   <form method="post" class="auth-form section-form">
         {{ csrf_input() }}
     <h2>Publier une mission</h2>
