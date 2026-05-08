@@ -19,7 +19,7 @@ def client():
 def test_index(client):
     r = client.get("/")
     assert r.status_code == 200
-    assert b"AubeDroniste" in r.data
+    assert b"AubePilot" in r.data
 
 
 def test_lang_switch(client):
@@ -35,7 +35,7 @@ def test_lang_invalid_404(client):
 
 
 def test_pilots_search(client):
-    r = client.get("/dronistes")
+    r = client.get("/pilotes")
     assert r.status_code == 200
 
 

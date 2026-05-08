@@ -7,7 +7,7 @@ python-pam>=2.0; sys_platform != "darwin"
 six>=1.16; sys_platform != "darwin"
 
 # Stripe Connect (paiement marketplace)
-# AubeDroniste fonctionne en "fake mode" sans la cle ; ce package est requis
+# AubePilot fonctionne en "fake mode" sans la cle ; ce package est requis
 # pour activer le vrai paiement.
 stripe>=8.0
 

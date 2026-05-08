@@ -18,4 +18,4 @@ Répondre : {{ site_url }}/missions/{{ mission.id }}
 Reply: {{ site_url }}/missions/{{ mission.id }}
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubePilot · {{ year }} · pilot.aubeetoilee.com

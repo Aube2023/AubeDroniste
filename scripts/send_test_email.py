@@ -16,9 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-# En prod Linux, charger /etc/aubedroniste.env si present (systemd le fait
+# En prod Linux, charger /etc/aubepilot.env si present (systemd le fait
 # pour le service mais pas pour les scripts standalone).
-ENV_FILE = "/etc/aubedroniste.env"
+ENV_FILE = "/etc/aubepilot.env"
 if os.path.exists(ENV_FILE) and os.access(ENV_FILE, os.R_OK):
     with open(ENV_FILE) as f:
         for line in f:
@@ -34,7 +34,7 @@ import mailer        # noqa: E402
 DEMO_USER = {
     "id": 1, "username": "demo.pilote",
     "email": "demo@aubemail.com", "full_name": "Sophie Tremblay",
-    "role": "droniste",
+    "role": "pilot",
 }
 DEMO_CLIENT = {"id": 9, "username": "demo.client",
                "email": "client@aubemail.com", "full_name": "Imane Cherif",

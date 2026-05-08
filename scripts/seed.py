@@ -1,4 +1,4 @@
-"""Donnees de demonstration pour AubeDroniste.
+"""Donnees de demonstration pour AubePilot.
 
 Lance : `python seed.py` avec la DB initialisee. Idempotent : passe si
 un compte demo existe deja.
@@ -29,11 +29,11 @@ def seed():
 
     samples = [
         # username, full_name, role, country, city, lat, lng
-        ("amine.benali",   "Amine Benali",      "droniste", "Maroc",   "Casablanca",  33.5731, -7.5898),
-        ("sophie.tremblay","Sophie Tremblay",   "droniste", "Canada",  "Montreal",    45.5017, -73.5673),
-        ("yacine.haddad",  "Yacine Haddad",     "droniste", "Algerie", "Alger",       36.7538,  3.0588),
-        ("linh.dupont",    "Linh Dupont",       "droniste", "France",  "Lyon",        45.7640,  4.8357),
-        ("kofi.adjei",     "Kofi Adjei",        "droniste", "Cote d'Ivoire", "Abidjan", 5.3600, -4.0083),
+        ("amine.benali",   "Amine Benali",      "pilot", "Maroc",   "Casablanca",  33.5731, -7.5898),
+        ("sophie.tremblay","Sophie Tremblay",   "pilot", "Canada",  "Montreal",    45.5017, -73.5673),
+        ("yacine.haddad",  "Yacine Haddad",     "pilot", "Algerie", "Alger",       36.7538,  3.0588),
+        ("linh.dupont",    "Linh Dupont",       "pilot", "France",  "Lyon",        45.7640,  4.8357),
+        ("kofi.adjei",     "Kofi Adjei",        "pilot", "Cote d'Ivoire", "Abidjan", 5.3600, -4.0083),
         ("client.alpha",   "Marie Dubois",      "client",   "France",  "Paris",       48.8566,  2.3522),
         ("client.beta",    "Pierre Lavigne",    "client",   "Canada",  "Quebec",      46.8139, -71.2080),
         ("client.gamma",   "Imane Cherif",      "client",   "Tunisie", "Tunis",       36.8065, 10.1815),
@@ -60,13 +60,13 @@ def seed():
                 )
             needed.append((uid, username, role, country))
 
-        # Profils dronistes : on cree juste les comptes et la dispo par defaut.
+        # Profils pilotes : on cree juste les comptes et la dispo par defaut.
         # Le pilote rempli lui-meme : headline, brevets, drones, specialites,
-        # tarifs, langues, assurance, etc. via /espace/droniste.
+        # tarifs, langues, assurance, etc. via /espace/pilote.
         # On laisse les fiches vides exprès pour rester proche de la realite
         # d'un nouveau marketplace : profil progressivement complete par les
         # utilisateurs eux-memes.
-        pilots = [(u, c) for (u, _, r, c) in needed if r == "droniste"]
+        pilots = [(u, c) for (u, _, r, c) in needed if r == "pilot"]
         for uid, country in pilots:
             # Marque le pilote comme disponible et ajoute son pays comme
             # territoire d'operation principal — c'est le seul pre-remplissage.

@@ -1,4 +1,4 @@
-# Architecture AubeDroniste
+# Architecture AubePilot
 
 Document destiné aux développeurs qui reprennent ou étendent le projet.
 Pour le déploiement opérationnel, voir [`deploy/README.md`](deploy/README.md).
@@ -8,7 +8,7 @@ Pour le déploiement opérationnel, voir [`deploy/README.md`](deploy/README.md).
 ## Arborescence
 
 ```
-AubeDroniste/
+AubePilot/
 ├── app.py                 Point d'entree Flask : routes, hooks, errors
 ├── config.py              Constantes + chemins (DATA_DIR, etc.) — env vars
 ├── db.py                  Connexion SQLite par requete + haversine_km
@@ -25,7 +25,7 @@ AubeDroniste/
 ├── ARCHITECTURE.md        ← vous etes ici
 │
 ├── data/                  GITIGNORE — etat runtime
-│   ├── aubedroniste.db    SQLite (cree au boot si absent)
+│   ├── aubepilot.db    SQLite (cree au boot si absent)
 │   ├── uploads/           justificatifs brevets + photos drones
 │   └── mail/              dump des emails en mode dev (.eml)
 │
@@ -40,7 +40,7 @@ AubeDroniste/
 ├── deploy/
 │   ├── README.md          Procedure prod complete
 │   ├── nginx.conf.example reverse proxy + SSL
-│   ├── aubedroniste.service systemd unit
+│   ├── aubepilot.service systemd unit
 │   └── pam.example        notes sur l'auth PAM partagee
 │
 ├── templates/
@@ -71,7 +71,7 @@ AubeDroniste/
 1. `POST /inscription` → `app.register`
 2. `auth.create_user` → INSERT users + INSERT pilot_profiles si role pilot
 3. `mailer.send_welcome` (async) → email bilingue FR + EN
-4. session creee → cookie `aubedroniste_sid`
+4. session creee → cookie `aubepilot_sid`
 5. redirect `/espace`
 
 ### Cycle d'une mission
@@ -192,7 +192,7 @@ dans `bookings.platform_fee`. Le `Transfer` au pilote utilise
 
 ### Onboarding pilote
 
-- `GET /espace/droniste/stripe` → crée un compte Connect Express et
+- `GET /espace/pilote/stripe` → crée un compte Connect Express et
   redirige vers l'URL d'onboarding Stripe (KYC)
 - `GET /stripe/return` → après onboarding, vérifie le statut Stripe et
   met à jour `pilot_profiles.stripe_charges_enabled / payouts_enabled`
@@ -302,7 +302,7 @@ sur l'app via `before_request` / `after_request` hooks.
 | `SMTP_PORT` | 587 | |
 | `SMTP_USER` / `SMTP_PASSWORD` | (vide) | login SMTP |
 | `SMTP_FROM` | `no-reply@aubeetoilee.com` | expéditeur |
-| `SMTP_FROM_NAME` | `AubeDroniste` | nom expéditeur |
+| `SMTP_FROM_NAME` | `AubePilot` | nom expéditeur |
 | `SMTP_TLS` | 1 | STARTTLS |
 | `STRIPE_SECRET_KEY` | (vide=fake) | `sk_test_...` ou `sk_live_...` |
 | `STRIPE_PUBLISHABLE_KEY` | (vide) | `pk_test_...` |

@@ -1,5 +1,5 @@
 {% extends "emails/_layout.html" %}
-{% block subject %}Bienvenue / Welcome — AubeDroniste{% endblock %}
+{% block subject %}Bienvenue / Welcome — AubePilot{% endblock %}
 {% block preview %}Votre compte est créé · Your account is ready.{% endblock %}
 
 {% block content %}
@@ -13,7 +13,7 @@
     Bienvenue à bord, {{ first }}.
   </h1>
   <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
-    Votre compte AubeDroniste est créé. Voici votre identifiant de connexion :
+    Votre compte AubePilot est créé. Voici votre identifiant de connexion :
   </p>
   <div style="margin:18px 0;padding:14px 18px;border:1px solid #e3ded1;background:#fbfaf6;font:500 14px/1 'Courier New',Courier,monospace;color:#15181f;letter-spacing:0.04em;">
     {{ user.email }}
@@ -21,8 +21,8 @@
   <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
     {% if user.role == 'client' %}
     En tant que client, vous pouvez dès maintenant publier votre première mission, comparer les pilotes près de chez vous et choisir celui qui répond exactement à votre brief.
-    {% elif user.role == 'droniste' %}
-    En tant que droniste, complétez votre carnet de vol : ajoutez vos brevets (DGAC, EASA, Transport Canada, FAA, ASECNA) et votre flotte. Plus votre fiche est complète, plus les clients vous font confiance.
+    {% elif user.role == 'pilot' %}
+    En tant que pilote, complétez votre carnet de vol : ajoutez vos brevets (DGAC, EASA, Transport Canada, FAA, ASECNA) et votre flotte. Plus votre fiche est complète, plus les clients vous font confiance.
     {% else %}
     Vous avez activé le double rôle : publiez vos missions de drone <em>et</em> soumissionnez sur celles des autres. Une seule fiche, deux entrées.
     {% endif %}
@@ -34,7 +34,7 @@
   </p>
   <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:0;">
     À bientôt en cabine,<br>
-    <em>L'équipage AubeDroniste</em>
+    <em>L'équipage AubePilot</em>
   </p>
 </td></tr>
 
@@ -49,7 +49,7 @@
     Welcome aboard, {{ first }}.
   </h1>
   <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
-    Your AubeDroniste account has been created. Here is your sign-in identifier:
+    Your AubePilot account has been created. Here is your sign-in identifier:
   </p>
   <div style="margin:18px 0;padding:14px 18px;border:1px solid #e3ded1;background:#fbfaf6;font:500 14px/1 'Courier New',Courier,monospace;color:#15181f;letter-spacing:0.04em;">
     {{ user.email }}
@@ -57,7 +57,7 @@
   <p style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
     {% if user.role == 'client' %}
     As a client, you can now post your first mission, compare pilots near you and pick the one who matches your brief exactly.
-    {% elif user.role == 'droniste' %}
+    {% elif user.role == 'pilot' %}
     As a drone pilot, complete your flight book: add your licenses (DGAC, EASA, Transport Canada, FAA, ASECNA) and your fleet. The more complete your card, the more trust you earn.
     {% else %}
     You've enabled both roles: post your missions <em>and</em> bid on others'. One profile, two doors.
@@ -70,7 +70,7 @@
   </p>
   <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:0;">
     See you in the cockpit,<br>
-    <em>The AubeDroniste crew</em>
+    <em>The AubePilot crew</em>
   </p>
 </td></tr>
 </table>

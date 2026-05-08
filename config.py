@@ -1,6 +1,6 @@
-"""Configuration AubeDroniste.
+"""Configuration AubePilot.
 
-Marketplace souveraine type Uber pour pilotes de drone (dronistes) et
+Marketplace souveraine type Uber pour pilotes de drone et
 clients qui publient des missions. Auth PAM partagee avec les autres
 services Aube. SQLite local pour demarrer ; PostgreSQL possible plus tard.
 """
@@ -13,7 +13,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Toutes les donnees runtime (DB, uploads, mail dev) vivent dans data/
 # pour separer code (versionne) et etat (gitignore).
 DATA_DIR = os.environ.get("AUBEDRONISTE_DATA", os.path.join(BASE_DIR, "data"))
-DB_PATH = os.path.join(DATA_DIR, "aubedroniste.db")
+DB_PATH = os.path.join(DATA_DIR, "aubepilot.db")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 MAIL_DUMP_DIR = os.path.join(DATA_DIR, "mail")
 
@@ -23,10 +23,10 @@ SITE_URL = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 
-SECRET_KEY = os.environ.get("AUBEDRONISTE_SECRET", "change-me-in-prod-aubedroniste-2026")
+SECRET_KEY = os.environ.get("AUBEDRONISTE_SECRET", "change-me-in-prod-aubepilot-2026")
 # La validation de production (refuse la cle par defaut hors dev) est faite
 # dans security.assert_production_ready() au demarrage de l'app.
-SESSION_COOKIE_NAME = "aubedroniste_sid"
+SESSION_COOKIE_NAME = "aubepilot_sid"
 SESSION_LIFETIME_DAYS = 30
 
 EMAIL_DOMAIN = "aubemail.com"

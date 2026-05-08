@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}AubeDroniste — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}{% endblock %}</title>
-  <meta name="description" content="{{ 'AubeDroniste met en relation dronistes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'AubeDroniste connects certified drone pilots and clients across the francophonie.' }}">
+  <title>{% block title %}AubePilot — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}{% endblock %}</title>
+  <meta name="description" content="{{ 'AubePilot met en relation pilotes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'AubePilot connects certified drone pilots and clients across the francophonie.' }}">
   <link rel="alternate" hreflang="fr" href="/lang/fr">
   <link rel="alternate" hreflang="en" href="/lang/en">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
@@ -26,7 +26,7 @@
   <a href="{{ url_for('index') }}" class="brand">
     <span class="glyph"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="36" height="36"></span>
     <span>
-      <b>Aube</b>Droniste
+      <b>Aube</b>Pilote
       <small>{{ t('nav.brand_sub') }}</small>
     </span>
   </a>
@@ -99,12 +99,12 @@
       <a href="https://meteo.aubeetoilee.com"><span class="pre">Aube</span>Météo</a>
       <a href="https://news.aubeetoilee.com"><span class="pre">Aube</span>News</a>
       <a href="https://livre.aubeetoilee.com"><span class="pre">Aube</span>Livre</a>
-      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span>Droniste</a>
+      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span>Pilote</a>
     </nav>
   </section>
   <div class="footer-line">
     <div>
-      <strong>AubeDroniste</strong> · {{ t('footer.tagline') }}
+      <strong>AubePilot</strong> · {{ t('footer.tagline') }}
     </div>
     <div class="dim">{{ now().year }} — {{ t('footer.cities') }}</div>
   </div>

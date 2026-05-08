@@ -1,4 +1,4 @@
-"""Couche securite AubeDroniste.
+"""Couche securite AubePilot.
 
 - CSRF tokens (par session, valides sur POST/PUT/DELETE/PATCH)
 - Rate limiting per IP / route (token bucket en memoire)
@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 from flask import abort, current_app, request, session
 from markupsafe import Markup
 
-log = logging.getLogger("aubedroniste.security")
+log = logging.getLogger("aubepilot.security")
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +188,7 @@ def audit(user_id: Optional[int], action: str, target: Optional[str] = None,
 # Verifications de demarrage en prod
 # ---------------------------------------------------------------------------
 
-DEFAULT_SECRET = "change-me-in-prod-aubedroniste-2026"
+DEFAULT_SECRET = "change-me-in-prod-aubepilot-2026"
 
 
 def assert_production_ready(app):
@@ -218,6 +218,6 @@ def assert_production_ready(app):
     if not site_url.startswith("https://"):
         log.warning(
             "SITE_URL=%s n'est pas https — HSTS desactive et cookies non secure. "
-            "Mets SITE_URL=https://droniste.aubeetoilee.com en prod.",
+            "Mets SITE_URL=https://pilot.aubeetoilee.com en prod.",
             site_url,
         )

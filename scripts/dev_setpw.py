@@ -1,6 +1,6 @@
 """Pose / met a jour un mot de passe local pour tester en dev (macOS).
 
-Sur macOS, l'auth PAM n'est pas disponible — AubeDroniste utilise le
+Sur macOS, l'auth PAM n'est pas disponible — AubePilot utilise le
 fichier .dev_passwords (SHA-256 sale). Cet helper permet d'ajouter un
 user "factice" qui imite ton compte AubeMail pour le tester localement.
 

@@ -1,7 +1,7 @@
-# AubeDroniste
+# AubePilot
 
 Marketplace souveraine type "Uber pour drones" : met en relation des
-**dronistes certifiés** (formations DGAC / EASA / Transport Canada / FAA /
+**pilotes certifiés** (formations DGAC / EASA / Transport Canada / FAA /
 ASECNA…) et des **clients** qui publient des missions (photo, vidéo,
 cartographie RTK, inspection thermique, mariages, agriculture, etc.).
 Recherche **géolocalisée par pays / ville / rayon**, enchères, messagerie,
@@ -21,9 +21,9 @@ Auth partagée `@aubemail.com` (PAM en prod, fallback dev local sur macOS).
 | Langues | **FR + EN** (sélecteur topbar, cookie `aube_lang`) |
 | Thèmes | **Aube (clair) + Nuit (sombre)** — toggle topbar |
 | Mailer | SMTP en prod, dump `.eml` local en dev |
-| API | JSON (`/api/dronistes`, `/api/missions`, `/api/near`, `/api/country-breakdown`, `/api/stats`) |
+| API | JSON (`/api/pilotes`, `/api/missions`, `/api/near`, `/api/country-breakdown`, `/api/stats`) |
 | Port | **5034** |
-| Domaine prod prévu | `droniste.aubeetoilee.com` |
+| Domaine prod prévu | `pilot.aubeetoilee.com` |
 
 ## Démarrage
 
@@ -33,8 +33,8 @@ Auth partagée `@aubemail.com` (PAM en prod, fallback dev local sur macOS).
 python3 app.py
 ```
 
-À la première exécution : crée `aubedroniste.db` à partir de `schema.sql`
-puis lance `seed.py` (8 comptes démo, mdp `demo` ; 5 dronistes répartis
+À la première exécution : crée `aubepilot.db` à partir de `schema.sql`
+puis lance `seed.py` (8 comptes démo, mdp `demo` ; 5 pilotes répartis
 France/Canada/Maroc/Algérie/Côte d'Ivoire, 3 missions ouvertes).
 
 Ouvrir : <http://127.0.0.1:5034>
@@ -43,11 +43,11 @@ Ouvrir : <http://127.0.0.1:5034>
 
 | login | rôle | pays |
 |---|---|---|
-| `amine.benali` | droniste | Maroc |
-| `sophie.tremblay` | droniste | Canada |
-| `yacine.haddad` | droniste | Algérie |
-| `linh.dupont` | droniste | France |
-| `kofi.adjei` | droniste | Côte d'Ivoire |
+| `amine.benali` | pilote | Maroc |
+| `sophie.tremblay` | pilote | Canada |
+| `yacine.haddad` | pilote | Algérie |
+| `linh.dupont` | pilote | France |
+| `kofi.adjei` | pilote | Côte d'Ivoire |
 | `client.alpha` | client | France |
 | `client.beta` | client | Canada |
 | `client.gamma` | client | Tunisie |
@@ -57,10 +57,10 @@ Mot de passe pour tous : `demo`.
 ## Modèle métier
 
 ### Comptes & rôles
-Un compte peut être `client`, `droniste` ou `both`. Un client devient
-droniste à la volée depuis l'espace (`/espace/droniste`).
+Un compte peut être `client`, `pilote` ou `both`. Un client devient
+pilote à la volée depuis l'espace (`/espace/pilote`).
 
-### Profil droniste
+### Profil pilote
 - accroche, bio, années d'expérience
 - tarif horaire / journée + devise
 - rayon de déplacement (km), accepte missions distantes / urgentes
@@ -89,7 +89,7 @@ certifications). Statuts : open → assigned → in_progress → done /
 cancelled.
 
 ### Enchères (`bids`) → Réservations (`bookings`)
-Un droniste soumissionne avec prix + délai + message. Le client accepte
+Un pilote soumissionne avec prix + délai + message. Le client accepte
 une enchère → création d'une réservation, autres enchères rejetées,
 mission passée en `assigned`. Commission plateforme **30%**
 (`PLATFORM_FEE_PCT`).
@@ -105,7 +105,7 @@ Thread par mission entre client et pilote, marquage lu/non-lu.
 
 ```
 GET /api/stats
-GET /api/dronistes?country=&city=&mission_type=&capability=&lat=&lng=&radius_km=&min_rating=&only_available=
+GET /api/pilotes?country=&city=&mission_type=&capability=&lat=&lng=&radius_km=&min_rating=&only_available=
 GET /api/missions ?country=&mission_type=&status=&lat=&lng=&radius_km=&only_urgent=
 ```
 

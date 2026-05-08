@@ -1,4 +1,4 @@
-"""Mailer AubeDroniste — SMTP en prod, dump local en dev.
+"""Mailer AubePilot — SMTP en prod, dump local en dev.
 
 Configuration via variables d'environnement :
   SMTP_HOST       (vide = mode dev, dump dans data/mail/*.eml)
@@ -7,7 +7,7 @@ Configuration via variables d'environnement :
   SMTP_PASSWORD   (optionnel)
   SMTP_TLS        "1" (defaut) | "0"
   SMTP_FROM       no-reply@aubeetoilee.com
-  SMTP_FROM_NAME  "AubeDroniste"
+  SMTP_FROM_NAME  "AubePilot"
 
 Les emails transactionnels sont **bilingues** (FR puis EN dans le meme
 message) afin que le destinataire voie sa langue quel que soit son
@@ -31,7 +31,7 @@ from jinja2 import TemplateNotFound
 import i18n
 from config import MAIL_DUMP_DIR, SITE_URL
 
-log = logging.getLogger("aubedroniste.mailer")
+log = logging.getLogger("aubepilot.mailer")
 
 
 def _smtp_config() -> dict:
@@ -41,7 +41,7 @@ def _smtp_config() -> dict:
         "user":      os.environ.get("SMTP_USER", "").strip(),
         "password":  os.environ.get("SMTP_PASSWORD", ""),
         "from_email":os.environ.get("SMTP_FROM", "no-reply@aubeetoilee.com"),
-        "from_name": os.environ.get("SMTP_FROM_NAME", "AubeDroniste"),
+        "from_name": os.environ.get("SMTP_FROM_NAME", "AubePilot"),
         "tls":       os.environ.get("SMTP_TLS", "1") == "1",
     }
 

@@ -1,5 +1,5 @@
 {% extends "emails/_layout.html" %}
-{% block subject %}Mission financée / Mission funded — {{ booking.mission_title or "AubeDroniste" }}{% endblock %}
+{% block subject %}Mission financée / Mission funded — {{ booking.mission_title or "AubePilot" }}{% endblock %}
 {% block preview %}Le client a payé — vous pouvez décoller · The client has paid — you can take off.{% endblock %}
 
 {% block content %}
@@ -10,7 +10,7 @@
     Décollage autorisé : la mission est payée.
   </h1>
   <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
-    <strong>{{ client.full_name }}</strong> vient de régler la mission. Les fonds sont sécurisés en escrow chez AubeDroniste. Vous pouvez préparer votre vol et exécuter la mission ; les fonds vous seront transférés dès que le client validera la livraison.
+    <strong>{{ client.full_name }}</strong> vient de régler la mission. Les fonds sont sécurisés en escrow chez AubePilot. Vous pouvez préparer votre vol et exécuter la mission ; les fonds vous seront transférés dès que le client validera la livraison.
   </p>
   <p style="margin:24px 0;">
     <a href="{{ site_url }}/reservations/{{ booking.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Ouvrir la réservation</a>
@@ -25,7 +25,7 @@
     Cleared for takeoff: the mission is paid.
   </h1>
   <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
-    <strong>{{ client.full_name }}</strong> has just paid for the mission. Funds are held in escrow at AubeDroniste. You can prepare your flight and execute the mission; funds will be released to you as soon as the client confirms delivery.
+    <strong>{{ client.full_name }}</strong> has just paid for the mission. Funds are held in escrow at AubePilot. You can prepare your flight and execute the mission; funds will be released to you as soon as the client confirms delivery.
   </p>
   <p style="margin:18px 0 0;">
     <a href="{{ site_url }}/reservations/{{ booking.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Open booking</a>

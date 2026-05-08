@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AubeDroniste — mise à jour rapide
+#  AubePilot — mise à jour rapide
 # =============================================================================
 #
 #  Usage : sudo bash deploy/update.sh
@@ -11,10 +11,10 @@
 
 set -euo pipefail
 
-INSTALL_DIR="${INSTALL_DIR:-/srv/aubedroniste}"
+INSTALL_DIR="${INSTALL_DIR:-/srv/aubepilot}"
 APP_USER="${APP_USER:-aube}"
-SERVICE_NAME="aubedroniste"
-DOMAIN="${DOMAIN:-droniste.aubeetoilee.com}"
+SERVICE_NAME="aubepilot"
+DOMAIN="${DOMAIN:-pilot.aubeetoilee.com}"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 ok()   { printf "${GREEN}✓${NC} %s\n" "$*"; }

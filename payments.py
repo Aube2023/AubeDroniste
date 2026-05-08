@@ -1,4 +1,4 @@
-"""Couche paiement AubeDroniste — Stripe Connect Express.
+"""Couche paiement AubePilot — Stripe Connect Express.
 
 Modele : escrow plateforme.
 1. Client accepte une enchere -> booking en `pending_payment`
@@ -28,7 +28,7 @@ from config import (
     STRIPE_WEBHOOK_SECRET,
 )
 
-log = logging.getLogger("aubedroniste.payments")
+log = logging.getLogger("aubepilot.payments")
 
 
 # ---------------------------------------------------------------------------
@@ -93,7 +93,7 @@ def create_pilot_account(user: dict) -> Tuple[str, str]:
     )
     link = s.AccountLink.create(
         account=account.id,
-        refresh_url=f"{SITE_URL}/espace/droniste/stripe",
+        refresh_url=f"{SITE_URL}/espace/pilote/stripe",
         return_url=return_url,
         type="account_onboarding",
     )
@@ -107,7 +107,7 @@ def fresh_onboarding_link(account_id: str) -> str:
         return f"{SITE_URL}/stripe/fake-onboarding/{account_id}"
     link = s.AccountLink.create(
         account=account_id,
-        refresh_url=f"{SITE_URL}/espace/droniste/stripe",
+        refresh_url=f"{SITE_URL}/espace/pilote/stripe",
         return_url=f"{SITE_URL}/stripe/return",
         type="account_onboarding",
     )
@@ -172,7 +172,7 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
                 "currency": currency.lower(),
                 "product_data": {
                     "name": f"Mission #{booking_id} — {mission_title[:80]}",
-                    "description": "Réservation de prestation drone via AubeDroniste",
+                    "description": "Réservation de prestation drone via AubePilot",
                 },
                 "unit_amount": amount_cents,
             },
@@ -295,7 +295,7 @@ def parse_webhook(payload: bytes, signature: str):
     if not STRIPE_WEBHOOK_SECRET:
         log.error(
             "REFUSE webhook : STRIPE_WEBHOOK_SECRET vide en mode Stripe live/test. "
-            "Configure-le dans le dashboard Stripe puis dans /etc/aubedroniste.env."
+            "Configure-le dans le dashboard Stripe puis dans /etc/aubepilot.env."
         )
         return None
     try:

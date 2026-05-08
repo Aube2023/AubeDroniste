@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AubeDroniste — healthcheck post-déploiement
+#  AubePilot — healthcheck post-déploiement
 # =============================================================================
 #
 #  Usage : bash deploy/healthcheck.sh
@@ -11,11 +11,11 @@
 
 set -uo pipefail
 
-DOMAIN="${DOMAIN:-droniste.aubeetoilee.com}"
-INSTALL_DIR="${INSTALL_DIR:-/srv/aubedroniste}"
-DATA_DIR="${DATA_DIR:-/var/lib/aubedroniste}"
-ENV_FILE="${ENV_FILE:-/etc/aubedroniste.env}"
-SERVICE_NAME="aubedroniste"
+DOMAIN="${DOMAIN:-pilot.aubeetoilee.com}"
+INSTALL_DIR="${INSTALL_DIR:-/srv/aubepilot}"
+DATA_DIR="${DATA_DIR:-/var/lib/aubepilot}"
+ENV_FILE="${ENV_FILE:-/etc/aubepilot.env}"
+SERVICE_NAME="aubepilot"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 PASS=0; FAIL=0; WARN=0
@@ -23,7 +23,7 @@ check_ok()    { printf "  ${GREEN}✓${NC} %s\n" "$*"; PASS=$((PASS+1)); }
 check_fail()  { printf "  ${RED}✗${NC} %s\n" "$*"; FAIL=$((FAIL+1)); }
 check_warn()  { printf "  ${YELLOW}⚠${NC} %s\n" "$*"; WARN=$((WARN+1)); }
 
-printf "${CYAN}AubeDroniste — healthcheck $DOMAIN${NC}\n\n"
+printf "${CYAN}AubePilot — healthcheck $DOMAIN${NC}\n\n"
 
 # 1. Service actif
 if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
@@ -127,18 +127,18 @@ else
 fi
 
 # 11. Cron en place
-if [[ -f /etc/cron.d/aubedroniste ]]; then
-    check_ok "Cron : /etc/cron.d/aubedroniste présent"
+if [[ -f /etc/cron.d/aubepilot ]]; then
+    check_ok "Cron : /etc/cron.d/aubepilot présent"
 else
     check_warn "Cron : auto-release / backup absents"
 fi
 
 # 12. DB lisible et tests
-if [[ -f "$DATA_DIR/aubedroniste.db" ]]; then
-    NB=$(sqlite3 "$DATA_DIR/aubedroniste.db" "SELECT COUNT(*) FROM users" 2>/dev/null || echo "?")
-    check_ok "DB : $DATA_DIR/aubedroniste.db ($NB users)"
+if [[ -f "$DATA_DIR/aubepilot.db" ]]; then
+    NB=$(sqlite3 "$DATA_DIR/aubepilot.db" "SELECT COUNT(*) FROM users" 2>/dev/null || echo "?")
+    check_ok "DB : $DATA_DIR/aubepilot.db ($NB users)"
 else
-    check_fail "DB : $DATA_DIR/aubedroniste.db manquant"
+    check_fail "DB : $DATA_DIR/aubepilot.db manquant"
 fi
 
 # Bilan

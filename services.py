@@ -1,4 +1,4 @@
-"""Logique metier AubeDroniste : missions, dronistes, encheres, bookings.
+"""Logique metier AubePilot : missions, pilotes, encheres, bookings.
 
 Garde le code SQL ici pour ne pas alourdir app.py. Pas d'ORM, on prefere
 voir les requetes a plat. Les fonctions retournent des dicts (sqlite3.Row
@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Iterable, Optional
 
-log = logging.getLogger("aubedroniste.services")
+log = logging.getLogger("aubepilot.services")
 
 import db
 from config import (
@@ -39,7 +39,7 @@ def row_to_dict(row) -> Optional[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Profil droniste
+# Profil pilote
 # ---------------------------------------------------------------------------
 
 def upsert_pilot_profile(user_id: int, **fields) -> Optional[dict]:
@@ -199,7 +199,7 @@ def delete_drone(drone_id: int, owner_user_id: int) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Recherche dronistes
+# Recherche pilotes
 # ---------------------------------------------------------------------------
 
 def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
@@ -224,7 +224,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "         COUNT(*) AS review_count "
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
-        "WHERE u.role IN ('droniste', 'both')",
+        "WHERE u.role IN ('pilot', 'both')",
     ]
     args: list = []
     if only_available:
@@ -724,7 +724,7 @@ def unread_count(user_id: int) -> int:
 
 def public_stats() -> dict:
     pilots = db.fetchone(
-        "SELECT COUNT(*) AS n FROM users WHERE role IN ('droniste', 'both')"
+        "SELECT COUNT(*) AS n FROM users WHERE role IN ('pilot', 'both')"
     )["n"]
     missions = db.fetchone("SELECT COUNT(*) AS n FROM missions WHERE status='open'")["n"]
     countries = db.fetchone(
@@ -753,7 +753,7 @@ def featured_pilots(limit: int = 6) -> list:
         "  SELECT target_user_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count "
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
-        "WHERE u.role IN ('droniste','both') AND p.is_available=1 "
+        "WHERE u.role IN ('pilot','both') AND p.is_available=1 "
         "ORDER BY u.is_verified DESC, datetime(u.last_seen_at) DESC LIMIT ?",
         (limit,),
     )
@@ -780,13 +780,13 @@ def latest_missions(limit: int = 8) -> list:
 
 
 def country_breakdown(limit: int = 12) -> list:
-    """Compte par pays : nb dronistes + nb missions ouvertes. Trie par activité totale."""
+    """Compte par pays : nb pilotes + nb missions ouvertes. Trie par activité totale."""
     pilots_by = {
         r["country"]: r["n"]
         for r in db.fetchall(
             "SELECT country, COUNT(*) AS n FROM users "
             "WHERE country IS NOT NULL AND country<>'' "
-            "AND role IN ('droniste','both') "
+            "AND role IN ('pilot','both') "
             "GROUP BY country"
         )
     }

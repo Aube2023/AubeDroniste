@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Mon profil droniste — AubeDroniste{% endblock %}
+{% block title %}Mon profil pilote — AubePilot{% endblock %}
 {% block content %}
-<h1>Mon profil droniste</h1>
+<h1>Mon profil pilote</h1>
 
 {# ===== Stripe Connect — encaissement ===== #}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}
@@ -21,7 +21,7 @@
     <a href="{{ url_for('stripe_onboard') }}" class="ghost">Mettre à jour mes infos Stripe</a>
   {% else %}
     <p class="muted">
-      Pour pouvoir <strong>accepter une mission payée</strong>, vous devez activer votre compte Stripe Connect : pièce d'identité, IBAN, statut fiscal. Stripe valide en 24-48 h ; aucune information bancaire ne transite par AubeDroniste.
+      Pour pouvoir <strong>accepter une mission payée</strong>, vous devez activer votre compte Stripe Connect : pièce d'identité, IBAN, statut fiscal. Stripe valide en 24-48 h ; aucune information bancaire ne transite par AubePilot.
     </p>
     {% if stripe_mode == 'FAKE' %}
     <p class="small mono" style="color: var(--amber); text-transform: uppercase; letter-spacing: .12em;">

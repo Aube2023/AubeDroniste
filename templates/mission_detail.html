@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ mission.title }} — AubeDroniste{% endblock %}
+{% block title %}{{ mission.title }} — AubePilot{% endblock %}
 {% block content %}
 
 <div class="mission-brief">
@@ -37,7 +37,7 @@
   {% endif %}
 </div>
 
-{% if current_user and current_user.role in ('droniste', 'both') and current_user.id != mission.client_user_id and mission.status == 'open' %}
+{% if current_user and current_user.role in ('pilot', 'both') and current_user.id != mission.client_user_id and mission.status == 'open' %}
 <section class="card">
   <span class="eyebrow">Soumissionner</span>
   <h2>{% if has_my_bid %}Mettre à jour mon offre{% else %}Faire une offre sur cette mission{% endif %}</h2>

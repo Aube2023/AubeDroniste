@@ -1,4 +1,4 @@
-"""Authentification AubeDroniste.
+"""Authentification AubePilot.
 
 Auth PAM (memoire feedback_auth: ne JAMAIS reset les mdp PAM, partages
 entre tous les services Aube). En dev / macOS, on bascule sur un check
@@ -21,7 +21,7 @@ from config import EMAIL_DOMAIN, SECRET_KEY, SESSION_COOKIE_NAME, SESSION_LIFETI
 import db
 
 
-_signer = URLSafeSerializer(SECRET_KEY, salt="aubedroniste-sid")
+_signer = URLSafeSerializer(SECRET_KEY, salt="aubepilot-sid")
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +282,7 @@ def create_user(*, username: str, password: str, full_name: str,
                 city: Optional[str] = None, phone: Optional[str] = None,
                 lat: Optional[float] = None, lng: Optional[float] = None,
                 send_welcome_email: bool = True) -> int:
-    """Cree le profil AubeDroniste local. En prod Linux, exige que le compte
+    """Cree le profil AubePilot local. En prod Linux, exige que le compte
     AubeMail (= compte systeme PAM) existe au prealable — l'inscription au
     sens credentiel se fait sur AubeMail, pas ici. Si le compte systeme est
     absent, leve `AubeMailRequiredError`.
@@ -301,7 +301,7 @@ def create_user(*, username: str, password: str, full_name: str,
     # En prod Linux, le mdp est gere par PAM/AubeMail — on n'y touche jamais.
     if not sys.platform.startswith("linux"):
         set_dev_password(username, password)
-    if role in ("droniste", "both"):
+    if role in ("pilot", "both"):
         db.execute(
             "INSERT INTO pilot_profiles (user_id) VALUES (?)",
             (user_id,),
@@ -315,7 +315,7 @@ def create_user(*, username: str, password: str, full_name: str,
             })
         except Exception as exc:  # email ne doit jamais bloquer l'inscription
             import logging
-            logging.getLogger("aubedroniste.auth").warning(
+            logging.getLogger("aubepilot.auth").warning(
                 "welcome email failed for user_id=%s : %s", user_id, exc,
             )
     return user_id

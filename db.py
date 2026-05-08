@@ -1,4 +1,4 @@
-"""Couche d'acces SQLite pour AubeDroniste.
+"""Couche d'acces SQLite pour AubePilot.
 
 Volontairement minimaliste : on garde les requetes pres du code metier,
 sans ORM. Une connexion par requete Flask via `g`.
@@ -25,7 +25,7 @@ from flask import g
 
 from config import DB_PATH
 
-log = logging.getLogger("aubedroniste.db")
+log = logging.getLogger("aubepilot.db")
 
 # Au-dela de ce seuil, on log un warning (slow query)
 SLOW_QUERY_MS = 200

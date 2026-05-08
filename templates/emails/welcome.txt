@@ -4,37 +4,37 @@
 [FR]
 Bienvenue à bord, {{ first }}.
 
-Votre compte AubeDroniste est créé. Identifiant de connexion :
+Votre compte AubePilot est créé. Identifiant de connexion :
 
   {{ user.email }}
 
 {% if user.role == 'client' %}En tant que client, publiez votre première mission, comparez les pilotes près de chez vous et choisissez celui qui répond à votre brief.
-{% elif user.role == 'droniste' %}En tant que droniste, complétez votre carnet de vol : brevets (DGAC, EASA, TC, FAA, ASECNA) et flotte. Plus votre fiche est complète, plus les clients vous font confiance.
+{% elif user.role == 'pilot' %}En tant que pilote, complétez votre carnet de vol : brevets (DGAC, EASA, TC, FAA, ASECNA) et flotte. Plus votre fiche est complète, plus les clients vous font confiance.
 {% else %}Vous avez activé le double rôle : publiez vos missions et soumissionnez sur celles des autres.
 {% endif %}
 Accédez à votre espace : {{ site_url }}/espace
 
 À bientôt en cabine,
-L'équipage AubeDroniste
+L'équipage AubePilot
 
 ------------------------------------------------------------
 
 [EN]
 Welcome aboard, {{ first }}.
 
-Your AubeDroniste account is ready. Sign-in identifier:
+Your AubePilot account is ready. Sign-in identifier:
 
   {{ user.email }}
 
 {% if user.role == 'client' %}As a client, post your first mission, compare pilots near you and pick the one who matches your brief.
-{% elif user.role == 'droniste' %}As a drone pilot, complete your flight book: licenses (DGAC, EASA, TC, FAA, ASECNA) and fleet. The more complete your card, the more trust you earn.
+{% elif user.role == 'pilot' %}As a drone pilot, complete your flight book: licenses (DGAC, EASA, TC, FAA, ASECNA) and fleet. The more complete your card, the more trust you earn.
 {% else %}You've enabled both roles: post missions and bid on others'.
 {% endif %}
 Open your dashboard: {{ site_url }}/espace
 
 See you in the cockpit,
-The AubeDroniste crew
+The AubePilot crew
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubePilot · {{ year }} · pilot.aubeetoilee.com
 A brand of L'Aube Étoilée · Shared @aubemail.com auth

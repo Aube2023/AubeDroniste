@@ -1,5 +1,5 @@
 [Unit]
-Description=AubeDroniste — marketplace dronistes francophones
+Description=AubePilot — marketplace pilotes francophones
 After=network-online.target
 Wants=network-online.target
 
@@ -7,9 +7,9 @@ Wants=network-online.target
 Type=simple
 User=aube
 Group=aube
-WorkingDirectory=/srv/aubedroniste
-EnvironmentFile=/etc/aubedroniste.env
-ExecStart=/srv/aubedroniste/.venv/bin/gunicorn \
+WorkingDirectory=/srv/aubepilot
+EnvironmentFile=/etc/aubepilot.env
+ExecStart=/srv/aubepilot/.venv/bin/gunicorn \
   --workers 2 \
   --threads 4 \
   --bind 127.0.0.1:5034 \
@@ -23,7 +23,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/aubedroniste /var/log/aubedroniste
+ReadWritePaths=/var/lib/aubepilot /var/log/aubepilot
 
 [Install]
 WantedBy=multi-user.target

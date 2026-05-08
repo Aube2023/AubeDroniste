@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Rejoindre — AubeDroniste{% endblock %}
+{% block title %}Rejoindre — AubePilot{% endblock %}
 {% block content %}
 
 <section class="auth-split">
@@ -8,7 +8,7 @@
     <h1>Embarquez dans <em>l'équipage</em>.</h1>
     <p class="lead muted">
       Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul
-      compte AubeDroniste. Bascule entre les rôles à tout moment depuis votre espace.
+      compte AubePilot. Bascule entre les rôles à tout moment depuis votre espace.
     </p>
     <ul class="checklist">
       <li>Compte unique pour publier <em>et</em> piloter, sans abonnement.</li>
@@ -32,14 +32,14 @@
           <span class="role-card">
             <span class="icon">▴ Client</span>
             <span class="name">Je cherche un pilote</span>
-            <span class="desc">Je publie des missions et je sélectionne mon droniste.</span>
+            <span class="desc">Je publie des missions et je sélectionne mon pilote.</span>
           </span>
         </label>
         <label>
-          <input type="radio" name="role" value="droniste" {% if sel=='droniste' %}checked{% endif %}>
+          <input type="radio" name="role" value="pilot" {% if sel=='pilot' %}checked{% endif %}>
           <span class="role-card">
             <span class="icon">▴ Pilote</span>
-            <span class="name">Je suis droniste</span>
+            <span class="name">Je suis pilote</span>
             <span class="desc">Je présente mes brevets, ma flotte et je soumissionne.</span>
           </span>
         </label>

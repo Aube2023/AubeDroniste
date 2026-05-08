@@ -1,4 +1,4 @@
-"""AubeDroniste - marketplace dronistes <-> clients.
+"""AubePilot - marketplace pilotes <-> clients.
 
 Point d'entree Flask. Auth PAM partagee, SQLite local, templates Jinja
 + une API JSON pour la recherche dynamique cote frontend.
@@ -43,7 +43,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-log = logging.getLogger("aubedroniste")
+log = logging.getLogger("aubepilot")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
@@ -227,7 +227,7 @@ def api_country_breakdown():
     return jsonify(services.country_breakdown(_api_limit(50)))
 
 
-@app.route("/dronistes")
+@app.route("/pilotes")
 def pilots_search():
     params = {
         "country": request.args.get("country", "").strip(),
@@ -258,10 +258,10 @@ def missions_search():
     return render_template("missions_search.html", missions=missions, params=params)
 
 
-@app.route("/dronistes/<int:user_id>")
+@app.route("/pilotes/<int:user_id>")
 def pilot_detail(user_id):
     profile = services.get_pilot_profile(user_id)
-    if not profile or profile.get("role") not in ("droniste", "both"):
+    if not profile or profile.get("role") not in ("pilot", "both"):
         abort(404)
     return render_template(
         "pilot_detail.html",
@@ -309,7 +309,7 @@ def register():
         lat = _to_float(request.form.get("lat"))
         lng = _to_float(request.form.get("lng"))
 
-        if role not in ("client", "droniste", "both"):
+        if role not in ("client", "pilot", "both"):
             role = "client"
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
@@ -337,7 +337,7 @@ def register():
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=60 * 60 * 24 * 30)
-        flash("Bienvenue sur AubeDroniste.", "success")
+        flash("Bienvenue sur AubePilot.", "success")
         return resp
     return render_template("register.html")
 
@@ -355,7 +355,7 @@ def login():
         if not auth.authenticate(username, password):
             flash("Identifiants invalides.", "error")
             return render_template("login.html", next_url=next_url)
-        # Si le compte AubeMail existe mais pas encore le profil AubeDroniste,
+        # Si le compte AubeMail existe mais pas encore le profil AubePilot,
         # on le cree a la volee — cas d'un user qui se cree sur AubeMail
         # puis vient ici pour la 1ere fois.
         row = db.fetchone("SELECT id FROM users WHERE username=?", (username,))
@@ -398,7 +398,7 @@ def logout():
 @auth.login_required
 def dashboard():
     user = g.user
-    is_pilot = user["role"] in ("droniste", "both")
+    is_pilot = user["role"] in ("pilot", "both")
     is_client = user["role"] in ("client", "both")
     return render_template(
         "dashboard.html",
@@ -413,17 +413,17 @@ def dashboard():
 
 
 # ---------------------------------------------------------------------------
-# Profil droniste (edition)
+# Profil pilote (edition)
 # ---------------------------------------------------------------------------
 
-@app.route("/espace/droniste", methods=["GET", "POST"])
+@app.route("/espace/pilote", methods=["GET", "POST"])
 @auth.login_required
 def pilot_edit():
     user = g.user
-    if user["role"] not in ("droniste", "both"):
-        # bascule de role si l'utilisateur veut devenir droniste
+    if user["role"] not in ("pilot", "both"):
+        # bascule de role si l'utilisateur veut devenir pilote
         if request.method == "POST" and request.form.get("become_pilot"):
-            new_role = "both" if user["role"] == "client" else "droniste"
+            new_role = "both" if user["role"] == "client" else "pilot"
             db.execute("UPDATE users SET role=? WHERE id=?", (new_role, user["id"]))
             db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (user["id"],))
             return redirect(url_for("pilot_edit"))
@@ -467,7 +467,7 @@ def pilot_edit():
                 user["id"],
             ),
         )
-        flash("Profil droniste mis a jour.", "success")
+        flash("Profil pilote mis a jour.", "success")
         return redirect(url_for("pilot_edit"))
 
     return render_template(
@@ -476,11 +476,11 @@ def pilot_edit():
     )
 
 
-@app.route("/espace/droniste/certification", methods=["POST"])
+@app.route("/espace/pilote/certification", methods=["POST"])
 @auth.login_required
 def pilot_add_certification():
     user = g.user
-    if user["role"] not in ("droniste", "both"):
+    if user["role"] not in ("pilot", "both"):
         abort(403)
     doc_path = ""
     f = request.files.get("document")
@@ -503,18 +503,18 @@ def pilot_add_certification():
     return redirect(url_for("pilot_edit"))
 
 
-@app.route("/espace/droniste/certification/<int:cert_id>/supprimer", methods=["POST"])
+@app.route("/espace/pilote/certification/<int:cert_id>/supprimer", methods=["POST"])
 @auth.login_required
 def pilot_delete_certification(cert_id):
     services.delete_certification(cert_id, g.user["id"])
     return redirect(url_for("pilot_edit"))
 
 
-@app.route("/espace/droniste/drone", methods=["POST"])
+@app.route("/espace/pilote/drone", methods=["POST"])
 @auth.login_required
 def pilot_add_drone():
     user = g.user
-    if user["role"] not in ("droniste", "both"):
+    if user["role"] not in ("pilot", "both"):
         abort(403)
     photo_path = ""
     f = request.files.get("photo")
@@ -541,7 +541,7 @@ def pilot_add_drone():
     return redirect(url_for("pilot_edit"))
 
 
-@app.route("/espace/droniste/drone/<int:drone_id>/supprimer", methods=["POST"])
+@app.route("/espace/pilote/drone/<int:drone_id>/supprimer", methods=["POST"])
 @auth.login_required
 def pilot_delete_drone(drone_id):
     services.delete_drone(drone_id, g.user["id"])
@@ -606,8 +606,8 @@ def mission_close(mission_id):
 @auth.login_required
 @security.rate_limit(per_minute=20, per_hour=100)
 def bid_place(mission_id):
-    if g.user["role"] not in ("droniste", "both"):
-        flash("Seuls les dronistes peuvent soumissionner.", "error")
+    if g.user["role"] not in ("pilot", "both"):
+        flash("Seuls les pilotes peuvent soumissionner.", "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
     price = _to_float(request.form.get("price"))
     if not price or price <= 0:
@@ -729,11 +729,11 @@ def mission_message(mission_id):
 # Stripe Connect — onboarding pilote
 # ---------------------------------------------------------------------------
 
-@app.route("/espace/droniste/stripe", methods=["GET", "POST"])
+@app.route("/espace/pilote/stripe", methods=["GET", "POST"])
 @auth.login_required
 def stripe_onboard():
     user = g.user
-    if user["role"] not in ("droniste", "both"):
+    if user["role"] not in ("pilot", "both"):
         abort(403)
     profile = services.get_pilot_profile(user["id"])
     account_id = profile.get("stripe_account_id") if profile else None
@@ -796,7 +796,7 @@ def booking_pay(booking_id):
         booking_id=booking["id"],
         amount=booking["agreed_price"],
         currency=booking["currency"],
-        mission_title=booking.get("mission_title", "Mission AubeDroniste"),
+        mission_title=booking.get("mission_title", "Mission AubePilot"),
         client_email=g.user["email"],
     )
     services.attach_payment_session(booking_id, session_id)
@@ -884,7 +884,7 @@ def booking_confirm(booking_id):
 def booking_dispute_open(booking_id):
     reason = (request.form.get("reason") or "").strip()
     if services.open_dispute(booking_id, g.user["id"], reason):
-        flash("Litige ouvert. L'équipe AubeDroniste prend contact sous 48 h.", "info")
+        flash("Litige ouvert. L'équipe AubePilot prend contact sous 48 h.", "info")
     else:
         flash("Impossible d'ouvrir un litige sur cette réservation.", "error")
     return redirect(url_for("booking_detail", booking_id=booking_id))
@@ -928,7 +928,7 @@ def _api_limit(default: int) -> int:
     return min(max(_to_int(request.args.get("limit"), default) or default, 1), API_MAX_LIMIT)
 
 
-@app.route("/api/dronistes")
+@app.route("/api/pilotes")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_pilots():
     pilots = services.search_pilots(

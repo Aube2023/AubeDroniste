@@ -1,10 +1,10 @@
--- AubeDroniste - schema SQLite
--- Marketplace dronistes <-> clients
+-- AubePilot - schema SQLite
+-- Marketplace pilotes <-> clients
 
 PRAGMA journal_mode=WAL;
 PRAGMA foreign_keys=ON;
 
--- Comptes (un compte peut etre client, droniste ou les deux)
+-- Comptes (un compte peut etre client, pilote ou les deux)
 CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT NOT NULL UNIQUE,           -- compte PAM
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     city          TEXT,
     lat           REAL,
     lng           REAL,
-    role          TEXT NOT NULL DEFAULT 'client', -- 'client' | 'droniste' | 'both'
+    role          TEXT NOT NULL DEFAULT 'client', -- 'client' | 'pilot' | 'both'
     avatar_path   TEXT,
     bio           TEXT,
     is_verified   INTEGER NOT NULL DEFAULT 0,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_country ON users(country);
 CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
 
--- Profil droniste etendu
+-- Profil pilote etendu
 CREATE TABLE IF NOT EXISTS pilot_profiles (
     user_id           INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     headline          TEXT,                       -- accroche courte

@@ -5,7 +5,7 @@ AUBEDRONISTE — MISSION FINANCÉE / MISSION FUNDED
 Décollage autorisé : la mission est payée.
 
 {{ client.full_name }} a réglé la mission. Les fonds sont sécurisés en
-escrow chez AubeDroniste. Préparez votre vol et exécutez la mission —
+escrow chez AubePilot. Préparez votre vol et exécutez la mission —
 les fonds vous seront transférés dès la validation du client.
 
 Ouvrir : {{ site_url }}/reservations/{{ booking.id }}
@@ -16,10 +16,10 @@ Ouvrir : {{ site_url }}/reservations/{{ booking.id }}
 Cleared for takeoff: the mission is paid.
 
 {{ client.full_name }} has paid for the mission. Funds are held in
-escrow at AubeDroniste. Prepare your flight and execute the mission —
+escrow at AubePilot. Prepare your flight and execute the mission —
 funds will be released as soon as the client confirms delivery.
 
 Open: {{ site_url }}/reservations/{{ booking.id }}
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubePilot · {{ year }} · pilot.aubeetoilee.com

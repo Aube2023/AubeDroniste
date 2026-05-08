@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Paiement simulé — AubeDroniste{% endblock %}
+{% block title %}Paiement simulé — AubePilot{% endblock %}
 {% block content %}
 
 {% set split = ((booking.agreed_price * 30 / 100)|round(2)) %}
@@ -19,12 +19,12 @@
         <td style="padding: 12px 0; text-align: right; font-weight: 600;">{{ booking.agreed_price|int }} {{ booking.currency }}</td></tr>
     <tr><td style="padding: 12px 0; border-top: 1px dashed var(--rule);" class="muted small">→ Pilote (70 %)</td>
         <td style="padding: 12px 0; border-top: 1px dashed var(--rule); text-align: right;" class="mono small">{{ pilot_amount|int }} {{ booking.currency }}</td></tr>
-    <tr><td style="padding: 12px 0;" class="muted small">→ AubeDroniste (30 %)</td>
+    <tr><td style="padding: 12px 0;" class="muted small">→ AubePilot (30 %)</td>
         <td style="padding: 12px 0; text-align: right;" class="mono small">{{ split|int }} {{ booking.currency }}</td></tr>
   </table>
 
   <p class="muted small">
-    En mode production, vous seriez redirigé vers <strong>Stripe Checkout</strong> pour saisir votre carte. Les fonds resteraient en escrow chez AubeDroniste jusqu'à votre validation de la mission.
+    En mode production, vous seriez redirigé vers <strong>Stripe Checkout</strong> pour saisir votre carte. Les fonds resteraient en escrow chez AubePilot jusqu'à votre validation de la mission.
   </p>
 
   <form method="post" action="{{ url_for('stripe_fake_checkout', booking_id=booking.id) }}">

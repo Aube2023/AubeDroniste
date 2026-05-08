@@ -1,5 +1,5 @@
 {% extends "emails/_layout.html" %}
-{% block subject %}Paiement libéré / Payout released — {{ booking.mission_title or "AubeDroniste" }}{% endblock %}
+{% block subject %}Paiement libéré / Payout released — {{ booking.mission_title or "AubePilot" }}{% endblock %}
 {% block preview %}Vous venez d'être payé · You've just been paid.{% endblock %}
 
 {% block content %}
@@ -19,7 +19,7 @@
       <div style="font:500 16px/1 Georgia,serif;color:#15181f;">{{ amount_total|int }} {{ booking.currency }}</div>
     </td></tr>
     <tr><td style="padding:14px 18px;border-bottom:1px solid #efece2;">
-      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Commission AubeDroniste 30%</div>
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Commission AubePilot 30%</div>
       <div style="font:500 14px/1 'Helvetica Neue',Arial,sans-serif;color:#6b6f7a;">−&nbsp;{{ fee|int }} {{ booking.currency }}</div>
     </td></tr>
     <tr><td style="padding:16px 18px;background:#fbfaf6;">
@@ -29,7 +29,7 @@
   </table>
 
   <p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#6b6f7a;margin:18px 0 0;">
-    Merci d'avoir volé avec nous,<br><em>L'équipage AubeDroniste</em>
+    Merci d'avoir volé avec nous,<br><em>L'équipage AubePilot</em>
   </p>
 </td></tr>
 

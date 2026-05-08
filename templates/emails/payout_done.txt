@@ -12,7 +12,7 @@ Commission 30%  : −{{ fee|int }} {{ booking.currency }}
 Net pilote      : {{ amount_pilot|int }} {{ booking.currency }}
 
 Merci d'avoir volé avec nous,
-L'équipage AubeDroniste
+L'équipage AubePilot
 
 ------------------------------------------------------------
 
@@ -27,7 +27,7 @@ Platform 30%   : −{{ fee|int }} {{ booking.currency }}
 Net to you     : {{ amount_pilot|int }} {{ booking.currency }}
 
 Thank you for flying with us,
-The AubeDroniste crew
+The AubePilot crew
 
 ------------------------------------------------------------
-AubeDroniste · {{ year }} · droniste.aubeetoilee.com
+AubePilot · {{ year }} · pilot.aubeetoilee.com

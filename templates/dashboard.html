@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Cockpit — AubeDroniste{% endblock %}
+{% block title %}Cockpit — AubePilot{% endblock %}
 {% block content %}
 
 <section class="cockpit-banner">
@@ -17,7 +17,7 @@
   <div class="cockpit-actions">
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
     {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Mon profil pilote</a>{% endif %}
-    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Devenir droniste</a>{% endif %}
+    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Devenir pilote</a>{% endif %}
   </div>
 </section>
 
@@ -164,7 +164,7 @@
   <p class="muted lead" style="margin: 0 auto 24px;">Publiez une mission ou complétez votre profil pilote pour entrer dans la rotation.</p>
   <div class="cta-row" style="justify-content: center;">
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
-    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}Compléter mon profil{% else %}Devenir droniste{% endif %}</a>
+    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}Compléter mon profil{% else %}Devenir pilote{% endif %}</a>
   </div>
 </section>
 {% endif %}

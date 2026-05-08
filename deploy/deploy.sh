@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AubeDroniste — installation / mise à jour automatisée pour serveur Linux
+#  AubePilot — installation / mise à jour automatisée pour serveur Linux
 # =============================================================================
 #
 #  Usage :
@@ -9,12 +9,12 @@
 #    sudo bash deploy/deploy.sh --dry-run       # affiche sans exécuter
 #
 #  Variables d'env honorées (sinon valeurs par défaut) :
-#    DOMAIN          droniste.aubeetoilee.com
+#    DOMAIN          pilot.aubeetoilee.com
 #    APP_USER        aube
-#    INSTALL_DIR     /srv/aubedroniste
-#    DATA_DIR        /var/lib/aubedroniste
-#    ENV_FILE        /etc/aubedroniste.env
-#    REPO_URL        https://github.com/Aube2023/AubeDroniste.git
+#    INSTALL_DIR     /srv/aubepilot
+#    DATA_DIR        /var/lib/aubepilot
+#    ENV_FILE        /etc/aubepilot.env
+#    REPO_URL        https://github.com/Aube2023/AubePilot.git
 #    ADMIN_EMAIL     no-reply@aubeetoilee.com   (pour Let's Encrypt)
 #    BRANCH          main
 #
@@ -24,7 +24,7 @@
 #    3. Répertoires (install, data, log, backup) + permissions
 #    4. Code       (git clone ou pull)
 #    5. Python     (venv + pip install -r requirements.txt + gunicorn)
-#    6. Env file   (génère AUBEDRONISTE_SECRET, écrit /etc/aubedroniste.env)
+#    6. Env file   (génère AUBEDRONISTE_SECRET, écrit /etc/aubepilot.env)
 #    7. Database   (init schema.sql si absent)
 #    8. systemd    (copie unit, enable, start)
 #    9. nginx      (copie conf, enable, reload)
@@ -36,18 +36,18 @@
 set -euo pipefail
 
 # ----- Config (valeurs par défaut, surchargées par les env vars) -------------
-DOMAIN="${DOMAIN:-droniste.aubeetoilee.com}"
+DOMAIN="${DOMAIN:-pilot.aubeetoilee.com}"
 APP_USER="${APP_USER:-aube}"
-INSTALL_DIR="${INSTALL_DIR:-/srv/aubedroniste}"
-DATA_DIR="${DATA_DIR:-/var/lib/aubedroniste}"
-LOG_DIR="${LOG_DIR:-/var/log/aubedroniste}"
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/aubedroniste}"
-ENV_FILE="${ENV_FILE:-/etc/aubedroniste.env}"
-REPO_URL="${REPO_URL:-https://github.com/Aube2023/AubeDroniste.git}"
+INSTALL_DIR="${INSTALL_DIR:-/srv/aubepilot}"
+DATA_DIR="${DATA_DIR:-/var/lib/aubepilot}"
+LOG_DIR="${LOG_DIR:-/var/log/aubepilot}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/aubepilot}"
+ENV_FILE="${ENV_FILE:-/etc/aubepilot.env}"
+REPO_URL="${REPO_URL:-https://github.com/Aube2023/AubePilot.git}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-no-reply@aubeetoilee.com}"
 BRANCH="${BRANCH:-main}"
 PORT="${PORT:-5034}"
-SERVICE_NAME="aubedroniste"
+SERVICE_NAME="aubepilot"
 
 DRY_RUN=0
 SKIP_CERT=0
@@ -192,7 +192,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
     log "Génération de $ENV_FILE avec un AUBEDRONISTE_SECRET aléatoire"
     SECRET=$("$INSTALL_DIR/.venv/bin/python" -c 'import secrets; print(secrets.token_urlsafe(48))')
     run "cat > \"$ENV_FILE\" <<EOF
-# AubeDroniste — production environment
+# AubePilot — production environment
 # Généré par deploy.sh le \$(date -Iseconds)
 
 AUBEDRONISTE_HOST=127.0.0.1
@@ -207,7 +207,7 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASSWORD=
 SMTP_FROM=no-reply@aubeetoilee.com
-SMTP_FROM_NAME=AubeDroniste
+SMTP_FROM_NAME=AubePilot
 SMTP_TLS=1
 
 # --- Stripe Connect (mode FAKE actif tant que ces 3 sont vides) ---
@@ -232,7 +232,7 @@ run "chmod 640 \"$ENV_FILE\""
 
 step "Base de données"
 
-if [[ ! -f "$DATA_DIR/aubedroniste.db" ]]; then
+if [[ ! -f "$DATA_DIR/aubepilot.db" ]]; then
     log "Initialisation du schéma SQLite"
     run "sudo -u $APP_USER \"$INSTALL_DIR/.venv/bin/python\" -c \"
 import os, sys
@@ -243,8 +243,8 @@ db.init_schema('$INSTALL_DIR/schema.sql')
 print('schema OK')
 \""
 fi
-DB_SIZE=$(stat -c '%s' "$DATA_DIR/aubedroniste.db" 2>/dev/null || echo "?")
-ok "DB : $DATA_DIR/aubedroniste.db ($DB_SIZE octets)"
+DB_SIZE=$(stat -c '%s' "$DATA_DIR/aubepilot.db" 2>/dev/null || echo "?")
+ok "DB : $DATA_DIR/aubepilot.db ($DB_SIZE octets)"
 
 # =============================================================================
 #  8. systemd unit
@@ -256,7 +256,7 @@ UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
 log "Génération du fichier $UNIT_PATH"
 run "cat > \"$UNIT_PATH\" <<EOF
 [Unit]
-Description=AubeDroniste — marketplace dronistes francophones
+Description=AubePilot — marketplace pilotes francophones
 After=network-online.target
 Wants=network-online.target
 
@@ -307,7 +307,7 @@ step "Configuration nginx"
 NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
 log "Génération de $NGINX_CONF"
 run "cat > \"$NGINX_CONF\" <<EOF
-# AubeDroniste — reverse proxy vers gunicorn
+# AubePilot — reverse proxy vers gunicorn
 server {
     listen 80;
     server_name $DOMAIN;
@@ -375,13 +375,13 @@ step "Tâches cron"
 CRON_FILE="/etc/cron.d/${SERVICE_NAME}"
 log "Écriture de $CRON_FILE"
 run "cat > \"$CRON_FILE\" <<EOF
-# AubeDroniste — auto-release escrow (J+7) + backup quotidien
+# AubePilot — auto-release escrow (J+7) + backup quotidien
 
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 0 4 * * * $APP_USER $INSTALL_DIR/.venv/bin/python $INSTALL_DIR/scripts/release_stale_bookings.py >> $LOG_DIR/auto_release.log 2>&1
-0 3 * * * $APP_USER /usr/bin/sqlite3 $DATA_DIR/aubedroniste.db \".backup '$BACKUP_DIR/aubedroniste-\$(date +\\%F).db'\" && find $BACKUP_DIR -name 'aubedroniste-*.db' -mtime +30 -delete
+0 3 * * * $APP_USER /usr/bin/sqlite3 $DATA_DIR/aubepilot.db \".backup '$BACKUP_DIR/aubepilot-\$(date +\\%F).db'\" && find $BACKUP_DIR -name 'aubepilot-*.db' -mtime +30 -delete
 EOF"
 run "chmod 644 \"$CRON_FILE\""
 ok "Cron en place : auto-release 04h00, backup 03h00 (rétention 30j)"
@@ -418,7 +418,7 @@ fi
 cat <<EOF
 
 ${GREEN}═══════════════════════════════════════════════════════════════════${NC}
-  ${GREEN}AubeDroniste déployé.${NC}
+  ${GREEN}AubePilot déployé.${NC}
 ${GREEN}═══════════════════════════════════════════════════════════════════${NC}
 
   URL publique     https://$DOMAIN

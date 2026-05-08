@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Réservation #{{ booking.id }} — AubeDroniste{% endblock %}
+{% block title %}Réservation #{{ booking.id }} — AubePilot{% endblock %}
 {% block content %}
 
 {% set is_client = current_user.id == booking.client_user_id %}
@@ -58,7 +58,7 @@
 <div class="card" style="border-left: 3px solid var(--amber);">
   <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Action requise — Régler la mission</h2>
   <p class="muted">
-    Votre offre est acceptée. Pour confirmer la réservation, payez la mission. Les fonds restent en escrow chez AubeDroniste jusqu'à votre validation finale.
+    Votre offre est acceptée. Pour confirmer la réservation, payez la mission. Les fonds restent en escrow chez AubePilot jusqu'à votre validation finale.
   </p>
   <div class="cta-row">
     <a href="{{ url_for('booking_pay', booking_id=booking.id) }}" class="cta cta-big">⚡ Payer {{ booking.agreed_price|int }} {{ booking.currency }}</a>
@@ -100,7 +100,7 @@
 <div class="card" style="border-left: 3px solid var(--teal);">
   <h2 style="font-size: 1.3rem; margin: 0 0 6px;">Mission payée — Vous pouvez décoller 🛫</h2>
   <p class="muted">
-    Les fonds sont en escrow chez AubeDroniste. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
+    Les fonds sont en escrow chez AubePilot. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
   </p>
   <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige ?')">
         {{ csrf_input() }}
@@ -123,7 +123,7 @@
 {% if booking.status == 'disputed' %}
 <div class="card" style="border-left: 3px solid var(--signal);">
   <h2 style="font-size: 1.3rem; margin: 0 0 6px;">⚠ Litige en cours</h2>
-  <p class="muted">L'équipe AubeDroniste va vous contacter sous 48 h pour médiation. Les fonds restent bloqués en escrow.</p>
+  <p class="muted">L'équipe AubePilot va vous contacter sous 48 h pour médiation. Les fonds restent bloqués en escrow.</p>
   {% if booking.dispute_reason %}
   <p class="serif-italic" style="background: var(--paper-3); padding: 12px 16px; border-left: 2px solid var(--signal);">« {{ booking.dispute_reason }} »</p>
   {% endif %}

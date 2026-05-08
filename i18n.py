@@ -1,4 +1,4 @@
-"""Internationalisation AubeDroniste — FR + EN.
+"""Internationalisation AubePilot — FR + EN.
 
 Approche minimaliste, sans dependance externe :
 - table de traductions plate `_T = {key: {'fr': ..., 'en': ...}}`
@@ -87,8 +87,8 @@ _T = {
                          "en": "The sky knows no border."},
     "home.h1_b":        {"fr": "Vos pilotes",       "en": "Your pilots"},
     "home.h1_b_em":     {"fr": "non plus.",         "en": "either."},
-    "home.lead":        {"fr": "AubeDroniste met en relation des dronistes certifiés (DGAC, EASA, Transport Canada, FAA, ASECNA) avec les commanditaires qui en ont besoin — du tournage de mariage à la cartographie RTK d'un chantier en Afrique de l'Ouest. Sans intermédiaire, en français, partout.",
-                         "en": "AubeDroniste connects certified drone pilots (DGAC, EASA, Transport Canada, FAA, ASECNA) with the people who need them — from wedding shoots to RTK mapping of a construction site in West Africa. No middlemen, francophone-first, anywhere."},
+    "home.lead":        {"fr": "AubePilot met en relation des pilotes certifiés (DGAC, EASA, Transport Canada, FAA, ASECNA) avec les commanditaires qui en ont besoin — du tournage de mariage à la cartographie RTK d'un chantier en Afrique de l'Ouest. Sans intermédiaire, en français, partout.",
+                         "en": "AubePilot connects certified drone pilots (DGAC, EASA, Transport Canada, FAA, ASECNA) with the people who need them — from wedding shoots to RTK mapping of a construction site in West Africa. No middlemen, francophone-first, anywhere."},
     "home.cta_publish": {"fr": "Publier une mission",   "en": "Publish a mission"},
     "home.cta_pilot":   {"fr": "Inscrire mon brevet de pilote →",
                          "en": "Register my pilot license →"},
@@ -150,11 +150,11 @@ _T = {
     "home.manifesto.eyebrow":{"fr": "Manifeste", "en": "Manifesto"},
     "home.manifesto.h":      {"fr": "Un pilote n'est pas un freelance jetable.",
                                "en": "A pilot is not a disposable freelancer."},
-    "home.manifesto.p1":     {"fr": "Sur AubeDroniste, votre brevet, votre flotte et vos heures de vol comptent autant que votre tarif. Les autorités (DGAC, EASA, TC, FAA, ASECNA) sont mises en avant ; les amateurs aussi, à leur juste place.",
-                               "en": "On AubeDroniste, your license, your fleet and your flight hours count as much as your price. Authorities (DGAC, EASA, TC, FAA, ASECNA) are highlighted; amateurs too, in their right place."},
+    "home.manifesto.p1":     {"fr": "Sur AubePilot, votre brevet, votre flotte et vos heures de vol comptent autant que votre tarif. Les autorités (DGAC, EASA, TC, FAA, ASECNA) sont mises en avant ; les amateurs aussi, à leur juste place.",
+                               "en": "On AubePilot, your license, your fleet and your flight hours count as much as your price. Authorities (DGAC, EASA, TC, FAA, ASECNA) are highlighted; amateurs too, in their right place."},
     "home.manifesto.p2":     {"fr": "Et nous ne facturons que sur les missions livrées. Pas d'abonnement, pas de pop-up.",
                                "en": "And we only bill on delivered missions. No subscription, no pop-ups."},
-    "home.manifesto.quote":  {"fr": "Avant Aube, on cherchait des dronistes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi — toutes avec des brevets vérifiés.",
+    "home.manifesto.quote":  {"fr": "Avant Aube, on cherchait des pilotes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi — toutes avec des brevets vérifiés.",
                                "en": "Before Aube, we hunted for drone pilots on LinkedIn between Facebook groups. Now I post a mission in the morning, I have three proposals by noon — all with verified licenses."},
     "home.manifesto.cite":   {"fr": "— Imane C., productrice — Tunis",
                                "en": "— Imane C., producer — Tunis"},
@@ -185,12 +185,12 @@ _T = {
     "common.username":     {"fr": "Identifiant", "en": "Username"},
 
     # ---- Login
-    "login.title":      {"fr": "Connexion — AubeDroniste", "en": "Sign in — AubeDroniste"},
+    "login.title":      {"fr": "Connexion — AubePilot", "en": "Sign in — AubePilot"},
     "login.eyebrow":    {"fr": "Retour en cabine", "en": "Back to the cockpit"},
     "login.h1":         {"fr": "Bonjour, commandant.", "en": "Welcome, commander."},
     "login.h1_em":      {"fr": "commandant", "en": "commander"},
-    "login.lead":       {"fr": "Vos identifiants AubeDroniste vous donnent aussi accès à tous les services L'Aube Étoilée — un seul compte pour tout l'écosystème.",
-                         "en": "Your AubeDroniste credentials also unlock every L'Aube Étoilée service — one account for the whole ecosystem."},
+    "login.lead":       {"fr": "Vos identifiants AubePilot vous donnent aussi accès à tous les services L'Aube Étoilée — un seul compte pour tout l'écosystème.",
+                         "en": "Your AubePilot credentials also unlock every L'Aube Étoilée service — one account for the whole ecosystem."},
     "login.bullet1":    {"fr": "Authentification partagée @aubemail.com.",
                          "en": "Shared @aubemail.com authentication."},
     "login.bullet2":    {"fr": "Aucun mot de passe stocké en clair, sessions signées côté serveur.",
@@ -207,12 +207,12 @@ _T = {
     "login.alt_link":   {"fr": "Rejoindre le réseau", "en": "Join the network"},
 
     # ---- Register
-    "reg.title":     {"fr": "Rejoindre — AubeDroniste", "en": "Join — AubeDroniste"},
+    "reg.title":     {"fr": "Rejoindre — AubePilot", "en": "Join — AubePilot"},
     "reg.eyebrow":   {"fr": "Rejoindre le réseau", "en": "Join the network"},
     "reg.h1":        {"fr": "Embarquez dans l'équipage.", "en": "Step into the crew."},
     "reg.h1_em":     {"fr": "l'équipage", "en": "the crew"},
-    "reg.lead":      {"fr": "Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul compte AubeDroniste. Bascule entre les rôles à tout moment depuis votre espace.",
-                       "en": "Whether you're looking for a pilot or you are one, you keep one AubeDroniste account. Switch roles anytime from your dashboard."},
+    "reg.lead":      {"fr": "Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul compte AubePilot. Bascule entre les rôles à tout moment depuis votre espace.",
+                       "en": "Whether you're looking for a pilot or you are one, you keep one AubePilot account. Switch roles anytime from your dashboard."},
     "reg.bullet1":   {"fr": "Compte unique pour publier et piloter, sans abonnement.",
                        "en": "Single account to post and fly, no subscription."},
     "reg.bullet2":   {"fr": "Vos brevets et certifications mis en avant — DGAC, EASA, TC, FAA, ASECNA.",
@@ -226,9 +226,9 @@ _T = {
     "reg.h2":        {"fr": "Créer mon compte", "en": "Create my account"},
     "reg.role":      {"fr": "Mon rôle au décollage", "en": "My role at takeoff"},
     "reg.role.client":      {"fr": "Je cherche un pilote", "en": "I'm looking for a pilot"},
-    "reg.role.client.desc": {"fr": "Je publie des missions et je sélectionne mon droniste.",
+    "reg.role.client.desc": {"fr": "Je publie des missions et je sélectionne mon pilote.",
                               "en": "I post missions and pick my drone pilot."},
-    "reg.role.pilot":       {"fr": "Je suis droniste", "en": "I'm a drone pilot"},
+    "reg.role.pilot":       {"fr": "Je suis pilote", "en": "I'm a drone pilot"},
     "reg.role.pilot.desc":  {"fr": "Je présente mes brevets, ma flotte et je soumissionne.",
                               "en": "I list my licenses, my fleet and I bid."},
     "reg.role.both":        {"fr": "Les deux", "en": "Both"},
@@ -287,8 +287,8 @@ _T = {
     "mission.autre":          {"fr": "Autre / sur mesure",                   "en": "Other / custom"},
 
     # ---- Emails (sujets)
-    "email.welcome.subject":      {"fr": "Bienvenue sur AubeDroniste",
-                                    "en": "Welcome to AubeDroniste"},
+    "email.welcome.subject":      {"fr": "Bienvenue sur AubePilot",
+                                    "en": "Welcome to AubePilot"},
     "email.new_bid.subject":      {"fr": "Nouvelle offre sur « {title} »",
                                     "en": "New bid on « {title} »"},
     "email.bid_accepted.subject": {"fr": "Votre offre est acceptée — « {title} »",
