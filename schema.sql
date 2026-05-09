@@ -167,6 +167,12 @@ CREATE TABLE IF NOT EXISTS bookings (
     released_at              TEXT,    -- date de transfer au pilote
     refunded_at              TEXT,
     dispute_reason           TEXT,
+    -- Annulation tardive : si le client annule a moins de
+    -- LATE_CANCELLATION_HOURS de la mission, une fraction du devis
+    -- (LATE_CANCELLATION_FEE_PCT) est versee au pilote a titre de
+    -- dedommagement et le client est rembourse du reste.
+    cancelled_at             TEXT,
+    cancellation_fee         REAL NOT NULL DEFAULT 0,
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_booking_pilot  ON bookings(pilot_user_id);

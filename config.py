@@ -47,6 +47,13 @@ MAX_SEARCH_RADIUS_KM = 500
 # 30% : choix Nicolas — le materiel drone est cher, la mission a plus de valeur ajoutee.
 PLATFORM_FEE_PCT = 30.0
 
+# Annulation tardive cote client : preavis exige (heures) avant
+# mission.start_date. En dessous de ce preavis, le client dedomage le pilote
+# a hauteur de LATE_CANCELLATION_FEE_PCT du prix convenu, et est rembourse
+# du reste. Au-dessus, refund integral et aucune penalite.
+LATE_CANCELLATION_HOURS = 24
+LATE_CANCELLATION_FEE_PCT = 25.0
+
 # Statuts
 MISSION_STATUS = ("open", "assigned", "in_progress", "done", "cancelled")
 BID_STATUS = ("pending", "accepted", "rejected", "withdrawn")

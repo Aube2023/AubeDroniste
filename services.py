@@ -560,6 +560,7 @@ def withdraw_bid(bid_id: int, pilot_user_id: int):
 def get_booking(booking_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT b.*, m.title AS mission_title, m.mission_type, m.country, m.city, "
+        "       m.start_date AS mission_start_date, m.end_date AS mission_end_date, "
         "       cu.full_name AS client_name, pu.full_name AS pilot_name "
         "FROM bookings b "
         "JOIN missions m ON m.id=b.mission_id "
@@ -569,6 +570,116 @@ def get_booking(booking_id: int) -> Optional[dict]:
         (booking_id,),
     )
     return dict(row) if row else None
+
+
+def compute_cancellation_fee(booking: dict) -> dict:
+    """Calcule la penalite client en cas d annulation.
+
+    Renvoie : {
+      "is_late":   True si annulation < LATE_CANCELLATION_HOURS de la mission,
+      "fee_pct":   % du prix verse au pilote (0 si preavis suffisant),
+      "fee_amount":   montant verse au pilote,
+      "refund_amount": montant rembourse au client,
+      "hours_until":  heures restantes avant la mission (ou None),
+      "preavis_h":    LATE_CANCELLATION_HOURS de reference,
+    }
+    """
+    from datetime import datetime, timezone
+    from config import LATE_CANCELLATION_HOURS, LATE_CANCELLATION_FEE_PCT
+
+    price = float(booking.get("agreed_price") or 0)
+    start = (booking.get("scheduled_at") or booking.get("mission_start_date") or "").strip()
+    hours_until = None
+    if start:
+        # Parse "YYYY-MM-DD" ou "YYYY-MM-DD HH:MM:SS"
+        try:
+            if len(start) <= 10:
+                dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            else:
+                dt = datetime.fromisoformat(start.replace(" ", "T"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            hours_until = (dt - now).total_seconds() / 3600.0
+        except (ValueError, TypeError):
+            hours_until = None
+
+    is_late = hours_until is not None and hours_until < LATE_CANCELLATION_HOURS
+    fee_pct = LATE_CANCELLATION_FEE_PCT if is_late else 0.0
+    fee_amount = round(price * fee_pct / 100.0, 2)
+    refund_amount = round(price - fee_amount, 2)
+    return {
+        "is_late": is_late,
+        "fee_pct": fee_pct,
+        "fee_amount": fee_amount,
+        "refund_amount": refund_amount,
+        "hours_until": round(hours_until, 1) if hours_until is not None else None,
+        "preavis_h": LATE_CANCELLATION_HOURS,
+    }
+
+
+def cancel_booking_by_client(booking_id: int, by_user: int,
+                             reason: str = "") -> dict:
+    """Annule une reservation a la demande du client. Applique la regle
+    de preavis (LATE_CANCELLATION_HOURS / LATE_CANCELLATION_FEE_PCT).
+
+    Renvoie le dict de calcul (compute_cancellation_fee) augmente de
+    {"ok": bool, "reason": str|None}.
+    """
+    booking = get_booking(booking_id)
+    if not booking:
+        return {"ok": False, "reason": "booking introuvable"}
+    if booking["client_user_id"] != by_user:
+        return {"ok": False, "reason": "seul le client peut annuler"}
+    if booking["status"] not in ("pending_payment", "funded", "in_progress"):
+        return {"ok": False,
+                "reason": f"statut {booking['status']} non annulable"}
+
+    calc = compute_cancellation_fee(booking)
+
+    # Refund Stripe (si paye en escrow). Le 25 % reste dans l'escrow et sera
+    # transfere au pilote via un job ulterieur — pour l'MVP on track juste
+    # le montant en DB, le transfer effectif est traite cote payments/cron.
+    refund_done = True
+    if (booking.get("stripe_payment_intent_id")
+            and booking["status"] in ("funded", "in_progress")
+            and calc["refund_amount"] > 0):
+        try:
+            import payments
+            refund_done = bool(payments.refund_payment(
+                booking["stripe_payment_intent_id"],
+                amount=calc["refund_amount"],
+                currency=booking.get("currency", "EUR"),
+                reason=f"booking:{booking_id}:cancel_client:late={calc['is_late']}",
+            ))
+        except Exception as exc:
+            log.warning("refund Stripe a echoue : %s", exc)
+            refund_done = False
+
+    db.execute(
+        "UPDATE bookings SET status='cancelled', "
+        "cancelled_at=datetime('now'), cancellation_fee=? "
+        "WHERE id=?",
+        (calc["fee_amount"], booking_id),
+    )
+    update_mission_status(booking["mission_id"], "cancelled")
+
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'booking_cancel_client', ?, ?)",
+        (by_user, f"booking:{booking_id}",
+         json.dumps({
+             "reason": (reason or "")[:200],
+             "is_late": calc["is_late"],
+             "fee_pct": calc["fee_pct"],
+             "fee_amount": calc["fee_amount"],
+             "refund_amount": calc["refund_amount"],
+             "hours_until": calc["hours_until"],
+             "stripe_refund_done": refund_done,
+         })),
+    )
+    return {"ok": True, "reason": None, **calc,
+            "stripe_refund_done": refund_done}
 
 
 def list_bookings_for(user_id: int) -> list:

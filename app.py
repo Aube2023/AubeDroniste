@@ -663,11 +663,19 @@ def booking_detail(booking_id):
     if g.user["id"] not in (booking["client_user_id"], booking["pilot_user_id"]):
         abort(403)
     peer_id = booking["pilot_user_id"] if g.user["id"] == booking["client_user_id"] else booking["client_user_id"]
+    is_client_view = g.user["id"] == booking["client_user_id"]
+    cancellation_preview = (
+        services.compute_cancellation_fee(booking)
+        if is_client_view and booking["status"] in ("pending_payment", "funded", "in_progress")
+        else None
+    )
     return render_template(
         "booking_detail.html",
         booking=booking,
         peer_id=peer_id,
         thread=services.thread(booking["mission_id"], g.user["id"], peer_id),
+        cancellation_preview=cancellation_preview,
+        is_client_view=is_client_view,
     )
 
 
@@ -679,6 +687,36 @@ def booking_status(booking_id):
         services.update_booking_status(booking_id, status, g.user["id"])
     except ValueError as exc:
         flash(str(exc), "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/reservations/<int:booking_id>/annuler", methods=["POST"])
+@auth.login_required
+def booking_cancel_client(booking_id):
+    """Annulation initiee par le client : applique la regle de preavis
+    (LATE_CANCELLATION_HOURS) et retient une part du devis pour le pilote
+    en cas d'annulation tardive (LATE_CANCELLATION_FEE_PCT, defaut 25%)."""
+    reason = (request.form.get("reason") or "").strip()
+    result = services.cancel_booking_by_client(
+        booking_id, g.user["id"], reason=reason,
+    )
+    if not result.get("ok"):
+        flash(result.get("reason") or "Annulation refusee.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    if result["is_late"]:
+        flash(
+            f"Reservation annulee. Annulation tardive : "
+            f"{int(result['fee_pct'])}% du devis "
+            f"({result['fee_amount']:.2f}) verse au pilote, "
+            f"{result['refund_amount']:.2f} rembourse.",
+            "info",
+        )
+    else:
+        flash(
+            f"Reservation annulee avec preavis suffisant. "
+            f"Refund integral : {result['refund_amount']:.2f}.",
+            "success",
+        )
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 

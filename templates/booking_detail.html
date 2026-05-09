@@ -162,6 +162,49 @@
   </form>
 </section>
 
+{# ============ Annulation client (avec regle de preavis) ============ #}
+
+{% if cancellation_preview %}
+<section class="card" style="border-left: 3px solid var(--terracotta, #c4633f);">
+  <span class="eyebrow">Annuler la réservation</span>
+  <h2 style="font-size: 1.2rem; margin-top: 6px;">Politique d'annulation</h2>
+  <p class="muted small" style="margin-top: 6px;">
+    Préavis ≥ {{ cancellation_preview.preavis_h }} h avant la mission · remboursement intégral.<br>
+    Préavis &lt; {{ cancellation_preview.preavis_h }} h · vous dédommagez le pilote à hauteur de
+    <strong>{{ '%g'|format(cancellation_preview.fee_pct if cancellation_preview.is_late else 25) }} %</strong>
+    du devis convenu.
+  </p>
+
+  {% if cancellation_preview.hours_until is not none %}
+  <div class="mono small" style="margin-top: 10px;">
+    Mission prévue dans
+    <strong>{{ '%.1f'|format(cancellation_preview.hours_until) }} h</strong>.
+    Si vous annulez maintenant :
+  </div>
+  <ul class="muted small" style="margin-top: 6px;">
+    {% if cancellation_preview.is_late %}
+      <li>⚠ <strong>Annulation tardive</strong> ({{ '%g'|format(cancellation_preview.fee_pct) }} % au pilote)</li>
+      <li>Versé au pilote · <strong>{{ '%.2f'|format(cancellation_preview.fee_amount) }} {{ booking.currency }}</strong></li>
+      <li>Remboursé au client · <strong>{{ '%.2f'|format(cancellation_preview.refund_amount) }} {{ booking.currency }}</strong></li>
+    {% else %}
+      <li>✓ Préavis suffisant · pas de pénalité</li>
+      <li>Remboursé au client · <strong>{{ '%.2f'|format(cancellation_preview.refund_amount) }} {{ booking.currency }}</strong></li>
+    {% endif %}
+  </ul>
+  {% else %}
+  <p class="muted small" style="margin-top: 10px;">Date de mission non renseignée — annulation traitée comme tardive par défaut.</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('booking_cancel_client', booking_id=booking.id) }}"
+        onsubmit="return confirm('Confirmer l\'annulation ?\n\n{% if cancellation_preview.is_late %}Annulation tardive : {{ '%.2f'|format(cancellation_preview.fee_amount) }} {{ booking.currency }} versés au pilote.{% else %}Préavis suffisant, remboursement intégral.{% endif %}')"
+        style="margin-top: 14px;">
+    {{ csrf_input() }}
+    <label class="small">Motif (facultatif)<textarea name="reason" rows="2" maxlength="500" placeholder="Empêchement, météo, changement de planning…"></textarea></label>
+    <button class="ghost danger" type="submit">Annuler la réservation</button>
+  </form>
+</section>
+{% endif %}
+
 {# ============ Avis ============ #}
 
 {% if booking.status == 'completed' %}
