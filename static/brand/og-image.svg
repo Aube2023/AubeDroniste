@@ -1,0 +1,81 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1428"/>
+      <stop offset="100%" stop-color="#1a2744"/>
+    </linearGradient>
+    <linearGradient id="aurore" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1d3a"/>
+      <stop offset="45%" stop-color="#8a3a2e"/>
+      <stop offset="75%" stop-color="#e08a4a"/>
+      <stop offset="100%" stop-color="#f5c878"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Étoiles décoratives en arrière-plan -->
+  <circle cx="150" cy="120" r="1.5" fill="#f4b860" opacity="0.6"/>
+  <circle cx="280" cy="80" r="1" fill="#fff" opacity="0.5"/>
+  <circle cx="950" cy="100" r="1.2" fill="#f4b860" opacity="0.5"/>
+  <circle cx="1080" cy="180" r="1" fill="#fff" opacity="0.4"/>
+  <circle cx="100" cy="500" r="1" fill="#fff" opacity="0.4"/>
+  <circle cx="1100" cy="520" r="1.5" fill="#f4b860" opacity="0.5"/>
+
+  <!-- Logo mark à gauche -->
+  <g transform="translate(180, 175)">
+    <circle cx="140" cy="140" r="135" fill="url(#aurore)" stroke="#f4b860" stroke-width="2"/>
+    <line x1="20" y1="170" x2="260" y2="170" stroke="#0a1428" stroke-width="0.8" opacity="0.4"/>
+
+    <g transform="translate(140, 130)">
+      <path d="M -10 -10 L -56 -56 L -48 -64 L 0 -18 Z" fill="#0a1428"/>
+      <path d="M 10 -10 L 56 -56 L 64 -48 L 18 0 Z" fill="#0a1428"/>
+      <path d="M -10 10 L -56 56 L -64 48 L -18 0 Z" fill="#0a1428"/>
+      <path d="M 10 10 L 56 56 L 48 64 L 0 18 Z" fill="#0a1428"/>
+
+      <rect x="-22" y="-22" width="44" height="44" rx="8" fill="#0a1428" stroke="#f4b860" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="10" fill="#1a2744" stroke="#f4b860" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="5" fill="#f4b860"/>
+      <circle cx="0" cy="0" r="2" fill="#0a1428"/>
+
+      <polygon points="0,-34 2,-28 8,-28 3,-24 5,-18 0,-22 -5,-18 -3,-24 -8,-28 -2,-28" fill="#f4b860"/>
+
+      <g transform="translate(-56, -56)">
+        <circle r="18" fill="#0a1428" stroke="#f4b860" stroke-width="2"/>
+        <circle r="5" fill="#f4b860"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(30)"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(-30)"/>
+      </g>
+      <g transform="translate(56, -56)">
+        <circle r="18" fill="#0a1428" stroke="#f4b860" stroke-width="2"/>
+        <circle r="5" fill="#f4b860"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(45)"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(-45)"/>
+      </g>
+      <g transform="translate(-56, 56)">
+        <circle r="18" fill="#0a1428" stroke="#f4b860" stroke-width="2"/>
+        <circle r="5" fill="#f4b860"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(60)"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(-60)"/>
+      </g>
+      <g transform="translate(56, 56)">
+        <circle r="18" fill="#0a1428" stroke="#f4b860" stroke-width="2"/>
+        <circle r="5" fill="#f4b860"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(15)"/>
+        <ellipse cx="0" cy="0" rx="18" ry="3" fill="#f4b860" opacity="0.4" transform="rotate(-15)"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Texte à droite -->
+  <g transform="translate(540, 230)">
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="84" font-weight="500" fill="#fff" letter-spacing="-2">Aube<tspan font-weight="300">Pilot</tspan></text>
+    <text x="0" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="500" fill="#f4b860" letter-spacing="6">RÉSEAU PILOTE FRANCOPHONE</text>
+    <line x1="0" y1="70" x2="80" y2="70" stroke="#c4633f" stroke-width="3"/>
+    <text x="0" y="115" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#c4ccda">Le ciel n'a pas de frontière.</text>
+    <text x="0" y="150" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#c4ccda">Vos pilotes non plus.</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="600" y="590" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="500" fill="#7a8294" letter-spacing="3">PILOT.AUBEETOILEE.COM  ·  L'AUBE ÉTOILÉE INC.  ·  MONTRÉAL</text>
+</svg>

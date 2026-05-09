@@ -1,0 +1,58 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aurore" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1d3a"/>
+      <stop offset="45%" stop-color="#8a3a2e"/>
+      <stop offset="75%" stop-color="#e08a4a"/>
+      <stop offset="100%" stop-color="#f5c878"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="100" cy="100" r="92" fill="url(#aurore)" stroke="#0a1428" stroke-width="2"/>
+  <line x1="20" y1="118" x2="180" y2="118" stroke="#0a1428" stroke-width="0.6" opacity="0.35"/>
+  <line x1="42" y1="125" x2="158" y2="125" stroke="#fff" stroke-width="0.4" opacity="0.25"/>
+
+  <g transform="translate(100, 92)">
+    <path d="M -6 -6 L -38 -38 L -32 -44 L 0 -12 Z" fill="#0a1428"/>
+    <path d="M 6 -6 L 38 -38 L 44 -32 L 12 0 Z" fill="#0a1428"/>
+    <path d="M -6 6 L -38 38 L -44 32 L -12 0 Z" fill="#0a1428"/>
+    <path d="M 6 6 L 38 38 L 32 44 L 0 12 Z" fill="#0a1428"/>
+
+    <rect x="-14" y="-14" width="28" height="28" rx="5" fill="#0a1428" stroke="#f4b860" stroke-width="0.8"/>
+    <circle cx="0" cy="0" r="6" fill="#1a2744" stroke="#f4b860" stroke-width="1"/>
+    <circle cx="0" cy="0" r="3" fill="#f4b860"/>
+    <circle cx="0" cy="0" r="1.2" fill="#0a1428"/>
+
+    <polygon points="0,-20 1,-17 4,-17 1.5,-15 2.5,-12 0,-13.5 -2.5,-12 -1.5,-15 -4,-17 -1,-17" fill="#f4b860"/>
+
+    <g transform="translate(-38, -38)">
+      <circle r="11" fill="#0a1428" stroke="#f4b860" stroke-width="1.2"/>
+      <circle r="3" fill="#f4b860"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(30)"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(-30)"/>
+    </g>
+    <g transform="translate(38, -38)">
+      <circle r="11" fill="#0a1428" stroke="#f4b860" stroke-width="1.2"/>
+      <circle r="3" fill="#f4b860"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(45)"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(-45)"/>
+    </g>
+    <g transform="translate(-38, 38)">
+      <circle r="11" fill="#0a1428" stroke="#f4b860" stroke-width="1.2"/>
+      <circle r="3" fill="#f4b860"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(60)"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(-60)"/>
+    </g>
+    <g transform="translate(38, 38)">
+      <circle r="11" fill="#0a1428" stroke="#f4b860" stroke-width="1.2"/>
+      <circle r="3" fill="#f4b860"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(15)"/>
+      <ellipse cx="0" cy="0" rx="11" ry="2" fill="#f4b860" opacity="0.35" transform="rotate(-15)"/>
+    </g>
+
+    <circle cx="-38" cy="-46" r="1.2" fill="#fff" opacity="0.9"/>
+    <circle cx="38" cy="-46" r="1.2" fill="#fff" opacity="0.9"/>
+    <circle cx="-38" cy="46" r="1.2" fill="#ff6b4a" opacity="0.8"/>
+    <circle cx="38" cy="46" r="1.2" fill="#ff6b4a" opacity="0.8"/>
+  </g>
+</svg>

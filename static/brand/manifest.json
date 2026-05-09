@@ -1,0 +1,13 @@
+{
+  "name": "Aube Pilot",
+  "short_name": "Aube Pilot",
+  "description": "Reseau pilote francophone — marketplace pilotes de drone certifies et clients.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1428",
+  "theme_color": "#c4633f",
+  "icons": [
+    { "src": "/static/brand/icon-180x180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/static/brand/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -7,7 +7,21 @@
   <meta name="description" content="{{ 'AubePilot met en relation pilotes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'AubePilot connects certified drone pilots and clients across the francophonie.' }}">
   <link rel="alternate" hreflang="fr" href="/lang/fr">
   <link rel="alternate" hreflang="en" href="/lang/en">
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand/favicon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='brand/favicon.ico') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='brand/icon-180x180.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='brand/manifest.json') }}">
+  <meta name="theme-color" content="#c4633f">
+
+  <meta property="og:title" content="Aube Pilot — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}">
+  <meta property="og:description" content="{{ 'Aube Pilot met en relation pilotes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'Aube Pilot connects certified drone pilots and clients across the francophonie.' }}">
+  <meta property="og:image" content="https://pilot.aubeetoilee.com{{ url_for('static', filename='brand/og-image.png') }}">
+  <meta property="og:url" content="https://pilot.aubeetoilee.com{{ request.path }}">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://pilot.aubeetoilee.com{{ url_for('static', filename='brand/og-image.png') }}">
   <script>
     // Anti-FOUC : applique le thème avant le rendu
     (function () {
@@ -24,7 +38,7 @@
 <body>
 <header class="topbar">
   <a href="{{ url_for('index') }}" class="brand">
-    <span class="glyph"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="36" height="36"></span>
+    <span class="glyph"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="Aube Pilot" width="36" height="36"></span>
     <span>
       <b>Aube</b> Pilot
       <small>{{ t('nav.brand_sub') }}</small>
