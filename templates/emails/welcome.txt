@@ -1,4 +1,4 @@
-{% set first = user.full_name.split(' ')[0] %}AUBEDRONISTE — BIENVENUE / WELCOME
+{% set first = user.full_name.split(' ')[0] %}AUBEDRONISTE, BIENVENUE / WELCOME
 ==================================
 
 [FR]

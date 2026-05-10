@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ pilot.full_name }} — AubePilot{% endblock %}
+{% block title %}{{ pilot.full_name }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="flightbook-hero">
@@ -164,7 +164,7 @@
   {% for r in reviews %}
   <div class="review-quote">
     <div class="stars">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
-    <q>{{ r.comment or "« — pas de commentaire écrit — »" }}</q>
+    <q>{{ r.comment or "«, pas de commentaire écrit, »" }}</q>
     <cite>{{ r.author_name }} · {{ r.created_at[:10] }}</cite>
   </div>
   {% else %}

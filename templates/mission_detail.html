@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ mission.title }} — AubePilot{% endblock %}
+{% block title %}{{ mission.title }} · AubePilot{% endblock %}
 {% block content %}
 
 <div class="mission-brief">
@@ -71,7 +71,7 @@
   {% endif %}
 
   {% if is_client %}
-    {# Client (auteur de la mission) — voit le détail complet de chaque offre #}
+    {# Client (auteur de la mission), voit le détail complet de chaque offre #}
     {% for b in mission.bids %}
     <div class="card" style="margin: 12px 0;">
       <div class="row-between" style="align-items: start;">
@@ -103,7 +103,7 @@
     {% endfor %}
 
   {% else %}
-    {# Pilote ou visiteur — résumé Upwork-style : noms seulement, pas de prix/message #}
+    {# Pilote ou visiteur, résumé Upwork-style : noms seulement, pas de prix/message #}
     {% if has_my_bid %}
     <div class="card" style="margin: 12px 0; border-left: 3px solid var(--ink);">
       <span class="eyebrow">Mon offre</span>

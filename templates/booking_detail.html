@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Réservation #{{ booking.id }} — AubePilot{% endblock %}
+{% block title %}Réservation #{{ booking.id }} · AubePilot{% endblock %}
 {% block content %}
 
 {% set is_client = current_user.id == booking.client_user_id %}
@@ -56,7 +56,7 @@
 
 {% if booking.status == 'pending_payment' and is_client %}
 <div class="card" style="border-left: 3px solid var(--amber);">
-  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Action requise — Régler la mission</h2>
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Action requise, Régler la mission</h2>
   <p class="muted">
     Votre offre est acceptée. Pour confirmer la réservation, payez la mission. Les fonds restent en escrow chez AubePilot jusqu'à votre validation finale.
   </p>
@@ -80,7 +80,7 @@
 
 {% if booking.status == 'funded' and is_client %}
 <div class="card" style="border-left: 3px solid var(--teal);">
-  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Mission financée — En attente de livraison</h2>
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Mission financée, En attente de livraison</h2>
   <p class="muted">
     Le pilote a {{ auto_release_days }} jours pour livrer. À réception des rushs, validez la mission pour libérer les fonds. Sans action de votre part, les fonds seront automatiquement libérés au pilote au bout de {{ auto_release_days }} jours.
   </p>
@@ -98,7 +98,7 @@
 
 {% if booking.status == 'funded' and is_pilot %}
 <div class="card" style="border-left: 3px solid var(--teal);">
-  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">Mission payée — Vous pouvez décoller 🛫</h2>
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">Mission payée, Vous pouvez décoller 🛫</h2>
   <p class="muted">
     Les fonds sont en escrow chez AubePilot. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
   </p>
@@ -192,7 +192,7 @@
     {% endif %}
   </ul>
   {% else %}
-  <p class="muted small" style="margin-top: 10px;">Date de mission non renseignée — annulation traitée comme tardive par défaut.</p>
+  <p class="muted small" style="margin-top: 10px;">Date de mission non renseignée, annulation traitée comme tardive par défaut.</p>
   {% endif %}
 
   <form method="post" action="{{ url_for('booking_cancel_client', booking_id=booking.id) }}"

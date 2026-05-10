@@ -1,8 +1,8 @@
-AUBEDRONISTE — DÉCOLLAGE / CLEARED FOR TAKEOFF
+AUBEDRONISTE, DÉCOLLAGE / CLEARED FOR TAKEOFF
 ==============================================
 
 [FR]
-Votre offre a été acceptée — bravo !
+Votre offre a été acceptée, bravo !
 
 Mission         : {{ mission.title }}
 Client          : {{ client.full_name }}
@@ -20,7 +20,7 @@ Prochaine étape : ouvrez la messagerie pour caler la logistique
 ------------------------------------------------------------
 
 [EN]
-Your bid has been accepted — congratulations!
+Your bid has been accepted, congratulations!
 
 Mission       : {{ mission.title }}
 Client        : {{ client.full_name }}

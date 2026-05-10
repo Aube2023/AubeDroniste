@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Mon profil pilote — AubePilot{% endblock %}
+{% block title %}Mon profil pilote · AubePilot{% endblock %}
 {% block content %}
 <h1>Mon profil pilote</h1>
 
-{# ===== Stripe Connect — encaissement ===== #}
+{# ===== Stripe Connect, encaissement ===== #}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}
 <section class="card" style="border-left: 3px solid {% if stripe_ready %}var(--teal){% else %}var(--amber){% endif %};">
   <span class="eyebrow">Encaissement</span>
@@ -117,7 +117,7 @@
     {% for c in profile.certifications %}
     <div class="cert row-between">
       <div>
-        <strong>{{ c.title }}</strong> — {{ auth_label(c.authority) }}
+        <strong>{{ c.title }}</strong>, {{ auth_label(c.authority) }}
         {% if c.is_verified %}<span class="tag tag-ok">vérifié</span>{% endif %}
         <div class="muted small">{{ c.reference or '' }}{% if c.issued_at %} · {{ c.issued_at }}{% endif %}{% if c.expires_at %} → {{ c.expires_at }}{% endif %}</div>
       </div>
@@ -151,7 +151,7 @@
         <label>Justificatif (PDF/JPG)
           <input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp">
           <small class="muted" style="display: block; margin-top: 4px;">
-            Scan du brevet — visible uniquement par l'admin Aube pour vérification.
+            Scan du brevet, visible uniquement par l'admin Aube pour vérification.
           </small>
         </label>
       </div>
@@ -182,7 +182,7 @@
     {% for d in profile.drones %}
     <div class="drone row-between">
       <div>
-        <strong>{{ d.brand }} {{ d.model }}</strong> — {{ drone_label(d.category) }}
+        <strong>{{ d.brand }} {{ d.model }}</strong>, {{ drone_label(d.category) }}
         <div class="muted small">
           {% if d.weight_g %}{{ d.weight_g }} g{% endif %}
           {% if d.flight_time_min %} · {{ d.flight_time_min }} min{% endif %}

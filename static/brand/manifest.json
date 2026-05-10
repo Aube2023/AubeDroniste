@@ -1,7 +1,7 @@
 {
   "name": "Aube Pilot",
   "short_name": "Aube Pilot",
-  "description": "Reseau pilote international — marketplace pilotes de drone certifies et clients.",
+  "description": "Reseau pilote international, marketplace pilotes de drone certifies et clients.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a1428",

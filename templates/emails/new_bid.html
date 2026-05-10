@@ -1,11 +1,11 @@
 {% extends "emails/_layout.html" %}
-{% block subject %}Nouvelle offre / New bid — {{ mission.title }}{% endblock %}
+{% block subject %}Nouvelle offre / New bid, {{ mission.title }}{% endblock %}
 {% block preview %}{{ pilot.full_name }} a fait une offre · has placed a bid.{% endblock %}
 
 {% block content %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr><td style="padding:36px 32px 12px;">
-  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR — Nouvelle offre</div>
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR, Nouvelle offre</div>
   <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">
     {{ pilot.full_name }} vient de soumissionner.
   </h1>
@@ -40,7 +40,7 @@
 <tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:8px 0;"></div></td></tr>
 
 <tr><td style="padding:24px 32px 36px;">
-  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN — New bid</div>
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN, New bid</div>
   <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">
     {{ pilot.full_name }} just placed a bid.
   </h1>

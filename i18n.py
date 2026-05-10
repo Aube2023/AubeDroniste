@@ -1,4 +1,4 @@
-"""Internationalisation AubePilot — FR + EN.
+"""Internationalisation AubePilot, FR + EN.
 
 Approche minimaliste, sans dependance externe :
 - table de traductions plate `_T = {key: {'fr': ..., 'en': ...}}`
@@ -81,14 +81,14 @@ _T = {
                            "en": "Crafted in Montréal"},
 
     # ---- Landing
-    "home.eyebrow":     {"fr": "Réseau pilote international — depuis 2026",
-                         "en": "International pilot network — since 2026"},
+    "home.eyebrow":     {"fr": "Réseau pilote international, depuis 2026",
+                         "en": "International pilot network, since 2026"},
     "home.h1_a":        {"fr": "Le ciel n'a pas de frontière.",
                          "en": "The sky knows no border."},
     "home.h1_b":        {"fr": "Vos pilotes",       "en": "Your pilots"},
     "home.h1_b_em":     {"fr": "non plus.",         "en": "either."},
-    "home.lead":        {"fr": "AubePilot met en relation des pilotes certifiés (DGAC, EASA, Transport Canada, FAA, ASECNA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA…) avec les commanditaires qui en ont besoin — du tournage de mariage à la cartographie RTK d'un chantier minier. Sans intermédiaire, partout dans le monde.",
-                         "en": "AubePilot connects certified drone pilots (DGAC, EASA, Transport Canada, FAA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA, ASECNA…) with the people who need them — from wedding shoots to RTK mapping of a mining site. No middlemen, anywhere in the world."},
+    "home.lead":        {"fr": "AubePilot connecte des pilotes certifiés (DGAC, EASA, Transport Canada, FAA, ASECNA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA et les autres) avec les commanditaires qui en ont besoin. Tournage de mariage, cartographie RTK d'un chantier minier, inspection thermique d'une éolienne. Sans intermédiaire, partout dans le monde.",
+                         "en": "AubePilot connects certified drone pilots (DGAC, EASA, Transport Canada, FAA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA, ASECNA and others) with the people who need them. Wedding shoots, RTK mapping of a mining site, thermal inspection of a wind turbine. No middlemen, anywhere in the world."},
     "home.cta_publish": {"fr": "Publier une mission",   "en": "Publish a mission"},
     "home.cta_pilot":   {"fr": "Inscrire mon brevet de pilote →",
                          "en": "Register my pilot license →"},
@@ -109,16 +109,16 @@ _T = {
 
     "home.nearby.title":   {"fr": "Trouvez ce qui vole près de vous.",
                              "en": "Find what's flying near you."},
-    "home.nearby.lead":    {"fr": "Avec votre permission, on identifie les pilotes et les missions dans un rayon de 100 km. Aucune donnée stockée côté plateforme — tout reste dans votre navigateur.",
-                             "en": "With your permission, we identify pilots and missions within a 100 km radius. Nothing stored server-side — everything stays in your browser."},
+    "home.nearby.lead":    {"fr": "Avec votre permission, on identifie les pilotes et les missions dans un rayon de 100 km. Aucune donnée stockée côté plateforme, tout reste dans votre navigateur.",
+                             "en": "With your permission, we identify pilots and missions within a 100 km radius. Nothing stored server-side, everything stays in your browser."},
     "home.nearby.cta":     {"fr": "⌖ Activer ma zone",      "en": "⌖ Enable my zone"},
     "home.nearby.alt":     {"fr": "Voir tous les pilotes", "en": "Browse all pilots"},
 
     "home.steps.eyebrow":  {"fr": "Comment on opère",       "en": "How it flies"},
     "home.steps.h":        {"fr": "Un canevas, quatre escales.",
                              "en": "One process, four steps."},
-    "home.steps.lead":     {"fr": "De la dépose d'une mission à la livraison du média, le parcours est cousu pour que vous gardiez la main — qu'on soit client pressé ou pilote en escale.",
-                             "en": "From posting a mission to delivering the footage, the journey is built so you stay in control — whether you're a client in a hurry or a pilot between flights."},
+    "home.steps.lead":     {"fr": "De la dépose d'une mission à la livraison du média, le parcours est cousu pour que vous gardiez la main, qu'on soit client pressé ou pilote en escale.",
+                             "en": "From posting a mission to delivering the footage, the journey is built so you stay in control, whether you're a client in a hurry or a pilot between flights."},
 
     "home.step1.h": {"fr": "Vous décrivez le besoin.",
                      "en": "You describe what you need."},
@@ -154,10 +154,10 @@ _T = {
                                "en": "On AubePilot, your license, your fleet and your flight hours count as much as your price. Authorities (DGAC, EASA, TC, FAA, ASECNA) are highlighted; amateurs too, in their right place."},
     "home.manifesto.p2":     {"fr": "Et nous ne facturons que sur les missions livrées. Pas d'abonnement, pas de pop-up.",
                                "en": "And we only bill on delivered missions. No subscription, no pop-ups."},
-    "home.manifesto.quote":  {"fr": "Avant Aube, on cherchait des pilotes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi — toutes avec des brevets vérifiés.",
-                               "en": "Before Aube, we hunted for drone pilots on LinkedIn between Facebook groups. Now I post a mission in the morning, I have three proposals by noon — all with verified licenses."},
-    "home.manifesto.cite":   {"fr": "— Imane C., productrice — Tunis",
-                               "en": "— Imane C., producer — Tunis"},
+    "home.manifesto.quote":  {"fr": "Avant Aube, on cherchait des pilotes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi, toutes avec des brevets vérifiés.",
+                               "en": "Before Aube, we hunted for drone pilots on LinkedIn between Facebook groups. Now I post a mission in the morning, I have three proposals by noon, all with verified licenses."},
+    "home.manifesto.cite":   {"fr": "— Imane C., productrice, Tunis",
+                               "en": "— Imane C., producer, Tunis"},
 
     "home.dep.eyebrow": {"fr": "Tableau des départs",      "en": "Departure board"},
     "home.dep.h":       {"fr": "Missions qui cherchent un pilote.",
@@ -185,12 +185,12 @@ _T = {
     "common.username":     {"fr": "Identifiant", "en": "Username"},
 
     # ---- Login
-    "login.title":      {"fr": "Connexion — AubePilot", "en": "Sign in — AubePilot"},
+    "login.title":      {"fr": "Connexion, AubePilot", "en": "Sign in, AubePilot"},
     "login.eyebrow":    {"fr": "Retour en cabine", "en": "Back to the cockpit"},
     "login.h1":         {"fr": "Bonjour, commandant.", "en": "Welcome, commander."},
     "login.h1_em":      {"fr": "commandant", "en": "commander"},
-    "login.lead":       {"fr": "Vos identifiants AubePilot vous donnent aussi accès à tous les services L'Aube Étoilée — un seul compte pour tout l'écosystème.",
-                         "en": "Your AubePilot credentials also unlock every L'Aube Étoilée service — one account for the whole ecosystem."},
+    "login.lead":       {"fr": "Vos identifiants AubePilot vous donnent aussi accès à tous les services L'Aube Étoilée, un seul compte pour tout l'écosystème.",
+                         "en": "Your AubePilot credentials also unlock every L'Aube Étoilée service, one account for the whole ecosystem."},
     "login.bullet1":    {"fr": "Authentification partagée @aubemail.com.",
                          "en": "Shared @aubemail.com authentication."},
     "login.bullet2":    {"fr": "Aucun mot de passe stocké en clair, sessions signées côté serveur.",
@@ -207,7 +207,7 @@ _T = {
     "login.alt_link":   {"fr": "Rejoindre le réseau", "en": "Join the network"},
 
     # ---- Register
-    "reg.title":     {"fr": "Rejoindre — AubePilot", "en": "Join — AubePilot"},
+    "reg.title":     {"fr": "Rejoindre, AubePilot", "en": "Join, AubePilot"},
     "reg.eyebrow":   {"fr": "Rejoindre le réseau", "en": "Join the network"},
     "reg.h1":        {"fr": "Embarquez dans l'équipage.", "en": "Step into the crew."},
     "reg.h1_em":     {"fr": "l'équipage", "en": "the crew"},
@@ -215,8 +215,8 @@ _T = {
                        "en": "Whether you're looking for a pilot or you are one, you keep one AubePilot account. Switch roles anytime from your dashboard."},
     "reg.bullet1":   {"fr": "Compte unique pour publier et piloter, sans abonnement.",
                        "en": "Single account to post and fly, no subscription."},
-    "reg.bullet2":   {"fr": "Vos brevets et certifications mis en avant — DGAC, EASA, TC, FAA, ASECNA.",
-                       "en": "Your licenses and certifications highlighted — DGAC, EASA, TC, FAA, ASECNA."},
+    "reg.bullet2":   {"fr": "Vos brevets et certifications mis en avant, DGAC, EASA, TC, FAA, ASECNA.",
+                       "en": "Your licenses and certifications highlighted, DGAC, EASA, TC, FAA, ASECNA."},
     "reg.bullet3":   {"fr": "Recherche géolocalisée mondiale : Europe, Amérique, Maghreb, Afrique, Russie, Asie-Pacifique, Moyen-Orient.",
                        "en": "Worldwide geo-located search: Europe, Americas, Maghreb, Africa, Russia, Asia-Pacific, Middle East."},
     "reg.bullet4":   {"fr": "Commission plateforme uniquement sur missions livrées (30 %).",
@@ -291,10 +291,10 @@ _T = {
                                     "en": "Welcome to AubePilot"},
     "email.new_bid.subject":      {"fr": "Nouvelle offre sur « {title} »",
                                     "en": "New bid on « {title} »"},
-    "email.bid_accepted.subject": {"fr": "Votre offre est acceptée — « {title} »",
-                                    "en": "Your bid was accepted — « {title} »"},
-    "email.new_message.subject":  {"fr": "Nouveau message — {title}",
-                                    "en": "New message — {title}"},
+    "email.bid_accepted.subject": {"fr": "Votre offre est acceptée, « {title} »",
+                                    "en": "Your bid was accepted, « {title} »"},
+    "email.new_message.subject":  {"fr": "Nouveau message, {title}",
+                                    "en": "New message, {title}"},
 
     # ---- Footer légal (Loi 25 Québec)
     "footer.privacy":  {"fr": "Confidentialité",     "en": "Privacy"},
@@ -303,7 +303,7 @@ _T = {
     "footer.cookies":  {"fr": "Cookies",             "en": "Cookies"},
     "footer.rprp":     {"fr": "Contacter le RPRP",   "en": "Contact our DPO"},
 
-    # ---- Statuts (mission / bid / booking) — affichés dans les .tag
+    # ---- Statuts (mission / bid / booking), affichés dans les .tag
     "status.open":            {"fr": "ouverte",        "en": "open"},
     "status.assigned":        {"fr": "attribuée",      "en": "assigned"},
     "status.in_progress":     {"fr": "en cours",       "en": "in progress"},

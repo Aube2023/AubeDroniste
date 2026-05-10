@@ -1,11 +1,11 @@
 {% extends "emails/_layout.html" %}
-{% block subject %}Paiement libéré / Payout released — {{ booking.mission_title or "AubePilot" }}{% endblock %}
+{% block subject %}Paiement libéré / Payout released, {{ booking.mission_title or "AubePilot" }}{% endblock %}
 {% block preview %}Vous venez d'être payé · You've just been paid.{% endblock %}
 
 {% block content %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr><td style="padding:36px 32px 12px;">
-  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">FR — Paiement libéré</div>
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">FR, Paiement libéré</div>
   <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
     Vous avez été payé.
   </h1>
@@ -36,7 +36,7 @@
 <tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:18px 0;"></div></td></tr>
 
 <tr><td style="padding:0 32px 36px;">
-  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">EN — Payout released</div>
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">EN, Payout released</div>
   <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
     <strong>{{ client.full_name }}</strong> confirmed the mission. Stripe has just transferred your share to your bank account (typically 1-3 business days depending on your bank).
   </p>
