@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}AubePilot — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}{% endblock %}</title>
-  <meta name="description" content="{{ 'AubePilot met en relation pilotes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'AubePilot connects certified drone pilots and clients across the francophonie.' }}">
+  <title>{% block title %}AubePilot — {{ 'Le réseau international des pilotes de drone' if lang == 'fr' else 'The global drone-pilot network' }}{% endblock %}</title>
+  <meta name="description" content="{{ 'AubePilot met en relation pilotes certifiés et clients partout dans le monde.' if lang == 'fr' else 'AubePilot connects certified drone pilots and clients worldwide.' }}">
   <link rel="alternate" hreflang="fr" href="/lang/fr">
   <link rel="alternate" hreflang="en" href="/lang/en">
 
@@ -15,8 +15,8 @@
   <link rel="manifest" href="{{ url_for('static', filename='brand/manifest.json') }}">
   <meta name="theme-color" content="#c4633f">
 
-  <meta property="og:title" content="Aube Pilot — {{ 'Le réseau des pilotes de drone francophones' if lang == 'fr' else 'The francophone drone-pilot network' }}">
-  <meta property="og:description" content="{{ 'Aube Pilot met en relation pilotes certifiés et clients à travers la francophonie.' if lang == 'fr' else 'Aube Pilot connects certified drone pilots and clients across the francophonie.' }}">
+  <meta property="og:title" content="Aube Pilot — {{ 'Le réseau international des pilotes de drone' if lang == 'fr' else 'The global drone-pilot network' }}">
+  <meta property="og:description" content="{{ 'Aube Pilot met en relation pilotes certifiés et clients partout dans le monde.' if lang == 'fr' else 'Aube Pilot connects certified drone pilots and clients worldwide.' }}">
   <meta property="og:image" content="https://pilot.aubeetoilee.com{{ url_for('static', filename='brand/og-image.png') }}">
   <meta property="og:url" content="https://pilot.aubeetoilee.com{{ request.path }}">
   <meta property="og:type" content="website">

@@ -164,17 +164,43 @@ DRONE_CAPABILITIES = [
     "largage", "epandage",
 ]
 
-# Autorites de certification (catalogue indicatif)
+# Autorites de certification (catalogue indicatif, monde entier)
 LICENCE_AUTHORITIES = [
-    ("DGAC",     "DGAC (France)"),
+    # Europe
     ("EASA",     "EASA - A1/A2/A3 / STS (UE)"),
+    ("DGAC",     "DGAC (France)"),
+    ("CAA_UK",   "CAA (Royaume-Uni)"),
+    ("OFAC",     "OFAC / FOCA (Suisse)"),
+    ("LBA_DE",   "LBA (Allemagne)"),
+    ("ENAC_IT",  "ENAC (Italie)"),
+    ("AESA_ES",  "AESA (Espagne)"),
+    # Amerique du Nord
     ("Transport Canada", "Transport Canada (avance / de base)"),
     ("FAA",      "FAA Part 107 (USA)"),
+    # Amerique latine
+    ("ANAC_BR",  "ANAC (Bresil)"),
+    ("DGAC_CL",  "DGAC (Chili)"),
+    # Maghreb / Afrique
     ("DGAC_MA",  "DGAC Maroc"),
     ("ANAC_TN",  "ANAC Tunisie"),
     ("DACM_DZ",  "DACM Algerie"),
     ("ASECNA",   "ASECNA (Afrique de l'Ouest)"),
-    ("OFAC",     "OFAC (Suisse)"),
+    ("SACAA_ZA", "SACAA (Afrique du Sud)"),
+    # Russie / CEI
+    ("Rosaviatsia", "Rosaviatsia (Russie)"),
+    # Asie-Pacifique
+    ("CAAC",     "CAAC (Chine)"),
+    ("JCAB",     "JCAB (Japon)"),
+    ("KOCA",     "KOCA / MOLIT (Coree du Sud)"),
+    ("CASA",     "CASA (Australie)"),
+    ("CAANZ",    "CAA (Nouvelle-Zelande)"),
+    ("DGCA_IN",  "DGCA (Inde)"),
+    ("CAAS_SG",  "CAAS (Singapour)"),
+    # Moyen-Orient
+    ("GCAA_AE",  "GCAA (Emirats arabes unis)"),
+    ("GACA_SA",  "GACA (Arabie saoudite)"),
+    ("CAAI_IL",  "CAAI (Israel)"),
+    # Generique
     ("autre",    "Autre / declarative"),
 ]
 
@@ -236,6 +262,104 @@ LICENCE_TITLES_BY_AUTHORITY = {
         "Categorie Ouverte A1/A3",
         "Categorie Ouverte A2",
         "Categorie Specifique (LUC)",
+    ],
+    "CAA_UK": [
+        "A2 CofC (A2 Certificate of Competency)",
+        "GVC (General VLOS Certificate)",
+        "Operational Authorisation (PDRA)",
+        "BVLOS Operational Authorisation",
+    ],
+    "LBA_DE": [
+        "EU-Kompetenznachweis A1/A3",
+        "EU-Fernpilotenzeugnis A2",
+        "STS-DE-01 / STS-DE-02",
+        "Spezielle Betriebsgenehmigung (LUC)",
+    ],
+    "ENAC_IT": [
+        "Attestato pilota A1/A3",
+        "Attestato pilota A2",
+        "Scenario standard STS-IT-01",
+        "Autorizzazione LUC",
+    ],
+    "AESA_ES": [
+        "Curso A1/A3 (categoria abierta)",
+        "Curso A2 (categoria abierta)",
+        "Escenario estandar STS-ES",
+        "Certificado LUC",
+    ],
+    "ANAC_BR": [
+        "Piloto remoto Classe 3 (RPA <25 kg, VLOS)",
+        "Piloto remoto Classe 2 (25-150 kg)",
+        "Piloto remoto Classe 1 (>150 kg)",
+        "Codigo ANAC RPA",
+    ],
+    "DGCA_CL": [
+        "Operador remoto categoria abierta",
+        "Operador remoto categoria especifica",
+    ],
+    "SACAA_ZA": [
+        "RPL (Remote Pilot Licence)",
+        "ROC (RPAS Operator Certificate)",
+        "BVLOS Authorisation",
+    ],
+    "Rosaviatsia": [
+        "Vneshnij pilot - kategoriya A (do 30 kg)",
+        "Vneshnij pilot - kategoriya B (BVLOS / >30 kg)",
+        "Sertifikat ekspluatanta BVS",
+    ],
+    "CAAC": [
+        "AOPA-China multirotor (sub-7 kg)",
+        "AOPA-China multirotor (7-25 kg)",
+        "AOPA-China BVLOS / large UAV",
+        "UTC Trainer rating",
+    ],
+    "JCAB": [
+        "JCAB Level 1 - basic skill",
+        "JCAB Level 2 - DID / nuit / BVLOS",
+        "JCAB Level 3 - ops habites",
+        "JCAB Level 4 - urbain / habites",
+    ],
+    "KOCA": [
+        "Telepilote categorie 1 (<2 kg)",
+        "Telepilote categorie 2 (2-7 kg)",
+        "Telepilote categorie 3 (7-25 kg)",
+        "Telepilote categorie 4 (>25 kg)",
+    ],
+    "CASA": [
+        "RePL (Remote Pilot Licence)",
+        "ReOC (Remote Operator's Certificate)",
+        "BVLOS Approval",
+        "Excluded category - sub-2 kg commercial",
+    ],
+    "CAANZ": [
+        "Part 101 - sub-25 kg unmanned",
+        "Part 102 - certified UAV operations",
+        "BVLOS Authorisation",
+    ],
+    "DGCA_IN": [
+        "Small UAS Pilot (RPC) - sub-25 kg",
+        "Medium UAS Pilot (25-150 kg)",
+        "Large UAS Pilot (>150 kg)",
+        "BVLOS Permit",
+    ],
+    "CAAS_SG": [
+        "UAPL (Unmanned Aircraft Pilot Licence)",
+        "Operator Permit (OP)",
+        "Activity Permit",
+    ],
+    "GCAA_AE": [
+        "UAS Pilot - Class A (sub-7 kg)",
+        "UAS Pilot - Class B (7-25 kg)",
+        "Commercial Operator Authorization",
+    ],
+    "GACA_SA": [
+        "UAS pilot certificate - Cat 1 (sub-7 kg)",
+        "UAS pilot certificate - Cat 2 (7-25 kg)",
+        "Commercial UAS operator licence",
+    ],
+    "CAAI_IL": [
+        "Commercial UAV Operator Licence",
+        "Recreational UAV Permit",
     ],
     "autre": [
         "Brevet theorique pilote (PPL/CPL)",
