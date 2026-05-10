@@ -5,6 +5,17 @@
 <section class="auth-split">
   <form method="post" class="auth-form section-form">
         {{ csrf_input() }}
+    {% if target_pilot %}
+    <div class="card" style="border-left: 3px solid var(--amber, #c4633f); margin-bottom: 18px;">
+      <span class="eyebrow">Demande adressée à un pilote</span>
+      <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ target_pilot.full_name }} sera notifié de votre mission</h3>
+      <p class="muted small" style="margin: 0;">
+        Vous publiez une mission ouverte à laquelle <strong>{{ target_pilot.full_name }}</strong> sera invité en priorité.
+        Elle reste visible des autres pilotes — ils peuvent aussi soumissionner.
+      </p>
+      <input type="hidden" name="target_pilot_id" value="{{ target_pilot.id }}">
+    </div>
+    {% endif %}
     <h2>Publier une mission</h2>
 
     <section class="numbered-section">

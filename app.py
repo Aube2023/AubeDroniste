@@ -615,7 +615,13 @@ def mission_create():
             return render_template("mission_create.html", form=request.form)
         flash("Mission publiee.", "success")
         return redirect(url_for("mission_detail", mission_id=mission_id))
-    return render_template("mission_create.html", form={})
+    target_pilot = None
+    pilot_arg = _to_int(request.args.get("pilot"))
+    if pilot_arg:
+        prof = services.get_pilot_profile(pilot_arg)
+        if prof and prof.get("role") in ("pilot", "both"):
+            target_pilot = prof
+    return render_template("mission_create.html", form={}, target_pilot=target_pilot)
 
 
 @app.route("/missions/<int:mission_id>/cloturer", methods=["POST"])

@@ -17,6 +17,12 @@
         « {{ pilot.headline }} »
       </p>
       {% endif %}
+      {% if not current_user or current_user.id != pilot.id %}
+      <div style="margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">Contacter ce pilote</a>
+        <a href="{{ url_for('missions_search') }}" class="ghost">Voir les missions ouvertes</a>
+      </div>
+      {% endif %}
     </div>
   </div>
   <div class="stat-rail">

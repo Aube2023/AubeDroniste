@@ -227,6 +227,11 @@ form.inline { display: inline; margin: 0; }
 
 .grid-2  { display: grid; gap: 18px; grid-template-columns: repeat(2, 1fr); }
 .grid-3  { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); }
+/* Champs courts (number, dates) : largeur min lisible, wrap auto. */
+.numbered-section .grid-3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.numbered-section .grid-3 input[type=number],
+.numbered-section .grid-3 input[type=datetime-local],
+.numbered-section .grid-3 input[type=date] { min-width: 0; }
 .grid-cards { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 @media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
