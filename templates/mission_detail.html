@@ -77,12 +77,12 @@
       <div class="row-between" style="align-items: start;">
         <div>
           <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-weight: 600;">
-            {{ b.pilot_name }}
+            {{ mask_name(b.pilot_name) }}
           </a>
           {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
           <div class="muted small mono" style="margin-top: 4px;">
             ★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})
-            {% if b.pilot_city or b.pilot_country %} · {{ b.pilot_city or '' }}{% if b.pilot_city and b.pilot_country %}, {% endif %}{{ b.pilot_country or '' }}{% endif %}
+            {% if b.pilot_country %} · {{ b.pilot_country }}{% endif %}
           </div>
         </div>
         <div style="text-align: right;">
@@ -134,7 +134,7 @@
       <ul class="bid-roster" style="list-style: none; padding: 0; margin: 10px 0 0;">
         {% for b in others %}
         <li style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ink-dim-bg, rgba(0,0,0,.06));">
-          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); color: var(--ink); font-weight: 600; text-decoration: none;">{{ b.pilot_name }}</a>
+          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}" style="font-family: var(--serif); color: var(--ink); font-weight: 600; text-decoration: none;">{{ mask_name(b.pilot_name) }}</a>
           {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
           {% if b.pilot_rating.count > 0 %}<span class="muted small mono">★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})</span>{% endif %}
         </li>

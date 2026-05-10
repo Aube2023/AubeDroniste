@@ -47,19 +47,20 @@
 
 <div class="grid-cards">
   {% for p in pilots %}
+  {% set masked = mask_name(p.full_name) %}
   <a class="pilot-card" href="{{ url_for('pilot_detail', user_id=p.id) }}">
     <div class="strip">
-      <span class="callsign">F-{{ '%04d' % p.id }}{{ (p.full_name|first)|upper }}</span>
+      <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
         {% if p.distance_km is not none %}≈ {{ p.distance_km }} km · {% endif %}
         {% if p.rating.count %}{{ p.rating.count }} avis{% else %}nouveau{% endif %}
       </span>
     </div>
     <div class="body">
-      <div class="avatar">{{ p.full_name[:1] }}</div>
+      <div class="avatar">{{ masked[:1] }}</div>
       <div>
-        <div class="name">{{ p.full_name }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
-        <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
+        <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
+        <div class="loc">{{ p.country }}</div>
         <div class="headline">« {{ p.headline or "Disponible pour vos prises de vue." }} »</div>
       </div>
     </div>

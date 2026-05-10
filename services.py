@@ -68,6 +68,46 @@ def upsert_pilot_profile(user_id: int, **fields) -> Optional[dict]:
     return get_pilot_profile(user_id)
 
 
+def mask_full_name(full_name: str) -> str:
+    """Anonymise un nom complet en gardant le prenom et l'initiale du nom.
+
+    "Amine Benali"   -> "Amine B."
+    "Sophie Tremblay" -> "Sophie T."
+    "Marie Dubois Pellerin" -> "Marie D."   (premier nom de famille)
+    "Cher" / mononyme -> "Cher"             (rien a masquer)
+    """
+    name = (full_name or "").strip()
+    if not name:
+        return ""
+    parts = name.split()
+    if len(parts) < 2:
+        return parts[0]
+    return f"{parts[0]} {parts[1][0].upper()}."
+
+
+def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
+    """True si le viewer (probablement un client) a au moins un booking
+    paye en escrow avec ce pilote (funded / in_progress / completed /
+    disputed). Utilise pour decider si on revele le nom complet, la
+    ville exacte et le portfolio_url du pilote.
+
+    Si viewer == pilote lui-meme, retourne True (il voit toujours sa propre
+    fiche en clair).
+    """
+    if not viewer_user_id or not pilot_user_id:
+        return False
+    if viewer_user_id == pilot_user_id:
+        return True
+    row = db.fetchone(
+        "SELECT 1 FROM bookings "
+        "WHERE pilot_user_id=? AND client_user_id=? "
+        "AND status IN ('funded','in_progress','completed','disputed') "
+        "LIMIT 1",
+        (pilot_user_id, viewer_user_id),
+    )
+    return bool(row)
+
+
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT u.*, p.headline, p.years_experience, p.hourly_rate, p.daily_rate, "

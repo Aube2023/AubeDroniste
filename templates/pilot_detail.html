@@ -1,17 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ pilot.full_name }} · AubePilot{% endblock %}
+{% set display_name = pilot.full_name if reveal_identity else masked_name %}
+{% block title %}{{ display_name }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="flightbook-hero">
   <div class="flightbook-band">
-    <div class="avatar big">{{ pilot.full_name[:1] }}</div>
+    <div class="avatar big">{{ display_name[:1] }}</div>
     <div>
-      <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (pilot.full_name|first)|upper }} · CDB</span>
-      <h1>{{ pilot.full_name }} {% if pilot.is_verified %}<span class="badge verified" style="vertical-align: middle;">vérifié</span>{% endif %}</h1>
+      <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (display_name|first)|upper }} · CDB</span>
+      <h1>{{ display_name }} {% if pilot.is_verified %}<span class="badge verified" style="vertical-align: middle;">vérifié</span>{% endif %}</h1>
       <div class="loc">
-        {{ pilot.country or '—' }}{% if pilot.city %} · {{ pilot.city }}{% endif %}
-        {% if pilot.lat and pilot.lng %} · {{ '%.4f'|format(pilot.lat) }}, {{ '%.4f'|format(pilot.lng) }}{% endif %}
+        {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
+        {% if reveal_identity and pilot.lat and pilot.lng %} · {{ '%.4f'|format(pilot.lat) }}, {{ '%.4f'|format(pilot.lng) }}{% endif %}
       </div>
+      {% if not reveal_identity %}
+      <p class="muted small mono" style="margin-top: 6px;">
+        Identité complète révélée après acceptation et paiement d'une mission.
+      </p>
+      {% endif %}
       {% if pilot.headline %}
       <p class="serif-italic" style="margin-top: 16px; font-size: 1.2rem; color: var(--ink-soft); max-width: 56ch;">
         « {{ pilot.headline }} »
@@ -96,7 +102,11 @@
 
     {% if pilot.portfolio_url %}
     <h3 style="margin-top: 24px;">Portfolio externe</h3>
-    <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
+    {% if reveal_identity %}
+      <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
+    {% else %}
+      <p class="muted small">Lien révélé après paiement d'une première mission avec ce pilote.</p>
+    {% endif %}
     {% endif %}
   </div>
 

@@ -156,6 +156,9 @@ def _inject_helpers():
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
         "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
         "status_label": status_label,
+        # Anti-bypass : nom anonymise dans toutes les listes / cartes
+        # (la fiche detail decide cas par cas via has_funded_relation).
+        "mask_name": services.mask_full_name,
     }
 
 
@@ -291,10 +294,14 @@ def pilot_detail(user_id):
     profile = services.get_pilot_profile(user_id)
     if not profile or profile.get("role") not in ("pilot", "both"):
         abort(404)
+    viewer_id = (g.user["id"] if getattr(g, "user", None) else 0)
+    reveal = services.has_funded_relation(viewer_id, user_id)
     return render_template(
         "pilot_detail.html",
         pilot=profile,
         reviews=services.reviews_for(user_id),
+        reveal_identity=reveal,
+        masked_name=services.mask_full_name(profile["full_name"]),
     )
 
 
