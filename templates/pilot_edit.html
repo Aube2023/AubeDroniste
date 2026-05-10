@@ -133,18 +133,48 @@
       <h3>Ajouter une formation</h3>
       <div class="grid-2">
         <label>Autorité
-          <select name="authority">
+          <select name="authority" id="cert-authority" onchange="updateTitleSuggestions(this.value)">
             {% for code, lbl in licence_authorities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
           </select>
         </label>
-        <label>Intitulé<input name="title" required placeholder="STS-01, A2, Avancé…"></label>
-        <label>Référence / N°<input name="reference"></label>
+        <label>Intitulé du brevet
+          <input name="title" id="cert-title" required list="cert-title-suggest"
+                 placeholder="Ex. Opérations de base, STS-01, Part 107…">
+          <datalist id="cert-title-suggest"></datalist>
+          <small class="muted" style="display: block; margin-top: 4px;">
+            Choisissez un brevet suggéré ou saisissez le vôtre.
+          </small>
+        </label>
+        <label>Référence / N°<input name="reference" placeholder="Ex. DGAC-2024-08821"></label>
         <label>Délivrée le<input name="issued_at" type="date"></label>
         <label>Expire le<input name="expires_at" type="date"></label>
-        <label>Justificatif (PDF/JPG)<input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+        <label>Justificatif (PDF/JPG)
+          <input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp">
+          <small class="muted" style="display: block; margin-top: 4px;">
+            Scan du brevet — visible uniquement par l'admin Aube pour vérification.
+          </small>
+        </label>
       </div>
       <button class="cta" type="submit">Ajouter</button>
     </form>
+    <script>
+      const CERT_TITLES = {{ licence_titles_by_authority | tojson }};
+      function updateTitleSuggestions(authority) {
+        const dl = document.getElementById('cert-title-suggest');
+        if (!dl) return;
+        dl.innerHTML = '';
+        const titles = CERT_TITLES[authority] || [];
+        for (const t of titles) {
+          const opt = document.createElement('option');
+          opt.value = t;
+          dl.appendChild(opt);
+        }
+      }
+      document.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('cert-authority');
+        if (sel) updateTitleSuggestions(sel.value);
+      });
+    </script>
   </div>
 
   <div class="card">

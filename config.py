@@ -178,6 +178,72 @@ LICENCE_AUTHORITIES = [
     ("autre",    "Autre / declarative"),
 ]
 
+# Catalogue indicatif des intitules de brevet par autorite. Le pilote peut
+# choisir une option suggeree (datalist) ou taper un intitule libre.
+# Cle = code autorite, valeur = liste d'intitules pretablis.
+LICENCE_TITLES_BY_AUTHORITY = {
+    "DGAC": [
+        "Categorie Ouverte A1/A3",
+        "Categorie Ouverte A2",
+        "Scenario STS-01 (vue directe urbain)",
+        "Scenario STS-02 (hors vue, hors urbain)",
+        "Scenario S1 (legacy <2024)",
+        "Scenario S2 (legacy)",
+        "Scenario S3 (legacy)",
+        "Scenario S4 (legacy hors vue)",
+        "Brevet theorique telepilote DGAC",
+    ],
+    "EASA": [
+        "Categorie Ouverte A1/A3",
+        "Categorie Ouverte A2 (CATS)",
+        "Scenario standard STS-01",
+        "Scenario standard STS-02",
+        "Categorie Specifique - LUC",
+        "Categorie Certifiee",
+    ],
+    "Transport Canada": [
+        "Operations de base (RPAS)",
+        "Operations avancees (RPAS)",
+        "Operations en vol au-dela visibilite directe (BVLOS)",
+        "Pilote certifie operations specialisees",
+    ],
+    "FAA": [
+        "Part 107 - Remote Pilot Certificate",
+        "Part 107 - Waiver / sUAS specifique",
+        "Part 61 - Manned + sUAS endorsement",
+    ],
+    "DGAC_MA": [
+        "Telepilote scenarios S1-S2-S3",
+        "Telepilote scenario S4 (hors vue)",
+        "Operateur drone professionnel - DGAC Maroc",
+    ],
+    "ANAC_TN": [
+        "Telepilote categorie A (loisir)",
+        "Telepilote categorie B (professionnel)",
+        "Operateur drone agree ANAC",
+    ],
+    "DACM_DZ": [
+        "Telepilote loisir",
+        "Telepilote professionnel",
+        "Operateur drone certifie DACM",
+    ],
+    "ASECNA": [
+        "Telepilote ASECNA categorie standard",
+        "Telepilote ASECNA categorie specifique",
+        "Operateur certifie ASECNA",
+    ],
+    "OFAC": [
+        "Categorie Ouverte A1/A3",
+        "Categorie Ouverte A2",
+        "Categorie Specifique (LUC)",
+    ],
+    "autre": [
+        "Brevet theorique pilote (PPL/CPL)",
+        "Formation interne entreprise",
+        "Autodidacte declare",
+    ],
+}
+
 # --- Stripe Connect ---------------------------------------------------------
 # Si STRIPE_SECRET_KEY est vide, l'app fonctionne en "fake mode" :
 # l'onboarding genere un account_id "acct_fake_<uid>", le paiement passe
