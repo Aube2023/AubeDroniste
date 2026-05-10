@@ -212,6 +212,30 @@ def index():
     )
 
 
+# ---------------------------------------------------------------------------
+# Pages legales (Loi 25 Quebec — confidentialite, mentions, CGU, cookies)
+# ---------------------------------------------------------------------------
+
+@app.route("/confidentialite")
+def page_privacy():
+    return render_template("legal_privacy.html")
+
+
+@app.route("/mentions-legales")
+def page_legal():
+    return render_template("legal_notice.html")
+
+
+@app.route("/cgu")
+def page_terms():
+    return render_template("legal_terms.html")
+
+
+@app.route("/cookies")
+def page_cookies():
+    return render_template("legal_cookies.html")
+
+
 @app.route("/api/near")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_near():

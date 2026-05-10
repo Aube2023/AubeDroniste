@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Mentions légales — Aube Pilot{% endblock %}
+{% block content %}
+
+<article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
+
+<h1>Mentions légales</h1>
+<p class="muted small">Dernière mise à jour : 9 mai 2026</p>
+
+<h2>Éditeur du site</h2>
+<p>
+<strong>Aube Pilot</strong> est une marque exploitée par<br>
+<strong>L'Aube Étoilée</strong><br>
+Entreprise individuelle / société en cours d'immatriculation<br>
+Adresse : Montréal, Québec, Canada<br>
+Courriel : <a href="mailto:contact@aubemail.com">contact@aubemail.com</a><br>
+Représentant légal : Nicolas Breidi
+</p>
+
+<h2>Hébergement</h2>
+<p>
+<strong>Vultr Holdings, LLC</strong><br>
+319 Clematis Street, Suite 900, West Palm Beach, FL 33401, USA<br>
+Datacenter principal : Toronto (Canada)
+</p>
+
+<h2>Paiements</h2>
+<p>
+Les paiements en escrow sont opérés par <strong>Stripe Payments Europe, Ltd.</strong>
+(Irlande) et <strong>Stripe, Inc.</strong> (États-Unis), via Stripe Connect.
+</p>
+
+<h2>Propriété intellectuelle</h2>
+<p>
+Les éléments graphiques, le code, les textes et le nom <em>Aube Pilot</em>
+sont protégés. Toute reproduction non autorisée est interdite. Les contenus
+publiés par les utilisateurs (profils, missions, avis, photos) restent
+leur propriété ; en publiant, l'utilisateur accorde à Aube Pilot une
+licence non exclusive, mondiale et gratuite d'utilisation aux seules fins
+d'exploitation du service.
+</p>
+
+<h2>Médiateur de la consommation</h2>
+<p>
+Conformément à l'article 14 du règlement UE n° 524/2013, les utilisateurs
+européens peuvent recourir à la plateforme européenne de
+<a href="https://ec.europa.eu/consumers/odr" rel="noopener">règlement en ligne des litiges</a>.
+Pour le Québec, la médiation est assurée par notre service interne
+(<a href="mailto:litiges@aubemail.com">litiges@aubemail.com</a>) ; en cas
+d'échec, l'<a href="https://www.opc.gouv.qc.ca" rel="noopener">Office de la protection du consommateur du Québec</a>
+peut être saisi.
+</p>
+
+<h2>Liens utiles</h2>
+<ul>
+  <li><a href="{{ url_for('page_privacy') }}">Politique de confidentialité (Loi 25)</a></li>
+  <li><a href="{{ url_for('page_terms') }}">Conditions générales d'utilisation</a></li>
+  <li><a href="{{ url_for('page_cookies') }}">Politique de cookies</a></li>
+</ul>
+
+</article>
+
+{% endblock %}

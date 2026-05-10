@@ -296,6 +296,13 @@ _T = {
     "email.new_message.subject":  {"fr": "Nouveau message — {title}",
                                     "en": "New message — {title}"},
 
+    # ---- Footer légal (Loi 25 Québec)
+    "footer.privacy":  {"fr": "Confidentialité",     "en": "Privacy"},
+    "footer.legal":    {"fr": "Mentions légales",    "en": "Legal notice"},
+    "footer.terms":    {"fr": "Conditions d'utilisation", "en": "Terms of use"},
+    "footer.cookies":  {"fr": "Cookies",             "en": "Cookies"},
+    "footer.rprp":     {"fr": "Contacter le RPRP",   "en": "Contact our DPO"},
+
     # ---- Statuts (mission / bid / booking) — affichés dans les .tag
     "status.open":            {"fr": "ouverte",        "en": "open"},
     "status.assigned":        {"fr": "attribuée",      "en": "assigned"},

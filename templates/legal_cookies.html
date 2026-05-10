@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Politique de cookies — Aube Pilot{% endblock %}
+{% block content %}
+
+<article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
+
+<h1>Politique de cookies</h1>
+<p class="muted small">Dernière mise à jour : 9 mai 2026</p>
+
+<p class="lead">
+Aube Pilot utilise un strict minimum de cookies. Aucune publicité, aucun
+traceur tiers, aucun outil d'analyse externe (Google Analytics, Meta
+Pixel, etc.) n'est déposé.
+</p>
+
+<h2>Cookies utilisés</h2>
+<table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+  <thead>
+    <tr style="text-align: left; border-bottom: 1px solid var(--ink-dim-bg, rgba(0,0,0,.1));">
+      <th style="padding: 8px 6px;">Nom</th>
+      <th style="padding: 8px 6px;">Finalité</th>
+      <th style="padding: 8px 6px;">Durée</th>
+      <th style="padding: 8px 6px;">Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--ink-dim-bg, rgba(0,0,0,.05));">
+      <td style="padding: 8px 6px;"><code>aubepilot_sid</code></td>
+      <td style="padding: 8px 6px;">Identifiant de session signé (HttpOnly, SameSite=Lax)</td>
+      <td style="padding: 8px 6px;">30 jours</td>
+      <td style="padding: 8px 6px;">Strictement nécessaire</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--ink-dim-bg, rgba(0,0,0,.05));">
+      <td style="padding: 8px 6px;"><code>csrf_token</code></td>
+      <td style="padding: 8px 6px;">Protection contre la falsification de requêtes (CSRF)</td>
+      <td style="padding: 8px 6px;">Session</td>
+      <td style="padding: 8px 6px;">Strictement nécessaire</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--ink-dim-bg, rgba(0,0,0,.05));">
+      <td style="padding: 8px 6px;"><code>aube-theme</code></td>
+      <td style="padding: 8px 6px;">Préférence d'affichage (jour / nuit) — stockage local navigateur</td>
+      <td style="padding: 8px 6px;">Persistant</td>
+      <td style="padding: 8px 6px;">Préférence (localStorage)</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 6px;"><code>lang</code></td>
+      <td style="padding: 8px 6px;">Préférence de langue (FR / EN)</td>
+      <td style="padding: 8px 6px;">365 jours</td>
+      <td style="padding: 8px 6px;">Préférence</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Cookies tiers</h2>
+<p>
+<strong>Aucun.</strong> Les paiements via Stripe Checkout déposent leurs
+propres cookies (essentiels à la sécurité de la transaction)
+uniquement sur le domaine <code>checkout.stripe.com</code>, hors de notre
+contrôle.
+</p>
+
+<h2>Comment refuser ?</h2>
+<p>
+Les cookies « strictement nécessaires » sont indispensables au
+fonctionnement (connexion, sécurité). Les refuser empêche d'utiliser
+Aube Pilot. Vous pouvez les supprimer manuellement via les paramètres
+de votre navigateur.
+</p>
+
+<p class="muted small">
+Pour toute question relative à cette politique, contactez le RPRP :
+<a href="mailto:rprp@aubemail.com">rprp@aubemail.com</a>.
+</p>
+
+</article>
+
+{% endblock %}

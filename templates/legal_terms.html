@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Conditions d'utilisation — Aube Pilot{% endblock %}
+{% block content %}
+
+<article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
+
+<h1>Conditions générales d'utilisation</h1>
+<p class="muted small">Dernière mise à jour : 9 mai 2026 · Version 1.0</p>
+
+<h2>1. Objet</h2>
+<p>
+Aube Pilot est une marketplace mettant en relation des pilotes de drone
+certifiés et des clients ayant un besoin de prestation aérienne (photo,
+vidéo, cartographie, inspection, agriculture, sécurité, etc.). Aube Pilot
+n'est pas opérateur des missions ; elle facilite la mise en relation, le
+paiement en escrow et la médiation des litiges.
+</p>
+
+<h2>2. Inscription et compte</h2>
+<ul>
+  <li>L'inscription est réservée aux personnes majeures.</li>
+  <li>L'authentification utilise le système partagé <em>L'Aube Étoilée</em> (PAM, courriel @aubemail.com).</li>
+  <li>Vous êtes seul responsable de la confidentialité de votre mot de passe.</li>
+  <li>Tout faux profil, faux brevet ou usurpation entraîne la suspension immédiate du compte.</li>
+</ul>
+
+<h2>3. Pilotes — obligations</h2>
+<ul>
+  <li>Détenir une certification valide (DGAC, EASA, Transport Canada, FAA, ASECNA, etc.) adaptée à la mission.</li>
+  <li>Disposer d'une assurance Responsabilité Civile Professionnelle valide.</li>
+  <li>Respecter la réglementation locale (NOTAM, ZRT, zones interdites, hauteur, météo).</li>
+  <li>Ne pas démarcher les clients en dehors de la plateforme avant le paiement de la mission.</li>
+  <li>Livrer les rushs / livrables convenus dans le délai annoncé.</li>
+</ul>
+
+<h2>4. Clients — obligations</h2>
+<ul>
+  <li>Décrire la mission de bonne foi (lieu, contraintes, livrables attendus).</li>
+  <li>Ne pas demander d'opération illégale (vol en zone interdite, sans certification…).</li>
+  <li>Régler le devis convenu via le système d'escrow.</li>
+  <li>Valider la mission ou ouvrir un litige sous 7 jours après livraison.</li>
+</ul>
+
+<h2>5. Commission plateforme</h2>
+<p>
+Aube Pilot prélève <strong>30 %</strong> sur chaque mission confirmée
+(commission incluse dans le prix affiché). Cette commission couvre la
+mise en relation, l'escrow Stripe, la médiation, l'hébergement et le
+support.
+</p>
+
+<h2>6. Annulation par le client</h2>
+<ul>
+  <li><strong>Préavis ≥ 24 h</strong> avant la mission : remboursement intégral.</li>
+  <li><strong>Préavis &lt; 24 h</strong> : le client dédommage le pilote à hauteur de
+      <strong>25 % du devis convenu</strong>, le reste lui étant remboursé.</li>
+</ul>
+
+<h2>7. Litiges et médiation</h2>
+<p>
+En cas de litige (livrable non conforme, no-show, météo, etc.), un bouton
+« Signaler un problème » ouvre une médiation. Aube Pilot statue sous 7
+jours ouvrés. Pour les abonnés Pro, le délai est ramené à 24 h.
+</p>
+
+<h2>8. Données personnelles</h2>
+<p>
+Le traitement des données est régi par notre
+<a href="{{ url_for('page_privacy') }}">politique de confidentialité</a>
+conforme à la Loi 25 (Québec).
+</p>
+
+<h2>9. Modifications des CGU</h2>
+<p>
+Toute modification substantielle est notifiée par courriel et affichée sur
+cette page au moins 15 jours avant son entrée en vigueur. La poursuite
+d'utilisation vaut acceptation.
+</p>
+
+<h2>10. Loi applicable et juridiction</h2>
+<p>
+Les présentes sont régies par le droit québécois. Tout litige relèvera des
+tribunaux compétents de Montréal, sauf disposition impérative contraire.
+</p>
+
+</article>
+
+{% endblock %}

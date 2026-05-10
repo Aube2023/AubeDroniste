@@ -113,12 +113,19 @@
       <a href="https://meteo.aubeetoilee.com"><span class="pre">Aube</span>Météo</a>
       <a href="https://news.aubeetoilee.com"><span class="pre">Aube</span>News</a>
       <a href="https://livre.aubeetoilee.com"><span class="pre">Aube</span>Livre</a>
-      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span>Pilote</a>
+      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span> Pilot</a>
     </nav>
   </section>
+  <nav class="footer-legal" aria-label="Mentions légales" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--ink-dim-bg, rgba(0,0,0,.08)); display: flex; flex-wrap: wrap; gap: 18px; font-size: .85rem;">
+    <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
+    <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>
+    <a href="{{ url_for('page_terms') }}" class="muted">{{ t('footer.terms') }}</a>
+    <a href="{{ url_for('page_cookies') }}" class="muted">{{ t('footer.cookies') }}</a>
+    <a href="mailto:rprp@aubemail.com" class="muted">{{ t('footer.rprp') }}</a>
+  </nav>
   <div class="footer-line">
     <div>
-      <strong>AubePilot</strong> · {{ t('footer.tagline') }}
+      <strong>Aube Pilot</strong> · {{ t('footer.tagline') }}
     </div>
     <div class="dim">{{ now().year }} — {{ t('footer.cities') }}</div>
   </div>

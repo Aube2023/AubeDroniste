@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Politique de confidentialité — Aube Pilot{% endblock %}
+{% block content %}
+
+<article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
+
+<h1>Politique de confidentialité</h1>
+<p class="muted small">Dernière mise à jour : 9 mai 2026 · Version 1.0</p>
+
+<p class="lead">
+La présente politique décrit comment <strong>Aube Pilot</strong>, marque
+exploitée par <strong>L'Aube Étoilée</strong> (Montréal, Québec, Canada),
+collecte, utilise et protège vos renseignements personnels conformément à
+la <a href="https://www.legisquebec.gouv.qc.ca/fr/document/lc/p-39.1" rel="noopener">Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25)</a>
+ainsi qu'à la LPRPDE fédérale et au RGPD pour les utilisateurs européens.
+</p>
+
+<h2>1. Responsable de la protection des renseignements personnels (RPRP)</h2>
+<p>
+Conformément à l'article 3.1 de la Loi 25, un RPRP est désigné. Vous pouvez
+le contacter à tout moment :
+</p>
+<ul>
+  <li>Courriel : <a href="mailto:rprp@aubemail.com">rprp@aubemail.com</a></li>
+  <li>Adresse postale : L'Aube Étoilée — RPRP, Montréal, Québec, Canada</li>
+</ul>
+
+<h2>2. Renseignements que nous collectons</h2>
+<ul>
+  <li><strong>Compte</strong> : nom complet, identifiant, courriel, mot de passe (chiffré).</li>
+  <li><strong>Profil pilote</strong> : tarifs, certifications (DGAC, EASA, Transport Canada, FAA, ASECNA…), assurance RC pro, drones, langues, géolocalisation déclarée.</li>
+  <li><strong>Profil client</strong> : ville, pays, téléphone (facultatif).</li>
+  <li><strong>Missions et offres</strong> : description, budget, dates, localisation, échanges.</li>
+  <li><strong>Paiements</strong> : traités par Stripe Connect ; nous conservons l'identifiant Stripe et l'historique des transactions, jamais les coordonnées bancaires complètes.</li>
+  <li><strong>Données techniques</strong> : adresse IP, agent utilisateur, journal d'accès (≤ 90 jours).</li>
+</ul>
+
+<h2>3. Finalités du traitement</h2>
+<ul>
+  <li>Mise en relation pilotes ↔ clients et exécution du contrat de service.</li>
+  <li>Vérification des certifications et de l'assurance.</li>
+  <li>Traitement des paiements en escrow et des éventuels remboursements.</li>
+  <li>Notifications transactionnelles (offres, messages, rappels).</li>
+  <li>Sécurité, prévention de la fraude, médiation des litiges.</li>
+  <li>Statistiques agrégées et anonymisées sur l'usage de la plateforme.</li>
+</ul>
+
+<h2>4. Bases légales et consentement</h2>
+<p>
+Le traitement repose sur l'exécution du contrat (compte, missions,
+paiements), votre consentement explicite (notifications optionnelles,
+profil étendu) ou notre intérêt légitime (sécurité, statistiques
+anonymisées). Vous pouvez retirer votre consentement à tout moment via
+votre Espace ou en écrivant au RPRP.
+</p>
+
+<h2>5. Durée de conservation</h2>
+<ul>
+  <li>Compte actif : tant que vous l'utilisez.</li>
+  <li>Compte inactif : 36 mois, puis anonymisation ou suppression.</li>
+  <li>Documents fiscaux et factures : 6 ans (obligation légale).</li>
+  <li>Journaux d'accès et logs techniques : 90 jours.</li>
+  <li>Avis publiés : conservés tant que l'auteur ou la cible existe.</li>
+</ul>
+
+<h2>6. Transferts hors Québec</h2>
+<p>
+Conformément à l'article 17 de la Loi 25, nous évaluons chaque transfert
+hors Québec. Aube Pilot est hébergé sur des serveurs situés à
+<strong>Toronto / New Jersey (Vultr)</strong>. Les paiements transitent par
+<strong>Stripe (Irlande / États-Unis)</strong>. Une évaluation des facteurs
+relatifs à la vie privée (EFVP) est disponible sur demande au RPRP.
+</p>
+
+<h2>7. Vos droits</h2>
+<p>Vous pouvez à tout moment demander :</p>
+<ul>
+  <li><strong>Accès</strong> à vos renseignements (export complet en JSON et CSV).</li>
+  <li><strong>Rectification</strong> en cas d'inexactitude.</li>
+  <li><strong>Suppression</strong> (effacement) de votre compte et données associées, sous réserve des obligations légales (factures, etc.).</li>
+  <li><strong>Portabilité</strong> de vos données dans un format structuré et couramment utilisé.</li>
+  <li><strong>Opposition</strong> au traitement à des fins de marketing.</li>
+  <li><strong>Retrait du consentement</strong> à tout moment.</li>
+  <li><strong>Information sur le profilage automatisé</strong> : aucun profilage 100 % automatisé n'est utilisé pour des décisions ayant un impact significatif.</li>
+</ul>
+<p>Demande à adresser à <a href="mailto:rprp@aubemail.com">rprp@aubemail.com</a> · réponse sous 30 jours maximum.</p>
+
+<h2>8. Sécurité</h2>
+<p>
+Mots de passe hachés (scrypt), connexions HTTPS / TLS 1.2+, sessions
+signées, journaux d'accès limités, audits internes trimestriels.
+En cas d'incident de confidentialité, nous notifierons sans délai la
+Commission d'accès à l'information du Québec (CAI) et les personnes
+concernées, conformément à l'article 3.5 de la Loi 25.
+</p>
+
+<h2>9. Cookies</h2>
+<p>Voir notre <a href="{{ url_for('page_cookies') }}">politique de cookies</a>.</p>
+
+<h2>10. Recours</h2>
+<p>
+Si vous estimez qu'Aube Pilot ne respecte pas la Loi 25, vous pouvez
+déposer une plainte auprès de la
+<a href="https://www.cai.gouv.qc.ca" rel="noopener">Commission d'accès à l'information du Québec (CAI)</a>
+ou, pour les utilisateurs européens, auprès de votre autorité de
+protection des données (CNIL en France, etc.).
+</p>
+
+<h2>11. Modifications</h2>
+<p>
+Toute modification substantielle sera notifiée par courriel et affichée
+sur cette page au moins 15 jours avant son entrée en vigueur.
+</p>
+
+</article>
+
+{% endblock %}
