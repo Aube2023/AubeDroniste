@@ -57,7 +57,13 @@
       </span>
     </div>
     <div class="body">
+      {% if p.avatar_path %}
+      <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
+           alt="Photo pilote" loading="lazy"
+           style="object-fit: cover;">
+      {% else %}
       <div class="avatar">{{ masked[:1] }}</div>
+      {% endif %}
       <div>
         <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
         <div class="loc">{{ p.country }}</div>
