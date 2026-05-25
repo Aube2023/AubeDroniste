@@ -154,10 +154,6 @@ _T = {
                                "en": "On AubePilot, your license, your fleet and your flight hours count as much as your price. Authorities (DGAC, EASA, TC, FAA, ASECNA) are highlighted; amateurs too, in their right place."},
     "home.manifesto.p2":     {"fr": "Et nous ne facturons que sur les missions livrées. Pas d'abonnement, pas de pop-up.",
                                "en": "And we only bill on delivered missions. No subscription, no pop-ups."},
-    "home.manifesto.quote":  {"fr": "Avant Aube, on cherchait des pilotes sur LinkedIn entre deux groupes Facebook. Aujourd'hui, je publie une mission le matin, j'ai trois propositions à midi, toutes avec des brevets vérifiés.",
-                               "en": "Before Aube, we hunted for drone pilots on LinkedIn between Facebook groups. Now I post a mission in the morning, I have three proposals by noon, all with verified licenses."},
-    "home.manifesto.cite":   {"fr": "— Imane C., productrice, Tunis",
-                               "en": "— Imane C., producer, Tunis"},
 
     "home.dep.eyebrow": {"fr": "Tableau des départs",      "en": "Departure board"},
     "home.dep.h":       {"fr": "Missions qui cherchent un pilote.",
