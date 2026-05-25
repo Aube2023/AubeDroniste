@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Mes forfaits · AubePilot{% endblock %}
+{% block content %}
+
+<div class="row-between" style="align-items: end; margin-bottom: 24px;">
+  <div>
+    <span class="eyebrow">Mon catalogue</span>
+    <h1>Mes forfaits</h1>
+    <p class="muted">
+      Vos forfaits apparaissent sur votre page publique. Un client peut
+      <strong>réserver directement</strong> un forfait : la mission est
+      créée automatiquement avec votre titre, votre description, vos
+      livrables et votre prix, et vous êtes invité en priorité à
+      soumettre le devis.
+    </p>
+  </div>
+  <a href="{{ url_for('pilot_edit') }}" class="ghost">← Profil pilote</a>
+</div>
+
+<section class="card">
+  <span class="eyebrow">Nouveau forfait</span>
+  <form method="post">
+        {{ csrf_input() }}
+    <div class="grid-2">
+      <label>Titre du forfait
+        <input name="title" required maxlength="160" placeholder="Captation aérienne mariage demi-journée">
+      </label>
+      <label>Type de mission
+        <select name="mission_type">
+          <option value="">Général (tous types)</option>
+          {% for code, lbl in mission_types %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <label>Description <span class="muted small">(≥ 20 caractères)</span>
+      <textarea name="description" rows="4" required minlength="20" placeholder="Ce qui est inclus, votre approche, votre matériel, votre disponibilité, vos exclusions…"></textarea>
+    </label>
+
+    <div class="grid-3">
+      <label>Prix
+        <input name="price" type="number" step="0.01" min="1" required placeholder="1200">
+      </label>
+      <label>Devise
+        <select name="currency">
+          {% for c in currencies %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Durée estimée (h)
+        <input name="duration_hours" type="number" step="0.5" min="0" placeholder="4">
+      </label>
+    </div>
+
+    <label>Livrables inclus
+      <textarea name="deliverables" rows="2" placeholder="100 photos JPG retouchées + 30 RAW + vidéo 4K 3 min montée + USB physique remis"></textarea>
+    </label>
+
+    <label>Capacités matériel requises (optionnel)
+      <select name="capabilities" multiple size="6" style="height: auto;">
+        {% for code, lbl in drone_capabilities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+      </select>
+      <small class="muted">Ctrl/Cmd-clic pour sélection multiple.</small>
+    </label>
+
+    <button class="cta" type="submit">Ajouter au catalogue</button>
+  </form>
+</section>
+
+<section class="section">
+  <h2 style="font-size: 1.4rem; margin-bottom: 14px;">
+    {% if packages %}{{ packages|length }} forfait(s) en catalogue{% else %}Catalogue vide{% endif %}
+  </h2>
+
+  {% if not packages %}
+    <p class="muted">Ajoutez votre premier forfait ci-dessus. Les clients pourront le réserver en un clic depuis votre page publique.</p>
+  {% endif %}
+
+  {% for p in packages %}
+  <div class="card" style="margin-bottom: 16px; {% if not p.is_active %}opacity:.55;{% endif %}">
+    <div class="row-between" style="align-items: start;">
+      <div>
+        <h3 style="margin: 0 0 4px; font-family: var(--serif); font-size: 1.3rem;">{{ p.title }}</h3>
+        <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .1em;">
+          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}Forfait général{% endif %}
+          {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
+          {% if not p.is_active %} · MASQUÉ{% endif %}
+        </div>
+      </div>
+      <div class="price big">{{ p.price|int }} <span style="font-size: .55em; color: var(--ink-dim);">{{ p.currency }}</span></div>
+    </div>
+
+    <p style="margin-top: 12px; white-space: pre-line;">{{ p.description }}</p>
+    {% if p.deliverables %}
+    <p class="muted small" style="margin-top: 8px;"><strong>Livrables :</strong> {{ p.deliverables }}</p>
+    {% endif %}
+    {% if p.capabilities %}
+    <p class="muted small" style="margin-top: 6px;"><strong>Matériel :</strong> {{ p.capabilities }}</p>
+    {% endif %}
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+      <form method="post" action="{{ url_for('pilot_package_toggle', package_id=p.id) }}" style="display: inline-block;">
+            {{ csrf_input() }}
+        <button class="ghost" type="submit">{% if p.is_active %}Masquer{% else %}Afficher{% endif %}</button>
+      </form>
+      <form method="post" action="{{ url_for('pilot_package_delete', package_id=p.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer ce forfait ?')">
+            {{ csrf_input() }}
+        <button class="ghost danger" type="submit">Supprimer</button>
+      </form>
+      <button class="ghost" type="button" onclick="document.getElementById('edit-{{ p.id }}').style.display='block';">Modifier</button>
+    </div>
+
+    <form id="edit-{{ p.id }}" method="post" action="{{ url_for('pilot_package_update', package_id=p.id) }}" style="display:none; margin-top: 14px; border-top: 1px dashed var(--ink-dim); padding-top: 14px;">
+          {{ csrf_input() }}
+      <div class="grid-2">
+        <label>Titre<input name="title" value="{{ p.title }}" maxlength="160"></label>
+        <label>Type
+          <select name="mission_type">
+            <option value="">Général</option>
+            {% for code, lbl in mission_types %}<option value="{{ code }}" {% if p.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+          </select>
+        </label>
+      </div>
+      <label>Description<textarea name="description" rows="3">{{ p.description }}</textarea></label>
+      <div class="grid-3">
+        <label>Prix<input name="price" type="number" step="0.01" value="{{ p.price }}"></label>
+        <label>Devise
+          <select name="currency">
+            {% for c in currencies %}<option value="{{ c }}" {% if c==p.currency %}selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Durée (h)<input name="duration_hours" type="number" step="0.5" value="{{ p.duration_hours or '' }}"></label>
+      </div>
+      <label>Livrables<textarea name="deliverables" rows="2">{{ p.deliverables or '' }}</textarea></label>
+      <button class="cta" type="submit">Enregistrer</button>
+    </form>
+  </div>
+  {% endfor %}
+</section>
+
+{% endblock %}

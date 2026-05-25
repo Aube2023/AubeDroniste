@@ -1,7 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Mon profil pilote · AubePilot{% endblock %}
 {% block content %}
-<h1>Mon profil pilote</h1>
+<div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap;">
+  <h1 style="margin: 0;">Mon profil pilote</h1>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="{{ url_for('pilot_packages') }}" class="ghost">Gérer mes forfaits →</a>
+    <a href="{{ url_for('pilot_portfolio') }}" class="ghost">Mon portfolio →</a>
+  </div>
+</div>
+
+{# ===== Photo de profil ===== #}
+<section class="card">
+  <span class="eyebrow">Photo de profil</span>
+  <div style="display: flex; align-items: center; gap: 18px; margin-top: 8px; flex-wrap: wrap;">
+    {% if profile.avatar_path %}
+      <img src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
+           alt="Avatar de {{ current_user.full_name }}"
+           style="width: 96px; height: 96px; object-fit: cover; border: 1px solid var(--ink-dim); border-radius: 50%;">
+    {% else %}
+      <div style="width: 96px; height: 96px; background: var(--paper-3, #f4eddd); border: 1px dashed var(--ink-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2rem; color: var(--ink-dim);">
+        {{ current_user.full_name[:1] }}
+      </div>
+    {% endif %}
+    <div style="flex: 1; min-width: 240px;">
+      <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
+            {{ csrf_input() }}
+        <label style="flex: 1;">Nouvelle photo (JPG/PNG/WebP, max 5 Mo)
+          <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required>
+        </label>
+        <button class="cta" type="submit">Téléverser</button>
+      </form>
+      {% if profile.avatar_path %}
+      <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" onsubmit="return confirm('Retirer la photo de profil ?')">
+            {{ csrf_input() }}
+        <button class="ghost danger" type="submit">Retirer la photo actuelle</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
 
 {# ===== Stripe Connect, encaissement ===== #}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}
@@ -38,7 +75,25 @@
         {{ csrf_input() }}
   <h2>Identité & zone</h2>
   <div class="grid-2">
-    <label>Nom complet<input value="{{ current_user.full_name }}" disabled></label>
+    <label>Nom complet
+      <input value="{{ current_user.full_name }}" disabled>
+      {% if identity_locked %}
+        <small class="muted" style="display:block; margin-top:4px;">
+          Verrouille apres l'upload d'un brevet.
+          {% if pending_name_change %}
+            Une demande de changement est en cours d'examen par l'admin.
+          {% else %}
+            <a href="{{ url_for('request_name_change') }}">Demander un changement</a>
+            (justificatif officiel requis).
+          {% endif %}
+        </small>
+      {% else %}
+        <small class="muted" style="display:block; margin-top:4px;">
+          Sera verrouille des l'upload d'un premier brevet. Toute modification ulterieure
+          devra passer par une demande validee par l'admin.
+        </small>
+      {% endif %}
+    </label>
     <label>Téléphone<input name="phone" value="{{ profile.phone or '' }}"></label>
     <label>Pays
       <input name="country" list="countries" value="{{ profile.country or '' }}">
@@ -108,7 +163,16 @@
 
   <label>URL portfolio<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
 
-  <button class="cta" type="submit">Enregistrer le profil</button>
+  <div class="save-bar"
+       style="position: sticky; bottom: 0; background: var(--bg, #fff);
+              padding: 14px 0; margin-top: 24px; border-top: 1px solid var(--border, #e5eae2);
+              display: flex; align-items: center; justify-content: space-between; gap: 16px; z-index: 5;">
+    <span class="muted small">
+      Cliquez sur <strong>Enregistrer le profil</strong> pour sauvegarder vos modifications.
+      Le bloc <em>Ajouter une formation</em> ci-dessous est independant.
+    </span>
+    <button class="cta" type="submit">Enregistrer le profil</button>
+  </div>
 </form>
 
 <section class="grid-2">
@@ -196,7 +260,7 @@
     </div>
     {% else %}<p class="muted">Aucun drone enregistré.</p>{% endfor %}
 
-    <form method="post" action="{{ url_for('pilot_add_drone') }}" enctype="multipart/form-data">
+    <form method="post" action="{{ url_for('pilot_add_drone') }}" enctype="multipart/form-data" id="drone-form">
         {{ csrf_input() }}
       <h3>Ajouter un drone</h3>
       <div class="grid-2">
@@ -205,8 +269,18 @@
             {% for code, lbl in drone_categories %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
           </select>
         </label>
-        <label>Marque<input name="brand"></label>
-        <label>Modèle<input name="model"></label>
+        <label>Marque
+          <input name="brand" id="drone-brand" list="drone-brands"
+                 placeholder="DJI, Autel, Parrot, Skydio, custom…" autocomplete="off">
+          <datalist id="drone-brands">
+            {% for b in drone_brands %}<option value="{{ b }}">{% endfor %}
+          </datalist>
+        </label>
+        <label>Modèle
+          <input name="model" id="drone-model" list="drone-models"
+                 placeholder="Ex. Mavic 3 Pro" autocomplete="off">
+          <datalist id="drone-models"></datalist>
+        </label>
         <label>N° série<input name="serial_number"></label>
         <label>Poids (g)<input name="weight_g" type="number"></label>
         <label>Charge utile max (g)<input name="max_payload_g" type="number"></label>
@@ -219,7 +293,24 @@
         <label class="chip-check"><input type="checkbox" name="capabilities" value="{{ cap }}"> {{ cap }}</label>
         {% endfor %}
       </div>
-      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+
+      <div id="custom-banner" hidden
+           style="background: var(--accent-bg, rgba(45,90,39,0.06));
+                  border-left: 3px solid var(--accent, #2d5a27);
+                  padding: 10px 14px; margin: 12px 0; font-size: 14px;">
+        <strong>Drone custom detecte.</strong>
+        Cette marque ou ce modele ne figure pas au catalogue connu.
+        Decrivez-le precisement ci-dessous : type de chassis (X / H / Y6),
+        carte de vol (Pixhawk, Cube, BetaFlight…), moteurs, helices, masse,
+        autonomie reelle, capteurs embarques, usage prevu.
+      </div>
+
+      <label>
+        <span id="notes-label">Notes / specificites</span>
+        <textarea name="notes" id="drone-notes" rows="3"
+                  placeholder="Ex. build FPV 5 pouces Pixhawk Cube Orange, charge utile L2 lidar…"></textarea>
+      </label>
+
       <button class="cta" type="submit">Ajouter le drone</button>
     </form>
   </div>
@@ -251,5 +342,65 @@ function removeTerritory(btn) {
   }
   row.remove();
 }
+
+// ───────────── Drone : datalist marque/modele + detection custom ─────────────
+const DRONE_MODELS = {{ drone_models_by_brand | tojson }};
+const DRONE_BRANDS_SET = new Set({{ drone_brands | tojson }});
+
+function _norm(s) { return (s || '').trim().toLowerCase(); }
+
+function updateModelDatalist() {
+  const brandEl = document.getElementById('drone-brand');
+  const dl = document.getElementById('drone-models');
+  if (!brandEl || !dl) return;
+  const brand = brandEl.value.trim();
+  const models = DRONE_MODELS[brand] || [];
+  dl.innerHTML = '';
+  for (const m of models) {
+    const o = document.createElement('option');
+    o.value = m;
+    dl.appendChild(o);
+  }
+}
+
+function isCustomDrone() {
+  const brand = document.getElementById('drone-brand').value.trim();
+  const model = document.getElementById('drone-model').value.trim();
+  if (!brand && !model) return false;
+  const knownBrand = DRONE_BRANDS_SET.has(brand);
+  if (!knownBrand) return true;
+  const knownModels = (DRONE_MODELS[brand] || []).map(_norm);
+  if (model && !knownModels.includes(_norm(model))) return true;
+  return false;
+}
+
+function refreshCustomState() {
+  const custom = isCustomDrone();
+  const banner = document.getElementById('custom-banner');
+  const notes = document.getElementById('drone-notes');
+  const lbl = document.getElementById('notes-label');
+  if (banner) banner.hidden = !custom;
+  if (notes) {
+    notes.required = custom;
+    notes.style.borderColor = custom ? 'var(--accent, #2d5a27)' : '';
+  }
+  if (lbl) lbl.textContent = custom
+    ? 'Description du drone custom (obligatoire)'
+    : 'Notes / specificites';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const b = document.getElementById('drone-brand');
+  const m = document.getElementById('drone-model');
+  if (b) {
+    b.addEventListener('input', function () {
+      updateModelDatalist();
+      refreshCustomState();
+    });
+  }
+  if (m) m.addEventListener('input', refreshCustomState);
+  updateModelDatalist();
+  refreshCustomState();
+});
 </script>
 {% endblock %}

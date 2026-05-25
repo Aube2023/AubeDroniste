@@ -1,0 +1,33 @@
+AubePilot · Devis refuse / Bid declined
+
+== FR ==
+
+{{ client.full_name }} a refuse votre devis.
+
+Mission : {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
+Devis refuse : {{ bid.price|int }} {{ bid.currency }}{% if bid.revision_no and bid.revision_no > 1 %} (revision {{ bid.revision_no }}){% endif %}
+{% if reason %}
+Retour du client :
+« {{ reason }} »
+{% endif %}
+La mission reste ouverte : vous pouvez reviser votre devis (description,
+livrables, conditions, prix) et le resoumettre.
+
+Reviser : {{ site_url }}/missions/{{ mission.id }}
+
+== EN ==
+
+{{ client.full_name }} declined your bid.
+
+Mission: {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
+Declined bid: {{ bid.price|int }} {{ bid.currency }}{% if bid.revision_no and bid.revision_no > 1 %} (revision {{ bid.revision_no }}){% endif %}
+{% if reason %}
+Client feedback:
+« {{ reason }} »
+{% endif %}
+The mission is still open. You can revise and resubmit your bid.
+
+Revise: {{ site_url }}/missions/{{ mission.id }}
+
+--
+AubePilot · pilot.aubeetoilee.com

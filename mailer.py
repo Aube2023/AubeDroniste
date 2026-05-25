@@ -191,3 +191,28 @@ def send_new_message(recipient: dict, sender: dict, mission: dict, body: str) ->
         context={"recipient": recipient, "sender": sender,
                  "mission": mission, "body": body},
     )
+
+
+def send_bid_rejected(pilot: dict, mission: dict, bid: dict,
+                      client: dict, reason: str = "") -> bool:
+    """Notifie le pilote que son devis a ete refuse par le client.
+    Le pilote peut alors reviser et resoumettre une nouvelle version."""
+    return send(
+        to=pilot["email"],
+        subject=f"Devis refuse / Bid declined, {mission['title']}",
+        template="bid_rejected",
+        context={"pilot": pilot, "mission": mission, "bid": bid,
+                 "client": client, "reason": reason or ""},
+    )
+
+
+def send_bid_revised(client: dict, mission: dict, bid: dict, pilot: dict) -> bool:
+    """Notifie le client que le pilote a soumis une version revisee
+    de son devis (revision_no > 1)."""
+    return send(
+        to=client["email"],
+        subject=f"Devis revise / Revised bid, {mission['title']}",
+        template="bid_revised",
+        context={"client": client, "mission": mission, "bid": bid,
+                 "pilot": pilot},
+    )

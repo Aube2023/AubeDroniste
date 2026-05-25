@@ -137,6 +137,99 @@
 </div>
 {% endif %}
 
+{# ============ Livrables ============ #}
+
+{% if booking.status in ('funded','in_progress','completed','disputed') %}
+<section class="card">
+  <span class="eyebrow">Livrables</span>
+  <h2 style="font-size: 1.3rem; margin: 4px 0 12px;">
+    {% if deliverables %}{{ deliverables|length }} fichier(s) livré(s){% else %}Aucun livrable pour le moment{% endif %}
+  </h2>
+  <p class="muted small">
+    {% if is_pilot %}
+      Téléversez photos, vidéos, ortho, ZIP, PDF (max {{ max_deliverable_mb }} Mo par fichier). Formats acceptés : JPEG/RAW/PNG/HEIC/TIFF, MP4/MOV/MKV, ZIP/7Z, PDF, LAS/LAZ/KML/GeoJSON, etc.
+    {% else %}
+      Téléchargez vos rushs, ou envoyez-les directement sur votre <strong>AubeDrive</strong> (tous fichiers) ou <strong>AubePhotos</strong> (images uniquement).
+    {% endif %}
+  </p>
+
+  {% if is_pilot %}
+  <form method="post" action="{{ url_for('booking_deliverable_upload', booking_id=booking.id) }}" enctype="multipart/form-data" style="margin-top: 14px;">
+        {{ csrf_input() }}
+    <div class="grid-2">
+      <label>Étiquette (optionnel)
+        <input name="label" maxlength="200" placeholder="Photos retouchées · 100 JPG">
+      </label>
+      <label>Fichier
+        <input name="file" type="file" required>
+      </label>
+    </div>
+    <button class="cta" type="submit">⬆ Téléverser un livrable</button>
+  </form>
+  {% endif %}
+
+  {% if deliverables %}
+  <ul style="list-style: none; padding: 0; margin: 18px 0 0;">
+    {% for d in deliverables %}
+    <li style="padding: 14px 0; border-top: 1px solid var(--ink-dim);">
+      <div class="row-between" style="align-items: start; gap: 10px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 240px;">
+          <div style="font-family: var(--serif); font-size: 1.05rem; font-weight: 600;">
+            {{ d.label or d.original_filename }}
+          </div>
+          <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .1em; margin-top: 4px;">
+            {{ d.kind }} ·
+            {% set kb = d.size_bytes / 1024.0 %}
+            {% if kb >= 1024 %}{{ '%.1f'|format(kb / 1024.0) }} Mo{% else %}{{ '%.0f'|format(kb) }} Ko{% endif %}
+            · {{ d.created_at[:16] }}
+            · uploadé par {{ d.uploader_name or '—' }}
+          </div>
+          {% if d.label %}
+          <div class="muted small" style="margin-top: 4px;">{{ d.original_filename }}</div>
+          {% endif %}
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <a class="ghost" href="{{ url_for('booking_deliverable_download', booking_id=booking.id, deliv_id=d.id) }}" download>
+            ⤓ Télécharger
+          </a>
+          {% if is_client %}
+            <form method="post" action="{{ url_for('booking_deliverable_push', booking_id=booking.id, deliv_id=d.id, service='aubedrive') }}" style="display: inline-block;">
+                  {{ csrf_input() }}
+              <button class="ghost" type="submit" {% if d.aubedrive_url %}disabled title="Déjà envoyé"{% endif %}>
+                {% if d.aubedrive_url %}✓ AubeDrive{% else %}→ AubeDrive{% endif %}
+              </button>
+            </form>
+            {% if d.kind == 'image' %}
+            <form method="post" action="{{ url_for('booking_deliverable_push', booking_id=booking.id, deliv_id=d.id, service='aubephotos') }}" style="display: inline-block;">
+                  {{ csrf_input() }}
+              <button class="ghost" type="submit" {% if d.aubephotos_url %}disabled title="Déjà envoyé"{% endif %}>
+                {% if d.aubephotos_url %}✓ AubePhotos{% else %}→ AubePhotos{% endif %}
+              </button>
+            </form>
+            {% endif %}
+          {% endif %}
+          {% if is_pilot %}
+          <form method="post" action="{{ url_for('booking_deliverable_delete', booking_id=booking.id, deliv_id=d.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer ce livrable ?')">
+                {{ csrf_input() }}
+            <button class="ghost danger" type="submit">Supprimer</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% if d.aubedrive_url or d.aubephotos_url %}
+      <div class="mono small muted" style="margin-top: 8px;">
+        {% if d.aubedrive_url %}<a href="{{ d.aubedrive_url }}" target="_blank" rel="noopener">↗ Sur AubeDrive</a>{% endif %}
+        {% if d.aubedrive_url and d.aubephotos_url %} · {% endif %}
+        {% if d.aubephotos_url %}<a href="{{ d.aubephotos_url }}" target="_blank" rel="noopener">↗ Sur AubePhotos</a>{% endif %}
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
 {# ============ Messagerie ============ #}
 
 <section class="card">

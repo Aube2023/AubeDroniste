@@ -35,6 +35,42 @@ EMAIL_DOMAIN = "aubemail.com"
 MAX_UPLOAD_MB = 10
 ALLOWED_DOC_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}
 
+# Avatar pilote (photo de profil) : max 5 Mo, images uniquement.
+MAX_AVATAR_MB = 5
+ALLOWED_AVATAR_EXT = {"jpg", "jpeg", "png", "webp"}
+
+# Portfolio pilote (showreel public : photos + videos courtes) :
+# 200 Mo max par piece, formats etendus aux videos.
+MAX_PORTFOLIO_MB = int(os.environ.get("AUBEPILOT_MAX_PORTFOLIO_MB", "200"))
+ALLOWED_PORTFOLIO_EXT = {
+    "jpg", "jpeg", "png", "webp", "heic",
+    "mp4", "mov", "webm", "m4v",
+}
+
+# Livrables booking : limite specifique (videos & rushs lourds)
+MAX_DELIVERABLE_MB = int(os.environ.get("AUBEPILOT_MAX_DELIVERABLE_MB", "1024"))
+ALLOWED_DELIVERABLE_EXT = {
+    # photos
+    "jpg", "jpeg", "png", "webp", "heic", "tif", "tiff",
+    # raw photo
+    "raw", "dng", "cr2", "cr3", "nef", "arw", "rw2", "orf",
+    # video
+    "mp4", "mov", "mkv", "avi", "m4v",
+    # archives / docs / data
+    "zip", "7z", "tar", "gz", "pdf", "txt", "csv",
+    # geomatique / mapping
+    "las", "laz", "obj", "ply", "tiff", "kml", "kmz", "geojson",
+}
+
+# Integrations cross-service Aube (push livrables vers AubeDrive / AubePhotos).
+# URLs configurables via env pour dev/prod.
+AUBEDRIVE_URL = os.environ.get("AUBEDRIVE_URL", "https://drive.aubeetoilee.com")
+AUBEPHOTOS_URL = os.environ.get("AUBEPHOTOS_URL", "https://photos.aubeetoilee.com")
+# Cle partagee server-to-server : si presente, ajoutee en header
+# X-Aube-Internal-Key. Sinon, on tente sans (les services Aube peuvent
+# autoriser via verification du username en clair).
+AUBE_INTERNAL_API_KEY = os.environ.get("AUBE_INTERNAL_API_KEY", "")
+
 # Devises supportees par defaut
 CURRENCIES = ["EUR", "CAD", "USD", "MAD", "TND", "DZD", "XOF", "CHF"]
 DEFAULT_CURRENCY = "EUR"
@@ -163,6 +199,83 @@ DRONE_CAPABILITIES = [
     "zoom_optique", "haut_parleur", "projecteur",
     "largage", "epandage",
 ]
+
+# Marques de drones connues (catalogue indicatif, non exhaustif)
+DRONE_BRANDS = [
+    "DJI", "Autel Robotics", "Parrot", "Skydio", "Yuneec",
+    "FreeFly", "Wingtra", "senseFly", "PowerVision", "Holy Stone",
+    "Hubsan", "Walkera", "Aurelia", "Quantum Systems", "Vantage Robotics",
+    "Anduril", "Insitu", "AeroVironment", "Teal Drones", "Inspired Flight",
+    "iFlight", "GEPRC", "BetaFPV", "EMAX", "TBS",
+]
+
+# Modeles populaires par marque (catalogue indicatif).
+# Si la marque/modele n'apparait pas, c'est un build custom et la description
+# devient obligatoire.
+DRONE_MODELS_BY_BRAND = {
+    "DJI": [
+        "Mavic 3 Pro", "Mavic 3", "Mavic 3 Classic", "Mavic 3 Thermal", "Mavic 3 Enterprise",
+        "Mini 4 Pro", "Mini 3 Pro", "Mini 3", "Mini 2 SE",
+        "Air 3", "Air 2S",
+        "Phantom 4 Pro V2", "Phantom 4 RTK", "Phantom 4 Multispectral",
+        "Inspire 3", "Inspire 2",
+        "Matrice 30", "Matrice 30T", "Matrice 300 RTK", "Matrice 350 RTK", "Matrice 600 Pro",
+        "Avata 2", "Avata", "FPV",
+        "Agras T40", "Agras T30", "Agras T20P", "Agras T10", "Agras MG-1P",
+    ],
+    "Autel Robotics": [
+        "EVO Lite+", "EVO II Pro V3", "EVO II Dual 640T",
+        "EVO Max 4T", "Dragonfish Standard", "Dragonfish Pro",
+    ],
+    "Parrot": [
+        "Anafi", "Anafi USA", "Anafi Ai", "Anafi Thermal", "Bebop 2",
+    ],
+    "Skydio": [
+        "Skydio 2+", "Skydio X10", "Skydio X10D", "Skydio X2D",
+    ],
+    "Yuneec": [
+        "H520E", "Typhoon H Plus", "Mantis G",
+    ],
+    "FreeFly": [
+        "Alta X", "Alta 8 Pro", "Astro",
+    ],
+    "Wingtra": [
+        "WingtraOne GEN II",
+    ],
+    "senseFly": [
+        "eBee X", "eBee Ag", "eBee Geo",
+    ],
+    "PowerVision": [
+        "PowerEgg X",
+    ],
+    "Holy Stone": [
+        "HS720", "HS720E", "HS900",
+    ],
+    "Hubsan": [
+        "Zino Mini Pro", "Zino 2+", "Zino Pro+",
+    ],
+    "Walkera": [
+        "Voyager 5",
+    ],
+    "Quantum Systems": [
+        "Trinity F90+", "Trinity Pro", "Vector",
+    ],
+    "Vantage Robotics": [
+        "Vesper",
+    ],
+    "Insitu": [
+        "Integrator", "ScanEagle",
+    ],
+    "AeroVironment": [
+        "Quantix Mapper", "Puma 3 AE", "JUMP 20",
+    ],
+    "Teal Drones": [
+        "Teal 2",
+    ],
+    "Inspired Flight": [
+        "IF800", "IF1200",
+    ],
+}
 
 # Autorites de certification (catalogue indicatif, monde entier)
 LICENCE_AUTHORITIES = [

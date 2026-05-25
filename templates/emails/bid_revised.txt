@@ -1,0 +1,31 @@
+AubePilot · Devis revise / Revised bid
+
+== FR ==
+
+{{ pilot.full_name }} a soumis une nouvelle version de son devis.
+
+Mission : {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
+Tarif revise (revision {{ bid.revision_no }}) : {{ bid.price|int }} {{ bid.currency }}
+{% if bid.eta_hours %}Delai estime : {{ bid.eta_hours }} h{% endif %}
+{% if bid.description %}
+Description :
+{{ bid.description }}
+{% endif %}
+{% if bid.message %}
+Mot du pilote :
+« {{ bid.message }} »
+{% endif %}
+Voir : {{ site_url }}/missions/{{ mission.id }}
+
+== EN ==
+
+{{ pilot.full_name }} sent a revised bid.
+
+Mission: {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
+Quoted (revision {{ bid.revision_no }}): {{ bid.price|int }} {{ bid.currency }}
+{% if bid.eta_hours %}Lead time: {{ bid.eta_hours }} h{% endif %}
+
+Review: {{ site_url }}/missions/{{ mission.id }}
+
+--
+AubePilot · pilot.aubeetoilee.com

@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from flask import (
     Flask, abort, flash, g, jsonify, make_response, redirect,
-    render_template, request, url_for,
+    render_template, request, send_from_directory, url_for,
 )
 
 import auth
@@ -25,13 +25,21 @@ from config import (
     CURRENCIES,
     DEFAULT_CURRENCY,
     DEFAULT_SEARCH_RADIUS_KM,
+    DRONE_BRANDS,
     DRONE_CAPABILITIES,
     DRONE_CATEGORIES,
+    DRONE_MODELS_BY_BRAND,
     FEATURED_COUNTRIES,
     HOST,
     LICENCE_AUTHORITIES,
     LICENCE_TITLES_BY_AUTHORITY,
     MAX_UPLOAD_MB,
+    MAX_DELIVERABLE_MB,
+    MAX_AVATAR_MB,
+    MAX_PORTFOLIO_MB,
+    ALLOWED_DELIVERABLE_EXT,
+    ALLOWED_AVATAR_EXT,
+    ALLOWED_PORTFOLIO_EXT,
     MISSION_TYPES,
     PORT,
     SECRET_KEY,
@@ -39,6 +47,7 @@ from config import (
     STRIPE_PUBLISHABLE_KEY,
     UPLOAD_DIR,
 )
+import aube_push
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,7 +60,10 @@ SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_MB * 1024 * 1024
+# Le max global accomode les livrables booking (gros videos). La limite
+# par usage est verifiee dans chaque route (10 Mo pour docs, 1 Go pour
+# livrables).
+app.config["MAX_CONTENT_LENGTH"] = max(MAX_UPLOAD_MB, MAX_DELIVERABLE_MB) * 1024 * 1024
 app.config["SITE_URL"] = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 
 # Cookies durcis : httpOnly toujours, secure si HTTPS, SameSite=Lax
@@ -112,6 +124,8 @@ def _inject_globals():
         "mission_types": MISSION_TYPES,
         "drone_categories": DRONE_CATEGORIES,
         "drone_capabilities": DRONE_CAPABILITIES,
+        "drone_brands": DRONE_BRANDS,
+        "drone_models_by_brand": DRONE_MODELS_BY_BRAND,
         "licence_authorities": LICENCE_AUTHORITIES,
         "licence_titles_by_authority": LICENCE_TITLES_BY_AUTHORITY,
         "featured_countries": FEATURED_COUNTRIES,
@@ -296,12 +310,16 @@ def pilot_detail(user_id):
         abort(404)
     viewer_id = (g.user["id"] if getattr(g, "user", None) else 0)
     reveal = services.has_funded_relation(viewer_id, user_id)
+    can_view_credentials = services.client_can_view_pilot_credentials(viewer_id, user_id)
     return render_template(
         "pilot_detail.html",
         pilot=profile,
         reviews=services.reviews_for(user_id),
         reveal_identity=reveal,
+        can_view_credentials=can_view_credentials,
         masked_name=services.mask_full_name(profile["full_name"]),
+        packages=services.list_pilot_packages(user_id, only_active=True),
+        portfolio=services.list_portfolio_items(user_id),
     )
 
 
@@ -320,6 +338,49 @@ def mission_detail(mission_id):
                 my_bid = b
                 break
     has_my_bid = my_bid is not None
+
+    # Historique de revisions :
+    #   - cote pilote : son propre devis
+    #   - cote client : tous les devis (pour comprendre l'evolution)
+    bid_revisions = {}
+    if is_client:
+        for b in all_bids:
+            revs = services.list_bid_revisions(b["id"])
+            if revs:
+                bid_revisions[b["id"]] = revs
+    elif my_bid:
+        revs = services.list_bid_revisions(my_bid["id"])
+        if revs:
+            bid_revisions[my_bid["id"]] = revs
+
+    # Fil de discussion pre-booking : client <-> chaque pilote ayant
+    # soumis un devis (cote client), ou pilote <-> client (cote pilote).
+    threads = {}
+    if user:
+        if is_client:
+            for b in all_bids:
+                threads[b["pilot_user_id"]] = services.thread(
+                    mission_id, user["id"], b["pilot_user_id"],
+                )
+        elif has_my_bid:
+            threads[mission["client_user_id"]] = services.thread(
+                mission_id, user["id"], mission["client_user_id"],
+            )
+
+    # Loi 101 / 96 : si client OU pilote (visiteur courant) est au
+    # Quebec, le devis signe doit etre redige en francais.
+    client_party = db.fetchone(
+        "SELECT country, city FROM users WHERE id=?",
+        (mission["client_user_id"],),
+    )
+    pilot_party = None
+    if user and not is_client:
+        pilot_party = {"country": user.get("country"), "city": user.get("city")}
+    french_only = services.contract_french_only([
+        dict(client_party) if client_party else None,
+        pilot_party,
+    ])
+
     return render_template(
         "mission_detail.html",
         mission=mission,
@@ -327,6 +388,9 @@ def mission_detail(mission_id):
         is_client=is_client,
         my_bid=my_bid,
         bid_count=len(all_bids),
+        bid_revisions=bid_revisions,
+        threads=threads,
+        french_only=french_only,
     )
 
 
@@ -513,6 +577,8 @@ def pilot_edit():
     return render_template(
         "pilot_edit.html",
         profile=services.get_pilot_profile(user["id"]),
+        identity_locked=services.is_identity_locked(user["id"]),
+        pending_name_change=services.has_pending_name_change(user["id"]),
     )
 
 
@@ -548,6 +614,200 @@ def pilot_add_certification():
 def pilot_delete_certification(cert_id):
     services.delete_certification(cert_id, g.user["id"])
     return redirect(url_for("pilot_edit"))
+
+
+# ---------------------------------------------------------------------------
+# Forfaits pilote (catalogue de packages)
+# ---------------------------------------------------------------------------
+
+@app.route("/espace/pilote/forfaits", methods=["GET", "POST"])
+@auth.login_required
+def pilot_packages():
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+    if request.method == "POST":
+        title = (request.form.get("title") or "").strip()
+        description = (request.form.get("description") or "").strip()
+        price = _to_float(request.form.get("price"))
+        if not title or len(description) < 20 or not price or price <= 0:
+            flash(
+                "Titre, description (>=20c) et prix sont requis.",
+                "error",
+            )
+            return redirect(url_for("pilot_packages"))
+        services.create_pilot_package(
+            user["id"],
+            title=title,
+            description=description,
+            price=price,
+            currency=(request.form.get("currency") or DEFAULT_CURRENCY).upper(),
+            mission_type=(request.form.get("mission_type") or "").strip() or None,
+            duration_hours=_to_float(request.form.get("duration_hours")),
+            deliverables=(request.form.get("deliverables") or "").strip(),
+            capabilities=",".join(request.form.getlist("capabilities")),
+            is_active=True,
+        )
+        flash("Forfait ajoute au catalogue.", "success")
+        return redirect(url_for("pilot_packages"))
+    return render_template(
+        "pilot_packages.html",
+        packages=services.list_pilot_packages(user["id"]),
+    )
+
+
+@app.route("/espace/pilote/forfaits/<int:package_id>/modifier", methods=["POST"])
+@auth.login_required
+def pilot_package_update(package_id):
+    user = g.user
+    fields = {
+        "title": (request.form.get("title") or "").strip()[:160] or None,
+        "description": (request.form.get("description") or "").strip()[:4000] or None,
+        "price": _to_float(request.form.get("price")),
+        "currency": (request.form.get("currency") or DEFAULT_CURRENCY).upper(),
+        "mission_type": (request.form.get("mission_type") or "").strip() or None,
+        "duration_hours": _to_float(request.form.get("duration_hours")),
+        "deliverables": (request.form.get("deliverables") or "").strip()[:2000] or None,
+        "capabilities": ",".join(request.form.getlist("capabilities")) or None,
+    }
+    fields = {k: v for k, v in fields.items() if v is not None}
+    services.update_pilot_package(package_id, user["id"], **fields)
+    flash("Forfait mis a jour.", "success")
+    return redirect(url_for("pilot_packages"))
+
+
+@app.route("/espace/pilote/forfaits/<int:package_id>/toggle", methods=["POST"])
+@auth.login_required
+def pilot_package_toggle(package_id):
+    services.toggle_pilot_package(package_id, g.user["id"])
+    return redirect(url_for("pilot_packages"))
+
+
+@app.route("/espace/pilote/forfaits/<int:package_id>/supprimer", methods=["POST"])
+@auth.login_required
+def pilot_package_delete(package_id):
+    services.delete_pilot_package(package_id, g.user["id"])
+    flash("Forfait supprime.", "info")
+    return redirect(url_for("pilot_packages"))
+
+
+# ---------------------------------------------------------------------------
+# Demande de changement de nom (verrouillage post-upload brevet)
+# ---------------------------------------------------------------------------
+
+@app.route("/profil/changer-nom", methods=["GET", "POST"])
+@auth.login_required
+def request_name_change():
+    user = g.user
+    if services.has_pending_name_change(user["id"]):
+        flash("Une demande est deja en cours. L'admin la traitera bientot.", "info")
+        return redirect(url_for("pilot_edit") if user["role"] in ("pilot", "both") else url_for("dashboard"))
+
+    if request.method == "POST":
+        requested = (request.form.get("requested_name") or "").strip()
+        reason = (request.form.get("reason") or "").strip()
+        if not requested or len(requested) < 3:
+            flash("Le nouveau nom complet doit faire au moins 3 caracteres.", "error")
+            return render_template("name_change_request.html", current_name=user["full_name"])
+        if requested == user["full_name"]:
+            flash("Le nom demande est identique au nom actuel.", "error")
+            return render_template("name_change_request.html", current_name=user["full_name"])
+
+        justif_path = ""
+        f = request.files.get("justif")
+        if not f or not f.filename:
+            flash("Un justificatif officiel (carte d'identite, passeport, etc.) est obligatoire.", "error")
+            return render_template("name_change_request.html", current_name=user["full_name"])
+        ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+        if ext not in ALLOWED_DOC_EXT:
+            flash(f"Format non accepte. Utiliser : {', '.join(sorted(ALLOWED_DOC_EXT))}.", "error")
+            return render_template("name_change_request.html", current_name=user["full_name"])
+        safe = f"u{user['id']}_namechange_{int(time.time())}.{ext}"
+        f.save(os.path.join(UPLOAD_DIR, safe))
+        justif_path = f"uploads/{safe}"
+
+        services.create_name_change_request(
+            user_id=user["id"],
+            current_name=user["full_name"],
+            requested_name=requested,
+            reason=reason,
+            justif_path=justif_path,
+        )
+        flash("Demande envoyee. Un admin la traitera sous 48h.", "success")
+        return redirect(url_for("pilot_edit") if user["role"] in ("pilot", "both") else url_for("dashboard"))
+
+    return render_template("name_change_request.html", current_name=user["full_name"])
+
+
+@app.route("/admin/changements-nom")
+@auth.admin_required
+def admin_name_changes():
+    return render_template(
+        "admin_name_changes.html",
+        requests=services.list_pending_name_changes(),
+    )
+
+
+@app.route("/admin/changements-nom/<int:req_id>/justif")
+@auth.admin_required
+def admin_name_change_justif(req_id):
+    req = services.get_name_change_request(req_id)
+    if not req or not req.get("justif_path"):
+        abort(404)
+    rel = req["justif_path"]
+    if not rel.startswith("uploads/"):
+        abort(404)
+    filename = rel[len("uploads/"):]
+    resp = make_response(send_from_directory(UPLOAD_DIR, filename, as_attachment=False))
+    resp.headers["Cache-Control"] = "private, no-store, max-age=0"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
+@app.route("/admin/changements-nom/<int:req_id>/approuver", methods=["POST"])
+@auth.admin_required
+def admin_approve_name_change(req_id):
+    note = (request.form.get("note") or "").strip()
+    if services.approve_name_change(req_id, g.user["id"], note):
+        flash("Changement de nom valide.", "success")
+    else:
+        flash("Demande introuvable ou deja traitee.", "error")
+    return redirect(url_for("admin_name_changes"))
+
+
+@app.route("/admin/changements-nom/<int:req_id>/refuser", methods=["POST"])
+@auth.admin_required
+def admin_reject_name_change(req_id):
+    note = (request.form.get("note") or "").strip()
+    if services.reject_name_change(req_id, g.user["id"], note):
+        flash("Demande refusee.", "success")
+    else:
+        flash("Demande introuvable ou deja traitee.", "error")
+    return redirect(url_for("admin_name_changes"))
+
+
+# ---------------------------------------------------------------------------
+# Telechargement du brevet (gating client legitime)
+# ---------------------------------------------------------------------------
+
+@app.route("/pilotes/<int:user_id>/brevets/<int:cert_id>/document")
+@auth.login_required
+def pilot_certification_document(user_id, cert_id):
+    viewer_id = g.user["id"]
+    is_admin = bool(g.user.get("is_admin"))
+    if not is_admin and not services.client_can_view_pilot_credentials(viewer_id, user_id):
+        abort(403)
+    cert = services.get_certification(cert_id)
+    if not cert or cert["pilot_user_id"] != user_id or not cert.get("document_path"):
+        abort(404)
+    rel = cert["document_path"]
+    if not rel.startswith("uploads/"):
+        abort(404)
+    filename = rel[len("uploads/"):]
+    resp = make_response(send_from_directory(UPLOAD_DIR, filename, as_attachment=False))
+    resp.headers["Cache-Control"] = "private, no-store, max-age=0"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
 
 
 @app.route("/espace/pilote/drone", methods=["POST"])
@@ -589,6 +849,165 @@ def pilot_delete_drone(drone_id):
 
 
 # ---------------------------------------------------------------------------
+# Avatar pilote (photo de profil)
+# ---------------------------------------------------------------------------
+
+@app.route("/espace/pilote/avatar", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=30)
+def pilot_upload_avatar():
+    user = g.user
+    f = request.files.get("avatar")
+    if not f or not f.filename:
+        flash("Aucun fichier selectionne.", "error")
+        return redirect(url_for("pilot_edit"))
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in ALLOWED_AVATAR_EXT:
+        flash(
+            f"Format non accepte. Utiliser : "
+            f"{', '.join(sorted(ALLOWED_AVATAR_EXT))}.",
+            "error",
+        )
+        return redirect(url_for("pilot_edit"))
+    f.stream.seek(0, os.SEEK_END)
+    size = f.stream.tell()
+    f.stream.seek(0)
+    if size > MAX_AVATAR_MB * 1024 * 1024:
+        flash(f"Avatar trop lourd (max {MAX_AVATAR_MB} Mo).", "error")
+        return redirect(url_for("pilot_edit"))
+
+    # Remplacement : supprime l'ancien fichier sur disque s'il existait.
+    old = services.clear_user_avatar(user["id"])
+    if old and old.startswith("uploads/"):
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, old[len("uploads/"):]))
+        except OSError:
+            pass
+
+    safe = f"avatar_u{user['id']}_{int(time.time())}.{ext}"
+    f.save(os.path.join(UPLOAD_DIR, safe))
+    services.set_user_avatar(user["id"], f"uploads/{safe}")
+    flash("Photo de profil mise a jour.", "success")
+    return redirect(url_for("pilot_edit"))
+
+
+@app.route("/espace/pilote/avatar/supprimer", methods=["POST"])
+@auth.login_required
+def pilot_delete_avatar():
+    old = services.clear_user_avatar(g.user["id"])
+    if old and old.startswith("uploads/"):
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, old[len("uploads/"):]))
+        except OSError:
+            pass
+    flash("Photo de profil retiree.", "info")
+    return redirect(url_for("pilot_edit"))
+
+
+# Avatars et media portfolio servis depuis /media/<path>. Stockes
+# physiquement dans data/uploads/ (avec UPLOAD_DIR).
+@app.route("/media/<path:filename>")
+def media_file(filename):
+    # Pas de traversee de chemin : send_from_directory gere deja
+    # le ".." ; on accepte uniquement sous-dossiers connus.
+    if ".." in filename or filename.startswith("/"):
+        abort(404)
+    resp = make_response(send_from_directory(UPLOAD_DIR, filename))
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
+# ---------------------------------------------------------------------------
+# Portfolio pilote (showreel photos + videos)
+# ---------------------------------------------------------------------------
+
+@app.route("/espace/pilote/portfolio", methods=["GET", "POST"])
+@auth.login_required
+def pilot_portfolio():
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+
+    if request.method == "POST":
+        f = request.files.get("file")
+        if not f or not f.filename:
+            flash("Aucun fichier selectionne.", "error")
+            return redirect(url_for("pilot_portfolio"))
+        ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+        if ext not in ALLOWED_PORTFOLIO_EXT:
+            flash(
+                f"Format non accepte. Utiliser : "
+                f"{', '.join(sorted(ALLOWED_PORTFOLIO_EXT))}.",
+                "error",
+            )
+            return redirect(url_for("pilot_portfolio"))
+
+        f.stream.seek(0, os.SEEK_END)
+        size = f.stream.tell()
+        f.stream.seek(0)
+        if size > MAX_PORTFOLIO_MB * 1024 * 1024:
+            flash(f"Fichier trop lourd (max {MAX_PORTFOLIO_MB} Mo).", "error")
+            return redirect(url_for("pilot_portfolio"))
+
+        safe_base = "".join(c for c in f.filename
+                            if c.isalnum() or c in "._-")[:80] or "file"
+        stored = f"portfolio_u{user['id']}/{int(time.time())}_{safe_base}"
+        os.makedirs(os.path.join(UPLOAD_DIR, f"portfolio_u{user['id']}"),
+                    exist_ok=True)
+        f.save(os.path.join(UPLOAD_DIR, stored))
+
+        services.add_portfolio_item(
+            pilot_user_id=user["id"],
+            title=(request.form.get("title") or "").strip(),
+            description=(request.form.get("description") or "").strip(),
+            kind=services.portfolio_kind_from_ext(ext),
+            original_filename=f.filename,
+            stored_filename=stored,
+            mime_type=f.mimetype or "application/octet-stream",
+            size_bytes=size,
+        )
+        flash("Realisation ajoutee au portfolio.", "success")
+        return redirect(url_for("pilot_portfolio"))
+
+    return render_template(
+        "pilot_portfolio.html",
+        items=services.list_portfolio_items(user["id"]),
+        max_mb=MAX_PORTFOLIO_MB,
+    )
+
+
+@app.route("/espace/pilote/portfolio/<int:item_id>/modifier", methods=["POST"])
+@auth.login_required
+def pilot_portfolio_update(item_id):
+    services.update_portfolio_item(
+        item_id, g.user["id"],
+        title=(request.form.get("title") or "").strip(),
+        description=(request.form.get("description") or "").strip(),
+    )
+    flash("Realisation mise a jour.", "success")
+    return redirect(url_for("pilot_portfolio"))
+
+
+@app.route("/espace/pilote/portfolio/<int:item_id>/supprimer", methods=["POST"])
+@auth.login_required
+def pilot_portfolio_delete(item_id):
+    item = services.delete_portfolio_item(item_id, g.user["id"])
+    if item:
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, item["stored_filename"]))
+        except OSError:
+            pass
+        if item.get("thumb_filename"):
+            try:
+                os.remove(os.path.join(UPLOAD_DIR, item["thumb_filename"]))
+            except OSError:
+                pass
+        flash("Realisation retiree.", "info")
+    return redirect(url_for("pilot_portfolio"))
+
+
+# ---------------------------------------------------------------------------
 # Missions client
 # ---------------------------------------------------------------------------
 
@@ -596,6 +1015,8 @@ def pilot_delete_drone(drone_id):
 @auth.login_required
 def mission_create():
     if request.method == "POST":
+        from_package_id = _to_int(request.form.get("from_package_id"))
+        targeted_pilot_id = _to_int(request.form.get("targeted_pilot_id"))
         try:
             mission_id = services.create_mission(
                 g.user["id"],
@@ -619,6 +1040,13 @@ def mission_create():
                 requires_certifications=request.form.getlist("requires_certifications"),
                 requires_capabilities=request.form.getlist("requires_capabilities"),
             )
+            # Tracabilite : mission issue d'un forfait + ciblee sur un pilote
+            if from_package_id or targeted_pilot_id:
+                db.execute(
+                    "UPDATE missions SET from_package_id=?, "
+                    "  targeted_pilot_id=? WHERE id=?",
+                    (from_package_id or None, targeted_pilot_id or None, mission_id),
+                )
         except Exception as exc:  # garde large : on remonte un message clair a l'UI
             flash(f"Mission invalide: {exc}", "error")
             return render_template("mission_create.html", form=request.form)
@@ -630,7 +1058,35 @@ def mission_create():
         prof = services.get_pilot_profile(pilot_arg)
         if prof and prof.get("role") in ("pilot", "both"):
             target_pilot = prof
-    return render_template("mission_create.html", form={}, target_pilot=target_pilot)
+    # Preremplissage depuis un forfait selectionne
+    prefill_package = None
+    form_prefill: dict = {}
+    pkg_arg = _to_int(request.args.get("package"))
+    if pkg_arg:
+        pkg = services.get_pilot_package(pkg_arg)
+        if pkg and pkg.get("is_active"):
+            prefill_package = pkg
+            if not target_pilot:
+                prof = services.get_pilot_profile(pkg["pilot_user_id"])
+                if prof:
+                    target_pilot = prof
+            form_prefill = {
+                "title": pkg["title"],
+                "description": pkg["description"]
+                    + (f"\n\nLivrables : {pkg['deliverables']}" if pkg.get("deliverables") else ""),
+                "mission_type": pkg.get("mission_type") or "autre",
+                "duration_hours": pkg.get("duration_hours") or "",
+                "budget_min": int(pkg["price"]),
+                "budget_max": int(pkg["price"]),
+                "currency": pkg["currency"],
+                "requires_capabilities": (pkg.get("capabilities") or "").split(","),
+            }
+    return render_template(
+        "mission_create.html",
+        form=form_prefill,
+        target_pilot=target_pilot,
+        prefill_package=prefill_package,
+    )
 
 
 @app.route("/missions/<int:mission_id>/cloturer", methods=["POST"])
@@ -659,14 +1115,27 @@ def bid_place(mission_id):
     if not price or price <= 0:
         flash("Tarif invalide.", "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
+    description = (request.form.get("description") or "").strip()[:5000]
+    # Devis minimal obligatoire : description >= 30 caracteres. Le pilote
+    # ne peut pas lacher un prix sec, le client doit pouvoir comparer.
+    if len(description) < 30:
+        flash(
+            "Decrivez votre devis en au moins 30 caracteres "
+            "(approche, materiel, deroule).",
+            "error",
+        )
+        return redirect(url_for("mission_detail", mission_id=mission_id))
     services.place_bid(
         mission_id, g.user["id"],
         price=price,
         currency=(request.form.get("currency") or DEFAULT_CURRENCY).upper(),
         eta_hours=_to_float(request.form.get("eta_hours")),
         message=(request.form.get("message") or "").strip(),
+        description=description,
+        deliverables=(request.form.get("deliverables") or "").strip()[:2000],
+        terms=(request.form.get("terms") or "").strip()[:2000],
     )
-    flash("Enchere envoyee.", "success")
+    flash("Devis envoye au client.", "success")
     return redirect(url_for("mission_detail", mission_id=mission_id))
 
 
@@ -685,8 +1154,22 @@ def bid_accept(mission_id, bid_id):
     except (LookupError, ValueError) as exc:
         flash(str(exc), "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
-    flash("Enchere acceptee, reservation creee.", "success")
+    flash("Devis valide, reservation creee.", "success")
     return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/missions/<int:mission_id>/refuser/<int:bid_id>", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=20, per_hour=100)
+def bid_reject(mission_id, bid_id):
+    """Le client refuse un devis. La mission reste ouverte, le pilote
+    peut alors reviser et resoumettre un nouveau devis."""
+    reason = (request.form.get("reason") or "").strip()
+    if services.reject_bid(mission_id, bid_id, g.user["id"], reason=reason):
+        flash("Devis refuse. Le pilote pourra proposer une revision.", "info")
+    else:
+        flash("Impossible de refuser ce devis.", "error")
+    return redirect(url_for("mission_detail", mission_id=mission_id))
 
 
 # ---------------------------------------------------------------------------
@@ -715,6 +1198,8 @@ def booking_detail(booking_id):
         thread=services.thread(booking["mission_id"], g.user["id"], peer_id),
         cancellation_preview=cancellation_preview,
         is_client_view=is_client_view,
+        deliverables=services.list_deliverables(booking_id),
+        max_deliverable_mb=MAX_DELIVERABLE_MB,
     )
 
 
@@ -776,6 +1261,154 @@ def booking_review(booking_id):
         comment=(request.form.get("comment") or "").strip(),
     )
     flash("Merci pour votre avis.", "success")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+# ---------------------------------------------------------------------------
+# Livrables booking (upload pilote, download client+pilote, push Aube)
+# ---------------------------------------------------------------------------
+
+def _deliverable_dir(booking_id: int) -> str:
+    """Sous-dossier dedie a une booking : data/uploads/booking_<id>/."""
+    p = os.path.join(UPLOAD_DIR, f"booking_{booking_id}")
+    os.makedirs(p, exist_ok=True)
+    return p
+
+
+@app.route("/reservations/<int:booking_id>/livrables", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=20, per_hour=200)
+def booking_deliverable_upload(booking_id):
+    booking = services.get_booking(booking_id)
+    if not booking:
+        abort(404)
+    # Seul le pilote attribue peut uploader. Le client telecharge ensuite.
+    if g.user["id"] != booking["pilot_user_id"]:
+        abort(403)
+    if booking["status"] not in ("funded", "in_progress", "completed"):
+        flash("Livrables acceptes uniquement apres financement de la mission.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    f = request.files.get("file")
+    if not f or not f.filename:
+        flash("Aucun fichier selectionne.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in ALLOWED_DELIVERABLE_EXT:
+        flash(
+            f"Format non accepte. Formats : "
+            f"{', '.join(sorted(ALLOWED_DELIVERABLE_EXT))}.",
+            "error",
+        )
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    # Verifie la taille (Flask MAX_CONTENT_LENGTH garde un filet de
+    # securite global mais on veut un message metier propre ici).
+    f.stream.seek(0, os.SEEK_END)
+    size = f.stream.tell()
+    f.stream.seek(0)
+    if size > MAX_DELIVERABLE_MB * 1024 * 1024:
+        flash(f"Fichier trop lourd (max {MAX_DELIVERABLE_MB} Mo).", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    safe_base = "".join(c for c in f.filename if c.isalnum() or c in "._-")[:80] or "file"
+    stored = f"booking_{booking_id}/{int(time.time())}_{safe_base}"
+    f.save(os.path.join(UPLOAD_DIR, stored))
+
+    services.add_deliverable(
+        booking_id=booking_id,
+        uploaded_by_user_id=g.user["id"],
+        label=(request.form.get("label") or "").strip(),
+        original_filename=f.filename,
+        stored_filename=stored,
+        mime_type=(f.mimetype or "application/octet-stream"),
+        size_bytes=size,
+        kind=services.deliverable_kind_from_ext(ext),
+    )
+    flash("Livrable televerse.", "success")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+def _can_access_deliverable(booking: dict, user_id: int) -> bool:
+    return user_id in (booking["pilot_user_id"], booking["client_user_id"])
+
+
+@app.route("/reservations/<int:booking_id>/livrables/<int:deliv_id>/download")
+@auth.login_required
+def booking_deliverable_download(booking_id, deliv_id):
+    booking = services.get_booking(booking_id)
+    d = services.get_deliverable(deliv_id)
+    if not booking or not d or d["booking_id"] != booking_id:
+        abort(404)
+    if not _can_access_deliverable(booking, g.user["id"]):
+        abort(403)
+    resp = make_response(send_from_directory(
+        UPLOAD_DIR, d["stored_filename"],
+        as_attachment=True, download_name=d["original_filename"],
+    ))
+    resp.headers["Cache-Control"] = "private, no-store, max-age=0"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
+@app.route("/reservations/<int:booking_id>/livrables/<int:deliv_id>/supprimer",
+           methods=["POST"])
+@auth.login_required
+def booking_deliverable_delete(booking_id, deliv_id):
+    booking = services.get_booking(booking_id)
+    if not booking:
+        abort(404)
+    if g.user["id"] != booking["pilot_user_id"]:
+        abort(403)
+    d = services.delete_deliverable(deliv_id, g.user["id"])
+    if d:
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, d["stored_filename"]))
+        except OSError:
+            pass
+        flash("Livrable supprime.", "info")
+    else:
+        flash("Livrable introuvable.", "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/reservations/<int:booking_id>/livrables/<int:deliv_id>/envoyer/<service>",
+           methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=60)
+def booking_deliverable_push(booking_id, deliv_id, service):
+    if service not in ("aubedrive", "aubephotos"):
+        abort(404)
+    booking = services.get_booking(booking_id)
+    d = services.get_deliverable(deliv_id)
+    if not booking or not d or d["booking_id"] != booking_id:
+        abort(404)
+    # Seul le client (proprietaire des livrables) peut pousser sur SON
+    # AubeDrive / AubePhotos. Le pilote n'a pas a copier dans le drive
+    # du client.
+    if g.user["id"] != booking["client_user_id"]:
+        abort(403)
+    # username AubeMail du client (clef d'identite cross-services Aube)
+    client = db.fetchone("SELECT username FROM users WHERE id=?",
+                         (booking["client_user_id"],))
+    if not client:
+        abort(404)
+
+    if service == "aubedrive":
+        result = aube_push.push_to_aubedrive(d, client["username"], booking_id)
+    else:
+        result = aube_push.push_to_aubephotos(d, client["username"], booking_id)
+
+    if result["ok"]:
+        services.mark_deliverable_pushed(deliv_id, service, result["url"])
+        flash(f"Livrable envoye vers {service.capitalize()}.", "success")
+    else:
+        flash(
+            f"Envoi vers {service.capitalize()} echoue : "
+            f"{result.get('reason') or 'erreur inconnue'}. "
+            "Telechargez puis uploadez manuellement.",
+            "error",
+        )
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 

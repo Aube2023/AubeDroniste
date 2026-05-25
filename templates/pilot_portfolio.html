@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Mon portfolio · AubePilot{% endblock %}
+{% block content %}
+
+<div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div>
+    <span class="eyebrow">Mon showreel</span>
+    <h1>Mon portfolio</h1>
+    <p class="muted">
+      Mettez en avant vos meilleures réalisations : photos aériennes,
+      vidéos de chantier, mariage filmé, inspection ouvrage d'art… Les
+      clients verront cette galerie sur votre page publique pour
+      apprécier votre travail avant de réserver.
+    </p>
+  </div>
+  <a href="{{ url_for('pilot_edit') }}" class="ghost">← Profil pilote</a>
+</div>
+
+<section class="card">
+  <span class="eyebrow">Ajouter une réalisation</span>
+  <form method="post" enctype="multipart/form-data">
+        {{ csrf_input() }}
+    <div class="grid-2">
+      <label>Titre
+        <input name="title" maxlength="200" placeholder="Mariage Sidi Bou Said · juillet 2025">
+      </label>
+      <label>Fichier (JPG/PNG/HEIC ou MP4/MOV/WebM, max {{ max_mb }} Mo)
+        <input name="file" type="file" required
+               accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm">
+      </label>
+    </div>
+    <label>Description (contexte, matériel utilisé, durée, défi technique…)
+      <textarea name="description" rows="3" maxlength="2000" placeholder="Captation 4K + drone FPV, 2 jours de tournage, 14 invités dans la médina…"></textarea>
+    </label>
+    <button class="cta" type="submit">⬆ Ajouter au portfolio</button>
+  </form>
+</section>
+
+<section class="section">
+  <h2 style="font-size: 1.4rem; margin-bottom: 14px;">
+    {% if items %}{{ items|length }} réalisation(s) en portfolio{% else %}Portfolio vide{% endif %}
+  </h2>
+
+  {% if not items %}
+    <p class="muted">Ajoutez vos premières réalisations ci-dessus. Une dizaine d'images soignées + 2-3 vidéos courtes suffisent pour convaincre.</p>
+  {% endif %}
+
+  <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    {% for it in items %}
+    <article class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+      <div style="background: #000; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;">
+        {% if it.kind == 'video' %}
+          <video controls preload="metadata" style="width: 100%; height: 100%; object-fit: contain;">
+            <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
+          </video>
+        {% else %}
+          <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
+               alt="{{ it.title or it.original_filename }}"
+               style="width: 100%; height: 100%; object-fit: cover;">
+        {% endif %}
+      </div>
+      <div style="padding: 14px;">
+        <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .12em;">
+          {{ it.kind }}
+          · {% set kb = it.size_bytes / 1024.0 %}{% if kb >= 1024 %}{{ '%.1f'|format(kb/1024.0) }} Mo{% else %}{{ '%.0f'|format(kb) }} Ko{% endif %}
+          · {{ it.created_at[:10] }}
+        </div>
+        {% if it.title %}
+        <h3 style="margin: 6px 0 4px; font-family: var(--serif); font-size: 1.1rem;">{{ it.title }}</h3>
+        {% endif %}
+        {% if it.description %}
+        <p class="muted small" style="margin: 0; white-space: pre-line;">{{ it.description }}</p>
+        {% endif %}
+
+        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+          <button class="ghost" type="button" onclick="document.getElementById('edit-pf-{{ it.id }}').style.display='block';">Modifier</button>
+          <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer cette réalisation ?')">
+                {{ csrf_input() }}
+            <button class="ghost danger" type="submit">Supprimer</button>
+          </form>
+        </div>
+
+        <form id="edit-pf-{{ it.id }}" method="post" action="{{ url_for('pilot_portfolio_update', item_id=it.id) }}" style="display: none; margin-top: 12px; border-top: 1px dashed var(--ink-dim); padding-top: 12px;">
+              {{ csrf_input() }}
+          <label>Titre<input name="title" value="{{ it.title or '' }}" maxlength="200"></label>
+          <label>Description<textarea name="description" rows="3" maxlength="2000">{{ it.description or '' }}</textarea></label>
+          <button class="cta" type="submit">Enregistrer</button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

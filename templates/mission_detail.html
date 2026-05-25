@@ -37,23 +37,70 @@
   {% endif %}
 </div>
 
-{% if current_user and current_user.role in ('pilot', 'both') and current_user.id != mission.client_user_id and mission.status == 'open' %}
+{% set can_bid = current_user and current_user.role in ('pilot', 'both') and current_user.id != mission.client_user_id and mission.status == 'open' %}
+{% set my_bid_rejected = my_bid and my_bid.status == 'rejected' %}
+
+{% if can_bid %}
 <section class="card">
-  <span class="eyebrow">Soumissionner</span>
-  <h2>{% if has_my_bid %}Mettre à jour mon offre{% else %}Faire une offre sur cette mission{% endif %}</h2>
+  {% if french_only %}
+  <div class="alert" style="margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid #b87519; background: rgba(184,117,25,.08); font-size: .92rem;">
+    <strong>Devis québécois · français obligatoire.</strong>
+    Une partie réside au Québec. Conformément à la <em>Charte de la
+    langue française</em> (Loi 101, renforcée par la Loi 96), le devis
+    signé doit être rédigé <strong>en français</strong>. N'utilisez pas
+    l'anglais dans la description, les livrables ou les conditions.
+  </div>
+  {% endif %}
+  <span class="eyebrow">{% if my_bid_rejected %}Réviser mon devis{% elif has_my_bid %}Mettre à jour mon devis{% else %}Envoyer un devis au client{% endif %}</span>
+  <h2>
+    {% if my_bid_rejected %}
+      Le client a refusé votre devis · proposez une nouvelle version
+    {% elif has_my_bid %}
+      Modifier mon devis (révision {{ my_bid.revision_no }})
+    {% else %}
+      Préparez votre devis pour cette mission
+    {% endif %}
+  </h2>
+
+  {% if my_bid_rejected and my_bid.client_response %}
+    <div class="alert alert-warn" style="margin: 10px 0 16px; padding: 12px 14px; border-left: 3px solid #b87519; background: rgba(184,117,25,.08);">
+      <div class="eyebrow" style="color:#b87519;">Retour du client</div>
+      <p style="margin: 6px 0 0; font-style: italic;">« {{ my_bid.client_response }} »</p>
+    </div>
+  {% endif %}
+
   <form method="post" action="{{ url_for('bid_place', mission_id=mission.id) }}">
         {{ csrf_input() }}
     <div class="grid-3">
-      <label>Mon prix<input name="price" type="number" step="0.01" required></label>
+      <label>Mon prix<input name="price" type="number" step="0.01" required value="{{ my_bid.price if my_bid else '' }}"></label>
       <label>Devise
         <select name="currency">
-          {% for c in currencies %}<option value="{{ c }}" {% if c==mission.currency %}selected{% endif %}>{{ c }}</option>{% endfor %}
+          {% for c in currencies %}<option value="{{ c }}" {% if (my_bid and c == my_bid.currency) or (not my_bid and c == mission.currency) %}selected{% endif %}>{{ c }}</option>{% endfor %}
         </select>
       </label>
-      <label>Délai estimé (h)<input name="eta_hours" type="number" step="0.5"></label>
+      <label>Délai estimé (h)<input name="eta_hours" type="number" step="0.5" value="{{ my_bid.eta_hours if my_bid and my_bid.eta_hours else '' }}"></label>
     </div>
-    <label>Message au client<textarea name="message" rows="4" placeholder="Approche, matériel, disponibilités, livrables…"></textarea></label>
-    <button class="cta" type="submit">Envoyer mon offre</button>
+
+    <label>Description du devis <span class="muted small">(obligatoire, ≥ 30 caractères)</span>
+      <textarea name="description" rows="4" required minlength="30" placeholder="Approche, matériel, déroulé de la mission, hypothèses, exclusions…">{{ my_bid.description if my_bid else '' }}</textarea>
+    </label>
+
+    <div class="grid-2">
+      <label>Livrables
+        <textarea name="deliverables" rows="3" placeholder="Photos RAW + JPG retouchées, vidéo 4K montée 3 min, plan PDF géoréférencé…">{{ my_bid.deliverables if my_bid else '' }}</textarea>
+      </label>
+      <label>Conditions / détails techniques
+        <textarea name="terms" rows="3" placeholder="RTK requis sur site, fenêtre météo, conditions paiement, droits d'usage…">{{ my_bid.terms if my_bid else '' }}</textarea>
+      </label>
+    </div>
+
+    <label>Mot d'accompagnement (court)
+      <textarea name="message" rows="2" placeholder="Quelques lignes pour vous présenter et rassurer le client.">{{ my_bid.message if my_bid else '' }}</textarea>
+    </label>
+
+    <button class="cta" type="submit">
+      {% if my_bid_rejected %}Envoyer le devis révisé{% elif has_my_bid %}Mettre à jour le devis{% else %}Envoyer le devis au client{% endif %}
+    </button>
   </form>
 </section>
 {% endif %}
@@ -61,17 +108,26 @@
 <section class="section">
   <div class="row-between" style="align-items: end;">
     <div>
-      <span class="eyebrow">Offres reçues</span>
+      <span class="eyebrow">Devis reçus</span>
       <h2>{{ bid_count }} pilote(s) ont répondu.</h2>
     </div>
   </div>
 
+  {% if french_only and is_client and bid_count > 0 %}
+  <div class="alert" style="margin: 10px 0 16px; padding: 10px 14px; border-left: 3px solid #b87519; background: rgba(184,117,25,.08); font-size: .92rem;">
+    <strong>Contrat québécois · français obligatoire.</strong>
+    Validez uniquement un devis rédigé <strong>en français</strong>.
+    Un devis en anglais ne respecte pas la Charte de la langue française
+    (Loi 101 / Loi 96) et exposerait les deux parties juridiquement.
+  </div>
+  {% endif %}
+
   {% if bid_count == 0 %}
-    <p class="muted">Aucune offre pour le moment. Soyez le premier pilote à répondre.</p>
+    <p class="muted">Aucun devis pour le moment. Soyez le premier pilote à répondre.</p>
   {% endif %}
 
   {% if is_client %}
-    {# Client (auteur de la mission), voit le détail complet de chaque offre #}
+    {# Client (auteur de la mission), voit le détail complet de chaque devis #}
     {% for b in mission.bids %}
     <div class="card" style="margin: 12px 0;">
       <div class="row-between" style="align-items: start;">
@@ -80,6 +136,7 @@
             {{ mask_name(b.pilot_name) }}
           </a>
           {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+          {% if b.revision_no and b.revision_no > 1 %}<span class="badge" style="background:#efece2;color:#3b414e;">révision {{ b.revision_no }}</span>{% endif %}
           <div class="muted small mono" style="margin-top: 4px;">
             ★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})
             {% if b.pilot_country %} · {{ b.pilot_country }}{% endif %}
@@ -91,14 +148,96 @@
         </div>
       </div>
       {% if b.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ b.eta_hours }} h</div>{% endif %}
-      {% if b.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 10px;">« {{ b.message }} »</p>{% endif %}
+
+      {% if b.description %}
+      <div style="margin-top: 14px;">
+        <div class="eyebrow">Description</div>
+        <p style="margin: 6px 0 0; white-space: pre-line;">{{ b.description }}</p>
+      </div>
+      {% endif %}
+      {% if b.deliverables %}
+      <div style="margin-top: 12px;">
+        <div class="eyebrow">Livrables</div>
+        <p style="margin: 6px 0 0; white-space: pre-line;">{{ b.deliverables }}</p>
+      </div>
+      {% endif %}
+      {% if b.terms %}
+      <div style="margin-top: 12px;">
+        <div class="eyebrow">Conditions / technique</div>
+        <p style="margin: 6px 0 0; white-space: pre-line;">{{ b.terms }}</p>
+      </div>
+      {% endif %}
+      {% if b.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 12px;">« {{ b.message }} »</p>{% endif %}
+
+      {% if b.status == 'rejected' and b.client_response %}
+      <div class="alert" style="margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--ink-dim); background: rgba(0,0,0,.03);">
+        <div class="eyebrow">Votre refus</div>
+        <p style="margin: 6px 0 0; font-style: italic;">« {{ b.client_response }} »</p>
+      </div>
+      {% endif %}
+
+      {% if bid_revisions.get(b.id) %}
+      <details style="margin-top: 12px;">
+        <summary style="cursor: pointer; font-family: var(--mono, 'Courier New', monospace); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim);">
+          Historique · {{ bid_revisions[b.id]|length }} version(s) antérieure(s)
+        </summary>
+        <ul style="list-style: none; padding: 10px 0 0; margin: 0;">
+          {% for r in bid_revisions[b.id] %}
+          <li style="padding: 10px 0; border-top: 1px dashed var(--ink-dim);">
+            <div class="row-between">
+              <span class="mono small">Révision {{ r.revision_no }} · {{ r.created_at[:16] }}</span>
+              <span>{{ r.price|int }} {{ r.currency }} · <span class="tag tag-{{ r.status }}">{{ status_label(r.status) }}</span></span>
+            </div>
+            {% if r.description %}<p style="margin: 6px 0 0; font-size: .9em; white-space: pre-line;">{{ r.description }}</p>{% endif %}
+            {% if r.client_response %}<p style="margin: 6px 0 0; font-size: .9em; color: var(--ink-soft); font-style: italic;">Refus client : « {{ r.client_response }} »</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
 
       {% if mission.status == 'open' and b.status == 'pending' %}
-      <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}" style="margin-top: 14px;">
-          {{ csrf_input() }}
-        <button class="cta" type="submit">Accepter cette offre</button>
+      <div class="row" style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+        <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}">
+            {{ csrf_input() }}
+          <button class="cta" type="submit">Valider ce devis</button>
+        </form>
+        <button class="ghost" type="button" onclick="document.getElementById('reject-{{ b.id }}').style.display='block';">Refuser</button>
+      </div>
+      <form id="reject-{{ b.id }}" method="post" action="{{ url_for('bid_reject', mission_id=mission.id, bid_id=b.id) }}" style="display: none; margin-top: 12px;">
+            {{ csrf_input() }}
+        <label>Raison du refus (optionnel, transmis au pilote)
+          <textarea name="reason" rows="2" maxlength="1000" placeholder="Budget trop élevé, délai trop long, livrable manquant…"></textarea>
+        </label>
+        <button class="ghost danger" type="submit">Confirmer le refus</button>
       </form>
       {% endif %}
+
+      {# Discussion client <-> ce pilote #}
+      {% set t = threads.get(b.pilot_user_id, []) %}
+      <details style="margin-top: 14px;" {% if t %}open{% endif %}>
+        <summary style="cursor: pointer; font-family: var(--mono, 'Courier New', monospace); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim);">
+          Discussion · {{ t|length }} message(s)
+        </summary>
+        <ul style="list-style: none; padding: 10px 0 0; margin: 0; max-height: 280px; overflow-y: auto;">
+          {% for m in t %}
+          <li style="padding: 8px 0; border-top: 1px dashed var(--ink-dim);">
+            <div class="mono small">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ mask_name(b.pilot_name) }}{% endif %} · {{ m.created_at[:16] }}</div>
+            <div style="margin-top: 4px; white-space: pre-line;">{{ m.body }}</div>
+          </li>
+          {% else %}
+          <li class="muted small" style="padding: 10px 0;">Aucun message. Demandez des précisions avant de valider.</li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="{{ url_for('mission_message', mission_id=mission.id) }}" style="margin-top: 10px;">
+            {{ csrf_input() }}
+          <input type="hidden" name="peer_id" value="{{ b.pilot_user_id }}">
+          <label>Écrire au pilote
+            <textarea name="body" rows="2" required placeholder="Demandez une précision sur le devis…"></textarea>
+          </label>
+          <button class="ghost" type="submit">Envoyer</button>
+        </form>
+      </details>
     </div>
     {% endfor %}
 
@@ -106,7 +245,7 @@
     {# Pilote ou visiteur, résumé Upwork-style : noms seulement, pas de prix/message #}
     {% if has_my_bid %}
     <div class="card" style="margin: 12px 0; border-left: 3px solid var(--ink);">
-      <span class="eyebrow">Mon offre</span>
+      <span class="eyebrow">Mon devis · révision {{ my_bid.revision_no or 1 }}</span>
       <div class="row-between" style="align-items: start; margin-top: 6px;">
         <div>
           <span style="font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-weight: 600;">{{ my_bid.pilot_name }}</span>
@@ -117,13 +256,68 @@
         </div>
       </div>
       {% if my_bid.eta_hours %}<div class="muted small mono" style="margin-top: 10px;">Délai · {{ my_bid.eta_hours }} h</div>{% endif %}
+      {% if my_bid.description %}<p style="margin-top: 10px; white-space: pre-line;">{{ my_bid.description }}</p>{% endif %}
       {% if my_bid.message %}<p class="serif-italic" style="color: var(--ink-soft); margin-top: 10px;">« {{ my_bid.message }} »</p>{% endif %}
+
+      {% if my_bid.status == 'rejected' and my_bid.client_response %}
+      <div class="alert" style="margin-top: 12px; padding: 10px 12px; border-left: 3px solid #b87519; background: rgba(184,117,25,.08);">
+        <div class="eyebrow" style="color:#b87519;">Refus du client</div>
+        <p style="margin: 6px 0 0; font-style: italic;">« {{ my_bid.client_response }} »</p>
+        <p class="muted small" style="margin-top: 8px;">Vous pouvez réviser et resoumettre votre devis ci-dessus.</p>
+      </div>
+      {% endif %}
+
       {% if my_bid.status == 'pending' %}
       <form method="post" action="{{ url_for('bid_withdraw', bid_id=my_bid.id) }}" style="margin-top: 14px;">
           {{ csrf_input() }}
-        <button class="ghost" type="submit">Retirer mon offre</button>
+        <button class="ghost" type="submit">Retirer mon devis</button>
       </form>
       {% endif %}
+
+      {% if bid_revisions.get(my_bid.id) %}
+      <details style="margin-top: 12px;">
+        <summary style="cursor: pointer; font-family: var(--mono, 'Courier New', monospace); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim);">
+          Mes versions précédentes · {{ bid_revisions[my_bid.id]|length }}
+        </summary>
+        <ul style="list-style: none; padding: 10px 0 0; margin: 0;">
+          {% for r in bid_revisions[my_bid.id] %}
+          <li style="padding: 10px 0; border-top: 1px dashed var(--ink-dim);">
+            <div class="row-between">
+              <span class="mono small">Révision {{ r.revision_no }} · {{ r.created_at[:16] }}</span>
+              <span>{{ r.price|int }} {{ r.currency }} · <span class="tag tag-{{ r.status }}">{{ status_label(r.status) }}</span></span>
+            </div>
+            {% if r.client_response %}<p style="margin: 6px 0 0; font-size: .9em; color: var(--ink-soft); font-style: italic;">Refus client : « {{ r.client_response }} »</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+
+      {# Discussion pilote <-> client #}
+      {% set t = threads.get(mission.client_user_id, []) %}
+      <details style="margin-top: 14px;" {% if t %}open{% endif %}>
+        <summary style="cursor: pointer; font-family: var(--mono, 'Courier New', monospace); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim);">
+          Discussion avec le client · {{ t|length }} message(s)
+        </summary>
+        <ul style="list-style: none; padding: 10px 0 0; margin: 0; max-height: 280px; overflow-y: auto;">
+          {% for m in t %}
+          <li style="padding: 8px 0; border-top: 1px dashed var(--ink-dim);">
+            <div class="mono small">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ mission.client_name }}{% endif %} · {{ m.created_at[:16] }}</div>
+            <div style="margin-top: 4px; white-space: pre-line;">{{ m.body }}</div>
+          </li>
+          {% else %}
+          <li class="muted small" style="padding: 10px 0;">Aucun message pour l'instant.</li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="{{ url_for('mission_message', mission_id=mission.id) }}" style="margin-top: 10px;">
+            {{ csrf_input() }}
+          <input type="hidden" name="peer_id" value="{{ mission.client_user_id }}">
+          <label>Écrire au client
+            <textarea name="body" rows="2" required placeholder="Précisez votre approche, posez une question…"></textarea>
+          </label>
+          <button class="ghost" type="submit">Envoyer</button>
+        </form>
+      </details>
     </div>
     {% endif %}
 
@@ -140,7 +334,7 @@
         </li>
         {% endfor %}
       </ul>
-      <p class="muted small" style="margin-top: 10px;">Les détails des offres (prix, délai, message) ne sont visibles que par l'auteur de la mission.</p>
+      <p class="muted small" style="margin-top: 10px;">Les détails des devis (prix, livrables, message) ne sont visibles que par l'auteur de la mission.</p>
     </div>
     {% endif %}
 

@@ -197,6 +197,126 @@ def delete_certification(cert_id: int, owner_user_id: int) -> bool:
     return cur.rowcount > 0
 
 
+def get_certification(cert_id: int) -> Optional[dict]:
+    row = db.fetchone("SELECT * FROM pilot_certifications WHERE id=?", (cert_id,))
+    return dict(row) if row else None
+
+
+def is_identity_locked(user_id: int) -> bool:
+    """True des qu'au moins un brevet/justificatif a ete uploade.
+    Le nom officiel devient alors non modifiable sans demande validee
+    par un admin (ref. name_change_requests)."""
+    row = db.fetchone(
+        "SELECT 1 FROM pilot_certifications "
+        "WHERE pilot_user_id=? AND document_path IS NOT NULL AND document_path <> '' "
+        "LIMIT 1",
+        (user_id,),
+    )
+    return bool(row)
+
+
+# ---------------------------------------------------------------------------
+# Demandes de changement de nom
+# ---------------------------------------------------------------------------
+
+def create_name_change_request(*, user_id: int, current_name: str,
+                               requested_name: str, reason: str = "",
+                               justif_path: str = "") -> int:
+    cur = db.execute(
+        "INSERT INTO name_change_requests "
+        "(user_id, current_name, requested_name, reason, justif_path) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (user_id, current_name, requested_name, reason or None,
+         justif_path or None),
+    )
+    return cur.lastrowid
+
+
+def get_name_change_request(req_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT n.*, u.full_name AS user_full_name, u.username "
+        "FROM name_change_requests n JOIN users u ON u.id = n.user_id "
+        "WHERE n.id=?",
+        (req_id,),
+    )
+    return dict(row) if row else None
+
+
+def list_pending_name_changes() -> list:
+    return [dict(r) for r in db.fetchall(
+        "SELECT n.*, u.full_name AS user_full_name, u.username "
+        "FROM name_change_requests n JOIN users u ON u.id = n.user_id "
+        "WHERE n.status='pending' ORDER BY n.created_at ASC"
+    )]
+
+
+def list_name_change_requests_for_user(user_id: int) -> list:
+    return [dict(r) for r in db.fetchall(
+        "SELECT * FROM name_change_requests WHERE user_id=? ORDER BY created_at DESC",
+        (user_id,),
+    )]
+
+
+def has_pending_name_change(user_id: int) -> bool:
+    row = db.fetchone(
+        "SELECT 1 FROM name_change_requests "
+        "WHERE user_id=? AND status='pending' LIMIT 1",
+        (user_id,),
+    )
+    return bool(row)
+
+
+def approve_name_change(req_id: int, admin_id: int, note: str = "") -> bool:
+    req = get_name_change_request(req_id)
+    if not req or req["status"] != "pending":
+        return False
+    db.execute(
+        "UPDATE users SET full_name=? WHERE id=?",
+        (req["requested_name"], req["user_id"]),
+    )
+    db.execute(
+        "UPDATE name_change_requests "
+        "SET status='approved', reviewed_by=?, reviewed_at=datetime('now'), admin_note=? "
+        "WHERE id=?",
+        (admin_id, note or None, req_id),
+    )
+    return True
+
+
+def reject_name_change(req_id: int, admin_id: int, note: str = "") -> bool:
+    cur = db.execute(
+        "UPDATE name_change_requests "
+        "SET status='rejected', reviewed_by=?, reviewed_at=datetime('now'), admin_note=? "
+        "WHERE id=? AND status='pending'",
+        (admin_id, note or None, req_id),
+    )
+    return cur.rowcount > 0
+
+
+def client_can_view_pilot_credentials(viewer_user_id: int, pilot_user_id: int) -> bool:
+    """True si le viewer a une raison legitime de voir le PDF du brevet :
+    - viewer == pilote lui-meme
+    - relation funded en cours ou passee
+    - viewer client a une mission sur laquelle le pilote a soumis une bid
+      (le client envisage de retenir ce pilote)
+    """
+    if not viewer_user_id or not pilot_user_id:
+        return False
+    if viewer_user_id == pilot_user_id:
+        return True
+    if has_funded_relation(viewer_user_id, pilot_user_id):
+        return True
+    row = db.fetchone(
+        "SELECT 1 FROM bids b "
+        "JOIN missions m ON m.id = b.mission_id "
+        "WHERE m.client_user_id=? AND b.pilot_user_id=? "
+        "AND b.status IN ('pending','accepted') "
+        "LIMIT 1",
+        (viewer_user_id, pilot_user_id),
+    )
+    return bool(row)
+
+
 # ---------------------------------------------------------------------------
 # Drones
 # ---------------------------------------------------------------------------
@@ -447,22 +567,65 @@ def list_missions_by_pilot(pilot_user_id: int) -> list:
 
 def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
               currency: str = DEFAULT_CURRENCY, eta_hours: Optional[float] = None,
-              message: str = "") -> int:
-    # On regarde si c'est une nouvelle enchere (pas un update) avant l'INSERT
-    is_new = not db.fetchone(
-        "SELECT 1 FROM bids WHERE mission_id=? AND pilot_user_id=?",
+              message: str = "", description: str = "",
+              deliverables: str = "", terms: str = "") -> int:
+    """Cree ou revise un devis pour une mission.
+
+    - Premier devis : INSERT avec revision_no=1, statut 'pending'.
+    - Revision (apres refus client) : snapshot l'ancien devis dans
+      bid_revisions, incremente revision_no et repasse en 'pending'.
+    - Mise a jour simple d'un devis 'pending' : on ecrase sans creer
+      d'entree d'historique (le pilote retouche son brouillon).
+    """
+    existing = db.fetchone(
+        "SELECT id, revision_no, price, currency, eta_hours, message, "
+        "       description, deliverables, terms, status, client_response "
+        "FROM bids WHERE mission_id=? AND pilot_user_id=?",
         (mission_id, pilot_user_id),
     )
-    cur = db.execute(
-        "INSERT INTO bids (mission_id, pilot_user_id, price, currency, eta_hours, message) "
-        "VALUES (?, ?, ?, ?, ?, ?) "
-        "ON CONFLICT(mission_id, pilot_user_id) DO UPDATE SET "
-        "  price=excluded.price, currency=excluded.currency, "
-        "  eta_hours=excluded.eta_hours, message=excluded.message, status='pending'",
-        (mission_id, pilot_user_id, price, currency, eta_hours, message),
-    )
-    bid_id = cur.lastrowid or 0
-    if is_new:
+    is_new = existing is None
+    is_revision = bool(existing and existing["status"] in ("rejected", "withdrawn"))
+
+    if is_revision:
+        # Snapshot de la version refusee avant ecrasement
+        db.execute(
+            "INSERT INTO bid_revisions "
+            "(bid_id, revision_no, price, currency, eta_hours, message, "
+            " description, deliverables, terms, status, client_response) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (existing["id"], existing["revision_no"], existing["price"],
+             existing["currency"], existing["eta_hours"], existing["message"],
+             existing["description"], existing["deliverables"],
+             existing["terms"], existing["status"], existing["client_response"]),
+        )
+        new_rev = int(existing["revision_no"] or 1) + 1
+        db.execute(
+            "UPDATE bids SET price=?, currency=?, eta_hours=?, message=?, "
+            "  description=?, deliverables=?, terms=?, "
+            "  status='pending', client_response=NULL, "
+            "  revision_no=?, updated_at=datetime('now') "
+            "WHERE id=?",
+            (price, currency, eta_hours, message, description, deliverables,
+             terms, new_rev, existing["id"]),
+        )
+        bid_id = existing["id"]
+    else:
+        cur = db.execute(
+            "INSERT INTO bids (mission_id, pilot_user_id, price, currency, "
+            "  eta_hours, message, description, deliverables, terms) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(mission_id, pilot_user_id) DO UPDATE SET "
+            "  price=excluded.price, currency=excluded.currency, "
+            "  eta_hours=excluded.eta_hours, message=excluded.message, "
+            "  description=excluded.description, "
+            "  deliverables=excluded.deliverables, terms=excluded.terms, "
+            "  status='pending', updated_at=datetime('now')",
+            (mission_id, pilot_user_id, price, currency, eta_hours, message,
+             description, deliverables, terms),
+        )
+        bid_id = cur.lastrowid or (existing["id"] if existing else 0)
+
+    if is_new or is_revision:
         try:
             import mailer
             client = db.fetchone(
@@ -478,16 +641,95 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
                 "SELECT id, full_name FROM users WHERE id=?",
                 (pilot_user_id,),
             )
+            bid_payload = {
+                "id": bid_id,
+                "price": price, "currency": currency,
+                "eta_hours": eta_hours, "message": message,
+                "description": description, "deliverables": deliverables,
+                "terms": terms,
+                "revision_no": (int(existing["revision_no"] or 1) + 1) if is_revision else 1,
+            }
             if client and mission and pilot:
-                mailer.send_new_bid(
-                    client=dict(client), mission=dict(mission),
-                    bid={"price": price, "currency": currency,
-                         "eta_hours": eta_hours, "message": message},
-                    pilot=dict(pilot),
-                )
+                if is_revision:
+                    mailer.send_bid_revised(
+                        client=dict(client), mission=dict(mission),
+                        bid=bid_payload, pilot=dict(pilot),
+                    )
+                else:
+                    mailer.send_new_bid(
+                        client=dict(client), mission=dict(mission),
+                        bid=bid_payload, pilot=dict(pilot),
+                    )
         except Exception as exc:
-            log.warning("email new_bid failed for mission=%s : %s", mission_id, exc)
+            log.warning("email new/revised bid failed for mission=%s : %s",
+                        mission_id, exc)
     return bid_id
+
+
+def reject_bid(mission_id: int, bid_id: int, client_user_id: int,
+               reason: str = "") -> bool:
+    """Le client refuse un devis specifique. La mission reste 'open' :
+    le pilote peut soumettre une revision. Retourne True si refus
+    applique, False sinon."""
+    bid = db.fetchone(
+        "SELECT b.*, m.client_user_id AS m_client "
+        "FROM bids b JOIN missions m ON m.id=b.mission_id "
+        "WHERE b.id=? AND b.mission_id=?",
+        (bid_id, mission_id),
+    )
+    if not bid:
+        return False
+    if bid["m_client"] != client_user_id:
+        return False
+    if bid["status"] != "pending":
+        return False
+    db.execute(
+        "UPDATE bids SET status='rejected', client_response=?, "
+        "  updated_at=datetime('now') WHERE id=?",
+        ((reason or "").strip()[:1000], bid_id),
+    )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'reject_bid', ?, ?)",
+        (client_user_id, f"bid:{bid_id}",
+         json.dumps({"reason": (reason or "")[:200]})),
+    )
+    try:
+        import mailer
+        pilot = db.fetchone(
+            "SELECT id, email, full_name FROM users WHERE id=?",
+            (bid["pilot_user_id"],),
+        )
+        mission = db.fetchone(
+            "SELECT id, title, country, city FROM missions WHERE id=?",
+            (mission_id,),
+        )
+        client = db.fetchone(
+            "SELECT id, full_name FROM users WHERE id=?",
+            (client_user_id,),
+        )
+        if pilot and mission and client:
+            mailer.send_bid_rejected(
+                pilot=dict(pilot), mission=dict(mission),
+                bid={"id": bid_id, "price": bid["price"],
+                     "currency": bid["currency"],
+                     "revision_no": bid["revision_no"]},
+                client=dict(client),
+                reason=(reason or "").strip(),
+            )
+    except Exception as exc:
+        log.warning("email bid_rejected failed for bid=%s : %s", bid_id, exc)
+    return True
+
+
+def list_bid_revisions(bid_id: int) -> list:
+    """Historique des versions precedentes d'un devis, plus recent d'abord."""
+    rows = db.fetchall(
+        "SELECT * FROM bid_revisions WHERE bid_id=? "
+        "ORDER BY revision_no DESC, id DESC",
+        (bid_id,),
+    )
+    return [dict(r) for r in rows]
 
 
 def list_bids(mission_id: int) -> list:
@@ -867,6 +1109,338 @@ def unread_count(user_id: int) -> int:
         (user_id,),
     )
     return int(row["n"]) if row else 0
+
+
+# ---------------------------------------------------------------------------
+# Forfaits pilote (catalogue de packages)
+# ---------------------------------------------------------------------------
+
+def list_pilot_packages(pilot_user_id: int, only_active: bool = False) -> list:
+    q = ["SELECT * FROM pilot_packages WHERE pilot_user_id=?"]
+    args: list = [pilot_user_id]
+    if only_active:
+        q.append("AND is_active=1")
+    q.append("ORDER BY sort_order ASC, id ASC")
+    rows = db.fetchall(" ".join(q), args)
+    return [dict(r) for r in rows]
+
+
+def get_pilot_package(package_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT p.*, u.full_name AS pilot_name, u.country AS pilot_country, "
+        "       u.city AS pilot_city "
+        "FROM pilot_packages p JOIN users u ON u.id=p.pilot_user_id "
+        "WHERE p.id=?",
+        (package_id,),
+    )
+    return dict(row) if row else None
+
+
+def create_pilot_package(pilot_user_id: int, *, title: str, description: str,
+                         price: float, currency: str = DEFAULT_CURRENCY,
+                         mission_type: Optional[str] = None,
+                         duration_hours: Optional[float] = None,
+                         deliverables: str = "", capabilities: str = "",
+                         is_active: bool = True) -> int:
+    cur = db.execute(
+        "INSERT INTO pilot_packages (pilot_user_id, title, description, "
+        "  mission_type, price, currency, duration_hours, deliverables, "
+        "  capabilities, is_active) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (pilot_user_id, title.strip()[:160], description.strip()[:4000],
+         mission_type or None, price, currency, duration_hours,
+         deliverables.strip()[:2000], capabilities.strip()[:500],
+         1 if is_active else 0),
+    )
+    return cur.lastrowid or 0
+
+
+def update_pilot_package(package_id: int, pilot_user_id: int, **fields) -> bool:
+    pkg = db.fetchone(
+        "SELECT id FROM pilot_packages WHERE id=? AND pilot_user_id=?",
+        (package_id, pilot_user_id),
+    )
+    if not pkg:
+        return False
+    allowed = {"title", "description", "mission_type", "price", "currency",
+               "duration_hours", "deliverables", "capabilities", "is_active",
+               "sort_order"}
+    sets, args = [], []
+    for k, v in fields.items():
+        if k not in allowed:
+            continue
+        sets.append(f"{k}=?")
+        args.append(v)
+    if not sets:
+        return False
+    sets.append("updated_at=datetime('now')")
+    args.append(package_id)
+    db.execute(f"UPDATE pilot_packages SET {', '.join(sets)} WHERE id=?", args)
+    return True
+
+
+def delete_pilot_package(package_id: int, pilot_user_id: int) -> bool:
+    cur = db.execute(
+        "DELETE FROM pilot_packages WHERE id=? AND pilot_user_id=?",
+        (package_id, pilot_user_id),
+    )
+    return cur.rowcount > 0
+
+
+def toggle_pilot_package(package_id: int, pilot_user_id: int) -> bool:
+    cur = db.execute(
+        "UPDATE pilot_packages SET is_active = 1 - is_active, "
+        "  updated_at=datetime('now') WHERE id=? AND pilot_user_id=?",
+        (package_id, pilot_user_id),
+    )
+    return cur.rowcount > 0
+
+
+# ---------------------------------------------------------------------------
+# Livrables booking
+# ---------------------------------------------------------------------------
+
+_DELIVERABLE_KIND_BY_EXT = {
+    "jpg": "image", "jpeg": "image", "png": "image", "webp": "image",
+    "heic": "image", "tif": "image", "tiff": "image",
+    "raw": "image", "dng": "image", "cr2": "image", "cr3": "image",
+    "nef": "image", "arw": "image", "rw2": "image", "orf": "image",
+    "mp4": "video", "mov": "video", "mkv": "video", "avi": "video", "m4v": "video",
+    "zip": "archive", "7z": "archive", "tar": "archive", "gz": "archive",
+    "pdf": "doc", "txt": "doc", "csv": "doc",
+    "las": "data", "laz": "data", "obj": "data", "ply": "data",
+    "kml": "data", "kmz": "data", "geojson": "data",
+}
+
+
+def deliverable_kind_from_ext(ext: str) -> str:
+    return _DELIVERABLE_KIND_BY_EXT.get((ext or "").lower().lstrip("."), "file")
+
+
+def add_deliverable(*, booking_id: int, uploaded_by_user_id: int,
+                    label: str, original_filename: str,
+                    stored_filename: str, mime_type: Optional[str],
+                    size_bytes: int, kind: str = "file") -> int:
+    cur = db.execute(
+        "INSERT INTO booking_deliverables "
+        "(booking_id, uploaded_by_user_id, label, original_filename, "
+        " stored_filename, mime_type, size_bytes, kind) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (booking_id, uploaded_by_user_id, label.strip()[:200] or None,
+         original_filename[:255], stored_filename[:255],
+         mime_type, int(size_bytes), kind),
+    )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'upload_deliverable', ?, ?)",
+        (uploaded_by_user_id, f"booking:{booking_id}",
+         json.dumps({"filename": original_filename, "size": size_bytes})),
+    )
+    return cur.lastrowid or 0
+
+
+def list_deliverables(booking_id: int) -> list:
+    rows = db.fetchall(
+        "SELECT d.*, u.full_name AS uploader_name "
+        "FROM booking_deliverables d "
+        "LEFT JOIN users u ON u.id=d.uploaded_by_user_id "
+        "WHERE d.booking_id=? ORDER BY d.created_at ASC",
+        (booking_id,),
+    )
+    return [dict(r) for r in rows]
+
+
+def get_deliverable(deliverable_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT * FROM booking_deliverables WHERE id=?",
+        (deliverable_id,),
+    )
+    return dict(row) if row else None
+
+
+def delete_deliverable(deliverable_id: int, user_id: int) -> Optional[dict]:
+    """Suppression autorisee uniquement par l'uploader (pilote).
+    Retourne le dict du livrable supprime pour que la route puisse
+    enlever le fichier disque."""
+    d = db.fetchone(
+        "SELECT * FROM booking_deliverables WHERE id=? AND uploaded_by_user_id=?",
+        (deliverable_id, user_id),
+    )
+    if not d:
+        return None
+    db.execute("DELETE FROM booking_deliverables WHERE id=?", (deliverable_id,))
+    return dict(d)
+
+
+# ---------------------------------------------------------------------------
+# Conformite linguistique des contrats (Loi 101 / Loi 96 du Quebec)
+# ---------------------------------------------------------------------------
+
+# Villes quebecoises principales (suffit pour le matching grossier ;
+# si l'utilisateur saisit une ville hors-liste, on retombe sur la
+# detection par region/code).
+_QUEBEC_CITIES = {
+    "montreal", "montréal", "quebec", "québec", "laval", "gatineau",
+    "longueuil", "sherbrooke", "saguenay", "levis", "lévis",
+    "trois-rivieres", "trois-rivières", "terrebonne", "brossard",
+    "saint-jean-sur-richelieu", "repentigny", "drummondville",
+    "saint-jerome", "saint-jérôme", "granby", "blainville",
+    "saint-hyacinthe", "shawinigan", "rimouski", "chateauguay",
+    "châteauguay", "joliette", "rouyn-noranda", "victoriaville",
+    "salaberry-de-valleyfield", "sept-iles", "sept-îles",
+    "alma", "boucherville", "saint-eustache", "mascouche",
+    "mirabel", "dollard-des-ormeaux", "pointe-claire", "kirkland",
+    "westmount", "outremont", "verdun", "lasalle", "anjou",
+    "saint-leonard", "saint-léonard", "ahuntsic", "rosemont",
+    "plateau-mont-royal", "ville-marie", "cote-saint-luc",
+    "côte-saint-luc", "hampstead", "mount royal", "mont-royal",
+}
+
+_CANADA_CODES = {"ca", "canada"}
+_QC_REGION_CODES = {"qc", "quebec", "québec", "province de quebec",
+                    "province de québec"}
+
+
+def is_party_in_quebec(country: Optional[str], city: Optional[str] = None,
+                       region: Optional[str] = None) -> bool:
+    """True si la partie reside au Quebec (Charte de la langue francaise).
+
+    Heuristique :
+      - region/province en {QC, Quebec, Québec} = oui (le plus fiable)
+      - country=Canada + city dans la liste des villes quebecoises = oui
+      - autres cas = non
+    Ne fait jamais de geoloc IP, on travaille sur ce qui est saisi.
+    """
+    c = (country or "").strip().lower()
+    r = (region or "").strip().lower()
+    v = (city or "").strip().lower()
+    if r in _QC_REGION_CODES:
+        return True
+    if c in _CANADA_CODES and v in _QUEBEC_CITIES:
+        return True
+    return False
+
+
+def contract_french_only(parties: list) -> bool:
+    """True si AU MOINS une partie est au Quebec, donc le contrat
+    doit etre en francais (Loi 101 + Loi 96).
+
+    `parties` est une liste de dicts user-like avec country/city/region.
+    """
+    for p in parties or []:
+        if not p:
+            continue
+        if is_party_in_quebec(p.get("country"), p.get("city"),
+                              p.get("region")):
+            return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Avatar pilote
+# ---------------------------------------------------------------------------
+
+def set_user_avatar(user_id: int, relative_path: str) -> None:
+    """relative_path = chemin relatif au repertoire data/ (ex.
+    'uploads/avatar_42.jpg'). Stocke dans users.avatar_path."""
+    db.execute(
+        "UPDATE users SET avatar_path=? WHERE id=?",
+        (relative_path, user_id),
+    )
+
+
+def clear_user_avatar(user_id: int) -> Optional[str]:
+    """Vide users.avatar_path et retourne l'ancien chemin (pour
+    suppression sur disque)."""
+    row = db.fetchone("SELECT avatar_path FROM users WHERE id=?", (user_id,))
+    if not row or not row["avatar_path"]:
+        return None
+    old = row["avatar_path"]
+    db.execute("UPDATE users SET avatar_path=NULL WHERE id=?", (user_id,))
+    return old
+
+
+# ---------------------------------------------------------------------------
+# Portfolio pilote (showreel)
+# ---------------------------------------------------------------------------
+
+_PORTFOLIO_VIDEO_EXT = {"mp4", "mov", "webm", "m4v"}
+
+
+def portfolio_kind_from_ext(ext: str) -> str:
+    return "video" if (ext or "").lower().lstrip(".") in _PORTFOLIO_VIDEO_EXT else "image"
+
+
+def list_portfolio_items(pilot_user_id: int) -> list:
+    rows = db.fetchall(
+        "SELECT * FROM pilot_portfolio_items WHERE pilot_user_id=? "
+        "ORDER BY sort_order ASC, id DESC",
+        (pilot_user_id,),
+    )
+    return [dict(r) for r in rows]
+
+
+def get_portfolio_item(item_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT * FROM pilot_portfolio_items WHERE id=?", (item_id,),
+    )
+    return dict(row) if row else None
+
+
+def add_portfolio_item(*, pilot_user_id: int, title: str, description: str,
+                       kind: str, original_filename: str,
+                       stored_filename: str, mime_type: Optional[str],
+                       size_bytes: int,
+                       thumb_filename: Optional[str] = None) -> int:
+    cur = db.execute(
+        "INSERT INTO pilot_portfolio_items "
+        "(pilot_user_id, title, description, kind, original_filename, "
+        " stored_filename, mime_type, size_bytes, thumb_filename) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (pilot_user_id, title.strip()[:200] or None,
+         description.strip()[:2000] or None,
+         kind, original_filename[:255], stored_filename[:255],
+         mime_type, int(size_bytes), thumb_filename),
+    )
+    return cur.lastrowid or 0
+
+
+def update_portfolio_item(item_id: int, pilot_user_id: int,
+                          title: str, description: str) -> bool:
+    cur = db.execute(
+        "UPDATE pilot_portfolio_items SET title=?, description=? "
+        "WHERE id=? AND pilot_user_id=?",
+        (title.strip()[:200] or None, description.strip()[:2000] or None,
+         item_id, pilot_user_id),
+    )
+    return cur.rowcount > 0
+
+
+def delete_portfolio_item(item_id: int, pilot_user_id: int) -> Optional[dict]:
+    item = db.fetchone(
+        "SELECT * FROM pilot_portfolio_items WHERE id=? AND pilot_user_id=?",
+        (item_id, pilot_user_id),
+    )
+    if not item:
+        return None
+    db.execute("DELETE FROM pilot_portfolio_items WHERE id=?", (item_id,))
+    return dict(item)
+
+
+def mark_deliverable_pushed(deliverable_id: int, service: str,
+                            url: Optional[str]) -> None:
+    if service == "aubedrive":
+        db.execute(
+            "UPDATE booking_deliverables SET aubedrive_url=?, "
+            "  aubedrive_sent_at=datetime('now') WHERE id=?",
+            (url, deliverable_id),
+        )
+    elif service == "aubephotos":
+        db.execute(
+            "UPDATE booking_deliverables SET aubephotos_url=?, "
+            "  aubephotos_sent_at=datetime('now') WHERE id=?",
+            (url, deliverable_id),
+        )
 
 
 # ---------------------------------------------------------------------------

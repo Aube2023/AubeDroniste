@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS missions (
     requires_certifications TEXT,                 -- CSV codes
     requires_capabilities   TEXT,                 -- CSV (thermique, RTK, ...)
     status          TEXT NOT NULL DEFAULT 'open',
+    from_package_id   INTEGER REFERENCES pilot_packages(id) ON DELETE SET NULL,
+    targeted_pilot_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -130,7 +132,9 @@ CREATE INDEX IF NOT EXISTS idx_mission_type    ON missions(mission_type);
 CREATE INDEX IF NOT EXISTS idx_mission_status  ON missions(status);
 CREATE INDEX IF NOT EXISTS idx_mission_geo     ON missions(lat, lng);
 
--- Enchere d'un pilote sur une mission
+-- Devis d'un pilote sur une mission (anciennement "enchere")
+-- Cycle : pending -> accepted (client valide) | rejected (client refuse,
+-- le pilote peut alors reviser et resoumettre, revision_no++) | withdrawn
 CREATE TABLE IF NOT EXISTS bids (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     mission_id      INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
@@ -138,13 +142,38 @@ CREATE TABLE IF NOT EXISTS bids (
     price           REAL NOT NULL,
     currency        TEXT NOT NULL DEFAULT 'EUR',
     eta_hours       REAL,
-    message         TEXT,
+    message         TEXT,                          -- mot d'accompagnement
+    description     TEXT,                          -- description detaillee du devis
+    deliverables    TEXT,                          -- livrables (photos RAW, plan PDF...)
+    terms           TEXT,                          -- conditions / details techniques
+    revision_no     INTEGER NOT NULL DEFAULT 1,    -- numero de revision
+    client_response TEXT,                          -- raison de refus client
     status          TEXT NOT NULL DEFAULT 'pending',
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE (mission_id, pilot_user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_bid_mission ON bids(mission_id);
 CREATE INDEX IF NOT EXISTS idx_bid_pilot   ON bids(pilot_user_id);
+
+-- Historique des revisions de devis : on snapshote l'ancienne version
+-- au moment ou le pilote en soumet une nouvelle (apres refus client).
+CREATE TABLE IF NOT EXISTS bid_revisions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    bid_id          INTEGER NOT NULL REFERENCES bids(id) ON DELETE CASCADE,
+    revision_no     INTEGER NOT NULL,
+    price           REAL NOT NULL,
+    currency        TEXT NOT NULL,
+    eta_hours       REAL,
+    message         TEXT,
+    description     TEXT,
+    deliverables    TEXT,
+    terms           TEXT,
+    status          TEXT NOT NULL,
+    client_response TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_bid_rev_bid ON bid_revisions(bid_id);
 
 -- Reservation issue d'une enchere acceptee
 CREATE TABLE IF NOT EXISTS bookings (
@@ -204,6 +233,65 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_msg_mission ON messages(mission_id);
 CREATE INDEX IF NOT EXISTS idx_msg_recipient ON messages(recipient_user_id);
 
+-- Forfaits proposes par le pilote (catalogue de packages)
+CREATE TABLE IF NOT EXISTS pilot_packages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title           TEXT NOT NULL,
+    description     TEXT NOT NULL,
+    mission_type    TEXT,
+    price           REAL NOT NULL,
+    currency        TEXT NOT NULL DEFAULT 'EUR',
+    duration_hours  REAL,
+    deliverables    TEXT,
+    capabilities    TEXT,
+    is_active       INTEGER NOT NULL DEFAULT 1,
+    sort_order      INTEGER NOT NULL DEFAULT 0,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pkg_pilot ON pilot_packages(pilot_user_id);
+CREATE INDEX IF NOT EXISTS idx_pkg_type  ON pilot_packages(mission_type);
+
+-- Portfolio pilote : galerie photos + videos d'operations passees
+-- (showreel commercial sur la page publique).
+CREATE TABLE IF NOT EXISTS pilot_portfolio_items (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title               TEXT,
+    description         TEXT,
+    kind                TEXT NOT NULL DEFAULT 'image',
+    original_filename   TEXT NOT NULL,
+    stored_filename     TEXT NOT NULL,
+    mime_type           TEXT,
+    size_bytes          INTEGER NOT NULL DEFAULT 0,
+    thumb_filename      TEXT,
+    sort_order          INTEGER NOT NULL DEFAULT 0,
+    created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_portfolio_pilot ON pilot_portfolio_items(pilot_user_id);
+
+-- Livrables d'une booking (photos / videos / ortho / PDFs / ZIPs uploades
+-- par le pilote, telechargeables par le client, pushables vers AubeDrive
+-- ou AubePhotos)
+CREATE TABLE IF NOT EXISTS booking_deliverables (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id            INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    uploaded_by_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    label                 TEXT,
+    original_filename     TEXT NOT NULL,
+    stored_filename       TEXT NOT NULL,
+    mime_type             TEXT,
+    size_bytes            INTEGER NOT NULL DEFAULT 0,
+    kind                  TEXT NOT NULL DEFAULT 'file',
+    aubedrive_url         TEXT,
+    aubedrive_sent_at     TEXT,
+    aubephotos_url        TEXT,
+    aubephotos_sent_at    TEXT,
+    created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_deliv_booking ON booking_deliverables(booking_id);
+
 -- Sessions
 CREATE TABLE IF NOT EXISTS sessions (
     sid          TEXT PRIMARY KEY,
@@ -224,3 +312,20 @@ CREATE TABLE IF NOT EXISTS audit_log (
     payload     TEXT,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Demandes de changement de nom (verrouillage apres upload brevet)
+CREATE TABLE IF NOT EXISTS name_change_requests (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    current_name    TEXT NOT NULL,
+    requested_name  TEXT NOT NULL,
+    reason          TEXT,
+    justif_path     TEXT,
+    status          TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected
+    reviewed_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at     TEXT,
+    admin_note      TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_name_change_user ON name_change_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_name_change_status ON name_change_requests(status);
