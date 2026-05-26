@@ -81,16 +81,19 @@ function refreshZonePill() {
     pill.classList.remove('active');
     return;
   }
-  const label = pill.querySelector('.zone-label');
-  if (label) {
-    label.textContent = zone.label
-      ? zone.label
-      : (zone.lat.toFixed(2) + '°, ' + zone.lng.toFixed(2) + '°');
+  // Privacy : on n'affiche JAMAIS les coordonnees brutes dans l'UI
+  // ("45.51°, -73.56°" donne la position du domicile a la lecture).
+  // On utilise le label (ville) s'il est connu, sinon on garde le
+  // libelle generique deja rendu cote serveur via i18n ("Ma zone"
+  // / "My zone").
+  const labelEl = pill.querySelector('.zone-label');
+  if (labelEl && zone.label) {
+    labelEl.textContent = zone.label;
   }
   pill.classList.add('active');
   pill.setAttribute('href',
-    '/dronistes?lat=' + zone.lat + '&lng=' + zone.lng + '&radius_km=100');
-  pill.title = 'Filtrer autour de votre position — clic droit pour effacer';
+    '/pilotes?lat=' + zone.lat + '&lng=' + zone.lng + '&radius_km=100');
+  pill.title = 'Filtrer autour de votre zone. Clic droit pour effacer.';
   pill.oncontextmenu = function (e) { e.preventDefault(); clearZone(); return false; };
 }
 
