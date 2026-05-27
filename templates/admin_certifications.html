@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Brevets a verifier · AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Brevets pilote</span>
+  <h1>Brevets en attente de verification.</h1>
+  <p class="lead muted">{{ certifications|length }} brevet(s) avec justificatif a controler.</p>
+</div>
+
+{% for c in certifications %}
+<div class="card">
+  <div class="row-between" style="align-items: start;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">
+        {{ c.authority }} <span class="muted">·</span> {{ c.title }}
+      </h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        Brevet #{{ c.id }} · pilote {{ c.pilot_full_name }} (@{{ c.username }})
+        {% if c.pilot_city or c.pilot_country %}
+          · {{ c.pilot_city }}{% if c.pilot_city and c.pilot_country %}, {% endif %}{{ c.pilot_country }}
+        {% endif %}
+      </div>
+      {% if c.reference %}
+      <div class="muted small" style="margin-top: 4px;">
+        Reference : <span class="mono">{{ c.reference }}</span>
+      </div>
+      {% endif %}
+      <div class="muted small" style="margin-top: 4px;">
+        {% if c.issued_at %}Emis le {{ c.issued_at }}{% endif %}
+        {% if c.expires_at %} · expire le {{ c.expires_at }}{% endif %}
+        · uploade le {{ c.created_at }}
+      </div>
+    </div>
+    <div>
+      <a href="{{ url_for('pilot_certification_document', user_id=c.pilot_user_id, cert_id=c.id) }}"
+         target="_blank" rel="noopener noreferrer" class="ghost">
+        Voir le justificatif &rarr;
+      </a>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+    <form method="post" action="{{ url_for('admin_verify_certification', cert_id=c.id) }}">
+      {{ csrf_input() }}
+      <button class="cta" type="submit"
+              onclick="return confirm('Marquer ce brevet comme verifie ?')">
+        Verifier
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin_unverify_certification', cert_id=c.id) }}">
+      {{ csrf_input() }}
+      <button class="ghost danger" type="submit"
+              onclick="return confirm('Garder ce brevet non-verifie (refus) ?')">
+        Refuser / laisser en attente
+      </button>
+    </form>
+  </div>
+</div>
+{% else %}
+<p class="muted">Aucun brevet en attente. Tout est a jour.</p>
+{% endfor %}
+
+{% endblock %}

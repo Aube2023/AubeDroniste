@@ -202,6 +202,27 @@ def get_certification(cert_id: int) -> Optional[dict]:
     return dict(row) if row else None
 
 
+def list_pending_certifications() -> list:
+    """Brevets uploades avec un PDF mais pas encore valides par un admin."""
+    return [dict(r) for r in db.fetchall(
+        "SELECT c.*, u.full_name AS pilot_full_name, u.username, "
+        "       u.country AS pilot_country, u.city AS pilot_city "
+        "FROM pilot_certifications c "
+        "JOIN users u ON u.id = c.pilot_user_id "
+        "WHERE c.is_verified=0 AND c.document_path IS NOT NULL "
+        "  AND c.document_path <> '' "
+        "ORDER BY c.created_at ASC"
+    )]
+
+
+def set_certification_verified(cert_id: int, verified: bool) -> bool:
+    cur = db.execute(
+        "UPDATE pilot_certifications SET is_verified=? WHERE id=?",
+        (1 if verified else 0, cert_id),
+    )
+    return cur.rowcount > 0
+
+
 def is_identity_locked(user_id: int) -> bool:
     """True des qu'au moins un brevet/justificatif a ete uploade.
     Le nom officiel devient alors non modifiable sans demande validee

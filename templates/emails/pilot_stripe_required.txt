@@ -1,0 +1,33 @@
+AUBEPILOT, ACTION REQUISE / ACTION REQUIRED
+============================================
+
+[FR]
+Un paiement vous attend, {{ pilot.full_name.split(' ')[0] }}.
+
+{{ client.full_name }} vient de tenter de payer la mission
+« {{ mission.title }} »{% if mission.city %} a {{ mission.city }}{% endif %}, mais votre compte Stripe
+n'est pas encore finalise. Tant que ce n'est pas fait, le client
+ne peut pas debloquer les fonds.
+
+Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}
+Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (apres 30% de commission)
+
+Finaliser Stripe (3 min) : {{ site_url }}/espace/pilote/stripe
+
+L'equipage AubePilot
+
+------------------------------------------------------------
+
+[EN]
+A payment is waiting for you, {{ pilot.full_name.split(' ')[0] }}.
+
+{{ client.full_name }} just tried to pay for the mission
+"{{ mission.title }}"{% if mission.city %} in {{ mission.city }}{% endif %}, but your Stripe account
+isn't finalized yet. Until it is, the client can't release the funds.
+
+Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}
+You'll get    : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (after 30% platform fee)
+
+Finalize Stripe (3 min): {{ site_url }}/espace/pilote/stripe
+
+The AubePilot crew

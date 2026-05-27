@@ -157,6 +157,18 @@
 </section>
 {% endif %}
 
+{% if current_user.is_admin %}
+<section class="card" style="margin-top: 32px; border-left: 3px solid var(--signal);">
+  <span class="eyebrow">Admin · Back-office</span>
+  <h2 style="margin: 6px 0 14px;">Console de moderation.</h2>
+  <div class="cta-row" style="flex-wrap: wrap; gap: 12px;">
+    <a class="ghost" href="{{ url_for('admin_certifications') }}">Brevets a verifier &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_name_changes') }}">Demandes de changement de nom &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_disputes') }}">Litiges en cours &rarr;</a>
+  </div>
+</section>
+{% endif %}
+
 {% if not (is_client and my_missions) and not (is_pilot and my_bids) and not my_bookings %}
 <section class="card" style="text-align: center; padding: 64px 32px;">
   <span class="eyebrow" style="justify-content: center;">Bienvenue à bord</span>

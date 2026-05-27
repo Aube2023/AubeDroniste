@@ -1,0 +1,61 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Action requise / Action required, finaliser Stripe pour {{ mission.title }}{% endblock %}
+{% block preview %}Un client veut vous payer mais Stripe n'est pas connecte · A client wants to pay but Stripe isn't connected.{% endblock %}
+
+{% block content %}
+{% set first = pilot.full_name.split(' ')[0] %}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR, Action requise</div>
+  <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Un paiement vous attend, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    <strong>{{ client.full_name }}</strong> vient de tenter de payer la mission
+    <strong>&laquo;&nbsp;{{ mission.title }}&nbsp;&raquo;</strong>{% if mission.city %} a {{ mission.city }}{% endif %},
+    mais votre compte Stripe n'est pas encore finalise. Tant que ce n'est pas fait,
+    le client ne peut pas debloquer les fonds et la mission reste en attente.
+  </p>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0;border:1px solid #e3ded1;">
+    <tr><td style="padding:14px 18px;border-bottom:1px solid #efece2;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Montant convenu</div>
+      <div style="font:700 22px/1 Georgia,serif;color:#1e6f5e;">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
+    </td></tr>
+    <tr><td style="padding:14px 18px;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Vous toucherez (apres commission 30%)</div>
+      <div style="font:700 18px/1 Georgia,serif;color:#15181f;">{{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}</div>
+    </td></tr>
+  </table>
+
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    Cela prend 3 minutes : RIB, justificatif d'identite, et Stripe verifie le tout.
+  </p>
+  <p style="margin:24px 0 0;">
+    <a href="{{ site_url }}/espace/pilote/stripe" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Finaliser mon compte Stripe</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN, Action required</div>
+  <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    A payment is waiting for you, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    <strong>{{ client.full_name }}</strong> just tried to pay for the mission
+    <strong>"{{ mission.title }}"</strong>{% if mission.city %} in {{ mission.city }}{% endif %},
+    but your Stripe account isn't finalized yet. Until it is, the client can't release
+    the funds and the mission stays on hold.
+  </p>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    Takes 3 minutes: bank details, ID document, Stripe verifies the rest.
+  </p>
+  <p style="margin:24px 0 0;">
+    <a href="{{ site_url }}/espace/pilote/stripe" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Finalize my Stripe account</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

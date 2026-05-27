@@ -216,3 +216,16 @@ def send_bid_revised(client: dict, mission: dict, bid: dict, pilot: dict) -> boo
         context={"client": client, "mission": mission, "bid": bid,
                  "pilot": pilot},
     )
+
+
+def send_pilot_stripe_required(pilot: dict, mission: dict, booking: dict,
+                               client: dict) -> bool:
+    """Relance le pilote dont le compte Stripe n'est pas finalise apres
+    qu'un client a tente de payer la mission."""
+    return send(
+        to=pilot["email"],
+        subject=f"Action requise / Action required, {mission['title']}",
+        template="pilot_stripe_required",
+        context={"pilot": pilot, "mission": mission, "booking": booking,
+                 "client": client},
+    )

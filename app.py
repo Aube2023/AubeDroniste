@@ -787,6 +787,39 @@ def admin_reject_name_change(req_id):
 
 
 # ---------------------------------------------------------------------------
+# Admin — verification des certifications pilote
+# ---------------------------------------------------------------------------
+
+@app.route("/admin/certifications")
+@auth.admin_required
+def admin_certifications():
+    return render_template(
+        "admin_certifications.html",
+        certifications=services.list_pending_certifications(),
+    )
+
+
+@app.route("/admin/certifications/<int:cert_id>/verifier", methods=["POST"])
+@auth.admin_required
+def admin_verify_certification(cert_id):
+    if services.set_certification_verified(cert_id, True):
+        flash("Brevet verifie.", "success")
+    else:
+        flash("Brevet introuvable.", "error")
+    return redirect(url_for("admin_certifications"))
+
+
+@app.route("/admin/certifications/<int:cert_id>/devalider", methods=["POST"])
+@auth.admin_required
+def admin_unverify_certification(cert_id):
+    if services.set_certification_verified(cert_id, False):
+        flash("Brevet remis en attente.", "info")
+    else:
+        flash("Brevet introuvable.", "error")
+    return redirect(url_for("admin_certifications"))
+
+
+# ---------------------------------------------------------------------------
 # Telechargement du brevet (gating client legitime)
 # ---------------------------------------------------------------------------
 
@@ -1506,7 +1539,24 @@ def booking_pay(booking_id):
     pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])
     if not pilot_acc:
         flash("Le pilote n'a pas finalisé son inscription Stripe — il a été notifié.", "error")
-        # On peut lui envoyer un mail de relance (TODO)
+        try:
+            import mailer
+            pilot = db.fetchone(
+                "SELECT id, email, full_name FROM users WHERE id=?",
+                (booking["pilot_user_id"],),
+            )
+            if pilot:
+                mailer.send_pilot_stripe_required(
+                    pilot=dict(pilot),
+                    mission={"id": booking.get("mission_id"),
+                             "title": booking.get("mission_title", "Mission AubePilot"),
+                             "city": booking.get("city")},
+                    booking=booking,
+                    client={"id": g.user["id"], "full_name": g.user["full_name"]},
+                )
+        except Exception as exc:
+            log.warning("email pilot_stripe_required failed for booking=%s : %s",
+                        booking_id, exc)
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
     session_id, url = payments.create_checkout_session(
