@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Changements de nom · AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Identite</span>
+  <h1>Demandes de changement de nom.</h1>
+  <p class="lead muted">{{ requests|length }} demande(s) en attente.</p>
+</div>
+
+{% for r in requests %}
+<div class="card">
+  <div class="row-between" style="align-items: start;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">
+        {{ r.current_name }} <span class="muted">&rarr;</span> {{ r.requested_name }}
+      </h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        Demande #{{ r.id }} · utilisateur @{{ r.username }} · {{ r.created_at }}
+      </div>
+    </div>
+    <div>
+      {% if r.justif_path %}
+        <a href="{{ url_for('admin_name_change_justif', req_id=r.id) }}"
+           target="_blank" rel="noopener noreferrer" class="ghost">
+          Voir le justificatif &rarr;
+        </a>
+      {% else %}
+        <span class="muted small">aucun justificatif</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if r.reason %}
+  <p class="serif-italic" style="background: var(--paper-3); padding: 14px 18px; border-left: 3px solid var(--signal); margin: 14px 0;">
+    « {{ r.reason }} »
+  </p>
+  {% endif %}
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+    <form method="post" action="{{ url_for('admin_approve_name_change', req_id=r.id) }}">
+      {{ csrf_input() }}
+      <label>Note (optionnel)<input name="note" placeholder="Justificatif verifie le ..."></label>
+      <button class="cta" type="submit"
+              onclick="return confirm('Approuver et appliquer le nouveau nom ?')">
+        Approuver
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin_reject_name_change', req_id=r.id) }}">
+      {{ csrf_input() }}
+      <label>Note (optionnel)<input name="note" placeholder="Motif du refus"></label>
+      <button class="ghost danger" type="submit"
+              onclick="return confirm('Refuser cette demande ?')">
+        Refuser
+      </button>
+    </form>
+  </div>
+</div>
+{% else %}
+<p class="muted">Aucune demande en attente.</p>
+{% endfor %}
+
+{% endblock %}

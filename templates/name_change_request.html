@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Demander un changement de nom · AubePilot{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Identite · Changement de nom</span>
+  <h1>Demande de changement de nom.</h1>
+  <p class="lead muted">
+    Votre nom est verrouille car au moins un brevet a ete uploade sous ce nom.
+    Pour le modifier, fournissez un justificatif officiel (carte d'identite, passeport,
+    acte de mariage, jugement). L'admin valide sous 48h.
+  </p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card">
+  {{ csrf_input() }}
+
+  <label>Nom actuel
+    <input value="{{ current_name }}" disabled>
+  </label>
+
+  <label>Nouveau nom complet
+    <input name="requested_name" required minlength="3" maxlength="120" autofocus>
+  </label>
+
+  <label>Motif (optionnel)
+    <textarea name="reason" rows="3" maxlength="500"
+              placeholder="Ex. mariage, changement d'etat civil, correction d'orthographe."></textarea>
+  </label>
+
+  <label>Justificatif officiel
+    <input name="justif" type="file" required accept=".pdf,.png,.jpg,.jpeg,.webp">
+    <small class="muted" style="display:block; margin-top:4px;">
+      PDF, JPG, PNG ou WebP. Visible uniquement par l'admin.
+    </small>
+  </label>
+
+  <div class="row-between" style="margin-top: 18px;">
+    <a href="{{ url_for('pilot_edit') if current_user.role in ('pilot','both') else url_for('dashboard') }}" class="ghost">Annuler</a>
+    <button class="cta" type="submit">Envoyer la demande</button>
+  </div>
+</form>
+
+{% endblock %}
