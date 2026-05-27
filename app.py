@@ -21,6 +21,7 @@ import security
 import services
 from config import (
     ALLOWED_DOC_EXT,
+    AUBECREW_URL,
     AUTO_RELEASE_DAYS,
     CURRENCIES,
     DEFAULT_CURRENCY,
@@ -139,6 +140,8 @@ def _inject_globals():
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
+        # URLs cross-service ecosysteme
+        "aubecrew_url": AUBECREW_URL,
         # CSRF
         "csrf_token": security.csrf_token,
         "csrf_input": security.csrf_input,

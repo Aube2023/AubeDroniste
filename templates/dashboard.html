@@ -36,7 +36,11 @@
       <div class="row"><span>Brevets</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
       <div class="row"><span>Aéronefs</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
     </div>
-    <div class="footnote"><a href="{{ url_for('pilot_edit') }}">Compléter →</a></div>
+    <div class="footnote">
+      <a href="{{ url_for('pilot_edit') }}">Compléter →</a>
+      &nbsp;·&nbsp;
+      <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">Gestion de flotte AubeCrew ↗</a>
+    </div>
   </div>
   {% endif %}
 

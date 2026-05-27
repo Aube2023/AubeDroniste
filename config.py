@@ -66,6 +66,8 @@ ALLOWED_DELIVERABLE_EXT = {
 # URLs configurables via env pour dev/prod.
 AUBEDRIVE_URL = os.environ.get("AUBEDRIVE_URL", "https://drive.aubeetoilee.com")
 AUBEPHOTOS_URL = os.environ.get("AUBEPHOTOS_URL", "https://photos.aubeetoilee.com")
+# AubeCrew = gestion de flotte / equipage / logbook pour les pilotes
+AUBECREW_URL = os.environ.get("AUBECREW_URL", "https://crew.aubeetoilee.com")
 # Cle partagee server-to-server : si presente, ajoutee en header
 # X-Aube-Internal-Key. Sinon, on tente sans (les services Aube peuvent
 # autoriser via verification du username en clair).
