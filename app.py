@@ -1086,6 +1086,18 @@ def mission_create():
         except Exception as exc:  # garde large : on remonte un message clair a l'UI
             flash(f"Mission invalide: {exc}", "error")
             return render_template("mission_create.html", form=request.form)
+        # Alerte les pilotes disponibles dont le rayon couvre la mission.
+        # Pas de diffusion pour une commande ciblee (forfait / pilote vise).
+        if not targeted_pilot_id:
+            try:
+                import mailer
+                full = services.get_mission(mission_id)
+                if full:
+                    recipients = services.pilots_for_mission_alert(
+                        full, exclude_user_id=g.user["id"])
+                    mailer.send_mission_alerts(recipients, full)
+            except Exception as exc:
+                log.warning("alertes mission %s echouees: %s", mission_id, exc)
         flash("Mission publiee.", "success")
         return redirect(url_for("mission_detail", mission_id=mission_id))
     target_pilot = None

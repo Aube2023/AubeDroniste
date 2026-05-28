@@ -499,6 +499,47 @@ def create_mission(client_user_id: int, **f) -> int:
     return cur.lastrowid
 
 
+def pilots_for_mission_alert(mission: dict, exclude_user_id: int = 0) -> list:
+    """Pilotes disponibles a prevenir qu'une mission vient d'etre publiee
+    dans leur rayon de deplacement. Inclut les pilotes acceptant les
+    missions hors zone (accepts_remote) quelle que soit la distance, et,
+    a defaut de coordonnees, ceux de la meme ville. Chaque pilote renvoye
+    porte un champ distance_km (None si la distance est inconnue), trie du
+    plus proche au plus loin."""
+    rows = db.fetchall(
+        "SELECT u.id, u.email, u.full_name, u.city, u.lat, u.lng, "
+        "       p.travel_radius_km, p.accepts_remote "
+        "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
+        "WHERE u.role IN ('pilot', 'both') AND p.is_available = 1 "
+        "  AND u.id != ?",
+        (exclude_user_id,),
+    )
+    m_lat, m_lng = mission.get("lat"), mission.get("lng")
+    m_city = (mission.get("city") or "").strip().lower()
+    out: list = []
+    for raw in rows:
+        r = dict(raw)
+        if not r.get("email"):
+            continue
+        dist = None
+        if (m_lat is not None and m_lng is not None
+                and r.get("lat") is not None and r.get("lng") is not None):
+            dist = round(db.haversine_km(m_lat, m_lng, r["lat"], r["lng"]), 1)
+        if r.get("accepts_remote"):
+            r["distance_km"] = dist
+            out.append(r)
+        elif dist is not None:
+            radius = r.get("travel_radius_km") or DEFAULT_SEARCH_RADIUS_KM
+            if dist <= radius:
+                r["distance_km"] = dist
+                out.append(r)
+        elif m_city and (r.get("city") or "").strip().lower() == m_city:
+            r["distance_km"] = None
+            out.append(r)
+    out.sort(key=lambda x: x["distance_km"] if x["distance_km"] is not None else 1e9)
+    return out
+
+
 def update_mission_status(mission_id: int, status: str):
     if status not in MISSION_STATUS:
         raise ValueError(f"statut invalide: {status}")

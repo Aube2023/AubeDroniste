@@ -1,0 +1,31 @@
+AUBEPILOT, NOUVELLE MISSION / NEW MISSION
+=========================================
+
+[FR]
+Une mission pres de vous, {{ pilot.full_name.split(' ')[0] }}.
+
+Une mission vient d'etre publiee{% if mission.city %} a {{ mission.city }}{% endif %}{% if distance_km is not none %}, a environ {{ distance_km|int }} km de votre base{% endif %}.
+Proposez votre devis avant les autres pilotes.
+
+Mission : {{ mission.title }}{% if mission.is_urgent %} (URGENT){% endif %}
+Type    : {{ mission_label(mission.mission_type) }}
+{% if mission.budget_min or mission.budget_max %}Budget  : {% if mission.budget_min and mission.budget_max %}{{ mission.budget_min|int }}-{{ mission.budget_max|int }}{% else %}{{ (mission.budget_min or mission.budget_max)|int }}{% endif %} {{ mission.currency }}
+{% endif %}
+Voir et proposer un devis : {{ site_url }}/missions/{{ mission.id }}
+
+Vous recevez cet email car votre profil pilote est disponible et la mission
+entre dans votre rayon. Mettez votre profil en pause pour ne plus etre alerte.
+
+L'equipage AubePilot
+
+------------------------------------------------------------
+
+[EN]
+A mission near you, {{ pilot.full_name.split(' ')[0] }}.
+
+A mission was just posted{% if mission.city %} in {{ mission.city }}{% endif %}{% if distance_km is not none %}, about {{ distance_km|int }} km from your base{% endif %}.
+Send your quote before the other pilots do.
+
+View and quote: {{ site_url }}/missions/{{ mission.id }}
+
+The AubePilot crew

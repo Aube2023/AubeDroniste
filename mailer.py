@@ -25,7 +25,7 @@ from datetime import datetime
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
 
-from flask import render_template
+from flask import current_app, render_template
 from jinja2 import TemplateNotFound
 
 import i18n
@@ -229,3 +229,36 @@ def send_pilot_stripe_required(pilot: dict, mission: dict, booking: dict,
         context={"pilot": pilot, "mission": mission, "booking": booking,
                  "client": client},
     )
+
+
+def send_mission_alerts(pilots: list, mission: dict, cap: int = 200) -> int:
+    """Previent les pilotes disponibles qu'une mission vient d'etre publiee
+    dans leur rayon. Tout part dans **un seul** thread de fond (contexte
+    d'app pousse a la main) : la requete HTTP n'attend ni le rendu ni le
+    SMTP, et on evite d'ouvrir un thread par destinataire.
+
+    `mission` ne doit contenir que des infos publiques (titre, ville,
+    budget) : l'identite du client reste anonyme avant tout paiement."""
+    pilots = [p for p in (pilots or []) if p.get("email")][:cap]
+    if not pilots:
+        return 0
+    app = current_app._get_current_object()
+
+    def _run():
+        with app.app_context():
+            for p in pilots:
+                try:
+                    send(
+                        to=p["email"],
+                        subject=f"Nouvelle mission / New mission, {mission['title']}",
+                        template="mission_alert",
+                        context={"pilot": p, "mission": mission,
+                                 "distance_km": p.get("distance_km")},
+                        async_=False,
+                    )
+                except Exception as exc:  # un envoi rate ne bloque pas les autres
+                    log.warning("alerte mission -> %s echouee: %s",
+                                p.get("email"), exc)
+
+    threading.Thread(target=_run, daemon=True).start()
+    return len(pilots)
