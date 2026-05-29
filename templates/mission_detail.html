@@ -122,7 +122,14 @@
   {% endif %}
 
   {% if bid_count == 0 %}
+    {% if not current_user %}
+    <p class="muted">Aucun devis pour le moment.
+      <a href="{{ url_for('login', next=request.path) }}">Connectez-vous pour répondre</a> en tant que pilote.</p>
+    {% elif can_bid %}
     <p class="muted">Aucun devis pour le moment. Soyez le premier pilote à répondre.</p>
+    {% else %}
+    <p class="muted">Aucun devis pour le moment.</p>
+    {% endif %}
   {% endif %}
 
   {% if is_client %}
