@@ -11,7 +11,6 @@
   <h1>{{ mission.title }}</h1>
   <div class="meta">
     {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
-    {% if mission.lat and mission.lng %} · {{ '%.4f'|format(mission.lat) }}, {{ '%.4f'|format(mission.lng) }}{% endif %}
     <br>
     Dépôt par {{ mission.client_name }} · {{ mission.created_at[:16] }}
   </div>

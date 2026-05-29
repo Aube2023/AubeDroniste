@@ -17,7 +17,6 @@
       <h1>{{ display_name }} {% if pilot.is_verified %}<span class="badge verified" style="vertical-align: middle;">vérifié</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
-        {% if reveal_identity and pilot.lat and pilot.lng %} · {{ '%.4f'|format(pilot.lat) }}, {{ '%.4f'|format(pilot.lng) }}{% endif %}
       </div>
       {% if not reveal_identity %}
       <p class="muted small mono" style="margin-top: 6px;">
