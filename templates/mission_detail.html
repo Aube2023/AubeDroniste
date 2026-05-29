@@ -219,6 +219,20 @@
       </form>
       {% endif %}
 
+      {% if b.status == 'accepted' and bookings_by_bid.get(b.id) %}
+      {% set bk = bookings_by_bid.get(b.id) %}
+      <div class="alert" style="margin-top: 14px; padding: 12px 14px; border-left: 3px solid var(--teal); background: rgba(30,122,106,.08);">
+        <div class="eyebrow" style="color: var(--teal);">Devis accepté</div>
+        <p style="margin: 6px 0 0;">
+          {% if bk.status == 'pending_payment' %}Réglez la mission pour la confirmer — les fonds restent en séquestre jusqu'à votre validation.
+          {% else %}Suivez l'avancement et validez la livraison depuis la réservation.{% endif %}
+        </p>
+        <a href="{{ url_for('booking_detail', booking_id=bk.id) }}" class="cta" style="margin-top: 12px;">
+          {% if bk.status == 'pending_payment' %}Régler la mission{% else %}Ouvrir la réservation #{{ bk.id }}{% endif %}
+        </a>
+      </div>
+      {% endif %}
+
       {# Discussion client <-> ce pilote #}
       {% set t = threads.get(b.pilot_user_id, []) %}
       <details style="margin-top: 14px;" {% if t %}open{% endif %}>
@@ -278,6 +292,27 @@
           {{ csrf_input() }}
         <button class="ghost" type="submit">Retirer mon devis</button>
       </form>
+      {% endif %}
+
+      {% if my_bid.status == 'accepted' %}
+      {% set my_booking = bookings_by_bid.get(my_bid.id) %}
+      <div class="alert" style="margin-top: 14px; padding: 12px 14px; border-left: 3px solid var(--teal); background: rgba(30,122,106,.08);">
+        <div class="eyebrow" style="color: var(--teal);">Devis accepté 🎉</div>
+        <p style="margin: 6px 0 0;">
+          Le client a retenu votre devis. {% if my_booking and my_booking.status == 'pending_payment' %}
+          Il doit maintenant <strong>régler la mission</strong> ; les fonds seront placés en séquestre et vous serez notifié pour démarrer.
+          {% elif my_booking %}
+          Suivez l'avancement et déposez vos livrables depuis la page de réservation.
+          {% else %}
+          La réservation est en cours de création.
+          {% endif %}
+        </p>
+        {% if my_booking %}
+        <a href="{{ url_for('booking_detail', booking_id=my_booking.id) }}" class="cta" style="margin-top: 12px;">
+          Ouvrir la réservation #{{ my_booking.id }}
+        </a>
+        {% endif %}
+      </div>
       {% endif %}
 
       {% if bid_revisions.get(my_bid.id) %}

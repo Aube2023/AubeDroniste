@@ -413,6 +413,19 @@ def mission_detail(mission_id):
         pilot_party,
     ])
 
+    # Reservation issue d'un devis accepte (pour lier vers le suivi de mission)
+    bookings_by_bid = {}
+    if is_client:
+        for b in all_bids:
+            if b["status"] == "accepted":
+                bk = services.get_booking_by_bid(b["id"])
+                if bk:
+                    bookings_by_bid[b["id"]] = bk
+    elif my_bid and my_bid["status"] == "accepted":
+        bk = services.get_booking_by_bid(my_bid["id"])
+        if bk:
+            bookings_by_bid[my_bid["id"]] = bk
+
     return render_template(
         "mission_detail.html",
         mission=mission,
@@ -423,6 +436,7 @@ def mission_detail(mission_id):
         bid_revisions=bid_revisions,
         threads=threads,
         french_only=french_only,
+        bookings_by_bid=bookings_by_bid,
     )
 
 

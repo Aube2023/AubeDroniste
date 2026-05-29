@@ -1454,3 +1454,28 @@ img.avatar { object-fit: cover; }
   color: var(--ink-faint);
   text-transform: uppercase;
 }
+
+/* ============ Paiement booking ============ */
+.pay-steps {
+  list-style: none; padding: 0; margin: 16px 0;
+  display: grid; gap: 10px;
+}
+.pay-steps li {
+  display: flex; align-items: center; gap: 12px;
+  font-size: .95rem; color: var(--ink-soft);
+}
+.pay-steps li span {
+  flex: 0 0 auto;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--paper-3); border: 1px solid var(--rule);
+  font: 700 13px/1 var(--mono); color: var(--amber);
+}
+.pay-recap {
+  background: var(--paper-3);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid; gap: 8px;
+}
+.pay-recap .row-between { font-size: .95rem; }

@@ -908,13 +908,27 @@ def get_booking(booking_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT b.*, m.title AS mission_title, m.mission_type, m.country, m.city, "
         "       m.start_date AS mission_start_date, m.end_date AS mission_end_date, "
-        "       cu.full_name AS client_name, pu.full_name AS pilot_name "
+        "       m.description AS mission_description, "
+        "       cu.full_name AS client_name, pu.full_name AS pilot_name, "
+        "       bd.description AS bid_description, bd.deliverables AS bid_deliverables, "
+        "       bd.terms AS bid_terms, bd.eta_hours AS bid_eta_hours, "
+        "       bd.message AS bid_message "
         "FROM bookings b "
         "JOIN missions m ON m.id=b.mission_id "
         "JOIN users cu ON cu.id=b.client_user_id "
         "JOIN users pu ON pu.id=b.pilot_user_id "
+        "LEFT JOIN bids bd ON bd.id=b.bid_id "
         "WHERE b.id=?",
         (booking_id,),
+    )
+    return dict(row) if row else None
+
+
+def get_booking_by_bid(bid_id: int) -> Optional[dict]:
+    """Reservation issue d'un devis (None si le devis n'a pas encore donne
+    lieu a une reservation)."""
+    row = db.fetchone(
+        "SELECT id, status FROM bookings WHERE bid_id=? LIMIT 1", (bid_id,)
     )
     return dict(row) if row else None
 

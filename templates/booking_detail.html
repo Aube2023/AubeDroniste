@@ -52,19 +52,72 @@
   </div>
 </div>
 
+{# ============ Détail du devis accepté ============ #}
+{% if booking.bid_description or booking.bid_deliverables or booking.bid_terms or booking.bid_message %}
+<div class="card">
+  <span class="eyebrow">Devis accepté</span>
+  <h2 style="font-size: 1.3rem; margin: 4px 0 14px;">Ce qui a été convenu avec {% if is_client %}{{ booking.pilot_name }}{% else %}le client{% endif %}</h2>
+
+  <div class="pay-recap" style="margin-bottom: 16px;">
+    <div class="row-between"><span class="muted">Prix convenu</span><strong>{{ booking.agreed_price|int }} {{ booking.currency }}</strong></div>
+    {% if booking.bid_eta_hours %}<div class="row-between"><span class="muted">Délai estimé</span><span>{{ booking.bid_eta_hours }} h</span></div>{% endif %}
+  </div>
+
+  {% if booking.bid_description %}
+  <div style="margin-top: 12px;">
+    <div class="eyebrow">Prestation</div>
+    <p style="margin: 6px 0 0; white-space: pre-line;">{{ booking.bid_description }}</p>
+  </div>
+  {% endif %}
+  {% if booking.bid_deliverables %}
+  <div style="margin-top: 14px;">
+    <div class="eyebrow">Livrables</div>
+    <p style="margin: 6px 0 0; white-space: pre-line;">{{ booking.bid_deliverables }}</p>
+  </div>
+  {% endif %}
+  {% if booking.bid_terms %}
+  <div style="margin-top: 14px;">
+    <div class="eyebrow">Conditions / détails techniques</div>
+    <p style="margin: 6px 0 0; white-space: pre-line;">{{ booking.bid_terms }}</p>
+  </div>
+  {% endif %}
+  {% if booking.bid_message %}
+  <p class="serif-italic" style="margin-top: 16px; color: var(--ink-soft);">« {{ booking.bid_message }} »</p>
+  {% endif %}
+</div>
+{% endif %}
+
 {# ============ Boutons d'action contextuels ============ #}
 
 {% if booking.status == 'pending_payment' and is_client %}
 <div class="card" style="border-left: 3px solid var(--amber);">
-  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">Action requise, Régler la mission</h2>
-  <p class="muted">
-    Votre offre est acceptée. Pour confirmer la réservation, payez la mission. Les fonds restent en escrow chez AubePilot jusqu'à votre validation finale.
+  <span class="eyebrow">Dernière étape</span>
+  <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Réglez la mission pour la confirmer</h2>
+  <p class="muted" style="max-width: 60ch;">
+    Votre devis est accepté. Le paiement est <strong>sécurisé</strong> : vos fonds
+    sont conservés en <strong>séquestre (escrow)</strong> par AubePilot et ne sont
+    versés au pilote qu'<strong>après votre validation</strong> de la livraison.
   </p>
-  <div class="cta-row">
-    <a href="{{ url_for('booking_pay', booking_id=booking.id) }}" class="cta cta-big">⚡ Payer {{ booking.agreed_price|int }} {{ booking.currency }}</a>
-    {% if stripe_mode == 'FAKE' %}
-    <span class="muted small mono" style="align-self: center;">Mode démo · Stripe non configuré</span>
-    {% endif %}
+
+  <ol class="pay-steps">
+    <li><span>1</span> Vous payez — les fonds sont bloqués en séquestre</li>
+    <li><span>2</span> Le pilote réalise la mission et livre les fichiers</li>
+    <li><span>3</span> Vous validez — le pilote est payé{% if booking.agreed_price %}, sinon vous êtes remboursé{% endif %}</li>
+  </ol>
+
+  <div class="pay-recap">
+    <div class="row-between"><span class="muted">Montant de la mission</span><strong>{{ booking.agreed_price|int }} {{ booking.currency }}</strong></div>
+    <div class="row-between"><span class="muted">Conservé en séquestre</span><span>{{ booking.agreed_price|int }} {{ booking.currency }}</span></div>
+  </div>
+
+  <div class="cta-row" style="margin-top: 18px;">
+    <a href="{{ url_for('booking_pay', booking_id=booking.id) }}" class="cta cta-big">
+      Payer {{ booking.agreed_price|int }} {{ booking.currency }}
+    </a>
+    <span class="muted small" style="align-self: center;">
+      🔒 Paiement sécurisé via Stripe
+      {% if stripe_mode == 'TEST' %} · mode test{% elif stripe_mode == 'FAKE' %} · mode démo{% endif %}
+    </span>
   </div>
 </div>
 {% endif %}
