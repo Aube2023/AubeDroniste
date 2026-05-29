@@ -1294,6 +1294,24 @@ def booking_detail(booking_id):
     )
 
 
+@app.route("/reservations/<int:booking_id>/devis.pdf")
+@auth.login_required
+def booking_devis_pdf(booking_id):
+    booking = services.get_booking(booking_id)
+    if not booking:
+        abort(404)
+    if g.user["id"] not in (booking["client_user_id"], booking["pilot_user_id"]):
+        abort(403)
+    import pdfgen
+    pdf = pdfgen.devis_pdf(booking, _mission_label(booking.get("mission_type") or ""))
+    resp = make_response(pdf)
+    resp.headers["Content-Type"] = "application/pdf"
+    resp.headers["Content-Disposition"] = (
+        f'attachment; filename="devis-AP-{booking_id}.pdf"'
+    )
+    return resp
+
+
 @app.route("/reservations/<int:booking_id>/statut", methods=["POST"])
 @auth.login_required
 def booking_status(booking_id):

@@ -84,6 +84,10 @@
   {% if booking.bid_message %}
   <p class="serif-italic" style="margin-top: 16px; color: var(--ink-soft);">« {{ booking.bid_message }} »</p>
   {% endif %}
+
+  <div style="margin-top: 18px;">
+    <a href="{{ url_for('booking_devis_pdf', booking_id=booking.id) }}" class="ghost">⬇ Télécharger le devis (PDF)</a>
+  </div>
 </div>
 {% endif %}
 
