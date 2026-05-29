@@ -32,15 +32,10 @@
     <label>Note minimale
       <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
     </label>
-    <label>Rayon (km)
-      <input name="radius_km" type="number" min="1" max="500" value="{{ params.radius_km }}">
-    </label>
-    <label>Latitude<input name="lat" type="number" step="any" value="{{ params.lat or '' }}"></label>
-    <label>Longitude<input name="lng" type="number" step="any" value="{{ params.lng or '' }}"></label>
     <label class="check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> Disponibles uniquement</label>
   </div>
   <div class="row-between" style="margin-top: 20px;">
-    <button type="button" class="ghost" onclick="useMyLocation()">⌖ Pré-remplir avec ma position</button>
+    <span></span>
     <button class="cta" type="submit">Filtrer</button>
   </div>
 </form>
@@ -52,7 +47,6 @@
     <div class="strip">
       <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
-        {% if p.distance_km is not none %}≈ {{ p.distance_km }} km · {% endif %}
         {% if p.rating.count %}{{ p.rating.count }} avis{% else %}nouveau{% endif %}
       </span>
     </div>
@@ -77,7 +71,7 @@
   </a>
   {% else %}
     <div class="card" style="grid-column: 1/-1;">
-      <p class="muted">Aucun pilote ne correspond. Essayez d'élargir le rayon ou de retirer un filtre.</p>
+      <p class="muted">Aucun pilote ne correspond. Essayez de retirer un filtre.</p>
     </div>
   {% endfor %}
 </div>

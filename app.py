@@ -145,7 +145,19 @@ def _inject_globals():
         # CSRF
         "csrf_token": security.csrf_token,
         "csrf_input": security.csrf_input,
+        # Cache-busting des assets statiques (?v=<mtime>)
+        "static_v": _static_v,
     }
+
+
+def _static_v(filename: str) -> str:
+    """URL d'un asset statique avec un suffixe ?v=<mtime> pour casser le cache navigateur."""
+    url = url_for("static", filename=filename)
+    try:
+        path = os.path.join(app.static_folder or "static", filename)
+        return f"{url}?v={int(os.path.getmtime(path))}"
+    except OSError:
+        return url
 
 
 def _label(pairs, code, fallback=""):
@@ -283,9 +295,6 @@ def pilots_search():
         "mission_type": request.args.get("mission_type", "").strip(),
         "capability": request.args.get("capability", "").strip(),
         "min_rating": _to_float(request.args.get("min_rating"), 0) or 0,
-        "lat": _to_float(request.args.get("lat")),
-        "lng": _to_float(request.args.get("lng")),
-        "radius_km": _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
         "only_available": _to_bool(request.args.get("only_available", "1")),
     }
     pilots = services.search_pilots(**params)
