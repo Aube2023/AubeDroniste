@@ -305,10 +305,8 @@ def pilots_search():
 def missions_search():
     params = {
         "country": request.args.get("country", "").strip(),
+        "city": request.args.get("city", "").strip(),
         "mission_type": request.args.get("mission_type", "").strip(),
-        "lat": _to_float(request.args.get("lat")),
-        "lng": _to_float(request.args.get("lng")),
-        "radius_km": _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
         "only_urgent": _to_bool(request.args.get("only_urgent", "0")),
     }
     missions = services.search_missions(status="open", **params)
@@ -1742,6 +1740,7 @@ def api_pilots():
 def api_missions():
     missions = services.search_missions(
         country=request.args.get("country", "").strip(),
+        city=request.args.get("city", "").strip(),
         mission_type=request.args.get("mission_type", "").strip(),
         status=request.args.get("status", "open"),
         lat=_to_float(request.args.get("lat")),

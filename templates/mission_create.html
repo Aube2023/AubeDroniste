@@ -47,7 +47,7 @@
 
     <section class="numbered-section">
       <h3>Localisation</h3>
-      <p class="muted">Le pays sert au filtrage. Les coordonnées GPS aident les pilotes à estimer leur déplacement.</p>
+      <p class="muted">Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.</p>
       <div class="grid-2">
         <label>Pays
           <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Maroc">
@@ -62,13 +62,6 @@
         <label>Adresse / point de RDV
           <input name="address" value="{{ form.get('address','') }}" placeholder="Riad Yasmine, Médina">
         </label>
-      </div>
-      <div class="geo-row">
-        <div class="geo-input grid-2">
-          <label>Latitude<input name="lat" type="number" step="any" value="{{ form.get('lat','') }}" placeholder="31.6295"></label>
-          <label>Longitude<input name="lng" type="number" step="any" value="{{ form.get('lng','') }}" placeholder="-7.9811"></label>
-        </div>
-        <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
       </div>
     </section>
 

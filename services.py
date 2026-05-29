@@ -563,7 +563,7 @@ def get_mission(mission_id: int) -> Optional[dict]:
     return out
 
 
-def search_missions(*, country: str = "", mission_type: str = "",
+def search_missions(*, country: str = "", city: str = "", mission_type: str = "",
                     status: str = "open", lat: Optional[float] = None,
                     lng: Optional[float] = None,
                     radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
@@ -580,6 +580,9 @@ def search_missions(*, country: str = "", mission_type: str = "",
     if country:
         q.append("AND m.country=?")
         args.append(country)
+    if city:
+        q.append("AND lower(m.city) LIKE ?")
+        args.append(f"%{city.lower()}%")
     if mission_type:
         q.append("AND m.mission_type=?")
         args.append(mission_type)

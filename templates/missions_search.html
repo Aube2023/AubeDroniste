@@ -22,13 +22,11 @@
         {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
       </select>
     </label>
-    <label>Rayon (km)<input name="radius_km" type="number" min="1" max="500" value="{{ params.radius_km }}"></label>
-    <label>Latitude<input name="lat" type="number" step="any" value="{{ params.lat or '' }}"></label>
-    <label>Longitude<input name="lng" type="number" step="any" value="{{ params.lng or '' }}"></label>
+    <label>Ville<input name="city" value="{{ params.city }}" placeholder="ex. Marrakech"></label>
     <label class="check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> Urgent uniquement</label>
   </div>
   <div class="row-between" style="margin-top: 20px;">
-    <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
+    <span></span>
     <button class="cta" type="submit">Filtrer</button>
   </div>
 </form>
@@ -43,7 +41,6 @@
     <h3>{{ m.title }}</h3>
     <div class="coords">
       {{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}
-      {% if m.distance_km is not none %} · ≈ {{ m.distance_km }} km{% endif %}
     </div>
     <div class="excerpt">{{ m.description[:140] }}{% if m.description|length > 140 %}…{% endif %}</div>
     <div class="footer">
