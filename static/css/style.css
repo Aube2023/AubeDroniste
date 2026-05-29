@@ -42,27 +42,29 @@
 }
 
 [data-theme="dark"] {
-  --paper:        #080a12;
-  --paper-2:      #111422;
-  --paper-3:      #1a1e30;
-  --rule:         #272c40;
-  --rule-soft:    #1b1f30;
+  /* Surfaces noires neutres (pas de teinte bleue) */
+  --paper:        #0a0a0c;
+  --paper-2:      #131316;
+  --paper-3:      #1c1c20;
+  --rule:         #28282d;
+  --rule-soft:    #1d1d20;
 
-  --ink:          #e9eaf2;
-  --ink-soft:     #b4b8cc;
-  --ink-dim:      #7e83a0;
-  --ink-faint:    #50546e;
+  --ink:          #ededeb;
+  --ink-soft:     #b8b8b3;
+  --ink-dim:      #828287;
+  --ink-faint:    #535358;
 
+  /* Accent indigo/violet conservé pour la cohérence avec le clair */
   --amber:        #8b9cf0;
   --amber-soft:   #aab8f7;
   --teal:         #4ec0a6;
   --signal:       #e3584a;
   --gold:         #b39ee8;
 
-  --cta-fg:       #080a12;
-  --topbar-bg:    rgba(8,10,18,0.80);
+  --cta-fg:       #0a0a0c;
+  --topbar-bg:    rgba(10,10,12,0.80);
   --tag-bg:       rgba(255,255,255,0.02);
-  --grid-line:    rgba(170,184,247,0.05);
+  --grid-line:    rgba(237,237,235,0.035);
 }
 
 * { box-sizing: border-box; }

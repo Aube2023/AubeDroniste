@@ -330,7 +330,29 @@ def pilot_detail(user_id):
         masked_name=services.mask_full_name(profile["full_name"]),
         packages=services.list_pilot_packages(user_id, only_active=True),
         portfolio=services.list_portfolio_items(user_id),
+        my_review_booking=services.reviewable_booking_for(viewer_id, user_id),
     )
+
+
+@app.route("/pilotes/<int:user_id>/avis", methods=["POST"])
+@auth.login_required
+def pilot_review(user_id):
+    profile = services.get_pilot_profile(user_id)
+    if not profile or profile.get("role") not in ("pilot", "both"):
+        abort(404)
+    booking = services.reviewable_booking_for(g.user["id"], user_id)
+    if not booking:
+        flash("Vous ne pouvez laisser un avis qu'après une mission réalisée avec ce pilote.", "error")
+        return redirect(url_for("pilot_detail", user_id=user_id))
+    services.add_review(
+        booking_id=booking["id"],
+        author_user_id=g.user["id"],
+        target_user_id=user_id,
+        rating=_to_int(request.form.get("rating"), 5) or 5,
+        comment=(request.form.get("comment") or "").strip(),
+    )
+    flash("Merci pour votre avis.", "success")
+    return redirect(url_for("pilot_detail", user_id=user_id) + "#avis")
 
 
 @app.route("/missions/<int:mission_id>")

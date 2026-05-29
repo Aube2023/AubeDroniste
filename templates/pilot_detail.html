@@ -253,9 +253,37 @@
 </section>
 {% endif %}
 
-<section class="card">
+<section class="card" id="avis">
   <span class="eyebrow">Retours d'expérience</span>
   <h2 style="font-size: 1.6rem; margin: 4px 0 18px;">Avis des clients</h2>
+
+  {% if my_review_booking %}
+  <form method="post" action="{{ url_for('pilot_review', user_id=pilot.id) }}"
+        class="card" style="background: var(--paper-3); margin: 0 0 22px;">
+    {{ csrf_input() }}
+    <strong>{% if my_review_booking.my_rating %}Modifier votre avis{% else %}Laisser un avis{% endif %}</strong>
+    <p class="muted small" style="margin: 4px 0 14px;">
+      Vous avez réalisé une mission avec ce pilote — partagez votre retour.
+    </p>
+    <label>Note
+      <select name="rating">
+        {% for n in [5, 4, 3, 2, 1] %}
+        <option value="{{ n }}" {% if (my_review_booking.my_rating or 5) == n %}selected{% endif %}>
+          {{ '★' * n }}{{ '☆' * (5 - n) }} · {{ n }}/5
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Commentaire
+      <textarea name="comment" rows="3" maxlength="1000"
+                placeholder="Ponctualité, qualité des images, professionnalisme…">{{ my_review_booking.my_comment or '' }}</textarea>
+    </label>
+    <div style="margin-top: 14px;">
+      <button class="cta" type="submit">{% if my_review_booking.my_rating %}Mettre à jour{% else %}Publier mon avis{% endif %}</button>
+    </div>
+  </form>
+  {% endif %}
+
   {% for r in reviews %}
   <div class="review-quote">
     <div class="stars">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>

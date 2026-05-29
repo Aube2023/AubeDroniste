@@ -1106,6 +1106,29 @@ def reviews_for(user_id: int, limit: int = 20) -> list:
     return [dict(r) for r in rows]
 
 
+def reviewable_booking_for(client_user_id: int, pilot_user_id: int) -> Optional[dict]:
+    """Retourne une reservation reelle (escrow finance) entre ce client et ce
+    pilote, sur laquelle le client peut deposer/modifier un avis — sinon None.
+
+    Le seul fait de pouvoir commenter prouve qu'on a deja travaille avec le
+    pilote. On privilegie une reservation pas encore notee ; si toutes le sont
+    deja, on renvoie la plus recente avec l'avis existant (rating/comment) pour
+    permettre la modification.
+    """
+    if not client_user_id or not pilot_user_id or client_user_id == pilot_user_id:
+        return None
+    row = db.fetchone(
+        "SELECT b.id, b.status, r.rating AS my_rating, r.comment AS my_comment "
+        "FROM bookings b "
+        "LEFT JOIN reviews r ON r.booking_id=b.id AND r.author_user_id=? "
+        "WHERE b.pilot_user_id=? AND b.client_user_id=? "
+        "  AND b.status IN ('funded','in_progress','completed','disputed') "
+        "ORDER BY (r.id IS NOT NULL), b.created_at DESC LIMIT 1",
+        (client_user_id, pilot_user_id, client_user_id),
+    )
+    return dict(row) if row else None
+
+
 # ---------------------------------------------------------------------------
 # Messagerie
 # ---------------------------------------------------------------------------
