@@ -91,6 +91,27 @@ def init_schema(schema_path: str):
         c.executescript(sql)
 
 
+def _column_exists(conn, table: str, column: str) -> bool:
+    cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+    return column in cols
+
+
+# Migrations additives idempotentes : ajoutent les colonnes manquantes sur une
+# base existante (CREATE TABLE IF NOT EXISTS ne modifie pas une table deja la).
+_ADD_COLUMNS = [
+    ("pilot_profiles", "business_name", "TEXT"),
+]
+
+
+def run_migrations():
+    """Applique les ALTER TABLE manquants. Sûr a lancer a chaque demarrage."""
+    with standalone() as c:
+        for table, column, decl in _ADD_COLUMNS:
+            if not _column_exists(c, table, column):
+                c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+                log.info("migration: %s.%s ajoutee", table, column)
+
+
 def _timed(query: str, params: Iterable, action):
     """Helper : execute `action()` et logue si > SLOW_QUERY_MS."""
     t0 = time.monotonic()

@@ -105,7 +105,9 @@
   </div>
 
   <h2>Présentation</h2>
-  <label>Accroche courte<input name="headline" value="{{ profile.headline or '' }}" maxlength="120"></label>
+  <label>Marque / société (raison sociale)<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="ex. SkyVision Drone, ou votre nom"></label>
+  <p class="hint" style="margin-top:-6px;color:var(--ink-dim);font-size:13px;">Affichée en en-tête de vos devis PDF (avec votre logo/photo). Laissez vide pour utiliser votre nom complet.</p>
+  <label>Accroche courte<input name="headline" value="{{ profile.headline or '' }}" maxlength="120" placeholder="ex. Prises de vue aériennes & inspections"></label>
   <label>Bio<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
 
   <h2>Tarifs & disponibilité</h2>

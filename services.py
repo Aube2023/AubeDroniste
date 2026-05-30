@@ -45,7 +45,7 @@ def row_to_dict(row) -> Optional[dict]:
 def upsert_pilot_profile(user_id: int, **fields) -> Optional[dict]:
     existing = db.fetchone("SELECT 1 FROM pilot_profiles WHERE user_id=?", (user_id,))
     allowed = {
-        "headline", "years_experience", "hourly_rate", "daily_rate",
+        "headline", "business_name", "years_experience", "hourly_rate", "daily_rate",
         "currency", "travel_radius_km", "accepts_remote", "insurance",
         "insurance_company", "insurance_policy", "is_available",
         "languages", "portfolio_url", "accepts_urgent",
@@ -110,7 +110,7 @@ def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
 
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
-        "SELECT u.*, p.headline, p.years_experience, p.hourly_rate, p.daily_rate, "
+        "SELECT u.*, p.headline, p.business_name, p.years_experience, p.hourly_rate, p.daily_rate, "
         "p.currency AS p_currency, p.travel_radius_km, p.accepts_remote, p.insurance, "
         "p.insurance_company, p.insurance_policy, p.is_available, p.languages, "
         "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at "
@@ -909,7 +909,12 @@ def get_booking(booking_id: int) -> Optional[dict]:
         "SELECT b.*, m.title AS mission_title, m.mission_type, m.country, m.city, "
         "       m.start_date AS mission_start_date, m.end_date AS mission_end_date, "
         "       m.description AS mission_description, "
-        "       cu.full_name AS client_name, pu.full_name AS pilot_name, "
+        "       cu.full_name AS client_name, cu.city AS client_city, "
+        "       cu.country AS client_country, "
+        "       pu.full_name AS pilot_name, pu.avatar_path AS pilot_avatar, "
+        "       pu.email AS pilot_email, pu.phone AS pilot_phone, "
+        "       pp.business_name AS pilot_business_name, pp.headline AS pilot_headline, "
+        "       pp.portfolio_url AS pilot_portfolio_url, "
         "       bd.description AS bid_description, bd.deliverables AS bid_deliverables, "
         "       bd.terms AS bid_terms, bd.eta_hours AS bid_eta_hours, "
         "       bd.message AS bid_message "
@@ -917,6 +922,7 @@ def get_booking(booking_id: int) -> Optional[dict]:
         "JOIN missions m ON m.id=b.mission_id "
         "JOIN users cu ON cu.id=b.client_user_id "
         "JOIN users pu ON pu.id=b.pilot_user_id "
+        "LEFT JOIN pilot_profiles pp ON pp.user_id=b.pilot_user_id "
         "LEFT JOIN bids bd ON bd.id=b.bid_id "
         "WHERE b.id=?",
         (booking_id,),

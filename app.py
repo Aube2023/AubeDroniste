@@ -91,6 +91,7 @@ def bootstrap_db():
 with app.app_context():
     if not os.path.exists(db.DB_PATH):
         bootstrap_db()
+    db.run_migrations()
 
 
 # ---------------------------------------------------------------------------
@@ -583,6 +584,7 @@ def pilot_edit():
         services.upsert_pilot_profile(
             user["id"],
             headline=(request.form.get("headline") or "").strip() or None,
+            business_name=(request.form.get("business_name") or "").strip() or None,
             years_experience=_to_int(request.form.get("years_experience"), 0),
             hourly_rate=_to_float(request.form.get("hourly_rate")),
             daily_rate=_to_float(request.form.get("daily_rate")),

@@ -30,6 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
 CREATE TABLE IF NOT EXISTS pilot_profiles (
     user_id           INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     headline          TEXT,                       -- accroche courte
+    business_name     TEXT,                       -- marque / raison sociale (mise en avant sur le devis)
     years_experience  INTEGER NOT NULL DEFAULT 0,
     hourly_rate       REAL,                       -- tarif horaire
     daily_rate        REAL,                       -- tarif journee
