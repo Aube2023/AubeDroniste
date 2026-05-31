@@ -3,25 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}AubePilot, {{ 'Le réseau international des pilotes de drone' if lang == 'fr' else 'The global drone-pilot network' }}{% endblock %}</title>
-  <meta name="description" content="{{ 'AubePilot met en relation pilotes certifiés et clients partout dans le monde.' if lang == 'fr' else 'AubePilot connects certified drone pilots and clients worldwide.' }}">
-  <link rel="alternate" hreflang="fr" href="/lang/fr">
-  <link rel="alternate" hreflang="en" href="/lang/en">
+  {% set _seo = seo or {} %}
+  {% set _title = _seo.title or ('AubePilot — Louez un pilote de drone certifié | Devis gratuits' if lang == 'fr' else 'AubePilot — Hire a Certified Drone Pilot | Free Quotes') %}
+  {% set _desc = _seo.description or ('Trouvez et réservez un pilote de drone certifié : prises de vue aériennes, inspections, mariages, immobilier. Devis gratuits, paiement sécurisé.' if lang == 'fr' else 'Find and book a certified drone pilot for aerial photography, inspections and events. Free quotes, secure escrow payments.') %}
+  {% set _ogimg = _seo.og_image or (canonical_base ~ url_for('static', filename='brand/og-image.png')) %}
+  {% set _url = canonical_base ~ request.path %}
+  <title>{% block title %}{{ _title }}{% endblock %}</title>
+  <meta name="description" content="{{ _desc }}">
+  <link rel="canonical" href="{{ _url }}">
+  <meta name="robots" content="{{ _seo.robots or 'index, follow, max-image-preview:large, max-snippet:-1' }}">
+  <link rel="alternate" hreflang="fr" href="{{ _url }}">
+  <link rel="alternate" hreflang="en" href="{{ _url }}">
+  <link rel="alternate" hreflang="x-default" href="{{ _url }}">
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand/favicon.svg') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='brand/favicon.ico') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='brand/icon-180x180.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='brand/manifest.json') }}">
-  <meta name="theme-color" content="#c4633f">
+  <meta name="theme-color" content="#0a0a0c">
 
-  <meta property="og:title" content="Aube Pilot, {{ 'Le réseau international des pilotes de drone' if lang == 'fr' else 'The global drone-pilot network' }}">
-  <meta property="og:description" content="{{ 'Aube Pilot met en relation pilotes certifiés et clients partout dans le monde.' if lang == 'fr' else 'Aube Pilot connects certified drone pilots and clients worldwide.' }}">
-  <meta property="og:image" content="https://pilot.aubeetoilee.com{{ url_for('static', filename='brand/og-image.png') }}">
-  <meta property="og:url" content="https://pilot.aubeetoilee.com{{ request.path }}">
-  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AubePilot">
+  <meta property="og:title" content="{{ _title }}">
+  <meta property="og:description" content="{{ _desc }}">
+  <meta property="og:image" content="{{ _ogimg }}">
+  <meta property="og:url" content="{{ _url }}">
+  <meta property="og:type" content="{{ _seo.og_type or 'website' }}">
+  <meta property="og:locale" content="{{ 'fr_FR' if lang == 'fr' else 'en_US' }}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://pilot.aubeetoilee.com{{ url_for('static', filename='brand/og-image.png') }}">
+  <meta name="twitter:title" content="{{ _title }}">
+  <meta name="twitter:description" content="{{ _desc }}">
+  <meta name="twitter:image" content="{{ _ogimg }}">
+
+  {# Donnees structurees schema.org (rich results / sitelinks) #}
+  {% for ld in (seo_global or []) %}<script type="application/ld+json">{{ ld | tojson }}</script>
+  {% endfor %}{% for ld in (_seo.jsonld or []) %}<script type="application/ld+json">{{ ld | tojson }}</script>
+  {% endfor %}
   <script>
     // Anti-FOUC : applique le thème avant le rendu
     (function () {
@@ -119,7 +136,7 @@
       <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span> Pilot</a>
     </nav>
   </section>
-  <nav class="footer-legal" aria-label="Mentions légales" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--ink-dim-bg, rgba(0,0,0,.08)); display: flex; flex-wrap: wrap; gap: 18px; font-size: .85rem;">
+  <nav class="footer-legal" aria-label="Mentions légales" style="max-width: 1240px; margin: 0 auto; padding: 16px 32px 4px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 18px 22px; font-size: .85rem;">
     <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>
     <a href="{{ url_for('page_terms') }}" class="muted">{{ t('footer.terms') }}</a>

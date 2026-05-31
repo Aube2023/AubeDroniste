@@ -18,6 +18,7 @@ import db
 import i18n
 import payments
 import security
+import seo
 import services
 from config import (
     ALLOWED_DOC_EXT,
@@ -148,6 +149,10 @@ def _inject_globals():
         "csrf_input": security.csrf_input,
         # Cache-busting des assets statiques (?v=<mtime>)
         "static_v": _static_v,
+        # SEO : base canonique + JSON-LD globaux (Organization + WebSite)
+        "canonical_base": seo.CANONICAL_BASE,
+        "seo_global": seo.global_ld(getattr(g, "lang", i18n.DEFAULT)),
+        "seo": {},   # defaut ; surcharge par page via render_template(seo=...)
     }
 
 
@@ -244,7 +249,45 @@ def index():
         featured_pilots=services.featured_pilots(8),
         latest_missions=services.latest_missions(8),
         country_breakdown=services.country_breakdown(12),
+        seo=seo.home(getattr(g, "lang", i18n.DEFAULT)),
     )
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    lines = ["User-agent: *", "Allow: /$", "Allow: /"]
+    lines += [f"Disallow: {d}" for d in seo.ROBOTS_DISALLOW]
+    lines.append("")
+    lines.append(f"Sitemap: {seo.CANONICAL_BASE}/sitemap.xml")
+    resp = make_response("\n".join(lines) + "\n")
+    resp.headers["Content-Type"] = "text/plain; charset=utf-8"
+    return resp
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    base = seo.CANONICAL_BASE
+    entries = [(base + path, "", prio, freq) for path, prio, freq in seo.PUBLIC_ROUTES]
+    for p in services.sitemap_pilots():
+        entries.append((f"{base}/pilotes/{p['id']}",
+                        str(p.get("lastmod") or "")[:10], "0.7", "weekly"))
+    for m in services.sitemap_missions():
+        entries.append((f"{base}/missions/{m['id']}",
+                        str(m.get("lastmod") or "")[:10], "0.6", "weekly"))
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, lastmod, prio, freq in entries:
+        xml.append("  <url>")
+        xml.append(f"    <loc>{loc}</loc>")
+        if lastmod:
+            xml.append(f"    <lastmod>{lastmod}</lastmod>")
+        xml.append(f"    <changefreq>{freq}</changefreq>")
+        xml.append(f"    <priority>{prio}</priority>")
+        xml.append("  </url>")
+    xml.append("</urlset>")
+    resp = make_response("\n".join(xml))
+    resp.headers["Content-Type"] = "application/xml; charset=utf-8"
+    return resp
 
 
 # ---------------------------------------------------------------------------
@@ -297,9 +340,13 @@ def pilots_search():
         "capability": request.args.get("capability", "").strip(),
         "min_rating": _to_float(request.args.get("min_rating"), 0) or 0,
         "only_available": _to_bool(request.args.get("only_available", "1")),
+        "text": request.args.get("q", "").strip(),
     }
     pilots = services.search_pilots(**params)
-    return render_template("pilots_search.html", pilots=pilots, params=params)
+    return render_template(
+        "pilots_search.html", pilots=pilots, params=params,
+        seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
+    )
 
 
 @app.route("/missions")
@@ -311,7 +358,10 @@ def missions_search():
         "only_urgent": _to_bool(request.args.get("only_urgent", "0")),
     }
     missions = services.search_missions(status="open", **params)
-    return render_template("missions_search.html", missions=missions, params=params)
+    return render_template(
+        "missions_search.html", missions=missions, params=params,
+        seo=seo.missions_list(getattr(g, "lang", i18n.DEFAULT)),
+    )
 
 
 @app.route("/pilotes/<int:user_id>")
@@ -322,16 +372,29 @@ def pilot_detail(user_id):
     viewer_id = (g.user["id"] if getattr(g, "user", None) else 0)
     reveal = services.has_funded_relation(viewer_id, user_id)
     can_view_credentials = services.client_can_view_pilot_credentials(viewer_id, user_id)
+    masked = services.mask_full_name(profile["full_name"])
+    # Nom public (masque sauf relation financee), conforme a l'affichage page
+    public_name = profile["full_name"] if reveal else masked
+    avatar = profile.get("avatar_path") or ""
+    avatar_url = (seo.CANONICAL_BASE + "/media/" + avatar[8:]) if avatar.startswith("uploads/") else None
+    page_seo = seo.pilot_profile(
+        getattr(g, "lang", i18n.DEFAULT),
+        name=public_name, city=profile.get("city") or "",
+        country=profile.get("country") or "",
+        headline=profile.get("headline") or "", bio=profile.get("bio") or "",
+        rating=services.pilot_rating(user_id), image=avatar_url, user_id=user_id,
+    )
     return render_template(
         "pilot_detail.html",
         pilot=profile,
         reviews=services.reviews_for(user_id),
         reveal_identity=reveal,
         can_view_credentials=can_view_credentials,
-        masked_name=services.mask_full_name(profile["full_name"]),
+        masked_name=masked,
         packages=services.list_pilot_packages(user_id, only_active=True),
         portfolio=services.list_portfolio_items(user_id),
         my_review_booking=services.reviewable_booking_for(viewer_id, user_id),
+        seo=page_seo,
     )
 
 
@@ -427,6 +490,11 @@ def mission_detail(mission_id):
         if bk:
             bookings_by_bid[my_bid["id"]] = bk
 
+    mission_seo = seo.mission_posting(
+        getattr(g, "lang", i18n.DEFAULT), mission=mission,
+        mission_type_label=_mission_label(mission.get("mission_type") or ""),
+        url=f"{seo.CANONICAL_BASE}/missions/{mission_id}",
+    )
     return render_template(
         "mission_detail.html",
         mission=mission,
@@ -438,6 +506,7 @@ def mission_detail(mission_id):
         threads=threads,
         french_only=french_only,
         bookings_by_bid=bookings_by_bid,
+        seo=mission_seo,
     )
 
 

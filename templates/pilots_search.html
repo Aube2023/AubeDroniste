@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Pilotes · AubePilot{% endblock %}
 {% block content %}
 
 <div style="margin-bottom: 24px;">
@@ -9,6 +8,10 @@
 </div>
 
 <form method="get" class="filters card">
+  <label>{{ 'Rechercher un pilote' if lang == 'fr' else 'Search for a pilot' }}
+    <input name="q" value="{{ params.text }}" type="search"
+           placeholder="{{ 'Nom, ville, spécialité…' if lang == 'fr' else 'Name, city, specialty…' }}">
+  </label>
   <div class="grid-3">
     <label>Pays
       <select name="country">

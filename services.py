@@ -384,13 +384,14 @@ def delete_drone(drone_id: int, owner_user_id: int) -> bool:
 # ---------------------------------------------------------------------------
 
 def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
-                  capability: str = "", lat: Optional[float] = None,
+                  capability: str = "", text: str = "", lat: Optional[float] = None,
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
                   limit: int = 50) -> list:
     # PERF : on JOIN un agregat de reviews dans la requete principale au
     # lieu d'appeler pilot_rating() N fois en Python (avant : 1 + N requetes,
     # maintenant : 1 seule).
+    _text = (text or "").strip().lower()   # recherche libre (search box / ?q=)
     q = [
         "SELECT u.id, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
         "       u.is_verified, u.avatar_path, u.bio, "
@@ -432,6 +433,14 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
             "             WHERE d.pilot_user_id=u.id AND ',' || d.capabilities || ',' LIKE ?)"
         )
         args.append(f"%,{capability},%")
+    if _text:
+        like = f"%{_text}%"
+        q.append(
+            "AND (lower(u.full_name) LIKE ? OR lower(u.city) LIKE ? "
+            "OR lower(u.country) LIKE ? OR lower(COALESCE(p.headline,'')) LIKE ? "
+            "OR lower(COALESCE(p.business_name,'')) LIKE ?)"
+        )
+        args.extend([like, like, like, like, like])
     if min_rating > 0:
         # filtre note minimum directement en SQL (LEFT JOIN garantit 0 si pas de reviews)
         q.append("AND COALESCE(r.avg_rating, 0.0) >= ?")
@@ -547,6 +556,29 @@ def update_mission_status(mission_id: int, status: str):
         "UPDATE missions SET status=?, updated_at=datetime('now') WHERE id=?",
         (status, mission_id),
     )
+
+
+# --------------------------------------------------------------------------- #
+# Sitemap : URLs publiques indexables (profils pilotes + missions ouvertes)
+# --------------------------------------------------------------------------- #
+
+def sitemap_pilots(limit: int = 5000) -> list:
+    rows = db.fetchall(
+        "SELECT u.id, COALESCE(p.updated_at, u.created_at) AS lastmod "
+        "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
+        "WHERE u.role IN ('pilot', 'both') ORDER BY u.id LIMIT ?",
+        (limit,),
+    )
+    return [dict(r) for r in rows]
+
+
+def sitemap_missions(limit: int = 5000) -> list:
+    rows = db.fetchall(
+        "SELECT id, COALESCE(updated_at, created_at) AS lastmod "
+        "FROM missions WHERE status = 'open' ORDER BY id LIMIT ?",
+        (limit,),
+    )
+    return [dict(r) for r in rows]
 
 
 def get_mission(mission_id: int) -> Optional[dict]:
