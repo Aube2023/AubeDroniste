@@ -32,6 +32,7 @@ from config import (
     DRONE_CATEGORIES,
     DRONE_MODELS_BY_BRAND,
     FEATURED_COUNTRIES,
+    GOOGLE_SITE_VERIFICATION,
     HOST,
     LICENCE_AUTHORITIES,
     LICENCE_TITLES_BY_AUTHORITY,
@@ -151,6 +152,7 @@ def _inject_globals():
         "static_v": _static_v,
         # SEO : base canonique + JSON-LD globaux (Organization + WebSite)
         "canonical_base": seo.CANONICAL_BASE,
+        "google_site_verification": GOOGLE_SITE_VERIFICATION,
         "seo_global": seo.global_ld(getattr(g, "lang", i18n.DEFAULT)),
         "seo": {},   # defaut ; surcharge par page via render_template(seo=...)
     }

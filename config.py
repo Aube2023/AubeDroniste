@@ -20,6 +20,11 @@ MAIL_DUMP_DIR = os.path.join(DATA_DIR, "mail")
 # URL publique du site (utilisee dans les emails et metas)
 SITE_URL = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 
+# Jeton de verification Google Search Console (methode "balise HTML").
+# Colle ici la valeur "content" donnee par Google -> la balise meta apparait
+# automatiquement dans le <head>, la verification devient instantanee.
+GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
+
 for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 

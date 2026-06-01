@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
   {% set _seo = seo or {} %}
   {% set _title = _seo.title or ('AubePilot — Louez un pilote de drone certifié | Devis gratuits' if lang == 'fr' else 'AubePilot — Hire a Certified Drone Pilot | Free Quotes') %}
   {% set _desc = _seo.description or ('Trouvez et réservez un pilote de drone certifié : prises de vue aériennes, inspections, mariages, immobilier. Devis gratuits, paiement sécurisé.' if lang == 'fr' else 'Find and book a certified drone pilot for aerial photography, inspections and events. Free quotes, secure escrow payments.') %}
