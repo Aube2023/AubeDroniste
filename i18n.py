@@ -13,6 +13,12 @@ from typing import Optional
 
 from flask import request
 
+from config import PILOT_SHARE_PCT, PLATFORM_FEE_PCT
+
+# Variables toujours disponibles dans les traductions (pas de "30 %" en dur) :
+#   {fee} = commission plateforme, {pilot_share} = part reversee au pilote.
+_FMT_DEFAULTS = {"fee": int(PLATFORM_FEE_PCT), "pilot_share": int(PILOT_SHARE_PCT)}
+
 SUPPORTED = ("fr", "en")
 DEFAULT = "fr"
 COOKIE = "aube_lang"
@@ -42,9 +48,9 @@ def t(key: str, lang: Optional[str] = None, **kwargs) -> str:
     if not entry:
         return key
     val = entry.get(lang) or entry.get(DEFAULT) or key
-    if kwargs:
+    if "{" in val:
         try:
-            val = val.format(**kwargs)
+            val = val.format(**{**_FMT_DEFAULTS, **kwargs})
         except (KeyError, IndexError, ValueError):
             pass
     return val
@@ -73,8 +79,8 @@ _T = {
                            "en": "The L'Aube Étoilée ecosystem"},
     "footer.eco_tagline": {"fr": "Tout en français, tout chez vous.",
                            "en": "Sovereign software, anywhere."},
-    "footer.eco_meta":    {"fr": "{year} · 17 services · auth partagée",
-                           "en": "{year} · 17 services · shared auth"},
+    "footer.eco_meta":    {"fr": "{year} · {count} services · auth partagée",
+                           "en": "{year} · {count} services · shared auth"},
     "footer.tagline":     {"fr": "Une marque de L'Aube Étoilée · Auth partagée @aubemail.com",
                            "en": "A brand of L'Aube Étoilée · Shared @aubemail.com auth"},
     "footer.cities":      {"fr": "Édité depuis Montréal",
@@ -134,8 +140,8 @@ _T = {
                      "en": "Accept = booked. Private messaging to handle logistics, NOTAMs and site access."},
     "home.step4.h": {"fr": "Livraison, paiement, avis.",
                      "en": "Delivery, payment, review."},
-    "home.step4.p": {"fr": "Le pilote livre les rushs. Vous validez, l'argent file, chacun laisse une note. Commission plateforme : 30 %.",
-                     "en": "The pilot delivers the footage. You confirm, the funds clear, both leave a review. Platform fee: 30%."},
+    "home.step4.p": {"fr": "Le pilote livre les rushs. Vous validez, l'argent file, chacun laisse une note. Commission plateforme : {fee} %.",
+                     "en": "The pilot delivers the footage. You confirm, the funds clear, both leave a review. Platform fee: {fee}%."},
 
     "home.featured.eyebrow": {"fr": "En piste cette semaine", "en": "On tarmac this week"},
     "home.featured.h":       {"fr": "Pilotes que l'on suit.",  "en": "Pilots we follow."},
@@ -215,8 +221,8 @@ _T = {
                        "en": "Your licenses and certifications highlighted, DGAC, EASA, TC, FAA, ASECNA."},
     "reg.bullet3":   {"fr": "Recherche géolocalisée mondiale : Europe, Amérique, Maghreb, Afrique, Russie, Asie-Pacifique, Moyen-Orient.",
                        "en": "Worldwide geo-located search: Europe, Americas, Maghreb, Africa, Russia, Asia-Pacific, Middle East."},
-    "reg.bullet4":   {"fr": "Commission plateforme uniquement sur missions livrées (30 %).",
-                       "en": "Platform fee only on delivered missions (30%)."},
+    "reg.bullet4":   {"fr": "Commission plateforme uniquement sur missions livrées ({fee} %).",
+                       "en": "Platform fee only on delivered missions ({fee}%)."},
     "reg.bullet5":   {"fr": "Auth partagée avec l'écosystème L'Aube Étoilée.",
                        "en": "Shared auth with the L'Aube Étoilée ecosystem."},
     "reg.h2":        {"fr": "Créer mon compte", "en": "Create my account"},

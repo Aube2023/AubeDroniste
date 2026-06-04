@@ -113,28 +113,11 @@
     <div class="eco-header">
       <span class="eyebrow">{{ t('footer.eco_eyebrow') }}</span>
       <strong>{{ t('footer.eco_tagline') }}</strong>
-      <span class="muted">{{ t('footer.eco_meta', year=now().year) }}</span>
+      <span class="muted">{{ t('footer.eco_meta', year=now().year, count=aube_service_count) }}</span>
     </div>
     <nav class="eco-grid" aria-label="Services L'Aube Étoilée">
-      <a href="https://inter.aubeetoilee.com"><span class="pre">L'Aube</span>Inter</a>
-      <a href="https://messenger.aubeetoilee.com"><span class="pre">Aube</span>Messenger</a>
-      <a href="https://mail.aubeetoilee.com"><span class="pre">Aube</span>Mail</a>
-      <a href="https://maps.aubeetoilee.com"><span class="pre">Aube</span>Maps</a>
-      <a href="https://agenda.aubeetoilee.com"><span class="pre">Aube</span>Agenda</a>
-      <a href="https://docs.aubeetoilee.com"><span class="pre">Aube</span>Docs</a>
-      <a href="https://forms.aubeetoilee.com"><span class="pre">Aube</span>Forms</a>
-      <a href="https://slides.aubeetoilee.com"><span class="pre">Aube</span>Slides</a>
-      <a href="https://drive.aubeetoilee.com"><span class="pre">Aube</span>Drive</a>
-      <a href="https://finances.aubeetoilee.com"><span class="pre">Aube</span>Finances</a>
-      <a href="https://data.aubeetoilee.com"><span class="pre">Aube</span>Data</a>
-      <a href="https://format.aubeetoilee.com"><span class="pre">Aube</span>Format</a>
-      <a href="https://meteo.aubeetoilee.com"><span class="pre">Aube</span>Météo</a>
-      <a href="https://news.aubeetoilee.com"><span class="pre">Aube</span>News</a>
-      <a href="https://livre.aubeetoilee.com"><span class="pre">Aube</span>Livre</a>
-      <a href="https://operation.aubeetoilee.com"><span class="pre">Aube</span>Operation</a>
-      <a href="https://pharos.aubeetoilee.com"><span class="pre">Aube</span>Pharos</a>
-      <a href="{{ aubecrew_url }}"><span class="pre">Aube</span>Crew</a>
-      <a href="{{ url_for('index') }}" class="here"><span class="pre">Aube</span> Pilot</a>
+      {% for s in aube_services %}<a href="{{ s.url }}"{% if s.here %} class="here"{% endif %}><span class="pre">{{ s.pre }}</span>{{ s.name }}</a>
+      {% endfor %}
     </nav>
   </section>
   <nav class="footer-legal" aria-label="Mentions légales" style="max-width: 1240px; margin: 0 auto; padding: 16px 32px 4px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 18px 22px; font-size: .85rem;">

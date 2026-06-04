@@ -27,11 +27,11 @@
   <div class="stat-rail" style="margin-top: 22px;">
     <div>
       <span class="v">{{ pilot_amount|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Net pilote (70%)</span>
+      <span class="k">Net pilote ({{ pilot_share_pct }}%)</span>
     </div>
     <div>
       <span class="v">{{ platform_fee|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Commission Aube (30%)</span>
+      <span class="k">Commission Aube ({{ platform_fee_pct }}%)</span>
     </div>
     <div>
       <span class="v" style="font-size: 1.1rem;">

@@ -43,7 +43,7 @@ paiement en escrow et la médiation des litiges.
 
 <h2>5. Commission plateforme</h2>
 <p>
-Aube Pilot prélève <strong>30 %</strong> sur chaque mission confirmée
+Aube Pilot prélève <strong>{{ platform_fee_pct }} %</strong> sur chaque mission confirmée
 (commission incluse dans le prix affiché). Cette commission couvre la
 mise en relation, l'escrow Stripe, la médiation, l'hébergement et le
 support.
@@ -53,7 +53,7 @@ La commission est <strong>dégressive sur la fidélité plateforme</strong>
 pour récompenser les binômes client/pilote qui collaborent dans la durée :
 </p>
 <ul>
-  <li>Missions 1 à 3 entre les mêmes parties : 30 %.</li>
+  <li>Missions 1 à 3 entre les mêmes parties : {{ platform_fee_pct }} %.</li>
   <li>Missions 4 à 9 entre les mêmes parties : 20 %.</li>
   <li>Missions 10 et au-delà : 12 %.</li>
 </ul>

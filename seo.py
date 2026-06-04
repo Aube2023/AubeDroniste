@@ -12,7 +12,10 @@ Tout est bilingue (fr/en) selon `lang`. Les fonctions renvoient des dicts ;
 les templates les sérialisent via le filtre Jinja `|tojson` (échappement sûr).
 """
 
-CANONICAL_BASE = "https://pilot.aubeetoilee.com"
+from config import CURRENT_SERVICE_SLUG, ROOT_DOMAIN
+
+# Base canonique derivee du domaine central (pas de domaine code en dur).
+CANONICAL_BASE = f"https://{CURRENT_SERVICE_SLUG}.{ROOT_DOMAIN}"
 ORG_NAME = "AubePilot"
 ORG_LOGO = CANONICAL_BASE + "/static/brand/og-image.png"
 
