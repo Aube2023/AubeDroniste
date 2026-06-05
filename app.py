@@ -1662,11 +1662,21 @@ def stripe_onboard():
         abort(403)
     profile = services.get_pilot_profile(user["id"])
     account_id = profile.get("stripe_account_id") if profile else None
-    if not account_id:
-        account_id, url = payments.create_pilot_account(user)
-        services.set_pilot_stripe_account(user["id"], account_id)
-    else:
-        url = payments.fresh_onboarding_link(account_id)
+    try:
+        if not account_id:
+            account_id, url = payments.create_pilot_account(user)
+            services.set_pilot_stripe_account(user["id"], account_id)
+        else:
+            url = payments.fresh_onboarding_link(account_id)
+    except Exception as exc:
+        # Ex. Connect pas encore active sur le compte Stripe -> message clair
+        # au lieu d'un 500. Cf. dashboard.stripe.com/connect.
+        log.error("stripe onboarding failed for user=%s : %s", user["id"], exc)
+        flash("L'activation Stripe est momentanément indisponible "
+              "(la plateforme finalise sa configuration de paiement). "
+              "Réessayez d'ici peu — vous serez prévenu dès que c'est prêt.",
+              "error")
+        return redirect(url_for("pilot_edit"))
     return redirect(url)
 
 
