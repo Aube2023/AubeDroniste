@@ -2,7 +2,8 @@
 dependance systeme.
 
 Le devis reprend les termes du devis accepte (prestation, livrables,
-conditions) et un echeancier de paiement (acompte + solde + total)."""
+conditions) et l'echeancier de paiement (100 % a la reservation, sous
+sequestre, libere au pilote apres validation de la livraison)."""
 
 import os
 from io import BytesIO
@@ -51,8 +52,6 @@ ACCENT = colors.HexColor("#4257b2")
 RULE = colors.HexColor("#dde0ec")
 PAPER3 = colors.HexColor("#eef0f8")
 
-# Part d'acompte demandee a la reservation (le solde est du a la livraison)
-ACOMPTE_PCT = 0.30
 
 
 def _money(amount, currency):
@@ -102,8 +101,6 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
     )
     cur = booking.get("currency") or "EUR"
     total = float(booking.get("agreed_price") or 0)
-    acompte = round(total * ACOMPTE_PCT, 2)
-    solde = round(total - acompte, 2)
     ref = booking.get("id")
     date = (booking.get("created_at") or "")[:10]
 
@@ -209,8 +206,7 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
     el.append(Paragraph("MONTANTS &amp; ÉCHÉANCIER", S["eyebrow"]))
     rows = [
         ["Désignation", "Montant"],
-        [f"Acompte ({int(ACOMPTE_PCT * 100)} % — à la réservation)", _money(acompte, cur)],
-        [f"Solde ({int((1 - ACOMPTE_PCT) * 100)} % — à la livraison)", _money(solde, cur)],
+        ["Règlement à la réservation (100 % — conservé sous séquestre)", _money(total, cur)],
         ["TOTAL À RÉGLER", _money(total, cur)],
     ]
     t = Table(rows, colWidths=[110 * mm, 50 * mm])
