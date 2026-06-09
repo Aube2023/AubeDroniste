@@ -387,7 +387,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   capability: str = "", text: str = "", lat: Optional[float] = None,
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
-                  limit: int = 50) -> list:
+                  strict_radius: bool = False, limit: int = 50) -> list:
     # PERF : on JOIN un agregat de reviews dans la requete principale au
     # lieu d'appeler pilot_rating() N fois en Python (avant : 1 + N requetes,
     # maintenant : 1 seule).
@@ -454,7 +454,10 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         if lat is not None and lng is not None and r.get("lat") is not None:
             d = db.haversine_km(lat, lng, r["lat"], r["lng"])
             r["distance_km"] = round(d, 1)
-            if d > radius:
+            # NON-EXCLUSION par defaut : on calcule la distance (pour le tri)
+            # mais on n'exclut que si strict_radius. Un pilote 'de partout'
+            # (ou une mission specialisee lointaine) reste donc visible.
+            if strict_radius and d > radius:
                 continue
         else:
             r["distance_km"] = None
@@ -549,12 +552,12 @@ def pilots_for_mission_alert(mission: dict, exclude_user_id: int = 0) -> list:
     return out
 
 
-def update_mission_status(mission_id: int, status: str):
+def update_mission_status(mission_id: int, status: str, commit: bool = True):
     if status not in MISSION_STATUS:
         raise ValueError(f"statut invalide: {status}")
     db.execute(
         "UPDATE missions SET status=?, updated_at=datetime('now') WHERE id=?",
-        (status, mission_id),
+        (status, mission_id), commit=commit,
     )
 
 
@@ -599,7 +602,8 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
                     status: str = "open", lat: Optional[float] = None,
                     lng: Optional[float] = None,
                     radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
-                    only_urgent: bool = False, limit: int = 100) -> list:
+                    only_urgent: bool = False, strict_radius: bool = False,
+                    limit: int = 100) -> list:
     q = [
         "SELECT m.*, u.full_name AS client_name "
         "FROM missions m JOIN users u ON u.id=m.client_user_id "
@@ -629,7 +633,7 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
         if lat is not None and lng is not None and r.get("lat") is not None:
             d = db.haversine_km(lat, lng, r["lat"], r["lng"])
             r["distance_km"] = round(d, 1)
-            if d > radius:
+            if strict_radius and d > radius:
                 continue
         else:
             r["distance_km"] = None
@@ -674,6 +678,15 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
     - Mise a jour simple d'un devis 'pending' : on ecrase sans creer
       d'entree d'historique (le pilote retouche son brouillon).
     """
+    mission = db.fetchone(
+        "SELECT client_user_id, status FROM missions WHERE id=?", (mission_id,)
+    )
+    if not mission:
+        raise LookupError("mission introuvable")
+    if mission["client_user_id"] == pilot_user_id:
+        raise ValueError("vous ne pouvez pas soumissionner sur votre propre mission")
+    if mission["status"] != "open":
+        raise ValueError("cette mission n'accepte plus de devis")
     existing = db.fetchone(
         "SELECT id, revision_no, price, currency, eta_hours, message, "
         "       description, deliverables, terms, status, client_response "
@@ -684,6 +697,7 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
     is_revision = bool(existing and existing["status"] in ("rejected", "withdrawn"))
 
     if is_revision:
+        assert existing is not None  # garanti par is_revision (narrowing)
         # Snapshot de la version refusee avant ecrasement
         db.execute(
             "INSERT INTO bid_revisions "
@@ -830,17 +844,30 @@ def list_bid_revisions(bid_id: int) -> list:
 
 
 def list_bids(mission_id: int) -> list:
+    # PERF : on replie le rating dans la requete principale (LEFT JOIN sur
+    # l'agregat reviews) au lieu d'appeler pilot_rating() une fois par devis.
+    # Avant : 1 + N requetes sur la page mission la plus chaude ; apres : 1.
     rows = db.fetchall(
         "SELECT b.*, u.full_name AS pilot_name, u.username AS pilot_username, "
-        "       u.is_verified, u.city AS pilot_city, u.country AS pilot_country "
+        "       u.is_verified, u.city AS pilot_city, u.country AS pilot_country, "
+        "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
+        "       COALESCE(r.review_count, 0) AS rating_count "
         "FROM bids b JOIN users u ON u.id=b.pilot_user_id "
+        "LEFT JOIN ("
+        "  SELECT target_user_id, AVG(rating) AS avg_rating, "
+        "         COUNT(*) AS review_count "
+        "  FROM reviews GROUP BY target_user_id"
+        ") r ON r.target_user_id = b.pilot_user_id "
         "WHERE b.mission_id=? ORDER BY b.price ASC, b.created_at ASC",
         (mission_id,),
     )
     out = []
     for r in rows:
         d = dict(r)
-        d["pilot_rating"] = pilot_rating(d["pilot_user_id"])
+        d["pilot_rating"] = {
+            "avg": round(float(d.pop("rating_avg") or 0.0), 2),
+            "count": int(d.pop("rating_count") or 0),
+        }
         out.append(d)
     return out
 
@@ -862,45 +889,45 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         raise LookupError("enchere ou mission introuvable")
     if mission["status"] != "open":
         raise ValueError(f"mission deja {mission['status']}")
-    # Verrou atomique : on tente de passer la mission en 'assigned'
-    # uniquement si elle est encore 'open'. Si rowcount=0, c'est qu'un
-    # autre processus a deja accepte une enchere -> on refuse.
-    cur_lock = db.execute(
-        "UPDATE missions SET status='assigned', updated_at=datetime('now') "
-        "WHERE id=? AND client_user_id=? AND status='open'",
-        (mission_id, client_user_id),
-    )
-    if cur_lock.rowcount == 0:
-        raise ValueError("mission deja attribuee (race detectee)")
+    if bid["status"] != "pending":
+        raise ValueError("ce devis n'est plus disponible")
+    if bid["pilot_user_id"] == client_user_id:
+        raise ValueError("vous ne pouvez pas accepter votre propre devis")
     fee = round(bid["price"] * PLATFORM_FEE_PCT / 100.0, 2)
-    cur = db.execute(
-        "INSERT INTO bookings "
-        "(mission_id, bid_id, client_user_id, pilot_user_id, agreed_price, currency, "
-        " platform_fee, scheduled_at, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')",
-        (
-            mission_id, bid_id, client_user_id, bid["pilot_user_id"],
-            bid["price"], bid["currency"], fee, mission["start_date"],
-        ),
-    )
-    booking_id = cur.lastrowid
-    db.execute("UPDATE bids SET status='accepted' WHERE id=?", (bid_id,))
-    db.execute(
-        "UPDATE bids SET status='rejected' WHERE mission_id=? AND id<>?",
-        (mission_id, bid_id),
-    )
-    # mission deja 'assigned' via le verrou plus haut.
-    # Statut explicite : en attente de paiement client
-    db.execute(
-        "UPDATE bookings SET status='pending_payment' WHERE id=?",
-        (booking_id,),
-    )
-    db.execute(
-        "INSERT INTO audit_log (user_id, action, target, payload) "
-        "VALUES (?, 'accept_bid', ?, ?)",
-        (client_user_id, f"mission:{mission_id}",
-         json.dumps({"booking": booking_id, "bid": bid_id})),
-    )
+    # Tout-ou-rien : verrou conditionnel + creation booking + cloture des
+    # autres devis dans UNE transaction. Si le verrou echoue (rowcount=0),
+    # une autre acceptation a deja eu lieu -> rollback complet + ValueError.
+    with db.transaction():
+        cur_lock = db.execute(
+            "UPDATE missions SET status='assigned', updated_at=datetime('now') "
+            "WHERE id=? AND client_user_id=? AND status='open'",
+            (mission_id, client_user_id), commit=False,
+        )
+        if cur_lock.rowcount == 0:
+            raise ValueError("mission deja attribuee (race detectee)")
+        cur = db.execute(
+            "INSERT INTO bookings "
+            "(mission_id, bid_id, client_user_id, pilot_user_id, agreed_price, currency, "
+            " platform_fee, scheduled_at, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')",
+            (
+                mission_id, bid_id, client_user_id, bid["pilot_user_id"],
+                bid["price"], bid["currency"], fee, mission["start_date"],
+            ), commit=False,
+        )
+        booking_id = cur.lastrowid
+        db.execute("UPDATE bids SET status='accepted' WHERE id=?", (bid_id,),
+                   commit=False)
+        db.execute(
+            "UPDATE bids SET status='rejected' WHERE mission_id=? AND id<>?",
+            (mission_id, bid_id), commit=False,
+        )
+        db.execute(
+            "INSERT INTO audit_log (user_id, action, target, payload) "
+            "VALUES (?, 'accept_bid', ?, ?)",
+            (client_user_id, f"mission:{mission_id}",
+             json.dumps({"booking": booking_id, "bid": bid_id})), commit=False,
+        )
     # Notification email au pilote choisi
     try:
         import mailer
@@ -1055,13 +1082,14 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
             log.warning("refund Stripe a echoue : %s", exc)
             refund_done = False
 
-    db.execute(
-        "UPDATE bookings SET status='cancelled', "
-        "cancelled_at=datetime('now'), cancellation_fee=? "
-        "WHERE id=?",
-        (calc["fee_amount"], booking_id),
-    )
-    update_mission_status(booking["mission_id"], "cancelled")
+    with db.transaction():
+        db.execute(
+            "UPDATE bookings SET status='cancelled', "
+            "cancelled_at=datetime('now'), cancellation_fee=? "
+            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress')",
+            (calc["fee_amount"], booking_id), commit=False,
+        )
+        update_mission_status(booking["mission_id"], "cancelled", commit=False)
 
     db.execute(
         "INSERT INTO audit_log (user_id, action, target, payload) "
@@ -1097,28 +1125,37 @@ def list_bookings_for(user_id: int) -> list:
 
 
 def update_booking_status(booking_id: int, status: str, by_user: int):
+    """Machine a etats STRICTE et role-based.
+
+    La SEULE transition autorisee par cette voie est : le pilote signale le
+    debut de l'operation (funded -> in_progress). Toutes les autres
+    transitions sensibles passent par des fonctions dediees money-safe :
+      - funded     : webhook Stripe (mark_booking_funded)
+      - completed  : confirm_completion (declenche le Transfer au pilote)
+      - cancelled  : cancel_booking_by_client (regle de preavis + refund)
+      - refunded   : refund_booking (admin)
+      - disputed   : open_dispute
+    Empeche un client ou un pilote de forcer un statut et de contourner
+    l'escrow (ex: passer 'completed' sans Transfer, ou 'funded' sans payer).
+    """
     if status not in BOOKING_STATUS:
         raise ValueError(f"statut booking invalide: {status}")
-    extra = ""
-    if status == "completed":
-        extra = ", completed_at=datetime('now')"
-    db.execute(
-        f"UPDATE bookings SET status=?{extra} "
-        "WHERE id=? AND (client_user_id=? OR pilot_user_id=?)",
-        (status, booking_id, by_user, by_user),
-    )
-    if status == "completed":
-        b = get_booking(booking_id)
-        if b:
-            update_mission_status(b["mission_id"], "done")
-    elif status == "in_progress":
-        b = get_booking(booking_id)
-        if b:
-            update_mission_status(b["mission_id"], "in_progress")
-    elif status == "cancelled":
-        b = get_booking(booking_id)
-        if b:
-            update_mission_status(b["mission_id"], "cancelled")
+    booking = get_booking(booking_id)
+    if not booking or by_user not in (booking["client_user_id"], booking["pilot_user_id"]):
+        raise ValueError("reservation introuvable")
+    if status != "in_progress":
+        raise ValueError("transition non autorisee par cette voie")
+    if by_user != booking["pilot_user_id"]:
+        raise ValueError("seul le pilote peut demarrer la mission")
+    with db.transaction():
+        cur = db.execute(
+            "UPDATE bookings SET status='in_progress' "
+            "WHERE id=? AND status='funded'",
+            (booking_id,), commit=False,
+        )
+        if cur.rowcount == 0:
+            raise ValueError("la mission doit etre financee pour pouvoir demarrer")
+        update_mission_status(booking["mission_id"], "in_progress", commit=False)
 
 
 # ---------------------------------------------------------------------------
@@ -1225,6 +1262,30 @@ def send_message(*, mission_id: int, sender_user_id: int,
             )
     except Exception as exc:
         log.warning("email hook failed: %s", exc)
+
+
+def can_message(mission_id: int, sender_user_id: int, peer_id: int) -> bool:
+    """Autorise la messagerie uniquement entre le client d'une mission et un
+    pilote ayant depose un devis sur CETTE mission (peu importe le sens).
+    Empeche un tiers d'ecrire sur une mission qui ne le concerne pas, ou un
+    pilote d'ouvrir un fil sans avoir soumissionne."""
+    mission = db.fetchone(
+        "SELECT client_user_id FROM missions WHERE id=?", (mission_id,)
+    )
+    if not mission:
+        return False
+    client_id = mission["client_user_id"]
+    parties = {sender_user_id, peer_id}
+    if client_id not in parties:
+        return False
+    others = parties - {client_id}
+    if not others:
+        return False  # client seul (lui-meme) : pas de fil
+    pilot_id = others.pop()
+    return bool(db.fetchone(
+        "SELECT 1 FROM bids WHERE mission_id=? AND pilot_user_id=?",
+        (mission_id, pilot_id),
+    ))
 
 
 def thread(mission_id: int, user_id: int, peer_id: int) -> list:
@@ -1619,7 +1680,7 @@ def featured_pilots(limit: int = 6) -> list:
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
         "WHERE u.role IN ('pilot','both') AND p.is_available=1 "
-        "ORDER BY u.is_verified DESC, datetime(u.last_seen_at) DESC LIMIT ?",
+        "ORDER BY u.is_verified DESC, u.last_seen_at DESC LIMIT ?",
         (limit,),
     )
     out = []
@@ -1755,15 +1816,22 @@ def attach_payment_session(booking_id: int, session_id: str):
     )
 
 
-def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None):
-    """Le client a paye. Booking en escrow (`funded`)."""
-    db.execute(
+def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None) -> bool:
+    """Le client a paye. Booking en escrow (`funded`).
+
+    Idempotent : ne s'applique qu'une fois, depuis 'pending_payment'. Renvoie
+    True si la transition a eu lieu, False si deja traite (rejeu de webhook
+    Stripe ou double-clic). Bloque ainsi une double-capture / double-notif.
+    """
+    cur = db.execute(
         "UPDATE bookings SET status='funded', paid_at=datetime('now'), "
         "stripe_payment_intent_id=COALESCE(?, stripe_payment_intent_id) "
-        "WHERE id=? AND status IN ('pending_payment', 'in_progress')",
+        "WHERE id=? AND status='pending_payment'",
         (payment_intent_id, booking_id),
     )
-    # Notifie le pilote que la mission est financée
+    if cur.rowcount == 0:
+        return False
+    # Notifie le pilote que la mission est financée (une seule fois)
     booking = get_booking(booking_id)
     if booking:
         try:
@@ -1782,6 +1850,7 @@ def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None
                 )
         except Exception:
             pass
+    return True
 
 
 def confirm_completion(booking_id: int, by_user: int) -> bool:
@@ -1805,13 +1874,26 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
         currency=booking["currency"],
         pilot_account_id=pilot_acc,
     )
+    # MONEY-SAFE : si le Transfer Stripe echoue (transfer_id None), on NE
+    # marque PAS le booking 'completed'. Il reste 'funded'/'in_progress' et
+    # sera rejoue (auto-release J+7 via stale_funded_bookings, ou nouvelle
+    # validation). Sinon les fonds quitteraient l'escrow sans jamais atteindre
+    # le pilote -> perte seche, pilote jamais paye.
+    if not transfer_id:
+        log.error(
+            "release_to_pilot a echoue pour booking=%s : laisse '%s' pour rejeu",
+            booking_id, booking["status"],
+        )
+        return False
 
-    db.execute(
-        "UPDATE bookings SET status='completed', completed_at=datetime('now'), "
-        "released_at=datetime('now'), stripe_transfer_id=? WHERE id=?",
-        (transfer_id, booking_id),
-    )
-    update_mission_status(booking["mission_id"], "done")
+    with db.transaction():
+        db.execute(
+            "UPDATE bookings SET status='completed', completed_at=datetime('now'), "
+            "released_at=datetime('now'), stripe_transfer_id=? "
+            "WHERE id=? AND status IN ('funded', 'in_progress')",
+            (transfer_id, booking_id), commit=False,
+        )
+        update_mission_status(booking["mission_id"], "done", commit=False)
 
     # Email "vous avez ete paye" au pilote
     try:
@@ -1871,11 +1953,13 @@ def refund_booking(booking_id: int, amount: Optional[float] = None,
         reason=f"booking:{booking_id}:admin:{admin_user}",
     )
     if ok:
-        db.execute(
-            "UPDATE bookings SET status='refunded', refunded_at=datetime('now') WHERE id=?",
-            (booking_id,),
-        )
-        update_mission_status(booking["mission_id"], "cancelled")
+        with db.transaction():
+            db.execute(
+                "UPDATE bookings SET status='refunded', refunded_at=datetime('now') "
+                "WHERE id=? AND status IN ('funded', 'disputed', 'in_progress')",
+                (booking_id,), commit=False,
+            )
+            update_mission_status(booking["mission_id"], "cancelled", commit=False)
     return ok
 
 

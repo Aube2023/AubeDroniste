@@ -25,6 +25,19 @@ SITE_URL = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 # automatiquement dans le <head>, la verification devient instantanee.
 GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
 
+# App Android (App Links) : sert /.well-known/assetlinks.json pour que les
+# liens https://pilot.aubeetoilee.com s'ouvrent directement dans l'app mobile.
+# Le defaut correspond au certificat DEBUG local ; en release, surcharger
+# ANDROID_CERT_SHA256 (plusieurs empreintes possibles, separees par virgules).
+ANDROID_PACKAGE = os.environ.get("ANDROID_PACKAGE", "com.aubeetoilee.aubepilot")
+ANDROID_CERT_SHA256 = [
+    f.strip().upper() for f in os.environ.get(
+        "ANDROID_CERT_SHA256",
+        "D4:F7:87:FE:6B:A8:3D:76:04:A1:9E:FF:EF:27:24:E4:73:8E:BE:ED:"
+        "F8:E8:85:93:97:DC:9C:D4:10:15:5C:CC",
+    ).split(",") if f.strip()
+]
+
 for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 
@@ -35,6 +48,14 @@ SESSION_COOKIE_NAME = "aubepilot_sid"
 SESSION_LIFETIME_DAYS = 30
 
 EMAIL_DOMAIN = "aubemail.com"
+
+# Inscription mondiale : par defaut, AubePilot est OUVERT a tout pilote, ou
+# qu'il soit — l'inscription cree directement le compte local (mot de passe
+# gere par AubePilot). Mettre AUBEPILOT_REQUIRE_AUBEMAIL=1 pour exiger un
+# compte AubeMail/PAM prealable (mode ecosysteme strict, ancien comportement).
+REQUIRE_AUBEMAIL = os.environ.get(
+    "AUBEPILOT_REQUIRE_AUBEMAIL", "0",
+).strip().lower() in ("1", "true", "yes", "on")
 
 # Fichiers
 MAX_UPLOAD_MB = 10

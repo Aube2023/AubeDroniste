@@ -55,7 +55,10 @@
         </label>
         <label>Ville
           <input name="city" value="{{ form.get('city','') }}" placeholder="Marrakech">
+          <button type="button" class="ghost" onclick="useMyLocation()" style="margin-top:6px">📍 Ma position</button>
         </label>
+        <input type="hidden" name="lat" value="{{ form.get('lat','') }}">
+        <input type="hidden" name="lng" value="{{ form.get('lng','') }}">
         <label>Région ou département
           <input name="region" value="{{ form.get('region','') }}" placeholder="Marrakech-Safi">
         </label>

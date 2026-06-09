@@ -1,0 +1,8 @@
+# Dependances de developpement / tests (NON necessaires en production).
+#   pip install -r requirements-dev.txt
+#
+# La prod n'installe que requirements.txt ; on garde donc pytest hors de
+# l'image de prod tout en rendant la suite de tests reproductible en local/CI.
+-r requirements.txt
+
+pytest>=8.0

@@ -102,14 +102,32 @@ _ADD_COLUMNS = [
     ("pilot_profiles", "business_name", "TEXT"),
 ]
 
+# Index additifs idempotents. schema.sql n'est execute QUE sur une base neuve
+# (bootstrap_db) ; sur la PROD existante, run_migrations() est le SEUL chemin
+# rejoue a chaque demarrage. On y (re)cree donc les index manquants
+# (CREATE INDEX IF NOT EXISTS = no-op si deja la). Tous ciblent des requetes
+# chaudes : ratings replies (search_pilots/list_bids/featured_pilots), devis
+# par mission, messagerie, classement de l'accueil.
+_ADD_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS idx_bid_mission_price ON bids(mission_id, price)",
+    "CREATE INDEX IF NOT EXISTS idx_booking_bid ON bookings(bid_id)",
+    "CREATE INDEX IF NOT EXISTS idx_review_target_rating ON reviews(target_user_id, rating)",
+    "CREATE INDEX IF NOT EXISTS idx_msg_sender ON messages(sender_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_msg_recip_read ON messages(mission_id, recipient_user_id, read_at)",
+    "CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at)",
+]
+
 
 def run_migrations():
-    """Applique les ALTER TABLE manquants. Sûr a lancer a chaque demarrage."""
+    """Applique les migrations additives manquantes (colonnes + index).
+    Sûr et idempotent : a lancer a chaque demarrage."""
     with standalone() as c:
         for table, column, decl in _ADD_COLUMNS:
             if not _column_exists(c, table, column):
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
                 log.info("migration: %s.%s ajoutee", table, column)
+        for stmt in _ADD_INDEXES:
+            c.execute(stmt)
 
 
 def _timed(query: str, params: Iterable, action):

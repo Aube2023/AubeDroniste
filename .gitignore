@@ -33,3 +33,14 @@ static/uploads/
 # Logs
 *.log
 nohup.out
+
+# Artefacts de build mobile (APK/AAB : ne JAMAIS commiter, ~40 Mo)
+*.apk
+*.aab
+mobile/build/
+mobile/.dart_tool/
+
+# Doublons de synchronisation iCloud ("config 2.py", "fichier 2.dart", ...)
+# iCloud cree des copies suffixees " N.ext" qu'il ne faut pas versionner.
+*[ ][0-9].py
+*[ ][0-9].dart

@@ -20,10 +20,10 @@ function useMyLocation() {
   });
 }
 
-// "Près de moi" sur la landing : géolocalise puis redirige vers /dronistes
+// "Près de moi" sur la landing : géolocalise puis redirige vers /pilotes
 // avec les coordonnées et un rayon par défaut. Mémorise la zone.
 function findNearMe(targetUrl) {
-  const url = targetUrl || '/dronistes';
+  const url = targetUrl || '/pilotes';
   if (!navigator.geolocation) {
     alert('Geolocalisation indisponible. Saisissez manuellement votre ville.');
     return;

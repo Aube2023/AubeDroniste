@@ -104,6 +104,18 @@
   {% endif %}
 {% endwith %}
 
+{% if g.user and g.user.role in ('pilot', 'both') and not pilot_payouts_ok %}
+  <div class="flashes">
+    <div class="flash flash-info">
+      {% if not pilot_country_payable %}
+        💳 Les paiements en ligne ne sont pas encore disponibles dans votre pays — vous pouvez proposer des missions, le versement se fera manuellement.
+      {% else %}
+        💳 <strong>Activez vos paiements</strong> pour être payé dès qu'un client valide une mission. <a href="{{ url_for('stripe_onboard') }}">Configurer Stripe →</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
 <main class="page">
   {% block content %}{% endblock %}
 </main>

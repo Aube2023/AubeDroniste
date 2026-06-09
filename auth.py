@@ -17,7 +17,13 @@ from typing import Optional
 from flask import g, redirect, request, url_for
 from itsdangerous import BadSignature, URLSafeSerializer
 
-from config import EMAIL_DOMAIN, SECRET_KEY, SESSION_COOKIE_NAME, SESSION_LIFETIME_DAYS
+from config import (
+    EMAIL_DOMAIN,
+    REQUIRE_AUBEMAIL,
+    SECRET_KEY,
+    SESSION_COOKIE_NAME,
+    SESSION_LIFETIME_DAYS,
+)
 import db
 
 
@@ -288,7 +294,13 @@ def create_user(*, username: str, password: str, full_name: str,
     absent, leve `AubeMailRequiredError`.
     """
     username = username.lower().strip()
-    if sys.platform.startswith("linux") and not system_user_exists(username):
+    # Compte PAM reel = uniquement sur Linux avec une entree /etc/passwd
+    # (system_user_exists renvoie True sur macOS par commodite, ce n'est PAS
+    # un vrai compte PAM). Inscription mondiale : on n'exige un compte
+    # AubeMail prealable que si REQUIRE_AUBEMAIL est explicitement active.
+    on_linux = sys.platform.startswith("linux")
+    has_pam_account = on_linux and system_user_exists(username)
+    if on_linux and not has_pam_account and REQUIRE_AUBEMAIL:
         raise AubeMailRequiredError(username)
     email = normalize_email(username, None)
     cur = db.execute(
@@ -297,9 +309,11 @@ def create_user(*, username: str, password: str, full_name: str,
         (username, email, full_name.strip(), phone, country, city, lat, lng, role),
     )
     user_id = cur.lastrowid
-    # Fallback dev uniquement (macOS) : on garde un mdp local pour la demo.
-    # En prod Linux, le mdp est gere par PAM/AubeMail — on n'y touche jamais.
-    if not sys.platform.startswith("linux"):
+    # Mot de passe local : provisionne sauf si un vrai compte PAM gere deja le
+    # mdp (prod Linux avec compte AubeMail — on ne touche jamais /etc/shadow).
+    # Un pilote etranger inscrit en direct (pas de compte PAM) obtient donc un
+    # mdp local et peut se connecter via le fallback dev de authenticate().
+    if not has_pam_account:
         set_dev_password(username, password)
     if role in ("pilot", "both"):
         db.execute(

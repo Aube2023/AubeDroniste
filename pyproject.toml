@@ -1,0 +1,8 @@
+# Configuration pytest uniquement (le projet n'est pas un package distribue,
+# donc pas de [build-system]). testpaths borne la collecte au dossier tests/
+# pour ne jamais ramasser un doublon de synchro iCloud ("fichier 2.py") laisse
+# a la racine.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

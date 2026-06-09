@@ -102,6 +102,11 @@
       </datalist>
     </label>
     <label>Ville<input name="city" value="{{ profile.city or '' }}"></label>
+    <input type="hidden" name="lat" value="{{ profile.lat or '' }}">
+    <input type="hidden" name="lng" value="{{ profile.lng or '' }}">
+    <label>Position GPS <span class="muted">(visibilité « autour de moi » + alertes mission)</span>
+      <button type="button" class="ghost" onclick="useMyLocation()" style="margin-top:6px">📍 Utiliser ma position actuelle</button>
+    </label>
   </div>
 
   <h2>Présentation</h2>

@@ -22,6 +22,8 @@ import seo
 import services
 from config import (
     ALLOWED_DOC_EXT,
+    ANDROID_CERT_SHA256,
+    ANDROID_PACKAGE,
     AUBECREW_URL,
     AUBE_SERVICES,
     AUBE_SERVICE_COUNT,
@@ -210,6 +212,19 @@ def _mission_label(code: str) -> str:
     return _label(MISSION_TYPES, code, code)
 
 
+def _pilot_payout_context() -> dict:
+    """Contexte du bandeau « Activez vos paiements » pour le pilote connecte.
+    Non-pilote / anonyme -> pas de bandeau (valeurs True)."""
+    u = getattr(g, "user", None)
+    if not u or u.get("role") not in ("pilot", "both"):
+        return {"pilot_payouts_ok": True, "pilot_country_payable": True}
+    prof = services.get_pilot_profile(u["id"])
+    return {
+        "pilot_payouts_ok": bool(prof and prof.get("stripe_charges_enabled")),
+        "pilot_country_payable": payments.country_is_payable(u.get("country") or ""),
+    }
+
+
 @app.context_processor
 def _inject_helpers():
     from i18n import status_label
@@ -222,6 +237,7 @@ def _inject_helpers():
         # Anti-bypass : nom anonymise dans toutes les listes / cartes
         # (la fiche detail decide cas par cas via has_funded_relation).
         "mask_name": services.mask_full_name,
+        **_pilot_payout_context(),
     }
 
 
@@ -290,6 +306,20 @@ def robots_txt():
     resp = make_response("\n".join(lines) + "\n")
     resp.headers["Content-Type"] = "text/plain; charset=utf-8"
     return resp
+
+
+@app.route("/.well-known/assetlinks.json")
+def assetlinks_json():
+    """App Links Android : declare que l'app mobile (package + certificat)
+    est autorisee a ouvrir les liens du site directement."""
+    return jsonify([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": ANDROID_PACKAGE,
+            "sha256_cert_fingerprints": ANDROID_CERT_SHA256,
+        },
+    }])
 
 
 @app.route("/sitemap.xml")
@@ -361,6 +391,12 @@ def api_country_breakdown():
 
 @app.route("/pilotes")
 def pilots_search():
+    # 'near_only' borne au rayon ; sinon lat/lng ne servent qu'au tri par
+    # distance (les pilotes lointains restent visibles -> pilote de partout).
+    near_only = _to_bool(request.args.get("near_only", "0"))
+    lat = _to_float(request.args.get("lat"))
+    lng = _to_float(request.args.get("lng"))
+    radius_km = _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM)
     params = {
         "country": request.args.get("country", "").strip(),
         "city": request.args.get("city", "").strip(),
@@ -370,7 +406,9 @@ def pilots_search():
         "only_available": _to_bool(request.args.get("only_available", "1")),
         "text": request.args.get("q", "").strip(),
     }
-    pilots = services.search_pilots(**params)
+    pilots = services.search_pilots(
+        lat=lat, lng=lng, radius_km=radius_km, strict_radius=near_only, **params
+    )
     return render_template(
         "pilots_search.html", pilots=pilots, params=params,
         seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
@@ -379,13 +417,31 @@ def pilots_search():
 
 @app.route("/missions")
 def missions_search():
+    # Pilote de n'importe ou : par defaut on montre les missions de PARTOUT.
+    # 'anywhere' (ou pays vide) = aucun filtre pays ; lat/lng servent au tri
+    # par distance sans EXCLURE (strict_radius=False) sauf si 'near_only'.
+    anywhere = _to_bool(request.args.get("anywhere", "0"))
+    near_only = _to_bool(request.args.get("near_only", "0"))
+    lat = _to_float(request.args.get("lat"))
+    lng = _to_float(request.args.get("lng"))
+    radius_km = _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM)
     params = {
-        "country": request.args.get("country", "").strip(),
+        "country": "" if anywhere else request.args.get("country", "").strip(),
         "city": request.args.get("city", "").strip(),
         "mission_type": request.args.get("mission_type", "").strip(),
         "only_urgent": _to_bool(request.args.get("only_urgent", "0")),
+        "anywhere": anywhere,
+        "near_only": near_only,
+        "radius_km": radius_km,
+        "lat": lat,
+        "lng": lng,
     }
-    missions = services.search_missions(status="open", **params)
+    missions = services.search_missions(
+        status="open",
+        country=params["country"], city=params["city"],
+        mission_type=params["mission_type"], only_urgent=params["only_urgent"],
+        lat=lat, lng=lng, radius_km=radius_km, strict_radius=near_only,
+    )
     return render_template(
         "missions_search.html", missions=missions, params=params,
         seo=seo.missions_list(getattr(g, "lang", i18n.DEFAULT)),
@@ -1084,15 +1140,25 @@ def pilot_delete_avatar():
 
 # Avatars et media portfolio servis depuis /media/<path>. Stockes
 # physiquement dans data/uploads/ (avec UPLOAD_DIR).
+# Types "actifs" refuses par /media : un SVG ou un HTML uploade comme avatar
+# ou item de portfolio pourrait executer du script dans l'origine du site
+# (XSS stocke). Les images / videos / PDF legitimes passent.
+_MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
+
+
 @app.route("/media/<path:filename>")
 def media_file(filename):
     # Pas de traversee de chemin : send_from_directory gere deja
     # le ".." ; on accepte uniquement sous-dossiers connus.
     if ".." in filename or filename.startswith("/"):
         abort(404)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext in _MEDIA_BLOCKED_EXT:
+        abort(404)
     resp = make_response(send_from_directory(UPLOAD_DIR, filename))
     resp.headers["Cache-Control"] = "public, max-age=86400"
     resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Content-Disposition"] = "inline"
     return resp
 
 
@@ -1315,16 +1381,20 @@ def bid_place(mission_id):
             "error",
         )
         return redirect(url_for("mission_detail", mission_id=mission_id))
-    services.place_bid(
-        mission_id, g.user["id"],
-        price=price,
-        currency=(request.form.get("currency") or DEFAULT_CURRENCY).upper(),
-        eta_hours=_to_float(request.form.get("eta_hours")),
-        message=(request.form.get("message") or "").strip(),
-        description=description,
-        deliverables=(request.form.get("deliverables") or "").strip()[:2000],
-        terms=(request.form.get("terms") or "").strip()[:2000],
-    )
+    try:
+        services.place_bid(
+            mission_id, g.user["id"],
+            price=price,
+            currency=(request.form.get("currency") or DEFAULT_CURRENCY).upper(),
+            eta_hours=_to_float(request.form.get("eta_hours")),
+            message=(request.form.get("message") or "").strip(),
+            description=description,
+            deliverables=(request.form.get("deliverables") or "").strip()[:2000],
+            terms=(request.form.get("terms") or "").strip()[:2000],
+        )
+    except (LookupError, ValueError) as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("mission_detail", mission_id=mission_id))
     flash("Devis envoye au client.", "success")
     return redirect(url_for("mission_detail", mission_id=mission_id))
 
@@ -1627,6 +1697,10 @@ def mission_message(mission_id):
     peer = _to_int(request.form.get("peer_id"))
     body = (request.form.get("body") or "").strip()
     if peer and body:
+        # Autorisation : seuls le client de la mission et un pilote ayant
+        # depose un devis dessus peuvent echanger (anti-spam / anti-tiers).
+        if not services.can_message(mission_id, g.user["id"], peer):
+            abort(403)
         # Filtre anti-bypass : avant que la mission ne soit fundee, on bloque
         # les coordonnees externes (email, tel, whatsapp, etc).
         booking = db.fetchone(
@@ -1668,6 +1742,18 @@ def stripe_onboard():
             services.set_pilot_stripe_account(user["id"], account_id)
         else:
             url = payments.fresh_onboarding_link(account_id)
+    except payments.StripeCountryUnsupportedError:
+        # Pays non supporte par Stripe Connect : on ne cree pas de compte
+        # casse. Le pilote peut quand meme proposer des missions ; versement
+        # manuel. Cf. payments.country_is_payable / bandeau base.html.
+        flash(
+            "Les paiements Stripe ne sont pas encore disponibles dans votre "
+            "pays. Vous pouvez tout de même proposer des missions — le "
+            "versement se fera manuellement. Si votre pays est incorrect, "
+            "corrigez-le dans votre profil.",
+            "info",
+        )
+        return redirect(url_for("pilot_edit"))
     except Exception as exc:
         # Ex. Connect pas encore active sur le compte Stripe -> message clair
         # au lieu d'un 500. Cf. dashboard.stripe.com/connect.
@@ -1777,6 +1863,12 @@ def stripe_fake_checkout(booking_id):
 
 @app.route("/stripe/webhook", methods=["POST"])
 def stripe_webhook():
+    # En mode FAKE (demo sans cle), le financement passe par
+    # /stripe/fake-checkout, jamais par ce webhook : on refuse tout POST ici
+    # pour qu'un tiers ne puisse pas forger un evenement non signe marquant
+    # une reservation comme 'funded' sans paiement reel.
+    if payments.is_fake():
+        abort(404)
     payload = request.data
     signature = request.headers.get("Stripe-Signature", "")
     event = payments.parse_webhook(payload, signature)

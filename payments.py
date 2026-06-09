@@ -31,6 +31,14 @@ from config import (
 log = logging.getLogger("aubepilot.payments")
 
 
+class StripeCountryUnsupportedError(Exception):
+    """Le pays du pilote n'est pas (encore) supporte par Stripe Connect.
+
+    Levee a la creation du compte connecte plutot que de creer un compte
+    avec un pays par defaut errone (qui ne serait jamais payable).
+    """
+
+
 # ---------------------------------------------------------------------------
 # Helpers internes
 # ---------------------------------------------------------------------------
@@ -79,7 +87,9 @@ def create_pilot_account(user: dict) -> Tuple[str, str]:
     if s is None:
         return (f"acct_fake_{user['id']}", f"{SITE_URL}/stripe/fake-onboarding/{user['id']}")
 
-    country = _country_for_stripe(user.get("country") or "FR")
+    country = _country_for_stripe(user.get("country") or "")
+    if country is None:
+        raise StripeCountryUnsupportedError(user.get("country") or "")
     account = s.Account.create(
         type="express",
         country=country,
@@ -309,17 +319,64 @@ def parse_webhook(payload: bytes, signature: str):
 # Mapping pays -> code Stripe (rapide, pas exhaustif)
 # ---------------------------------------------------------------------------
 
+# Pays ou Stripe Connect (Express) peut creer un compte connecte payable.
+# Liste alignee sur la doc Stripe « Supported countries ». Un pilote hors de
+# cette liste est detecte (country_is_payable=False) au lieu de recevoir un
+# compte casse — on lui propose alors un versement manuel.
+_STRIPE_CONNECT_COUNTRIES = frozenset({
+    "AU", "AT", "BE", "BG", "CA", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+    "DE", "GI", "GR", "HK", "HU", "IE", "IT", "JP", "LV", "LI", "LT", "LU",
+    "MT", "MX", "NL", "NZ", "NO", "PL", "PT", "RO", "SG", "SK", "SI", "ES",
+    "SE", "CH", "TH", "AE", "GB", "US", "BR", "IN", "ID", "MY", "PH",
+})
+
+# Noms (FR + EN) -> code ISO2. Les codes ISO2 sont aussi acceptes directement.
 _COUNTRY_CODES = {
-    "France": "FR", "Belgique": "BE", "Suisse": "CH", "Luxembourg": "LU",
-    "Canada": "CA", "Quebec": "CA",
-    "Maroc": "MA", "Algerie": "DZ", "Tunisie": "TN",
-    "Senegal": "SN", "Cote d'Ivoire": "CI", "Mali": "ML", "Burkina Faso": "BF",
-    "Niger": "NE", "Cameroun": "CM", "Madagascar": "MG", "Liban": "LB",
+    # Francophonie / Europe
+    "france": "FR", "belgique": "BE", "belgium": "BE", "suisse": "CH",
+    "switzerland": "CH", "luxembourg": "LU", "allemagne": "DE", "germany": "DE",
+    "espagne": "ES", "spain": "ES", "italie": "IT", "italy": "IT",
+    "portugal": "PT", "pays-bas": "NL", "netherlands": "NL", "irlande": "IE",
+    "ireland": "IE", "autriche": "AT", "austria": "AT", "royaume-uni": "GB",
+    "royaume uni": "GB", "united kingdom": "GB", "angleterre": "GB",
+    "grande-bretagne": "GB", "danemark": "DK", "denmark": "DK", "suede": "SE",
+    "sweden": "SE", "norvege": "NO", "norway": "NO", "finlande": "FI",
+    "finland": "FI", "pologne": "PL", "poland": "PL", "grece": "GR",
+    "greece": "GR", "tchequie": "CZ", "czechia": "CZ", "roumanie": "RO",
+    "romania": "RO", "hongrie": "HU", "hungary": "HU",
+    # Ameriques
+    "canada": "CA", "quebec": "CA", "québec": "CA", "etats-unis": "US",
+    "états-unis": "US", "usa": "US", "united states": "US", "mexique": "MX",
+    "mexico": "MX", "bresil": "BR", "brésil": "BR", "brazil": "BR",
+    # Asie / Oceanie / Moyen-Orient
+    "japon": "JP", "japan": "JP", "singapour": "SG", "singapore": "SG",
+    "hong kong": "HK", "inde": "IN", "india": "IN", "thailande": "TH",
+    "thaïlande": "TH", "thailand": "TH", "malaisie": "MY", "malaysia": "MY",
+    "indonesie": "ID", "indonesia": "ID", "philippines": "PH",
+    "australie": "AU", "australia": "AU", "nouvelle-zelande": "NZ",
+    "new zealand": "NZ", "emirats arabes unis": "AE",
+    "émirats arabes unis": "AE", "uae": "AE", "dubai": "AE", "dubaï": "AE",
 }
 
 
-def _country_for_stripe(country: str) -> str:
-    return _COUNTRY_CODES.get(country, "FR")
+def _country_for_stripe(country: str) -> Optional[str]:
+    """Resout un pays libre en code Stripe Connect (ISO2), ou None si non
+    supporte. Ne RABAT PLUS sur 'FR' : un code errone creerait un compte
+    connecte incoherent avec l'IBAN du pilote (donc jamais payable)."""
+    raw = (country or "").strip()
+    if not raw:
+        return None
+    if len(raw) == 2 and raw.upper() in _STRIPE_CONNECT_COUNTRIES:
+        return raw.upper()
+    code = _COUNTRY_CODES.get(raw.lower())
+    if code and code in _STRIPE_CONNECT_COUNTRIES:
+        return code
+    return None
+
+
+def country_is_payable(country: str) -> bool:
+    """True si un pilote dans ce pays peut etre paye via Stripe Connect."""
+    return _country_for_stripe(country) is not None
 
 
 # ---------------------------------------------------------------------------

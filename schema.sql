@@ -330,3 +330,13 @@ CREATE TABLE IF NOT EXISTS name_change_requests (
 );
 CREATE INDEX IF NOT EXISTS idx_name_change_user ON name_change_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_name_change_status ON name_change_requests(status);
+
+-- Index de performance additionnels (requetes chaudes). Idempotents : aussi
+-- (re)crees par db.run_migrations() a chaque boot, seul chemin qui touche une
+-- base de PROD deja existante.
+CREATE INDEX IF NOT EXISTS idx_bid_mission_price     ON bids(mission_id, price);
+CREATE INDEX IF NOT EXISTS idx_booking_bid           ON bookings(bid_id);
+CREATE INDEX IF NOT EXISTS idx_review_target_rating  ON reviews(target_user_id, rating);
+CREATE INDEX IF NOT EXISTS idx_msg_sender            ON messages(sender_user_id);
+CREATE INDEX IF NOT EXISTS idx_msg_recip_read        ON messages(mission_id, recipient_user_id, read_at);
+CREATE INDEX IF NOT EXISTS idx_users_last_seen       ON users(last_seen_at);
