@@ -389,6 +389,17 @@ def api_country_breakdown():
     return jsonify(services.country_breakdown(_api_limit(50)))
 
 
+@app.route("/api/map")
+@security.rate_limit(per_minute=60, per_hour=600)
+def api_map():
+    # Marqueurs carte : pilotes (coords floutees ~11 km) + missions ouvertes.
+    return jsonify(services.map_markers(
+        country=request.args.get("country", "").strip(),
+        mission_type=request.args.get("mission_type", "").strip(),
+        limit=_api_limit(500),
+    ))
+
+
 @app.route("/pilotes")
 def pilots_search():
     # 'near_only' borne au rayon ; sinon lat/lng ne servent qu'au tri par

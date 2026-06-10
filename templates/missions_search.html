@@ -30,6 +30,8 @@
   </div>
 </form>
 
+{% set map_focus = 'missions' %}{% include "_map.html" with context %}
+
 <div class="grid-cards">
   {% for m in missions %}
   <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">

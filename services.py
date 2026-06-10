@@ -1750,6 +1750,65 @@ def near_geo(lat: float, lng: float, radius_km: int = 100, limit: int = 10) -> d
     return {"pilots": pilots[:limit], "missions": missions[:limit]}
 
 
+def _fuzz_coord(value: Optional[float], decimals: int) -> Optional[float]:
+    """Floute une coordonnee en l'arrondissant a une grille grossiere.
+
+    decimals=1 -> ~11 km (niveau quartier/ville) : protege l'adresse exacte
+    du pilote tout en restant utile pour une carte mondiale.
+    """
+    if value is None:
+        return None
+    return round(float(value), decimals)
+
+
+def map_markers(*, country: str = "", mission_type: str = "",
+                limit: int = 500) -> dict:
+    """Marqueurs cartographiques pilotes + missions, coords floutees.
+
+    Coordonnees pilote arrondies (~11 km) pour la confidentialite ; missions
+    a ~1 km. Seuls les enregistrements geolocalises sont renvoyes.
+    """
+    pilots = search_pilots(
+        country=country, mission_type=mission_type,
+        only_available=True, limit=limit,
+    )
+    missions = search_missions(
+        country=country, mission_type=mission_type,
+        status="open", limit=limit,
+    )
+    p_out = []
+    for p in pilots:
+        if p.get("lat") is None or p.get("lng") is None:
+            continue
+        p_out.append({
+            "id": p["id"],
+            "lat": _fuzz_coord(p["lat"], 1),
+            "lng": _fuzz_coord(p["lng"], 1),
+            "country": p.get("country"),
+            "rating": p.get("rating", {}),
+            "verified": bool(p.get("is_verified")),
+            "headline": (p.get("headline") or "")[:90],
+        })
+    m_out = []
+    for m in missions:
+        if m.get("lat") is None or m.get("lng") is None:
+            continue
+        m_out.append({
+            "id": m["id"],
+            "lat": _fuzz_coord(m["lat"], 2),
+            "lng": _fuzz_coord(m["lng"], 2),
+            "title": (m.get("title") or "")[:90],
+            "city": m.get("city"),
+            "country": m.get("country"),
+            "mission_type": m.get("mission_type"),
+            "is_urgent": bool(m.get("is_urgent")),
+            "budget_min": m.get("budget_min"),
+            "budget_max": m.get("budget_max"),
+            "currency": m.get("currency"),
+        })
+    return {"pilots": p_out, "missions": m_out}
+
+
 # Validation des statuts pour les vues
 ALL_MISSION_STATUS = MISSION_STATUS
 ALL_BID_STATUS = BID_STATUS

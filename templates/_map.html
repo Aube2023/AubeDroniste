@@ -1,0 +1,82 @@
+{# Carte interactive MapLibre GL — pilotes + missions geolocalises.
+   Parametres optionnels passes via include `with` :
+     map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
+   Coords pilote floutees cote serveur (~11 km) pour la confidentialite. #}
+{% set _focus = map_focus|default('pilots') %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
+  <div id="aube-map" style="height:420px;width:100%;background:var(--surface,#101014);"></div>
+  <div class="map-legend" style="display:flex;gap:18px;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes' if lang == 'fr' else 'Pilots' }}</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
+    <span class="muted" id="map-count"></span>
+  </div>
+</div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+  var el = document.getElementById('aube-map');
+  if (!el || typeof maplibregl === 'undefined') return;
+  var LANG = {{ ('"fr"' if lang == 'fr' else '"en"') | safe }};
+  var FOCUS = {{ ('"' ~ _focus ~ '"') | safe }};
+  var params = new URLSearchParams(window.location.search);
+  var qs = new URLSearchParams();
+  if (params.get('country')) qs.set('country', params.get('country'));
+  if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
+
+  var map = new maplibregl.Map({
+    container: 'aube-map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [2.3, 46.6], zoom: 3, attributionControl: true
+  });
+  map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+
+  function popupPilot(p) {
+    var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count) : (LANG === 'fr' ? 'nouveau' : 'new');
+    var verif = p.verified ? ' <b style="color:#3b82f6">✓</b>' : '';
+    return '<div style="font:14px system-ui"><b>' + (LANG==='fr'?'Pilote':'Pilot') + verif + '</b><br>' +
+      (p.country || '') + '<br><span style="color:#666">' + stars + '</span><br>' +
+      '<a href="/pilotes/' + p.id + '">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div>';
+  }
+  function popupMission(m) {
+    var budget = (m.budget_min || m.budget_max) ? ((m.budget_min||'') + (m.budget_max?('–'+m.budget_max):'') + ' ' + (m.currency||'')) : '';
+    var urgent = m.is_urgent ? ' 🔥' : '';
+    return '<div style="font:14px system-ui"><b>' + (m.title || (LANG==='fr'?'Mission':'Mission')) + urgent + '</b><br>' +
+      [m.city, m.country].filter(Boolean).join(', ') + '<br><span style="color:#666">' + budget + '</span><br>' +
+      '<a href="/missions/' + m.id + '">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div>';
+  }
+
+  map.on('load', function () {
+    fetch('/api/map' + (qs.toString() ? ('?' + qs.toString()) : ''))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var bounds = new maplibregl.LngLatBounds();
+        var n = 0;
+        (data.pilots || []).forEach(function (p) {
+          if (p.lng == null || p.lat == null) return;
+          var d = document.createElement('div');
+          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+          new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
+            .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupPilot(p))).addTo(map);
+          if (FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);
+          n++;
+        });
+        (data.missions || []).forEach(function (m) {
+          if (m.lng == null || m.lat == null) return;
+          var d = document.createElement('div');
+          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+          new maplibregl.Marker({element: d}).setLngLat([m.lng, m.lat])
+            .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupMission(m))).addTo(map);
+          if (FOCUS === 'missions') bounds.extend([m.lng, m.lat]);
+          n++;
+        });
+        if (FOCUS !== 'pilots') (data.pilots||[]).forEach(function(p){ if(p.lng!=null) bounds.extend([p.lng,p.lat]); });
+        if (FOCUS !== 'missions') (data.missions||[]).forEach(function(m){ if(m.lng!=null) bounds.extend([m.lng,m.lat]); });
+        var lbl = document.getElementById('map-count');
+        if (lbl) lbl.textContent = (LANG==='fr' ? (n + ' point(s) sur la carte') : (n + ' point(s) on the map'));
+        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: 9, duration: 0});
+      })
+      .catch(function () {});
+  });
+})();
+</script>

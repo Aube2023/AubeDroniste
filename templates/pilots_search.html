@@ -43,6 +43,8 @@
   </div>
 </form>
 
+{% include "_map.html" with context %}
+
 <div class="grid-cards">
   {% for p in pilots %}
   {% set masked = mask_name(p.full_name) %}

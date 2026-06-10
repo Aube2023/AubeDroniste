@@ -80,6 +80,33 @@ def test_api_near_ok(client):
     assert "pilots" in data and "missions" in data
 
 
+def test_api_map_shape(client):
+    r = client.get("/api/map")
+    assert r.status_code == 200
+    data = r.get_json()
+    assert "pilots" in data and "missions" in data
+    assert isinstance(data["pilots"], list)
+    assert isinstance(data["missions"], list)
+
+
+def test_api_map_coords_are_fuzzed(client):
+    # Les coords pilote renvoyees sont arrondies a 1 decimale (~11 km) :
+    # confidentialite de l'adresse exacte. On verifie l'invariant sur tout
+    # marqueur pilote geolocalise present.
+    r = client.get("/api/map")
+    for p in r.get_json()["pilots"]:
+        if p.get("lat") is not None:
+            assert round(p["lat"], 1) == p["lat"]
+            assert round(p["lng"], 1) == p["lng"]
+
+
+def test_csp_allows_maplibre(client):
+    csp = client.get("/").headers.get("Content-Security-Policy", "")
+    assert "https://unpkg.com" in csp
+    assert "demotiles.maplibre.org" in csp
+    assert "worker-src 'self' blob:" in csp
+
+
 def test_dashboard_requires_auth(client):
     r = client.get("/espace", follow_redirects=False)
     assert r.status_code in (302, 303)
