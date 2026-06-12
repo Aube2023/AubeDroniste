@@ -73,6 +73,7 @@ _T = {
     "nav.theme_dark":   {"fr": "Nuit",               "en": "Night"},
     "nav.theme_light":  {"fr": "Aube",               "en": "Dawn"},
     "nav.zone":         {"fr": "Ma zone",            "en": "My zone"},
+    "nav.skip":         {"fr": "Aller au contenu",   "en": "Skip to content"},
 
     # ---- Footer
     "footer.eco_eyebrow": {"fr": "L'écosystème L'Aube Étoilée",

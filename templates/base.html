@@ -54,6 +54,7 @@
   <link rel="stylesheet" href="{{ static_v('css/style.css') }}">
 </head>
 <body>
+<a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
 <header class="topbar">
   <a href="{{ url_for('index') }}" class="brand">
     <span class="glyph"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="Aube Pilot" width="36" height="36"></span>
@@ -116,7 +117,7 @@
   </div>
 {% endif %}
 
-<main class="page">
+<main class="page" id="main">
   {% block content %}{% endblock %}
 </main>
 
@@ -132,7 +133,7 @@
       {% endfor %}
     </nav>
   </section>
-  <nav class="footer-legal" aria-label="Mentions légales" style="max-width: 1240px; margin: 0 auto; padding: 16px 32px 4px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 18px 22px; font-size: .85rem;">
+  <nav class="footer-legal" aria-label="Mentions légales">
     <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>
     <a href="{{ url_for('page_terms') }}" class="muted">{{ t('footer.terms') }}</a>

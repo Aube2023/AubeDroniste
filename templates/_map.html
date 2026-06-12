@@ -3,6 +3,10 @@
      map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
    Coords pilote floutees cote serveur (~11 km) pour la confidentialite. #}
 {% set _focus = map_focus|default('pilots') %}
+{# preconnect : unpkg sert <link>/<script> (no-CORS, sans crossorigin) ;
+   demotiles est requete par fetch() MapLibre (CORS, avec crossorigin). #}
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="preconnect" href="https://demotiles.maplibre.org" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:420px;width:100%;background:var(--surface,#101014);"></div>

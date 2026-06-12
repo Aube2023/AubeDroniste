@@ -56,6 +56,7 @@
         {% else %}
           <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
                alt="{{ it.title or it.original_filename }}"
+               loading="lazy"
                style="width: 100%; height: 100%; object-fit: cover;">
         {% endif %}
       </div>

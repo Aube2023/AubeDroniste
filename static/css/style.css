@@ -144,6 +144,17 @@ p { margin: 0 0 1em; }
 
 /* ============ Topbar ============ */
 
+/* Lien d'evitement (a11y) : hors ecran, visible uniquement au focus clavier. */
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--amber); color: #0a0a0c;
+  font: 600 13px/1 var(--sans);
+  text-decoration: none;
+}
+.skip-link:focus { left: 0; }
+
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 24px;
@@ -767,46 +778,48 @@ img.avatar { object-fit: cover; }
 }
 
 .eco-section {
-  padding: 48px 32px 32px;
+  padding: 20px 32px 18px;
   border-bottom: 1px solid var(--rule);
 }
 .eco-header {
-  display: flex; flex-wrap: wrap; gap: 12px;
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
   align-items: baseline; justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 10px;
   max-width: 1240px; margin-left: auto; margin-right: auto;
 }
 .eco-header strong {
   font-family: var(--serif);
-  font-size: 1.35rem;
+  font-size: .95rem;
   font-weight: 600;
   letter-spacing: -.01em;
   color: var(--ink);
 }
 .eco-header .eyebrow { margin: 0; }
 .eco-header .muted {
-  font: 500 11px/1.4 var(--mono);
+  font: 500 10px/1.4 var(--mono);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
 
+/* Bande compacte : les 19 services en liens fluides (flex-wrap), filets
+   hairline via border-top/left conteneur + border-right/bottom cellules
+   (rendu net quel que soit le nombre de lignes). */
 .eco-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0;
-  border: 1px solid var(--rule);
+  display: flex; flex-wrap: wrap;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
   max-width: 1240px;
   margin: 0 auto;
 }
 .eco-grid > a {
-  display: flex; align-items: center; gap: 8px;
-  padding: 14px 18px;
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 6px 11px;
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
   color: var(--ink-soft);
   font-family: var(--sans);
   font-weight: 500;
-  font-size: 14px;
+  font-size: 12.5px;
   letter-spacing: -.01em;
   text-decoration: none;
   background: var(--paper);
@@ -817,7 +830,7 @@ img.avatar { object-fit: cover; }
   color: var(--amber);
 }
 .eco-grid > a .pre {
-  font: 600 10px/1 var(--mono);
+  font: 600 8.5px/1 var(--mono);
   letter-spacing: .14em;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -829,26 +842,20 @@ img.avatar { object-fit: cover; }
 }
 .eco-grid > a.here::after {
   content: "●";
-  margin-left: auto;
+  margin-left: 2px;
   color: var(--amber);
-  font-size: 8px;
+  font-size: 6px;
   align-self: center;
   animation: zone-ping 2s ease-in-out infinite;
 }
-.eco-grid > a.portal {
-  background: var(--paper-2);
-  color: var(--ink);
-  font-weight: 600;
+
+.footer-legal {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 14px 32px 2px;
+  display: flex; flex-wrap: wrap; gap: 10px 22px;
+  font-size: .85rem;
 }
-.eco-grid > a.portal .pre { color: var(--amber); }
-.eco-grid > a.portal::after {
-  content: "PORTAIL";
-  margin-left: auto;
-  font: 700 9px/1 var(--mono); letter-spacing: .18em;
-  color: var(--amber);
-  align-self: center;
-}
-.eco-grid > a.portal:hover { color: var(--amber); }
 
 .footer-line {
   padding: 24px 32px 36px;
