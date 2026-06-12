@@ -55,12 +55,12 @@
       <textarea name="deliverables" rows="2" placeholder="100 photos JPG retouchées + 30 RAW + vidéo 4K 3 min montée + USB physique remis"></textarea>
     </label>
 
-    <label>Capacités matériel requises (optionnel)
-      <select name="capabilities" multiple size="6" style="height: auto;">
-        {% for code, lbl in drone_capabilities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
-      </select>
-      <small class="muted">Ctrl/Cmd-clic pour sélection multiple.</small>
-    </label>
+    <label style="margin-bottom: 6px;">Capacités matériel requises (optionnel)</label>
+    <div class="chips check-grid">
+      {% for cap in drone_capabilities %}
+      <label class="chip-check"><input type="checkbox" name="capabilities" value="{{ cap }}"> {{ cap }}</label>
+      {% endfor %}
+    </div>
 
     <button class="cta" type="submit">Ajouter au catalogue</button>
   </form>
