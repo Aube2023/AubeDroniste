@@ -78,6 +78,9 @@
         {% if it.description %}
         <p class="muted small" style="margin: 0; white-space: pre-line;">{{ it.description }}</p>
         {% endif %}
+        {% if it.kind == 'video' %}
+        <a class="small muted" href="{{ url_for('media_file', filename=it.stored_filename) }}" target="_blank" rel="noopener" style="display: inline-block; margin-top: 8px;">▶ Ouvrir la vidéo en grand ↗</a>
+        {% endif %}
 
         <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
           <button class="ghost" type="button" onclick="document.getElementById('edit-pf-{{ it.id }}').style.display='block';">Modifier</button>

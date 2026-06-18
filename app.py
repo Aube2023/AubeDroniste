@@ -1178,6 +1178,50 @@ def media_file(filename):
     return resp
 
 
+def _ensure_web_video(stored_rel, fallback_mime="application/octet-stream"):
+    """Garantit une video lisible dans TOUS les navigateurs.
+
+    .mp4/.m4v/.webm sont deja web-compatibles. Le .mov (QuickTime) ne se lit
+    pas dans Chrome/Firefox : on le reconditionne en .mp4. Les videos de
+    telephone etant en H.264/AAC, c'est un simple remux (-c copy +faststart) :
+    quasi instantane, sans re-encodage ni perte. Si ffmpeg manque ou echoue
+    (codec exotique type ProRes/HEVC), on garde l'original.
+
+    Retourne (stored_rel, mime_type).
+    """
+    ext = stored_rel.rsplit(".", 1)[-1].lower() if "." in stored_rel else ""
+    web_mimes = {"mp4": "video/mp4", "m4v": "video/mp4", "webm": "video/webm"}
+    if ext in web_mimes:
+        return stored_rel, web_mimes[ext]
+    if ext != "mov":
+        return stored_rel, fallback_mime
+    import shutil
+    import subprocess
+    if not shutil.which("ffmpeg"):
+        return stored_rel, "video/quicktime"
+    src = os.path.join(UPLOAD_DIR, stored_rel)
+    dst_rel = stored_rel[:-4] + ".mp4"
+    dst = os.path.join(UPLOAD_DIR, dst_rel)
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", src, "-c", "copy",
+             "-movflags", "+faststart", dst],
+            check=True, capture_output=True, timeout=180,
+        )
+    except Exception as exc:
+        app.logger.warning("remux video %s -> mp4 echoue: %s", stored_rel, exc)
+        try:
+            os.remove(dst)
+        except OSError:
+            pass
+        return stored_rel, "video/quicktime"
+    try:
+        os.remove(src)
+    except OSError:
+        pass
+    return dst_rel, "video/mp4"
+
+
 # ---------------------------------------------------------------------------
 # Portfolio pilote (showreel photos + videos)
 # ---------------------------------------------------------------------------
@@ -1230,6 +1274,17 @@ def pilot_portfolio():
                     exist_ok=True)
         f.save(os.path.join(UPLOAD_DIR, stored))
 
+        mime = f.mimetype or "application/octet-stream"
+        if kind == "video":
+            # .mov (QuickTime) ne se lit pas dans Chrome/Firefox -> on
+            # reconditionne en .mp4 (remux sans ré-encodage si H.264/AAC :
+            # rapide, sans perte). La taille peut changer -> on la relit.
+            stored, mime = _ensure_web_video(stored, mime)
+            try:
+                size = os.path.getsize(os.path.join(UPLOAD_DIR, stored))
+            except OSError:
+                pass
+
         services.add_portfolio_item(
             pilot_user_id=user["id"],
             title=(request.form.get("title") or "").strip(),
@@ -1237,7 +1292,7 @@ def pilot_portfolio():
             kind=kind,
             original_filename=f.filename,
             stored_filename=stored,
-            mime_type=f.mimetype or "application/octet-stream",
+            mime_type=mime,
             size_bytes=size,
         )
         flash("Realisation ajoutee au portfolio.", "success")
