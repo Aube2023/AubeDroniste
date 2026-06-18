@@ -70,9 +70,9 @@
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
       <a href="{{ url_for('dashboard') }}" class="account-chip" title="{{ t('nav.account') }}">
         {% if current_user.avatar_path %}
-          <img class="avatar" id="account-avatar" data-username="{{ current_user.username }}" src="{{ url_for('media_file', filename=current_user.avatar_path[8:]) }}" alt="" width="30" height="30">
+          <img class="avatar js-self-avatar" data-username="{{ current_user.username }}" src="{{ url_for('media_file', filename=current_user.avatar_path[8:]) }}" alt="" width="30" height="30">
         {% else %}
-          <span class="avatar" id="account-avatar" data-username="{{ current_user.username }}">{{ (current_user.full_name or current_user.username or '?')[:1]|upper }}</span>
+          <span class="avatar js-self-avatar" data-username="{{ current_user.username }}">{{ (current_user.full_name or current_user.username or '?')[:1]|upper }}</span>
         {% endif %}
         <span class="account-name">{{ current_user.full_name or current_user.username }}</span>
       </a>
@@ -158,23 +158,27 @@
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 {% if current_user %}
 <script>
-// Avatar unifié : la pastille « mon compte » affiche la photo AubeMail
-// (source de vérité cross-Aube). Cible UNIQUEMENT la pastille (#account-avatar),
-// jamais les autres .avatar de la page — sinon on écraserait les pilotes listés.
+// Avatar unifié AubeMail (source de vérité cross-Aube) : applique TA photo à
+// tous TES avatars (.js-self-avatar : pastille header, profil…). Ciblé sur
+// l'utilisateur courant uniquement — jamais les .avatar des pilotes listés,
+// sinon on écraserait tout le monde avec ta photo.
 (function () {
-  var el = document.getElementById('account-avatar');
-  if (!el) return;
-  var u = el.getAttribute('data-username');
+  var els = document.querySelectorAll('.js-self-avatar[data-username]');
+  if (!els.length) return;
+  var u = els[0].getAttribute('data-username');
   if (!u) return;
   var KEY = 'aube_avatar_' + u;
   function apply(url) {
     if (!url) return;
-    if (el.tagName === 'IMG') { el.src = url; }
-    else {
-      el.style.backgroundImage = 'url("' + url + '")';
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-      el.style.color = 'transparent';
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.tagName === 'IMG') { el.src = url; }
+      else {
+        el.style.backgroundImage = 'url("' + url + '")';
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.style.color = 'transparent';
+      }
     }
   }
   try { apply(localStorage.getItem(KEY)); } catch (e) {}

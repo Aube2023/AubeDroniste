@@ -14,28 +14,38 @@
   <span class="eyebrow">Photo de profil</span>
   <div style="display: flex; align-items: center; gap: 18px; margin-top: 8px; flex-wrap: wrap;">
     {% if profile.avatar_path %}
-      <img src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
+      <img class="js-self-avatar" data-username="{{ current_user.username }}"
+           src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
            alt="Avatar de {{ current_user.full_name }}"
            style="width: 96px; height: 96px; object-fit: cover; border: 1px solid var(--ink-dim); border-radius: 50%;">
     {% else %}
-      <div style="width: 96px; height: 96px; background: var(--paper-3, #f4eddd); border: 1px dashed var(--ink-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2rem; color: var(--ink-dim);">
+      <div class="js-self-avatar" data-username="{{ current_user.username }}"
+           style="width: 96px; height: 96px; background: var(--paper-3, #f4eddd); border: 1px dashed var(--ink-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2rem; color: var(--ink-dim);">
         {{ current_user.full_name[:1] }}
       </div>
     {% endif %}
     <div style="flex: 1; min-width: 240px;">
-      <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
-            {{ csrf_input() }}
-        <label style="flex: 1;">Nouvelle photo (JPG/PNG/WebP, max 5 Mo)
-          <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required>
-        </label>
-        <button class="cta" type="submit">Téléverser</button>
-      </form>
-      {% if profile.avatar_path %}
-      <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" onsubmit="return confirm('Retirer la photo de profil ?')">
-            {{ csrf_input() }}
-        <button class="ghost danger" type="submit">Retirer la photo actuelle</button>
-      </form>
-      {% endif %}
+      <p style="margin: 0 0 8px;">
+        Ta photo est <strong>unifiée avec ton compte Aube</strong> : la même sur
+        AubeMail, AubePilot et tout le reste de la suite. Tu la changes à un seul endroit.
+      </p>
+      <a class="cta" href="{{ aubemail_url }}" target="_blank" rel="noopener">Gérer ma photo sur AubeMail →</a>
+      <details style="margin-top: 12px;">
+        <summary class="muted" style="cursor: pointer;">Pas de compte AubeMail ? Utiliser une photo locale</summary>
+        <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 10px;">
+              {{ csrf_input() }}
+          <label style="flex: 1;">Photo locale (JPG/PNG/WebP, max 5 Mo)
+            <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required>
+          </label>
+          <button class="ghost" type="submit">Téléverser</button>
+        </form>
+        {% if profile.avatar_path %}
+        <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" onsubmit="return confirm('Retirer la photo locale ?')">
+              {{ csrf_input() }}
+          <button class="ghost danger" type="submit">Retirer la photo locale</button>
+        </form>
+        {% endif %}
+      </details>
     </div>
   </div>
 </section>

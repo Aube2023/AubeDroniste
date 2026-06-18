@@ -25,5 +25,5 @@ def test_header_logged_in_shows_name_and_account_link(make_user, auth_client):
     assert "Bob Header" in html
     assert "/espace" in html
     # avatar unifié : la pastille est câblée sur l'avatar AubeMail (source de vérité)
-    assert 'id="account-avatar"' in html
+    assert "js-self-avatar" in html
     assert "/aubemail/api/avatar/" in html
