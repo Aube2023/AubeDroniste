@@ -68,7 +68,14 @@
     <a href="{{ url_for('missions_search') }}">{{ t('nav.missions') }}</a>
     {% if current_user %}
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
-      <a href="{{ url_for('dashboard') }}">{{ t('nav.dashboard') }}</a>
+      <a href="{{ url_for('dashboard') }}" class="account-chip" title="{{ t('nav.account') }}">
+        {% if current_user.avatar_path %}
+          <img class="avatar" src="{{ url_for('media_file', filename=current_user.avatar_path[8:]) }}" alt="" width="30" height="30">
+        {% else %}
+          <span class="avatar">{{ (current_user.full_name or current_user.username or '?')[:1]|upper }}</span>
+        {% endif %}
+        <span class="account-name">{{ current_user.full_name or current_user.username }}</span>
+      </a>
       <form method="post" action="{{ url_for('logout') }}" class="inline">
         {{ csrf_input() }}
         <button class="ghost" type="submit">{{ t('nav.logout') }}</button>

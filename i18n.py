@@ -66,6 +66,7 @@ _T = {
     "nav.missions":     {"fr": "Missions",           "en": "Missions"},
     "nav.publish":      {"fr": "Publier une mission","en": "Publish a mission"},
     "nav.dashboard":    {"fr": "Espace",             "en": "Dashboard"},
+    "nav.account":      {"fr": "Mon compte",         "en": "My account"},
     "nav.logout":       {"fr": "Quitter",            "en": "Sign out"},
     "nav.login":        {"fr": "Connexion",          "en": "Sign in"},
     "nav.register":     {"fr": "Rejoindre",          "en": "Join"},

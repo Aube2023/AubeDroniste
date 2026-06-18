@@ -196,6 +196,17 @@ p { margin: 0 0 1em; }
 .topnav .cta { color: var(--paper); }
 form.inline { display: inline; margin: 0; }
 
+/* Pastille « mon compte » : montre qui est connecte + acces a l'espace. */
+.account-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 220px; }
+.account-chip .avatar { width: 30px; height: 30px; font-size: 15px; flex: 0 0 auto; }
+.account-chip .account-name {
+  font-weight: 600; color: var(--ink);
+  max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.account-chip:hover .account-name { color: var(--amber); }
+.account-chip:hover::after { display: none; }   /* pas de soulignement sous la pastille */
+@media (max-width: 760px) { .account-chip .account-name { display: none; } }
+
 /* ============ Boutons ============ */
 
 .cta, button.cta, a.cta {
