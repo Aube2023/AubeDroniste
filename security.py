@@ -127,14 +127,14 @@ def apply_security_headers(resp):
     # web workers via blob:).
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com; "
+        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com https://aubemail.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; "
         "font-src 'self' data: https://fonts.gstatic.com; "
         "img-src 'self' data: blob: https:; "
         "worker-src 'self' blob:; "
         "child-src 'self' blob:; "
         "frame-src https://js.stripe.com https://hooks.stripe.com; "
-        "connect-src 'self' https://api.stripe.com https://demotiles.maplibre.org; "
+        "connect-src 'self' https://api.stripe.com https://demotiles.maplibre.org https://aubemail.com; "
         "form-action 'self' https://checkout.stripe.com https://connect.stripe.com; "
         "frame-ancestors 'none'; "
         "base-uri 'self';"

@@ -98,6 +98,10 @@ AUBEDRIVE_URL = os.environ.get("AUBEDRIVE_URL", "https://drive.aubeetoilee.com")
 AUBEPHOTOS_URL = os.environ.get("AUBEPHOTOS_URL", "https://photos.aubeetoilee.com")
 # AubeCrew = gestion de flotte / equipage / logbook pour les pilotes
 AUBECREW_URL = os.environ.get("AUBECREW_URL", "https://crew.aubeetoilee.com")
+# AubeMail = identite centrale de l'ecosysteme. L'avatar y est unifie :
+# API publique GET {AUBEMAIL_URL}/aubemail/api/avatar/<username> -> {avatar_url}.
+# AubePilot affiche cette photo (source de verite) plutot qu'une copie locale.
+AUBEMAIL_URL = os.environ.get("AUBEMAIL_URL", "https://aubemail.com")
 # Cle partagee server-to-server : si presente, ajoutee en header
 # X-Aube-Internal-Key. Sinon, on tente sans (les services Aube peuvent
 # autoriser via verification du username en clair).

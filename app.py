@@ -25,6 +25,7 @@ from config import (
     ANDROID_CERT_SHA256,
     ANDROID_PACKAGE,
     AUBECREW_URL,
+    AUBEMAIL_URL,
     AUBE_SERVICES,
     AUBE_SERVICE_COUNT,
     AUTO_RELEASE_DAYS,
@@ -156,6 +157,7 @@ def _inject_globals():
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
+        "aubemail_url": AUBEMAIL_URL,
         # Ecosysteme : liste + compteur derives de config (footer data-driven)
         "aube_services": _aube_services(),
         "aube_service_count": AUBE_SERVICE_COUNT,
