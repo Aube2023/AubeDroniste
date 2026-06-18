@@ -27,6 +27,12 @@
       <label>Fichier (JPG/PNG/HEIC ou MP4/MOV/WebM, max {{ max_mb }} Mo)
         <input name="file" type="file" required
                accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm">
+        <small class="muted">
+          Photos illimitées ·
+          {% if max_videos %}vidéos&nbsp;: {{ video_count }}/{{ max_videos }}
+            {% if video_count >= max_videos %}(limite atteinte — supprime-en une pour en ajouter){% endif %}
+          {% else %}vidéos illimitées{% endif %}
+        </small>
       </label>
     </div>
     <label>Description (contexte, matériel utilisé, durée, défi technique…)
@@ -42,7 +48,7 @@
   </h2>
 
   {% if not items %}
-    <p class="muted">Ajoutez vos premières réalisations ci-dessus. Une dizaine d'images soignées + 2-3 vidéos courtes suffisent pour convaincre.</p>
+    <p class="muted">Ajoutez vos premières réalisations ci-dessus. Photos illimitées{% if max_videos %} + jusqu'à {{ max_videos }} vidéos courtes{% endif %} : une dizaine d'images soignées suffisent déjà à convaincre.</p>
   {% endif %}
 
   <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">

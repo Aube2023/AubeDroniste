@@ -45,6 +45,7 @@ from config import (
     MAX_DELIVERABLE_MB,
     MAX_AVATAR_MB,
     MAX_PORTFOLIO_MB,
+    MAX_PORTFOLIO_VIDEOS,
     ALLOWED_DELIVERABLE_EXT,
     ALLOWED_AVATAR_EXT,
     ALLOWED_PORTFOLIO_EXT,
@@ -71,10 +72,12 @@ SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-# Le max global accomode les livrables booking (gros videos). La limite
-# par usage est verifiee dans chaque route (10 Mo pour docs, 1 Go pour
-# livrables).
-app.config["MAX_CONTENT_LENGTH"] = max(MAX_UPLOAD_MB, MAX_DELIVERABLE_MB) * 1024 * 1024
+# Le max global doit couvrir le PLUS GROS upload accepte par n'importe quelle
+# route (sinon Flask coupe en 413 avant la verif fine). La limite par usage
+# est verifiee dans chaque route (10 Mo docs, 1 Go portfolio/livrables).
+app.config["MAX_CONTENT_LENGTH"] = (
+    max(MAX_UPLOAD_MB, MAX_PORTFOLIO_MB, MAX_DELIVERABLE_MB) * 1024 * 1024
+)
 app.config["SITE_URL"] = os.environ.get("SITE_URL", f"http://localhost:{PORT}")
 
 # Cookies durcis : httpOnly toujours, secure si HTTPS, SameSite=Lax
@@ -1198,6 +1201,19 @@ def pilot_portfolio():
             )
             return redirect(url_for("pilot_portfolio"))
 
+        # Photos illimitees ; videos plafonnees (cf MAX_PORTFOLIO_VIDEOS).
+        kind = services.portfolio_kind_from_ext(ext)
+        if (kind == "video" and MAX_PORTFOLIO_VIDEOS
+                and services.count_portfolio_items(user["id"], "video")
+                >= MAX_PORTFOLIO_VIDEOS):
+            flash(
+                f"Maximum {MAX_PORTFOLIO_VIDEOS} vidéos dans le portfolio "
+                f"(les photos restent illimitées). Supprime une vidéo pour en "
+                f"ajouter une nouvelle.",
+                "error",
+            )
+            return redirect(url_for("pilot_portfolio"))
+
         f.stream.seek(0, os.SEEK_END)
         size = f.stream.tell()
         f.stream.seek(0)
@@ -1216,7 +1232,7 @@ def pilot_portfolio():
             pilot_user_id=user["id"],
             title=(request.form.get("title") or "").strip(),
             description=(request.form.get("description") or "").strip(),
-            kind=services.portfolio_kind_from_ext(ext),
+            kind=kind,
             original_filename=f.filename,
             stored_filename=stored,
             mime_type=f.mimetype or "application/octet-stream",
@@ -1229,6 +1245,8 @@ def pilot_portfolio():
         "pilot_portfolio.html",
         items=services.list_portfolio_items(user["id"]),
         max_mb=MAX_PORTFOLIO_MB,
+        max_videos=MAX_PORTFOLIO_VIDEOS,
+        video_count=services.count_portfolio_items(user["id"], "video"),
     )
 
 
@@ -2040,7 +2058,10 @@ def _403(_e):
 
 @app.errorhandler(413)
 def _413(_e):
-    return render_template("error.html", code=413, message=f"Fichier trop lourd (max {MAX_UPLOAD_MB} Mo)."), 413
+    # MAX_CONTENT_LENGTH = max(MAX_UPLOAD_MB, MAX_DELIVERABLE_MB) : on affiche
+    # le vrai plafond global, pas l'ancien 10 Mo trompeur. Les routes (portfolio
+    # 200 Mo, livrables 1 Go) renvoient deja leur propre message plus precis.
+    return render_template("error.html", code=413, message=f"Fichier trop volumineux (max {MAX_DELIVERABLE_MB} Mo)."), 413
 
 
 @app.context_processor

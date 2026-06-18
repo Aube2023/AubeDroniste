@@ -1581,6 +1581,23 @@ def list_portfolio_items(pilot_user_id: int) -> list:
     return [dict(r) for r in rows]
 
 
+def count_portfolio_items(pilot_user_id: int,
+                          kind: Optional[str] = None) -> int:
+    """Nombre de pieces du portfolio, filtrable par kind ('video' / 'image')."""
+    if kind:
+        row = db.fetchone(
+            "SELECT COUNT(*) AS n FROM pilot_portfolio_items "
+            "WHERE pilot_user_id=? AND kind=?",
+            (pilot_user_id, kind),
+        )
+    else:
+        row = db.fetchone(
+            "SELECT COUNT(*) AS n FROM pilot_portfolio_items WHERE pilot_user_id=?",
+            (pilot_user_id,),
+        )
+    return int(row["n"]) if row else 0
+
+
 def get_portfolio_item(item_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT * FROM pilot_portfolio_items WHERE id=?", (item_id,),

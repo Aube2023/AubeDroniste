@@ -65,13 +65,17 @@ ALLOWED_DOC_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}
 MAX_AVATAR_MB = 5
 ALLOWED_AVATAR_EXT = {"jpg", "jpeg", "png", "webp"}
 
-# Portfolio pilote (showreel public : photos + videos courtes) :
-# 200 Mo max par piece, formats etendus aux videos.
-MAX_PORTFOLIO_MB = int(os.environ.get("AUBEPILOT_MAX_PORTFOLIO_MB", "200"))
+# Portfolio pilote (showreel public : photos + videos) :
+# 1 Go max par piece (peu de videos mais haute qualite : 4K/6K accepte),
+# formats etendus aux videos. Surchargable via env.
+MAX_PORTFOLIO_MB = int(os.environ.get("AUBEPILOT_MAX_PORTFOLIO_MB", "1024"))
 ALLOWED_PORTFOLIO_EXT = {
     "jpg", "jpeg", "png", "webp", "heic",
     "mp4", "mov", "webm", "m4v",
 }
+# Photos illimitees ; videos plafonnees (hebergement/bande passante lourds).
+# 0 = illimite. Surchargable via env pour ajuster sans toucher au code.
+MAX_PORTFOLIO_VIDEOS = int(os.environ.get("AUBEPILOT_MAX_PORTFOLIO_VIDEOS", "2"))
 
 # Livrables booking : limite specifique (videos & rushs lourds)
 MAX_DELIVERABLE_MB = int(os.environ.get("AUBEPILOT_MAX_DELIVERABLE_MB", "1024"))
@@ -569,7 +573,7 @@ MESSAGE_BANNED_PATTERNS = [
 
 # Pays vedettes pour le selecteur (le reste reste libre)
 FEATURED_COUNTRIES = [
-    "France", "Canada", "Belgique", "Suisse", "Luxembourg",
+    "France", "Canada", "États-Unis", "Belgique", "Suisse", "Luxembourg",
     "Maroc", "Algerie", "Tunisie", "Senegal", "Cote d'Ivoire",
     "Cameroun", "Mali", "Burkina Faso", "Niger", "Madagascar",
     "Liban", "Quebec",
