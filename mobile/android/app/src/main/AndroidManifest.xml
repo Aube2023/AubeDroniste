@@ -6,10 +6,13 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.location" android:required="false"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <!-- allowBackup=false : la session (cookies WebView) ne doit pas se
+         retrouver dans les sauvegardes extractibles de l'appareil. -->
     <application
         android:label="Aube Pilot"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,6 +33,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- App Links : les liens pilot.aubeetoilee.com ouvrent l'app.
+                 Verifie via /.well-known/assetlinks.json servi par le site. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="pilot.aubeetoilee.com"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
