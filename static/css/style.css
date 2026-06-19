@@ -823,29 +823,28 @@ img.avatar { object-fit: cover; }
    hairline via border-top/left conteneur + border-right/bottom cellules
    (rendu net quel que soit le nombre de lignes). */
 .eco-grid {
-  display: flex; flex-wrap: wrap;
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
+  display: flex; flex-wrap: wrap; gap: 8px;
   max-width: 1240px;
   margin: 0 auto;
 }
 .eco-grid > a {
   display: inline-flex; align-items: baseline; gap: 6px;
-  padding: 6px 11px;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  padding: 6px 12px;
+  border: 1px solid var(--rule-soft);
+  border-radius: 8px;
   color: var(--ink-soft);
   font-family: var(--sans);
   font-weight: 500;
   font-size: 12.5px;
   letter-spacing: -.01em;
   text-decoration: none;
-  background: var(--paper);
-  transition: background .12s, color .12s;
+  background: var(--paper-2);
+  transition: background .12s, color .12s, border-color .12s;
 }
 .eco-grid > a:hover {
-  background: var(--paper-2);
+  background: var(--paper);
   color: var(--amber);
+  border-color: var(--amber);
 }
 .eco-grid > a .pre {
   font: 600 8.5px/1 var(--mono);
@@ -855,8 +854,9 @@ img.avatar { object-fit: cover; }
 }
 .eco-grid > a:hover .pre { color: var(--amber); }
 .eco-grid > a.here {
-  background: var(--paper-2);
+  background: var(--paper);
   color: var(--amber);
+  border-color: var(--amber);
 }
 .eco-grid > a.here::after {
   content: "●";
