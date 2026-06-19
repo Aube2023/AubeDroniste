@@ -1,45 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
+{% set fr = (lang == 'fr') %}
 
 <div style="margin-bottom: 24px;">
-  <span class="eyebrow">Annuaire pilote</span>
-  <h1>Trouver un pilote.</h1>
-  <p class="lead muted">{{ pilots|length }} pilote(s) correspondent à votre filtrage.</p>
+  <span class="eyebrow">{{ 'Annuaire pilote' if fr else 'Pilot directory' }}</span>
+  <h1>{{ 'Trouver un pilote.' if fr else 'Find a pilot.' }}</h1>
+  <p class="lead muted">{{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage.' if fr else 'pilot(s) match your filters.' }}</p>
 </div>
 
 <form method="get" class="filters card">
-  <label>{{ 'Rechercher un pilote' if lang == 'fr' else 'Search for a pilot' }}
+  <label>{{ 'Rechercher un pilote' if fr else 'Search for a pilot' }}
     <input name="q" value="{{ params.text }}" type="search"
-           placeholder="{{ 'Nom, ville, spécialité…' if lang == 'fr' else 'Name, city, specialty…' }}">
+           placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
   </label>
   <div class="grid-3">
-    <label>Pays
+    <label>{{ 'Pays' if fr else 'Country' }}
       <select name="country">
-        <option value="">— tous —</option>
+        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
         {% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
       </select>
     </label>
-    <label>Ville<input name="city" value="{{ params.city }}"></label>
-    <label>Spécialité
+    <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}"></label>
+    <label>{{ 'Spécialité' if fr else 'Specialty' }}
       <select name="mission_type">
-        <option value="">— toutes —</option>
+        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
         {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
       </select>
     </label>
-    <label>Capacité drone
+    <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
       <select name="capability">
-        <option value="">— toutes —</option>
+        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
         {% for cap in drone_capabilities %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap }}</option>{% endfor %}
       </select>
     </label>
-    <label>Note minimale
+    <label>{{ 'Note minimale' if fr else 'Min. rating' }}
       <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
     </label>
-    <label class="check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> Disponibles uniquement</label>
+    <label class="check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles uniquement' if fr else 'Available only' }}</label>
   </div>
   <div class="row-between" style="margin-top: 20px;">
     <span></span>
-    <button class="cta" type="submit">Filtrer</button>
+    <button class="cta" type="submit">{{ 'Filtrer' if fr else 'Filter' }}</button>
   </div>
 </form>
 
@@ -52,31 +53,31 @@
     <div class="strip">
       <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
-        {% if p.rating.count %}{{ p.rating.count }} avis{% else %}nouveau{% endif %}
+        {% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
       </span>
     </div>
     <div class="body">
       {% if p.avatar_path %}
       <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
-           alt="Photo pilote" loading="lazy"
+           alt="{{ 'Photo pilote' if fr else 'Pilot photo' }}" loading="lazy"
            style="object-fit: cover;">
       {% else %}
       <div class="avatar">{{ masked[:1] }}</div>
       {% endif %}
       <div>
-        <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</div>
+        <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
         <div class="loc">{{ p.country }}</div>
-        <div class="headline">« {{ p.headline or "Disponible pour vos prises de vue." }} »</div>
+        <div class="headline">« {{ p.headline or ('Disponible pour vos prises de vue.' if fr else 'Available for your aerial shots.') }} »</div>
       </div>
     </div>
     <div class="foot">
       <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
-      <span>{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}sur devis{% endif %}</span>
+      <span>{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
     </div>
   </a>
   {% else %}
     <div class="card" style="grid-column: 1/-1;">
-      <p class="muted">Aucun pilote ne correspond. Essayez de retirer un filtre.</p>
+      <p class="muted">{{ 'Aucun pilote ne correspond. Essayez de retirer un filtre.' if fr else 'No pilot matches. Try removing a filter.' }}</p>
     </div>
   {% endfor %}
 </div>

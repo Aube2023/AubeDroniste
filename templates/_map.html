@@ -6,10 +6,10 @@
 {# preconnect : unpkg sert <link>/<script> (no-CORS, sans crossorigin) ;
    demotiles est requete par fetch() MapLibre (CORS, avec crossorigin). #}
 <link rel="preconnect" href="https://unpkg.com">
-<link rel="preconnect" href="https://demotiles.maplibre.org" crossorigin>
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
-  <div id="aube-map" style="height:420px;width:100%;background:var(--surface,#101014);"></div>
+  <div id="aube-map" style="height:360px;width:100%;background:var(--surface,#101014);"></div>
   <div class="map-legend" style="display:flex;gap:18px;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes' if lang == 'fr' else 'Pilots' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
@@ -28,9 +28,25 @@
   if (params.get('country')) qs.set('country', params.get('country'));
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
 
+  // Fond de carte CARTO (épuré, gratuit, sans clé) adapté au thème jour/nuit.
+  // Bien plus détaillé/élégant que le fond générique (villes, rues, labels).
+  var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
+  var variant = DARK ? 'dark_all' : 'light_all';
+  var TILES = ['a', 'b', 'c', 'd'].map(function (s) {
+    return 'https://' + s + '.basemaps.cartocdn.com/' + variant + '/{z}/{x}/{y}.png';
+  });
   var map = new maplibregl.Map({
     container: 'aube-map',
-    style: 'https://demotiles.maplibre.org/style.json',
+    style: {
+      version: 8,
+      sources: {
+        carto: {
+          type: 'raster', tiles: TILES, tileSize: 256,
+          attribution: '© OpenStreetMap · © CARTO'
+        }
+      },
+      layers: [{ id: 'carto', type: 'raster', source: 'carto' }]
+    },
     center: [2.3, 46.6], zoom: 3, attributionControl: true
   });
   map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');

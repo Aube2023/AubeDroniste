@@ -103,7 +103,8 @@ def test_api_map_coords_are_fuzzed(client):
 def test_csp_allows_maplibre(client):
     csp = client.get("/").headers.get("Content-Security-Policy", "")
     assert "https://unpkg.com" in csp
-    assert "demotiles.maplibre.org" in csp
+    # Fond de carte CARTO (raster) chargé en fetch -> doit être en connect-src.
+    assert "basemaps.cartocdn.com" in csp
     assert "worker-src 'self' blob:" in csp
 
 

@@ -1,32 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
+{% set fr = (lang == 'fr') %}
 
 <div style="margin-bottom: 24px;">
-  <span class="eyebrow">Tableau des départs</span>
-  <h1>Missions ouvertes.</h1>
-  <p class="lead muted">{{ missions|length }} mission(s) attendent un pilote.</p>
+  <span class="eyebrow">{{ 'Tableau des départs' if fr else 'Departures board' }}</span>
+  <h1>{{ 'Missions ouvertes.' if fr else 'Open missions.' }}</h1>
+  <p class="lead muted">{{ missions|length }} {{ 'mission(s) attendent un pilote.' if fr else 'mission(s) awaiting a pilot.' }}</p>
 </div>
 
 <form method="get" class="filters card">
   <div class="grid-3">
-    <label>Pays
+    <label>{{ 'Pays' if fr else 'Country' }}
       <select name="country">
-        <option value="">— tous —</option>
+        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
         {% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
       </select>
     </label>
-    <label>Type
+    <label>{{ 'Type' if fr else 'Type' }}
       <select name="mission_type">
-        <option value="">— tous —</option>
+        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
         {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
       </select>
     </label>
-    <label>Ville<input name="city" value="{{ params.city }}" placeholder="ex. Marrakech"></label>
-    <label class="check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> Urgent uniquement</label>
+    <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}" placeholder="{{ 'ex. Marrakech' if fr else 'e.g. Toronto' }}"></label>
+    <label class="check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> {{ 'Urgent uniquement' if fr else 'Urgent only' }}</label>
   </div>
   <div class="row-between" style="margin-top: 20px;">
     <span></span>
-    <button class="cta" type="submit">Filtrer</button>
+    <button class="cta" type="submit">{{ 'Filtrer' if fr else 'Filter' }}</button>
   </div>
 </form>
 
@@ -37,7 +38,7 @@
   <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
     <div class="header">
       <span class="tag">{{ mission_label(m.mission_type) }}</span>
-      {% if m.is_urgent %}<span class="tag tag-urgent">⚡ urgent</span>{% endif %}
+      {% if m.is_urgent %}<span class="tag tag-urgent">⚡ {{ 'urgent' if fr else 'urgent' }}</span>{% endif %}
     </div>
     <h3>{{ m.title }}</h3>
     <div class="coords">
@@ -46,7 +47,7 @@
     <div class="excerpt">{{ m.description[:140] }}{% if m.description|length > 140 %}…{% endif %}</div>
     <div class="footer">
       <span>
-        {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}sur devis{% endif %}
+        {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}
         {{ m.currency if m.budget_min or m.budget_max else '' }}
       </span>
       <span>{{ m.created_at[:10] }}</span>
@@ -54,7 +55,7 @@
   </a>
   {% else %}
     <div class="card" style="grid-column: 1/-1;">
-      <p class="muted">Aucune mission ne correspond. Essayez de retirer le filtre pays ou type.</p>
+      <p class="muted">{{ 'Aucune mission ne correspond. Essayez de retirer le filtre pays ou type.' if fr else 'No mission matches. Try removing the country or type filter.' }}</p>
     </div>
   {% endfor %}
 </div>
