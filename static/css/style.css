@@ -252,10 +252,10 @@ form.inline { display: inline; margin: 0; }
 .card {
   background: var(--paper);
   border: 1px solid var(--rule-soft);
-  border-radius: 16px;
-  padding: 26px;
-  margin: 16px 0;
-  box-shadow: 0 1px 2px rgba(20,22,31,.04), 0 6px 20px rgba(20,22,31,.05);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 14px 0;
+  box-shadow: 0 1px 2px rgba(20,22,31,.03), 0 4px 16px rgba(20,22,31,.045);
 }
 [data-theme="dark"] .card {
   background: var(--paper-2);
@@ -356,8 +356,8 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 .tag-ok       { color: var(--teal); border-color: rgba(78,169,147,.4); }
 .tag-urgent   { color: var(--signal); border-color: rgba(207,72,56,.4); background: rgba(207,72,56,.06); }
-.tag-open, .tag-pending, .tag-scheduled { color: var(--amber); border-color: rgba(224,162,60,.4); }
-.tag-assigned, .tag-in_progress         { color: var(--gold); border-color: rgba(216,184,90,.4); }
+.tag-open, .tag-pending, .tag-scheduled { color: var(--amber); border-color: rgba(66,87,178,.4); }
+.tag-assigned, .tag-in_progress         { color: var(--gold); border-color: rgba(122,95,196,.4); }
 .tag-done, .tag-completed, .tag-accepted { color: var(--teal); border-color: rgba(78,169,147,.4); }
 .tag-cancelled, .tag-rejected, .tag-withdrawn, .tag-disputed { color: var(--ink-dim); }
 
@@ -515,7 +515,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   display: grid; grid-template-columns: 1fr auto;
   align-items: center;
   padding: 10px 14px;
-  background: linear-gradient(90deg, rgba(224,162,60,.1), transparent 70%);
+  background: linear-gradient(90deg, rgba(66,87,178,.1), transparent 70%);
   border-bottom: 1px solid var(--rule);
 }
 .pilot-card .callsign {
@@ -685,8 +685,15 @@ img.avatar { object-fit: cover; }
 
 /* ============ Filtres ============ */
 
-.filters { padding: 22px; }
+.filters { padding: 18px 20px; }
+.filters label { margin: 9px 0; }
 .filters .grid-3 { gap: 14px; }
+
+/* En-tête des pages recherche : compact (le h1 display géant — jusqu'à 4.2rem —
+   poussait la carte et les résultats hors de l'écran). */
+.search-head { margin-bottom: 16px; }
+.search-head h1 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); line-height: 1.05; }
+.search-head .lead { font-size: 1rem; margin-top: 4px; }
 
 /* ============ Chat ============ */
 
@@ -701,8 +708,8 @@ img.avatar { object-fit: cover; }
 }
 .msg-mine {
   align-self: flex-end;
-  background: rgba(224,162,60,.08);
-  border-color: rgba(224,162,60,.4);
+  background: rgba(66,87,178,.08);
+  border-color: rgba(66,87,178,.4);
 }
 .msg .muted { font: 500 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 
@@ -1173,7 +1180,7 @@ img.avatar { object-fit: cover; }
 .role-cards .role-card:hover { border-color: var(--amber); transform: translateY(-1px); }
 .role-cards input:checked + .role-card {
   border-color: var(--amber);
-  background: rgba(224,162,60,.08);
+  background: rgba(66,87,178,.08);
 }
 .role-cards input:focus-visible + .role-card {
   outline: 2px solid var(--amber); outline-offset: 2px;
@@ -1289,7 +1296,7 @@ img.avatar { object-fit: cover; }
 .patch-shield {
   width: 48px; height: 48px;
   background:
-    linear-gradient(135deg, rgba(224,162,60,.25), rgba(224,162,60,.08)),
+    linear-gradient(135deg, rgba(66,87,178,.25), rgba(66,87,178,.08)),
     var(--paper);
   border: 1px solid var(--amber);
   display: grid; place-items: center;

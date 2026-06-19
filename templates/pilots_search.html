@@ -2,7 +2,7 @@
 {% block content %}
 {% set fr = (lang == 'fr') %}
 
-<div style="margin-bottom: 24px;">
+<div class="search-head">
   <span class="eyebrow">{{ 'Annuaire pilote' if fr else 'Pilot directory' }}</span>
   <h1>{{ 'Trouver un pilote.' if fr else 'Find a pilot.' }}</h1>
   <p class="lead muted">{{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage.' if fr else 'pilot(s) match your filters.' }}</p>

@@ -2,7 +2,7 @@
 {% block content %}
 {% set fr = (lang == 'fr') %}
 
-<div style="margin-bottom: 24px;">
+<div class="search-head">
   <span class="eyebrow">{{ 'Tableau des départs' if fr else 'Departures board' }}</span>
   <h1>{{ 'Missions ouvertes.' if fr else 'Open missions.' }}</h1>
   <p class="lead muted">{{ missions|length }} {{ 'mission(s) attendent un pilote.' if fr else 'mission(s) awaiting a pilot.' }}</p>
