@@ -8,7 +8,7 @@
     <p class="lead">{{ t('home.lead') }}</p>
     <div class="cta-row">
       <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta cta-big">{{ t('home.cta_publish') }}</a>
-      <a href="{{ url_for('register') }}?role=pilot" class="ghost">{{ t('home.cta_pilot') }}</a>
+      <a href="{{ url_for('register') }}?role=pilot" class="ghost cta-big">{{ t('home.cta_pilot') }}</a>
     </div>
   </div>
   <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}">
@@ -28,7 +28,7 @@
         {% for code, lbl in mission_types %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
       </select>
     </label>
-    <button class="cta" type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">{{ t('home.search_btn') }}</button>
+    <button class="cta btn-block" type="submit">{{ t('home.search_btn') }}</button>
   </form>
 </section>
 
@@ -39,6 +39,7 @@
   <div><div class="num">{{ stats.completed_bookings }}</div><div class="lbl">{{ t('home.notam.completed') }}</div></div>
 </div>
 
+{% if latest_missions %}
 <div class="ticker">
   <div class="ticker-track">
     {% for i in range(2) %}
@@ -48,6 +49,7 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}
 
 <section class="section">
   <div class="section-header">
@@ -89,7 +91,7 @@
         <div>
           <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
           <div class="loc">{{ p.country }}</div>
-          <div class="headline">« {{ p.headline or '' }} »</div>
+          {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
         </div>
       </div>
       <div class="foot">
@@ -97,6 +99,14 @@
         <span>{% if p.hourly_rate %}{{ t('common.per_hour', amount=p.hourly_rate|int, currency=p.p_currency) }}{% else %}{{ t('common.no_quote') }}{% endif %}</span>
       </div>
     </a>
+    {% else %}
+    <div class="empty-state">
+      <strong>{{ 'Aucun pilote pour le moment.' if lang == 'fr' else 'No pilots yet.' }}</strong>
+      <p>{{ 'Soyez le premier pilote certifié référencé sur la plateforme.' if lang == 'fr' else 'Be the first certified pilot listed on the platform.' }}</p>
+      <div class="actions-row">
+        <a href="{{ url_for('register') }}?role=pilot" class="cta">{{ t('home.cta_pilot') }}</a>
+      </div>
+    </div>
     {% endfor %}
   </div>
 </section>
@@ -149,13 +159,21 @@
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
       <div class="footer">
-        <span>
+        <span class="budget">
           {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}{{ t('common.no_quote') }}{% endif %}
           {{ m.currency if m.budget_min or m.budget_max else '' }}
         </span>
         <span>{{ m.created_at[:10] }}</span>
       </div>
     </a>
+    {% else %}
+    <div class="empty-state">
+      <strong>{{ 'Aucune mission ouverte.' if lang == 'fr' else 'No open missions.' }}</strong>
+      <p>{{ 'Publiez la première mission et recevez des devis de pilotes certifiés.' if lang == 'fr' else 'Post the first mission and receive quotes from certified pilots.' }}</p>
+      <div class="actions-row">
+        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('home.cta_publish') }}</a>
+      </div>
+    </div>
     {% endfor %}
   </div>
 </section>

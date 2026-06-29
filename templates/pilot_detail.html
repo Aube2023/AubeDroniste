@@ -6,14 +6,13 @@
   <div class="flightbook-band">
     {% if pilot.avatar_path %}
     <img class="avatar big" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
-         alt="Photo de {{ display_name }}"
-         style="width: 96px; height: 96px; object-fit: cover; border-radius: 50%;">
+         alt="Photo de {{ display_name }}">
     {% else %}
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
       <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (display_name|first)|upper }} · CDB</span>
-      <h1>{{ display_name }} {% if pilot.is_verified %}<span class="badge verified" style="vertical-align: middle;">vérifié</span>{% endif %}</h1>
+      <h1>{{ display_name }} {% if pilot.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
@@ -28,7 +27,7 @@
       </p>
       {% endif %}
       {% if not current_user or current_user.id != pilot.id %}
-      <div style="margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <div class="actions-row" style="margin-top: 18px;">
         <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">Contacter ce pilote</a>
         <a href="{{ url_for('missions_search') }}" class="ghost">Voir les missions ouvertes</a>
       </div>
@@ -155,7 +154,7 @@
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
       <span class="eyebrow">Flotte personnelle</span>
-      <h2 style="font-size: 1.6rem; margin: 0;">Aéronefs déclarés</h2>
+      <h2 class="card-title" style="margin: 0;">Aéronefs déclarés</h2>
     </div>
     <span class="muted mono" style="font-size: 12px; text-transform: uppercase; letter-spacing: .12em;">
       {{ pilot.drones|length }} appareil{{ 's' if pilot.drones|length > 1 else '' }}
@@ -188,26 +187,24 @@
 {% if portfolio %}
 <section class="card">
   <span class="eyebrow">Showreel</span>
-  <h2 style="font-size: 1.6rem; margin: 4px 0 18px;">Portfolio · {{ portfolio|length }} réalisation(s)</h2>
-  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+  <h2 class="card-title">Portfolio · {{ portfolio|length }} réalisation(s)</h2>
+  <div class="media-grid">
     {% for it in portfolio %}
-    <figure class="portfolio-item" style="margin: 0; border: 1px solid var(--ink-dim); display: flex; flex-direction: column;">
-      <div style="background: #000; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;">
+    <figure class="media-figure">
+      <div class="media-frame">
         {% if it.kind == 'video' %}
-          <video controls preload="metadata" style="width: 100%; height: 100%; object-fit: contain;">
+          <video controls preload="metadata">
             <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
           </video>
         {% else %}
           <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or 'Réalisation' }}"
-               loading="lazy"
-               style="width: 100%; height: 100%; object-fit: cover;">
+               alt="{{ it.title or 'Réalisation' }}" loading="lazy">
         {% endif %}
       </div>
       {% if it.title or it.description %}
-      <figcaption style="padding: 12px 14px;">
-        {% if it.title %}<div style="font-family: var(--serif); font-size: 1.05rem; font-weight: 600;">{{ it.title }}</div>{% endif %}
-        {% if it.description %}<p class="muted small" style="margin: 4px 0 0; white-space: pre-line;">{{ it.description }}</p>{% endif %}
+      <figcaption class="media-body">
+        {% if it.title %}<div class="media-title">{{ it.title }}</div>{% endif %}
+        {% if it.description %}<p class="muted small prewrap" style="margin: 4px 0 0;">{{ it.description }}</p>{% endif %}
       </figcaption>
       {% endif %}
     </figure>
@@ -219,27 +216,27 @@
 {% if packages %}
 <section class="card">
   <span class="eyebrow">Catalogue</span>
-  <h2 style="font-size: 1.6rem; margin: 4px 0 18px;">Forfaits proposés</h2>
-  <p class="muted small" style="margin-top: -10px; margin-bottom: 18px;">
+  <h2 class="card-title" style="margin-bottom: 6px;">Forfaits proposés</h2>
+  <p class="muted small" style="margin: 0 0 18px;">
     Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.
   </p>
 
-  <div class="packages-grid" style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+  <div class="pkg-grid">
     {% for p in packages %}
-    <article class="package-card" style="border: 1px solid var(--ink-dim); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+    <article class="pkg-card">
       <header>
-        <h3 style="margin: 0; font-family: var(--serif); font-size: 1.2rem;">{{ p.title }}</h3>
-        <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .1em; margin-top: 4px;">
+        <h3>{{ p.title }}</h3>
+        <div class="pkg-meta">
           {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}Forfait général{% endif %}
           {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
         </div>
       </header>
-      <p style="margin: 0; font-size: .95rem; white-space: pre-line;">{{ p.description }}</p>
+      <p class="prewrap" style="margin: 0; font-size: .95rem;">{{ p.description }}</p>
       {% if p.deliverables %}
       <p class="muted small" style="margin: 0;"><strong>Inclus :</strong> {{ p.deliverables }}</p>
       {% endif %}
-      <footer style="display: flex; justify-content: space-between; align-items: end; margin-top: auto; gap: 10px;">
-        <div class="price big">{{ p.price|int }} <span style="font-size: .55em; color: var(--ink-dim);">{{ p.currency }}</span></div>
+      <footer class="pkg-foot">
+        <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
         {% if current_user and current_user.id != pilot.id %}
           <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">Réserver</a>
         {% elif not current_user %}
@@ -254,7 +251,7 @@
 
 <section class="card" id="avis">
   <span class="eyebrow">Retours d'expérience</span>
-  <h2 style="font-size: 1.6rem; margin: 4px 0 18px;">Avis des clients</h2>
+  <h2 class="card-title">Avis des clients</h2>
 
   {% if my_review_booking %}
   <form method="post" action="{{ url_for('pilot_review', user_id=pilot.id) }}"

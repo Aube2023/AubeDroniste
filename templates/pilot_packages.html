@@ -72,7 +72,10 @@
   </h2>
 
   {% if not packages %}
-    <p class="muted">Ajoutez votre premier forfait ci-dessus. Les clients pourront le réserver en un clic depuis votre page publique.</p>
+  <div class="empty-state">
+    <strong>Catalogue vide</strong>
+    <p>Ajoutez votre premier forfait avec le formulaire ci-dessus. Les clients pourront le réserver en un clic depuis votre page publique.</p>
+  </div>
   {% endif %}
 
   {% for p in packages %}
@@ -86,10 +89,10 @@
           {% if not p.is_active %} · MASQUÉ{% endif %}
         </div>
       </div>
-      <div class="price big">{{ p.price|int }} <span style="font-size: .55em; color: var(--ink-dim);">{{ p.currency }}</span></div>
+      <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
     </div>
 
-    <p style="margin-top: 12px; white-space: pre-line;">{{ p.description }}</p>
+    <p class="prewrap" style="margin-top: 12px;">{{ p.description }}</p>
     {% if p.deliverables %}
     <p class="muted small" style="margin-top: 8px;"><strong>Livrables :</strong> {{ p.deliverables }}</p>
     {% endif %}
@@ -97,7 +100,7 @@
     <p class="muted small" style="margin-top: 6px;"><strong>Matériel :</strong> {{ p.capabilities }}</p>
     {% endif %}
 
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+    <div class="actions-row" style="margin-top: 12px;">
       <form method="post" action="{{ url_for('pilot_package_toggle', package_id=p.id) }}" style="display: inline-block;">
             {{ csrf_input() }}
         <button class="ghost" type="submit">{% if p.is_active %}Masquer{% else %}Afficher{% endif %}</button>

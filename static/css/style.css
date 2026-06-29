@@ -385,6 +385,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 
 .price { font: 700 17px/1 var(--display); color: var(--ink); letter-spacing: -.02em; }
 .price.big { font-size: 30px; font-family: var(--display); font-weight: 800; }
+.price .cur { font-size: .6em; color: var(--ink-dim); font-weight: 600; }
 
 /* ============ Hero éditorial ============ */
 
@@ -612,6 +613,7 @@ img.avatar { object-fit: cover; }
   font-family: var(--mono); font-size: 12px;
   color: var(--ink-dim);
 }
+.mission-card .footer .budget { color: var(--ink); font-weight: 700; }
 
 /* ============ Page détail pilote ============ */
 
@@ -1520,3 +1522,235 @@ img.avatar { object-fit: cover; }
   display: grid; gap: 8px;
 }
 .pay-recap .row-between { font-size: .95rem; }
+
+/* =========================================================================
+   AMÉLIORATIONS PROGRESSIVES
+   Utilitaires + composants réutilisables qui remplacent des styles inline
+   répétés dans les templates. Même direction artistique « éditorial aviation »
+   — on ne fait que régler espacement, lisibilité, hiérarchie et responsive.
+   ========================================================================= */
+
+/* ---- petites utilités ---- */
+.text-right     { text-align: right; }
+.prewrap        { white-space: pre-line; }
+.col-span-full  { grid-column: 1 / -1; }
+.mt-0           { margin-top: 0 !important; }
+.actions-row    { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.actions-row.mt { margin-top: 14px; }
+.btn-block      { width: 100%; margin-top: 14px; }
+.form-hint      { margin-top: -6px; color: var(--ink-dim); font-size: 13px; }
+
+/* Titre de section à l'intérieur d'une .card (remplace les h2 inline 1.6rem). */
+.card-title {
+  font-family: var(--display); font-weight: 600;
+  font-size: 1.6rem; letter-spacing: -.01em;
+  margin: 4px 0 18px;
+}
+
+/* Base de badge (le badge « révision N » n'avait que des styles inline). */
+.badge {
+  display: inline-block; vertical-align: middle;
+  font: 700 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 4px;
+  background: var(--paper-3); color: var(--ink-soft);
+}
+
+/* ---- état vide générique (annuaire, missions, portfolio, forfaits) ---- */
+.empty-state {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--rule);
+  border-radius: 14px;
+  background: var(--paper-2);
+  padding: 34px 26px;
+  text-align: center;
+  color: var(--ink-dim);
+}
+.empty-state strong {
+  display: block; color: var(--ink);
+  font-family: var(--display); font-weight: 600; font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+.empty-state p { margin: 0 auto; max-width: 52ch; }
+.empty-state .actions-row { justify-content: center; margin-top: 16px; }
+
+/* ---- alertes (consolide les encadrés border-left inline) ---- */
+.alert {
+  margin: 12px 0;
+  padding: 12px 15px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ink-dim);
+  background: var(--paper-2);
+  border-radius: 8px;
+  font-size: .95rem;
+}
+.alert > :first-child { margin-top: 0; }
+.alert > :last-child  { margin-bottom: 0; }
+.alert .eyebrow { margin-bottom: 6px; }
+.alert .quote   { margin: 6px 0 0; font-style: italic; }
+.alert-ok      { border-left-color: var(--teal);    background: rgba(30,122,106,.08); }
+.alert-ok .eyebrow { color: var(--teal); }
+.alert-info    { border-left-color: var(--amber);   background: rgba(66,87,178,.06); }
+.alert-neutral { border-left-color: var(--ink-dim); background: var(--paper-3); }
+/* Avis juridique Québec / français obligatoire — ton ambré distinct (conservé). */
+.alert-warn      { border-left-color: #b87519; background: rgba(184,117,25,.08); }
+.alert-warn .eyebrow { color: #b87519; }
+
+/* ---- disclosure (details/summary) homogène ---- */
+.disclosure { margin-top: 14px; }
+.disclosure > summary {
+  cursor: pointer; list-style: none;
+  font: 500 .78rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure > summary::before { content: "▸ "; color: var(--amber); }
+.disclosure[open] > summary::before { content: "▾ "; }
+.disclosure > summary:hover { color: var(--ink); }
+
+/* Listes empilées (historique des révisions, fils de discussion). */
+.stack-list { list-style: none; padding: 10px 0 0; margin: 0; }
+.stack-list > li { padding: 10px 0; border-top: 1px dashed var(--rule); }
+.stack-list.scroll { max-height: 280px; overflow-y: auto; }
+.stack-list .who { font: 500 12px/1.4 var(--mono); color: var(--ink-dim); }
+.stack-list .body { margin-top: 4px; white-space: pre-line; }
+
+/* ---- cadre média (portfolio public + espace pilote) ---- */
+.media-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.media-figure {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper-2);
+  display: flex; flex-direction: column;
+}
+.media-frame {
+  background: #000; aspect-ratio: 16 / 10;
+  display: flex; align-items: center; justify-content: center;
+}
+.media-frame img, .media-frame video { width: 100%; height: 100%; display: block; }
+.media-frame img   { object-fit: cover; }
+.media-frame video { object-fit: contain; }
+.media-body { padding: 14px; }
+.media-title {
+  font-family: var(--display); font-weight: 600; font-size: 1.05rem;
+  margin: 6px 0 4px; line-height: 1.25;
+}
+
+/* ---- forfaits (catalogue pilote, page publique + espace) ---- */
+.pkg-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.pkg-card {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--paper-2);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pkg-card h3 { margin: 0; font-family: var(--display); font-size: 1.2rem; }
+.pkg-meta {
+  font: 500 11px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-dim); margin-top: 4px;
+}
+.pkg-foot {
+  display: flex; justify-content: space-between; align-items: end;
+  gap: 10px; margin-top: auto; padding-top: 4px;
+}
+
+/* ---- devis reçus : présentation comparable (mission_detail) ---- */
+.bid-card { margin: 12px 0; }
+.bid-card.mine { border-left: 3px solid var(--ink); }
+.bid-head {
+  display: flex; justify-content: space-between; align-items: start; gap: 16px;
+}
+.bid-id { min-width: 0; }
+.bid-name {
+  font-family: var(--display); font-weight: 600; font-size: 1.2rem;
+  color: var(--ink); text-decoration: none;
+}
+a.bid-name:hover { color: var(--amber); }
+.bid-sub { margin-top: 4px; }
+.bid-price { text-align: right; flex: 0 0 auto; }
+.bid-price .cur { font-size: .6em; color: var(--ink-dim); }
+.bid-price .tag { margin-top: 6px; }
+.bid-message { color: var(--ink-soft); margin-top: 12px; }
+/* bandeau de faits comparables : prix / délai / révision, même gabarit partout */
+.bid-facts {
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  margin-top: 12px; padding: 10px 0;
+  border-top: 1px dashed var(--rule);
+  font: 500 12px/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.bid-facts strong { color: var(--ink); font-weight: 700; }
+.bid-block { margin-top: 12px; }
+.bid-block .eyebrow { margin-bottom: 4px; }
+.bid-block p { margin: 0; }
+.bid-roster { list-style: none; padding: 0; margin: 10px 0 0; }
+.bid-roster li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-top: 1px solid var(--rule-soft);
+}
+.bid-roster li:first-child { border-top: 0; }
+.bid-roster a { font-family: var(--display); font-weight: 600; color: var(--ink); }
+.bid-roster a:hover { color: var(--amber); }
+
+/* Bandeau de faits clés d'une mission (brief) : budget/durée/dates lisibles. */
+.brief-facts { margin: 18px 0 6px; }
+
+/* ---- carte pilote : indicateur de disponibilité réel ---- */
+.dot-ok { color: var(--teal); }
+.dot-ok::before {
+  content: "●"; font-size: .7em;
+  margin-right: 5px; vertical-align: middle;
+}
+.pilot-card .foot .rate { color: var(--ink-soft); }
+
+/* ---- espace pilote : barre d'enregistrement collante ---- */
+.save-bar {
+  position: sticky; bottom: 0; z-index: 5;
+  background: var(--paper);                /* corrige le fond blanc en mode sombre */
+  padding: 14px 0; margin-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+
+/* ---- espace pilote : téléversement de la photo de profil ---- */
+.avatar-uploader {
+  display: flex; align-items: center; gap: 18px;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.avatar-uploader .avatar-frame {
+  width: 96px; height: 96px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--rule);
+  flex: 0 0 auto;
+}
+.avatar-uploader .avatar-frame.placeholder {
+  background: var(--paper-3); border-style: dashed;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 2rem; color: var(--ink-dim);
+}
+.avatar-uploader .uploader-body { flex: 1; min-width: 240px; }
+.inline-form {
+  display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 10px;
+}
+.inline-form > label { flex: 1; min-width: 200px; margin: 0; }
+
+/* ---- responsive : topbar utilisable + page moins serrée sur mobile ---- */
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; gap: 12px 16px; padding: 14px 18px; }
+  .topnav { flex-wrap: wrap; gap: 12px 14px; }
+  /* le soulignement hover (positionné à -22px) n'a plus de sens une fois enroulé */
+  .topnav > a:hover::after { display: none; }
+}
+@media (max-width: 600px) {
+  .page { padding: 24px 18px 72px; }
+  .eco-section, .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
+  .mission-brief { padding: 24px 18px; }
+}

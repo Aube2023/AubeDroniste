@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap;">
   <h1 style="margin: 0;">Mon profil pilote</h1>
-  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+  <div class="actions-row">
     <a href="{{ url_for('pilot_packages') }}" class="ghost">Gérer mes forfaits →</a>
     <a href="{{ url_for('pilot_portfolio') }}" class="ghost">Mon portfolio →</a>
   </div>
@@ -12,19 +12,17 @@
 {# ===== Photo de profil ===== #}
 <section class="card">
   <span class="eyebrow">Photo de profil</span>
-  <div style="display: flex; align-items: center; gap: 18px; margin-top: 8px; flex-wrap: wrap;">
+  <div class="avatar-uploader">
     {% if profile.avatar_path %}
-      <img class="js-self-avatar" data-username="{{ current_user.username }}"
+      <img class="js-self-avatar avatar-frame" data-username="{{ current_user.username }}"
            src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
-           alt="Avatar de {{ current_user.full_name }}"
-           style="width: 96px; height: 96px; object-fit: cover; border: 1px solid var(--ink-dim); border-radius: 50%;">
+           alt="Avatar de {{ current_user.full_name }}">
     {% else %}
-      <div class="js-self-avatar" data-username="{{ current_user.username }}"
-           style="width: 96px; height: 96px; background: var(--paper-3, #f4eddd); border: 1px dashed var(--ink-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2rem; color: var(--ink-dim);">
+      <div class="js-self-avatar avatar-frame placeholder" data-username="{{ current_user.username }}">
         {{ current_user.full_name[:1] }}
       </div>
     {% endif %}
-    <div style="flex: 1; min-width: 240px;">
+    <div class="uploader-body">
       <p style="margin: 0 0 8px;">
         Ta photo est <strong>unifiée avec ton compte Aube</strong> : la même sur
         AubeMail, AubePilot et tout le reste de la suite. Tu la changes à un seul endroit.
@@ -32,9 +30,9 @@
       <a class="cta" href="{{ aubemail_url }}" target="_blank" rel="noopener">Gérer ma photo sur AubeMail →</a>
       <details style="margin-top: 12px;">
         <summary class="muted" style="cursor: pointer;">Pas de compte AubeMail ? Utiliser une photo locale</summary>
-        <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 10px;">
+        <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" class="inline-form">
               {{ csrf_input() }}
-          <label style="flex: 1;">Photo locale (JPG/PNG/WebP, max 5 Mo)
+          <label>Photo locale (JPG/PNG/WebP, max 5 Mo)
             <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required>
           </label>
           <button class="ghost" type="submit">Téléverser</button>
@@ -121,7 +119,7 @@
 
   <h2>Présentation</h2>
   <label>Marque / société (raison sociale)<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="ex. SkyVision Drone, ou votre nom"></label>
-  <p class="hint" style="margin-top:-6px;color:var(--ink-dim);font-size:13px;">Affichée en en-tête de vos devis PDF (avec votre logo/photo). Laissez vide pour utiliser votre nom complet.</p>
+  <p class="form-hint">Affichée en en-tête de vos devis PDF (avec votre logo/photo). Laissez vide pour utiliser votre nom complet.</p>
   <label>Accroche courte<input name="headline" value="{{ profile.headline or '' }}" maxlength="120" placeholder="ex. Prises de vue aériennes & inspections"></label>
   <label>Bio<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
 
@@ -178,10 +176,7 @@
 
   <label>URL portfolio<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
 
-  <div class="save-bar"
-       style="position: sticky; bottom: 0; background: var(--bg, #fff);
-              padding: 14px 0; margin-top: 24px; border-top: 1px solid var(--border, #e5eae2);
-              display: flex; align-items: center; justify-content: space-between; gap: 16px; z-index: 5;">
+  <div class="save-bar">
     <span class="muted small">
       Cliquez sur <strong>Enregistrer le profil</strong> pour sauvegarder vos modifications.
       Le bloc <em>Ajouter une formation</em> ci-dessous est independant.
@@ -315,10 +310,7 @@
         {% endfor %}
       </div>
 
-      <div id="custom-banner" hidden
-           style="background: var(--accent-bg, rgba(45,90,39,0.06));
-                  border-left: 3px solid var(--accent, #2d5a27);
-                  padding: 10px 14px; margin: 12px 0; font-size: 14px;">
+      <div id="custom-banner" class="alert alert-info" hidden>
         <strong>Drone custom detecte.</strong>
         Cette marque ou ce modele ne figure pas au catalogue connu.
         Decrivez-le precisement ci-dessous : type de chassis (X / H / Y6),
@@ -403,7 +395,7 @@ function refreshCustomState() {
   if (banner) banner.hidden = !custom;
   if (notes) {
     notes.required = custom;
-    notes.style.borderColor = custom ? 'var(--accent, #2d5a27)' : '';
+    notes.style.borderColor = custom ? 'var(--amber)' : '';
   }
   if (lbl) lbl.textContent = custom
     ? 'Description du drone custom (obligatoire)'

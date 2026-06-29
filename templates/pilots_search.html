@@ -53,14 +53,13 @@
     <div class="strip">
       <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
-        {% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
+        {% if p.is_available %}<span class="dot-ok">{{ 'dispo' if fr else 'avail.' }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
       </span>
     </div>
     <div class="body">
       {% if p.avatar_path %}
       <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
-           alt="{{ 'Photo pilote' if fr else 'Pilot photo' }}" loading="lazy"
-           style="object-fit: cover;">
+           alt="{{ 'Photo pilote' if fr else 'Pilot photo' }}" loading="lazy">
       {% else %}
       <div class="avatar">{{ masked[:1] }}</div>
       {% endif %}
@@ -71,13 +70,17 @@
       </div>
     </div>
     <div class="foot">
-      <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
-      <span>{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
+      <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }} · {{ p.rating.count }}{% else %}— · —{% endif %}</span>
+      <span class="rate">{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
     </div>
   </a>
   {% else %}
-    <div class="card" style="grid-column: 1/-1;">
-      <p class="muted">{{ 'Aucun pilote ne correspond. Essayez de retirer un filtre.' if fr else 'No pilot matches. Try removing a filter.' }}</p>
+    <div class="empty-state">
+      <strong>{{ 'Aucun pilote ne correspond.' if fr else 'No pilot matches.' }}</strong>
+      <p>{{ 'Élargissez votre recherche : retirez un filtre (pays, spécialité, note minimale) ou décochez « Disponibles uniquement ».' if fr else 'Broaden your search: remove a filter (country, specialty, min. rating) or uncheck “Available only”.' }}</p>
+      <div class="actions-row">
+        <a href="{{ url_for('pilots_search') }}" class="ghost">{{ 'Réinitialiser les filtres' if fr else 'Reset filters' }}</a>
+      </div>
     </div>
   {% endfor %}
 </div>
