@@ -26,10 +26,7 @@ from config import (
     ANDROID_PACKAGE,
     AUBECREW_URL,
     AUBEMAIL_URL,
-    AUBE_SERVICES,
-    AUBE_SERVICE_COUNT,
     AUTO_RELEASE_DAYS,
-    CURRENT_SERVICE_SLUG,
     CURRENCIES,
     DEFAULT_CURRENCY,
     DEFAULT_SEARCH_RADIUS_KM,
@@ -54,7 +51,6 @@ from config import (
     PILOT_SHARE_PCT,
     PLATFORM_FEE_PCT,
     PORT,
-    ROOT_DOMAIN,
     SECRET_KEY,
     SESSION_COOKIE_NAME,
     STRIPE_PUBLISHABLE_KEY,
@@ -158,9 +154,6 @@ def _inject_globals():
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
-        # Ecosysteme : liste + compteur derives de config (footer data-driven)
-        "aube_services": _aube_services(),
-        "aube_service_count": AUBE_SERVICE_COUNT,
         # Economie plateforme : surface unique (jamais "30 %"/"70 %" en dur en vue)
         "platform_fee_pct": int(PLATFORM_FEE_PCT),
         "pilot_share_pct": int(PILOT_SHARE_PCT),
@@ -175,20 +168,6 @@ def _inject_globals():
         "seo_global": seo.global_ld(getattr(g, "lang", i18n.DEFAULT)),
         "seo": {},   # defaut ; surcharge par page via render_template(seo=...)
     }
-
-
-def _aube_services():
-    """Liste de l'ecosysteme pour le footer, derivee de config.AUBE_SERVICES.
-
-    Le service courant pointe vers l'accueil local et est marque `here` ; les
-    autres pointent vers https://<slug>.<ROOT_DOMAIN>. Ajouter un service =
-    une ligne dans config.AUBE_SERVICES (le compteur suit automatiquement)."""
-    out = []
-    for slug, pre, name in AUBE_SERVICES:
-        here = (slug == CURRENT_SERVICE_SLUG)
-        url = url_for("index") if here else f"https://{slug}.{ROOT_DOMAIN}"
-        out.append({"slug": slug, "pre": pre, "name": name, "url": url, "here": here})
-    return out
 
 
 def _static_v(filename: str) -> str:

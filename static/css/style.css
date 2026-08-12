@@ -33,7 +33,8 @@
   --cta-fg:       #ffffff;          /* texte des boutons accent */
   --topbar-bg:    rgba(248,249,253,0.82);
   --tag-bg:       transparent;
-  --grid-line:    rgba(20,24,31,0.0); /* invisible en clair */
+  --bg-veil-top:  rgba(247,248,252,0.80); /* voile de lisibilité sur le fond d'écran */
+  --bg-veil:      rgba(247,248,252,0.94);
 
   /* Police — display géométrique (feel "mobilité") + corps neutre */
   --display:      'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
@@ -65,7 +66,8 @@
   --cta-fg:       #0a0a0c;
   --topbar-bg:    rgba(10,10,12,0.80);
   --tag-bg:       rgba(255,255,255,0.02);
-  --grid-line:    rgba(237,237,235,0.035);
+  --bg-veil-top:  rgba(10,10,14,0.60);
+  --bg-veil:      rgba(10,10,14,0.90);
 }
 
 * { box-sizing: border-box; }
@@ -87,17 +89,22 @@ body {
   transition: background-color .25s ease, color .25s ease;
 }
 
-/* Grille subtile uniquement en mode sombre */
-[data-theme="dark"] body::before {
+/* Fond d'écran « aube » : image fixe plein écran sous le contenu… */
+body::before {
   content: "";
   position: fixed; inset: 0;
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background: url('../img/bg-aube.jpg') center / cover no-repeat;
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* …et voile dégradé par-dessus pour garder le texte lisible (dosé par thème) */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background: linear-gradient(180deg, var(--bg-veil-top), var(--bg-veil) 60%);
   pointer-events: none;
   z-index: -1;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
 }
 
 a { color: var(--amber); text-decoration: none; }
@@ -795,78 +802,6 @@ img.avatar { object-fit: cover; }
   border-top: 1px solid var(--rule);
   margin-top: 80px;
   padding: 0;
-}
-
-.eco-section {
-  padding: 20px 32px 18px;
-  border-bottom: 1px solid var(--rule);
-}
-.eco-header {
-  display: flex; flex-wrap: wrap; gap: 6px 16px;
-  align-items: baseline; justify-content: space-between;
-  margin-bottom: 10px;
-  max-width: 1240px; margin-left: auto; margin-right: auto;
-}
-.eco-header strong {
-  font-family: var(--serif);
-  font-size: .95rem;
-  font-weight: 600;
-  letter-spacing: -.01em;
-  color: var(--ink);
-}
-.eco-header .eyebrow { margin: 0; }
-.eco-header .muted {
-  font: 500 10px/1.4 var(--mono);
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-
-/* Bande compacte : les 19 services en liens fluides (flex-wrap), filets
-   hairline via border-top/left conteneur + border-right/bottom cellules
-   (rendu net quel que soit le nombre de lignes). */
-.eco-grid {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  max-width: 1240px;
-  margin: 0 auto;
-}
-.eco-grid > a {
-  display: inline-flex; align-items: baseline; gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--rule-soft);
-  border-radius: 8px;
-  color: var(--ink-soft);
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 12.5px;
-  letter-spacing: -.01em;
-  text-decoration: none;
-  background: var(--paper-2);
-  transition: background .12s, color .12s, border-color .12s;
-}
-.eco-grid > a:hover {
-  background: var(--paper);
-  color: var(--amber);
-  border-color: var(--amber);
-}
-.eco-grid > a .pre {
-  font: 600 8.5px/1 var(--mono);
-  letter-spacing: .14em;
-  color: var(--ink-faint);
-  text-transform: uppercase;
-}
-.eco-grid > a:hover .pre { color: var(--amber); }
-.eco-grid > a.here {
-  background: var(--paper);
-  color: var(--amber);
-  border-color: var(--amber);
-}
-.eco-grid > a.here::after {
-  content: "●";
-  margin-left: 2px;
-  color: var(--amber);
-  font-size: 6px;
-  align-self: center;
-  animation: zone-ping 2s ease-in-out infinite;
 }
 
 .footer-legal {
@@ -1751,6 +1686,6 @@ a.bid-name:hover { color: var(--amber); }
 }
 @media (max-width: 600px) {
   .page { padding: 24px 18px 72px; }
-  .eco-section, .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
+  .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
   .mission-brief { padding: 24px 18px; }
 }

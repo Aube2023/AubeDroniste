@@ -129,17 +129,6 @@
 </main>
 
 <footer class="footer">
-  <section class="eco-section">
-    <div class="eco-header">
-      <span class="eyebrow">{{ t('footer.eco_eyebrow') }}</span>
-      <strong>{{ t('footer.eco_tagline') }}</strong>
-      <span class="muted">{{ t('footer.eco_meta', year=now().year, count=aube_service_count) }}</span>
-    </div>
-    <nav class="eco-grid" aria-label="Services L'Aube Étoilée">
-      {% for s in aube_services %}<a href="{{ s.url }}"{% if s.here %} class="here"{% endif %}><span class="pre">{{ s.pre }}</span>{{ s.name }}</a>
-      {% endfor %}
-    </nav>
-  </section>
   <nav class="footer-legal" aria-label="Mentions légales">
     <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>

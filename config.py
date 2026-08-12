@@ -110,36 +110,8 @@ AUBE_INTERNAL_API_KEY = os.environ.get("AUBE_INTERNAL_API_KEY", "")
 # Domaine racine de l'ecosysteme : chaque service vit sur <slug>.<ROOT_DOMAIN>.
 ROOT_DOMAIN = os.environ.get("AUBE_ROOT_DOMAIN", "aubeetoilee.com")
 
-# Ecosysteme L'Aube Etoilee — LISTE SOURCE UNIQUE.
-# Le footer ET le compteur ("N services") en derivent : ajouter / retirer un
-# service = une seule ligne ici (slug du sous-domaine, prefixe affiche, nom).
-AUBE_SERVICES = [
-    ("inter", "L'Aube", "Inter"),
-    ("messenger", "Aube", "Messenger"),
-    ("mail", "Aube", "Mail"),
-    ("meet", "Aube", "Meet"),
-    ("maps", "Aube", "Maps"),
-    ("agenda", "Aube", "Agenda"),
-    ("docs", "Aube", "Docs"),
-    ("forms", "Aube", "Forms"),
-    ("slides", "Aube", "Slides"),
-    ("drive", "Aube", "Drive"),
-    ("photos", "Aube", "Photos"),
-    ("video", "Aube", "Vidéo"),
-    ("finances", "Aube", "Finances"),
-    ("data", "Aube", "Data"),
-    ("format", "Aube", "Format"),
-    ("meteo", "Aube", "Météo"),
-    ("news", "Aube", "News"),
-    ("livre", "Aube", "Livre"),
-    ("operation", "Aube", "Operation"),
-    ("pharos", "Aube", "Pharos"),
-    ("crew", "Aube", "Crew"),
-    ("pilot", "Aube", "Pilot"),
-]
-# Service courant (cette app) : marque "ici" dans le footer.
+# Service courant (cette app) : utilise pour la base canonique SEO.
 CURRENT_SERVICE_SLUG = "pilot"
-AUBE_SERVICE_COUNT = len(AUBE_SERVICES)
 
 # Devises supportees par defaut
 CURRENCIES = ["EUR", "CAD", "USD", "MAD", "TND", "DZD", "XOF", "CHF"]

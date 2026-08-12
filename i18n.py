@@ -77,12 +77,6 @@ _T = {
     "nav.skip":         {"fr": "Aller au contenu",   "en": "Skip to content"},
 
     # ---- Footer
-    "footer.eco_eyebrow": {"fr": "L'écosystème L'Aube Étoilée",
-                           "en": "The L'Aube Étoilée ecosystem"},
-    "footer.eco_tagline": {"fr": "Tout en français, tout chez vous.",
-                           "en": "Sovereign software, anywhere."},
-    "footer.eco_meta":    {"fr": "{year} · {count} services · auth partagée",
-                           "en": "{year} · {count} services · shared auth"},
     "footer.tagline":     {"fr": "Une marque de L'Aube Étoilée · Auth partagée @aubemail.com",
                            "en": "A brand of L'Aube Étoilée · Shared @aubemail.com auth"},
     "footer.cities":      {"fr": "Édité depuis Montréal",
