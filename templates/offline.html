@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hors ligne — Aube Pilot</title>
+  <meta name="robots" content="noindex">
+  <style>
+    /* Page autonome : aucun asset requis pour s'afficher (servie par le SW). */
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: grid; place-items: center;
+      background: #0a0a0c; color: #ededeb;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      text-align: center; padding: 24px;
+    }
+    .wrap { max-width: 420px; }
+    img { width: 64px; height: 64px; margin-bottom: 20px; }
+    h1 { font-size: 1.4rem; letter-spacing: -.02em; margin: 0 0 10px; }
+    p { color: #b8b8b3; line-height: 1.55; margin: 0 0 6px; }
+    .en { color: #828287; font-size: .9rem; }
+    button {
+      margin-top: 24px; padding: 13px 26px;
+      background: #8b9cf0; color: #0a0a0c; border: 0; border-radius: 10px;
+      font: 700 15px/1 inherit; cursor: pointer;
+    }
+    button:active { opacity: .8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img src="/static/brand/logo-mark.svg" alt="" onerror="this.style.display='none'">
+    <h1>Vous êtes hors ligne</h1>
+    <p>Impossible de joindre Aube Pilot pour l'instant. Vérifiez votre connexion, puis réessayez.</p>
+    <p class="en">You're offline — check your connection and try again.</p>
+    <button onclick="location.reload()">Réessayer</button>
+  </div>
+</body>
+</html>

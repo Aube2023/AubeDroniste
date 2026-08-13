@@ -1,13 +1,40 @@
 {
+  "id": "/",
   "name": "Aube Pilot",
   "short_name": "Aube Pilot",
-  "description": "Reseau pilote international, marketplace pilotes de drone certifies et clients.",
+  "description": "Louez un pilote de drone certifié : prises de vue aériennes, inspections, événements. Devis gratuits, paiement sécurisé.",
+  "lang": "fr",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a1428",
-  "theme_color": "#c4633f",
+  "orientation": "any",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
+  "categories": ["business", "photo", "productivity"],
   "icons": [
-    { "src": "/static/brand/icon-180x180.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "/static/brand/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/static/brand/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/brand/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/brand/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Trouver un pilote",
+      "short_name": "Pilotes",
+      "url": "/pilotes",
+      "icons": [{ "src": "/static/brand/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Missions ouvertes",
+      "short_name": "Missions",
+      "url": "/missions",
+      "icons": [{ "src": "/static/brand/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Publier une mission",
+      "short_name": "Publier",
+      "url": "/missions/nouvelle",
+      "icons": [{ "src": "/static/brand/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

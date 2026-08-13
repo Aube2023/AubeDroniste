@@ -2,7 +2,7 @@
    AubeDroniste — feuille de style "éditorial aviation"
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Polices : chargées via <link> dans base.html (préconnect + non bloquant). */
 
 /* =========================================================================
    THÈMES — clair (par défaut) + sombre via [data-theme="dark"]
@@ -1677,15 +1677,74 @@ a.bid-name:hover { color: var(--amber); }
 }
 .inline-form > label { flex: 1; min-width: 200px; margin: 0; }
 
-/* ---- responsive : topbar utilisable + page moins serrée sur mobile ---- */
+/* ---- App mobile : topbar compacte + barre d'onglets fixe en bas ---- */
+
+html { -webkit-tap-highlight-color: transparent; }
+a, button { touch-action: manipulation; }
+
+.mobile-tabs { display: none; }
+
 @media (max-width: 760px) {
-  .topbar { flex-wrap: wrap; gap: 12px 16px; padding: 14px 18px; }
-  .topnav { flex-wrap: wrap; gap: 12px 14px; }
-  /* le soulignement hover (positionné à -22px) n'a plus de sens une fois enroulé */
+  /* Topbar une seule ligne : la navigation principale vit dans .mobile-tabs */
+  .topbar {
+    gap: 10px;
+    padding: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .topnav { gap: 10px; }
   .topnav > a:hover::after { display: none; }
+  /* on ne garde que : pastille compte, zone, langues, thème, déconnexion */
+  .topnav > a:not(.account-chip):not(.zone-pill) { display: none; }
+  .topnav .ghost { padding: 8px 11px; font-size: 13px; }
+  .zone-pill .zone-label { display: none; }
+  .theme-toggle .label-dark, .theme-toggle .label-light { display: none; }
+  .brand { font-size: 1.05rem; gap: 9px; }
+  .brand .glyph, .brand .glyph img { width: 30px; height: 30px; }
+
+  .mobile-tabs {
+    display: flex;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: var(--topbar-bg);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-top: 1px solid var(--rule);
+    padding: 6px max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+  .mobile-tabs > a {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 4px 2px 2px;
+    color: var(--ink-dim);
+    font: 600 10px/1 var(--sans);
+    letter-spacing: .02em;
+  }
+  .mobile-tabs > a svg { width: 22px; height: 22px; }
+  .mobile-tabs > a.on { color: var(--amber); }
+  .mobile-tabs > a:active { opacity: .65; }
+
+  /* Bouton central « Publier » surélevé */
+  .mobile-tabs .tab-fab {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; margin-top: -24px;
+    border-radius: 50%;
+    background: var(--amber); color: var(--cta-fg);
+    box-shadow: 0 6px 18px rgba(66,87,178,.35);
+  }
+  .mobile-tabs .tab-fab svg { width: 20px; height: 20px; }
+  .mobile-tabs .tab-publish.on .tab-fab { background: var(--amber-soft); }
+
+  /* Dégage l'espace derrière la barre d'onglets */
+  .page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .footer { padding-bottom: calc(64px + env(safe-area-inset-bottom)); margin-top: 48px; }
+
+  /* iOS zoome dans les champs < 16px : on force 16px sur mobile */
+  input, select, textarea { font-size: 16px !important; }
 }
+
 @media (max-width: 600px) {
-  .page { padding: 24px 18px 72px; }
+  .page { padding: 24px 18px calc(96px + env(safe-area-inset-bottom)); }
   .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
   .mission-brief { padding: 24px 18px; }
 }

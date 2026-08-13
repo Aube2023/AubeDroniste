@@ -306,6 +306,20 @@ def assetlinks_json():
     }])
 
 
+@app.route("/sw.js")
+def service_worker():
+    """Service worker servi a la racine (scope '/') plutot que /static/."""
+    resp = send_from_directory(app.static_folder or "static", "sw.js")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@app.route("/offline")
+def offline():
+    """Page de secours affichee par le service worker sans reseau."""
+    return render_template("offline.html")
+
+
 @app.route("/sitemap.xml")
 def sitemap_xml():
     base = seo.CANONICAL_BASE

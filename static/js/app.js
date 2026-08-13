@@ -44,6 +44,13 @@ function toggleTheme() {
   const next = cur === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   try { localStorage.setItem('aube-theme', next); } catch (e) {}
+  syncThemeColor(next);
+}
+
+// Aligne la couleur de la barre système (Android/TWA, iOS PWA) sur le thème.
+function syncThemeColor(theme) {
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', theme === 'dark' ? '#0a0a0c' : '#f8f9fd');
 }
 
 // ----- Mémoire de zone (lat/lng + label optionnel) -----

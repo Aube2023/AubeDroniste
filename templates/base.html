@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
   {% set _seo = seo or {} %}
   {% set _title = _seo.title or ('AubePilot — Louez un pilote de drone certifié | Devis gratuits' if lang == 'fr' else 'AubePilot — Hire a Certified Drone Pilot | Free Quotes') %}
@@ -23,6 +23,9 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='brand/icon-180x180.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='brand/manifest.json') }}">
   <meta name="theme-color" content="#0a0a0c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Aube Pilot">
 
   <meta property="og:site_name" content="AubePilot">
   <meta property="og:title" content="{{ _title }}">
@@ -48,9 +51,14 @@
         var sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         var theme = saved || sys;
         document.documentElement.setAttribute('data-theme', theme);
+        var mc = document.querySelector('meta[name="theme-color"]');
+        if (mc) mc.setAttribute('content', theme === 'dark' ? '#0a0a0c' : '#f8f9fd');
       } catch (e) {}
     })();
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="{{ static_v('css/style.css') }}">
 </head>
 <body>
@@ -144,7 +152,46 @@
   </div>
 </footer>
 
+{# Barre d'onglets mobile (≤760px) : navigation principale style app native #}
+<nav class="mobile-tabs" aria-label="Navigation">
+  <a href="{{ url_for('index') }}" class="{{ 'on' if request.endpoint == 'index' else '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v11h5v-6h4v6h5V10"/></svg>
+    <span>{{ t('nav.home') }}</span>
+  </a>
+  <a href="{{ url_for('pilots_search') }}" class="{{ 'on' if request.endpoint == 'pilots_search' else '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="5" r="2.4"/><circle cx="19" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="m6.7 6.7 2.8 2.8m4.9 0 2.9-2.8M6.7 17.3l2.8-2.8m4.9 0 2.9 2.8"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/></svg>
+    <span>{{ t('nav.pilots') }}</span>
+  </a>
+  <a href="{{ url_for('mission_create') }}" class="tab-publish {{ 'on' if request.endpoint == 'mission_create' else '' }}" aria-label="{{ t('nav.publish') }}">
+    <span class="tab-fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+    <span>{{ t('nav.publish_short') }}</span>
+  </a>
+  <a href="{{ url_for('missions_search') }}" class="{{ 'on' if request.endpoint == 'missions_search' else '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>
+    <span>{{ t('nav.missions') }}</span>
+  </a>
+  {% if current_user %}
+  <a href="{{ url_for('dashboard') }}" class="{{ 'on' if request.endpoint == 'dashboard' else '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+    <span>{{ t('nav.dashboard') }}</span>
+  </a>
+  {% else %}
+  <a href="{{ url_for('login') }}" class="{{ 'on' if request.endpoint == 'login' else '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+    <span>{{ t('nav.login') }}</span>
+  </a>
+  {% endif %}
+</nav>
+
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+  // PWA : offline de secours + cache statiques (voir static/sw.js)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+</script>
 {% if current_user %}
 <script>
 // Avatar unifié AubeMail (source de vérité cross-Aube) : applique TA photo à

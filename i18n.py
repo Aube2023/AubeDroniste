@@ -62,6 +62,8 @@ def t(key: str, lang: Optional[str] = None, **kwargs) -> str:
 
 _T = {
     # ---- Navigation
+    "nav.home":         {"fr": "Accueil",            "en": "Home"},
+    "nav.publish_short":{"fr": "Publier",            "en": "Post"},
     "nav.pilots":       {"fr": "Pilotes",            "en": "Pilots"},
     "nav.missions":     {"fr": "Missions",           "en": "Missions"},
     "nav.publish":      {"fr": "Publier une mission","en": "Publish a mission"},
