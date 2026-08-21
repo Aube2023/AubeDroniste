@@ -25,6 +25,12 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 const String kSiteUrl = 'https://pilot.aubeetoilee.com';
 const String kSiteHost = 'pilot.aubeetoilee.com';
 
+/// Canal natif (MainActivity.kt) : garde la session entre deux lancements.
+/// Le cookie de session est HttpOnly (invisible du JS) et le CookieManager
+/// Android ne l'ecrit sur disque que par intermittence — le natif le
+/// sauvegarde et le reinjecte au demarrage si la WebView l'a perdu.
+const MethodChannel kSessionChannel = MethodChannel('aubepilot/session');
+
 // Palette du site (static/css/style.css) — theme clair.
 const Color kInk = Color(0xFF14161F); // noir franc
 const Color kIndigo = Color(0xFF4257B2); // accent indigo
@@ -180,7 +186,7 @@ class _WebHomeState extends State<WebHome> {
     _controller = WebViewController.fromPlatformCreationParams(params)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(kPaper)
-      ..setUserAgent('AubePilotMobile/1.1 (Android)')
+      ..setUserAgent('AubePilotMobile/1.3 (Android)')
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: _onNavigationRequest,
         onPageStarted: (url) {
@@ -196,6 +202,7 @@ class _WebHomeState extends State<WebHome> {
         onProgress: (p) => setState(() => _progress = p),
         onPageFinished: (url) {
           unawaited(_controller.runJavaScript(kAppModeJs).catchError((_) {}));
+          unawaited(_persistSession());
           unawaited(_syncTheme());
           setState(() {
             _loading = false;
@@ -237,6 +244,14 @@ class _WebHomeState extends State<WebHome> {
   /// lien pilot.aubeetoilee.com, sinon l'accueil. Puis ecoute les liens
   /// recus pendant que l'app tourne.
   Future<void> _bootstrap() async {
+    // Restaure la session AVANT la premiere page : si la WebView a perdu le
+    // cookie (process tue avant l'ecriture disque), le natif le reinjecte et
+    // l'utilisateur arrive deja connecte.
+    try {
+      await kSessionChannel.invokeMethod('restoreSession');
+    } catch (_) {
+      // canal absent (autre plateforme / vieux binaire) : sans gravite
+    }
     Uri start = Uri.parse(kSiteUrl);
     try {
       final initial = await _appLinks.getInitialLink();
@@ -280,6 +295,15 @@ class _WebHomeState extends State<WebHome> {
       return NavigationDecision.prevent;
     }
     return NavigationDecision.navigate;
+  }
+
+  /// Sauvegarde native du cookie de session apres chaque page : couvre la
+  /// connexion (cookie pose) comme la deconnexion (copie effacee, pour ne
+  /// pas ressusciter une session revoquee).
+  Future<void> _persistSession() async {
+    try {
+      await kSessionChannel.invokeMethod('persistSession');
+    } catch (_) {}
   }
 
   Future<List<String>> _onShowFileSelector(FileSelectorParams params) async {
