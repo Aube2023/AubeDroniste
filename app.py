@@ -53,6 +53,7 @@ from config import (
     PORT,
     SECRET_KEY,
     SESSION_COOKIE_NAME,
+    SESSION_LIFETIME_DAYS,
     STRIPE_PUBLISHABLE_KEY,
     UPLOAD_DIR,
 )
@@ -127,6 +128,21 @@ def _csrf_check():
 @app.after_request
 def _security_headers(resp):
     return security.apply_security_headers(resp)
+
+
+@app.after_request
+def _refresh_session_cookie(resp):
+    # Renouvellement glissant (voir auth.load_user_from_request) : re-pose le
+    # cookie avec un max_age complet, sinon le navigateur l'expire 30 jours
+    # apres le login initial meme pour un utilisateur actif tous les jours.
+    token = getattr(g, "refreshed_session_token", None)
+    if token:
+        resp.set_cookie(
+            SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
+            secure=app.config.get("SESSION_COOKIE_SECURE", False),
+            max_age=60 * 60 * 24 * SESSION_LIFETIME_DAYS,
+        )
+    return resp
 
 
 @app.context_processor

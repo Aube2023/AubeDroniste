@@ -221,15 +221,45 @@ def load_user_from_request() -> Optional[dict]:
     except BadSignature:
         return None
     row = db.fetchone(
-        "SELECT u.* FROM sessions s "
+        "SELECT u.*, s.expires_at AS session_expires_at FROM sessions s "
         "JOIN users u ON u.id = s.user_id "
         "WHERE s.sid=? AND s.expires_at > datetime('now')",
         (sid,),
     )
     if not row:
         return None
-    db.execute("UPDATE users SET last_seen_at=datetime('now') WHERE id=?", (row["id"],))
-    return dict(row)
+    user = dict(row)
+    _maybe_extend_session(sid, token, user.pop("session_expires_at", None))
+    db.execute("UPDATE users SET last_seen_at=datetime('now') WHERE id=?", (user["id"],))
+    return user
+
+
+def _maybe_extend_session(sid: str, token: str, expires_at) -> None:
+    """Renouvellement glissant : tant que l'utilisateur revient, sa session ne
+    meurt jamais (sinon elle expire 30 jours apres le LOGIN, meme pour un
+    utilisateur actif tous les jours — et il doit se reconnecter).
+
+    Au plus une extension par jour (des que l'echeance a ete entamee d'un
+    jour), pour ne pas ecrire en base a chaque requete. Le cookie est re-pose
+    cote reponse par app._refresh_session_cookie via g.refreshed_session_token.
+    """
+    if not expires_at:
+        return
+    try:
+        current = datetime.fromisoformat(str(expires_at))
+    except ValueError:
+        return
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    if current - now > timedelta(days=SESSION_LIFETIME_DAYS - 1):
+        return  # session posee/renouvelee il y a moins d'un jour
+    new_expires = now + timedelta(days=SESSION_LIFETIME_DAYS)
+    db.execute(
+        "UPDATE sessions SET expires_at=? WHERE sid=?",
+        (new_expires.isoformat(timespec="seconds"), sid),
+    )
+    g.refreshed_session_token = token
 
 
 def attach_user():
