@@ -48,41 +48,42 @@
   </h2>
 
   {% if not items %}
-    <p class="muted">Ajoutez vos premières réalisations ci-dessus. Photos illimitées{% if max_videos %} + jusqu'à {{ max_videos }} vidéos courtes{% endif %} : une dizaine d'images soignées suffisent déjà à convaincre.</p>
+  <div class="empty-state">
+    <strong>Portfolio vide</strong>
+    <p>Ajoutez vos premières réalisations avec le formulaire ci-dessus. Photos illimitées{% if max_videos %} + jusqu'à {{ max_videos }} vidéos courtes{% endif %} : une dizaine d'images soignées suffisent déjà à convaincre.</p>
+  </div>
   {% endif %}
 
-  <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+  <div class="media-grid">
     {% for it in items %}
-    <article class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-      <div style="background: #000; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;">
+    <article class="media-figure">
+      <div class="media-frame">
         {% if it.kind == 'video' %}
-          <video controls preload="metadata" style="width: 100%; height: 100%; object-fit: contain;">
+          <video controls preload="metadata">
             <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
           </video>
         {% else %}
           <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or it.original_filename }}"
-               loading="lazy"
-               style="width: 100%; height: 100%; object-fit: cover;">
+               alt="{{ it.title or it.original_filename }}" loading="lazy">
         {% endif %}
       </div>
-      <div style="padding: 14px;">
+      <div class="media-body">
         <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .12em;">
           {{ it.kind }}
           · {% set kb = it.size_bytes / 1024.0 %}{% if kb >= 1024 %}{{ '%.1f'|format(kb/1024.0) }} Mo{% else %}{{ '%.0f'|format(kb) }} Ko{% endif %}
           · {{ it.created_at[:10] }}
         </div>
         {% if it.title %}
-        <h3 style="margin: 6px 0 4px; font-family: var(--serif); font-size: 1.1rem;">{{ it.title }}</h3>
+        <h3 class="media-title">{{ it.title }}</h3>
         {% endif %}
         {% if it.description %}
-        <p class="muted small" style="margin: 0; white-space: pre-line;">{{ it.description }}</p>
+        <p class="muted small prewrap" style="margin: 0;">{{ it.description }}</p>
         {% endif %}
         {% if it.kind == 'video' %}
         <a class="small muted" href="{{ url_for('media_file', filename=it.stored_filename) }}" target="_blank" rel="noopener" style="display: inline-block; margin-top: 8px;">▶ Ouvrir la vidéo en grand ↗</a>
         {% endif %}
 
-        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+        <div class="actions-row" style="margin-top: 12px;">
           <button class="ghost" type="button" onclick="document.getElementById('edit-pf-{{ it.id }}').style.display='block';">Modifier</button>
           <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer cette réalisation ?')">
                 {{ csrf_input() }}
