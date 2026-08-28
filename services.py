@@ -387,10 +387,21 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   capability: str = "", text: str = "", lat: Optional[float] = None,
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
+                  only_verified: bool = False, only_insured: bool = False,
+                  authority: str = "",
                   strict_radius: bool = False, limit: int = 50) -> list:
-    # PERF : on JOIN un agregat de reviews dans la requete principale au
-    # lieu d'appeler pilot_rating() N fois en Python (avant : 1 + N requetes,
-    # maintenant : 1 seule).
+    """Annuaire pilotes.
+
+    Filtres « confiance » (facon annuaire pro) :
+      only_verified -> au moins un brevet controle par l'admin (ou compte verifie)
+      only_insured  -> assurance RC pro declaree
+      authority     -> detient un brevet de cette autorite (ex. Transport Canada)
+    Chaque resultat expose `verified_authorities` (codes des autorites dont un
+    brevet est verifie) et `certs_verified` pour les badges des cartes.
+    """
+    # PERF : on JOIN un agregat de reviews + un agregat de brevets dans la
+    # requete principale au lieu d'appeler pilot_rating() / list_certifications()
+    # N fois en Python (1 seule requete).
     _text = (text or "").strip().lower()   # recherche libre (search box / ?q=)
     q = [
         "SELECT u.id, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
@@ -398,7 +409,10 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
-        "       COALESCE(r.review_count, 0) AS rating_count "
+        "       COALESCE(r.review_count, 0) AS rating_count, "
+        "       COALESCE(c.n_certs, 0) AS certs_total, "
+        "       COALESCE(c.n_verified, 0) AS certs_verified, "
+        "       c.verified_auths AS verified_auths "
         "FROM users u "
         "JOIN pilot_profiles p ON p.user_id = u.id "
         "LEFT JOIN ("
@@ -406,11 +420,28 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "         COUNT(*) AS review_count "
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
+        "LEFT JOIN ("
+        "  SELECT pilot_user_id, COUNT(*) AS n_certs, "
+        "         SUM(is_verified) AS n_verified, "
+        "         GROUP_CONCAT(DISTINCT CASE WHEN is_verified=1 THEN authority END) "
+        "           AS verified_auths "
+        "  FROM pilot_certifications GROUP BY pilot_user_id"
+        ") c ON c.pilot_user_id = u.id "
         "WHERE u.role IN ('pilot', 'both')",
     ]
     args: list = []
     if only_available:
         q.append("AND p.is_available = 1")
+    if only_verified:
+        q.append("AND (u.is_verified = 1 OR COALESCE(c.n_verified, 0) > 0)")
+    if only_insured:
+        q.append("AND p.insurance = 1")
+    if authority:
+        q.append(
+            "AND EXISTS (SELECT 1 FROM pilot_certifications pc "
+            "             WHERE pc.pilot_user_id=u.id AND pc.authority=?)"
+        )
+        args.append(authority)
     if country:
         q.append(
             "AND (u.country = ? OR EXISTS ("
@@ -467,6 +498,8 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
             "avg": round(float(r.pop("rating_avg") or 0.0), 2),
             "count": int(r.pop("rating_count") or 0),
         }
+        auths = r.pop("verified_auths", None) or ""
+        r["verified_authorities"] = [a for a in auths.split(",") if a]
         enriched.append(r)
     if lat is not None and lng is not None:
         enriched.sort(key=lambda x: (x.get("distance_km") or 1e9))
@@ -638,6 +671,11 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
         else:
             r["distance_km"] = None
         out.append(r)
+    if lat is not None and lng is not None:
+        # Recherche « autour de » : du plus proche au plus lointain (les
+        # missions sans coordonnees passent en fin de liste).
+        out.sort(key=lambda x: (x.get("distance_km") is None,
+                                x.get("distance_km") or 0, -x["is_urgent"]))
     return out
 
 

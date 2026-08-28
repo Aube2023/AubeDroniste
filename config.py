@@ -550,6 +550,26 @@ MESSAGE_BANNED_PATTERNS = [
     r"\b(?:wa\.me|t\.me|m\.me|ig|@\w{3,})\b",
 ]
 
+# Contact public : destinataire du formulaire /contact (et de la FAQ).
+# Par defaut la boite RPRP deja publiee dans le pied de page ; surchargable.
+CONTACT_EMAIL = os.environ.get("AUBEPILOT_CONTACT_EMAIL", "rprp@aubemail.com").strip()
+# Delai de reponse annonce sur la page contact (heures ouvrables)
+CONTACT_REPLY_HOURS = int(os.environ.get("AUBEPILOT_CONTACT_REPLY_HOURS", "24"))
+
+# Reseaux sociaux : affiches dans le pied de page + `sameAs` schema.org
+# uniquement s'ils sont renseignes (aucun lien mort par defaut).
+SOCIAL_LINKS = [
+    (name, url) for name, url in (
+        ("LinkedIn",  os.environ.get("AUBEPILOT_SOCIAL_LINKEDIN", "").strip()),
+        ("Instagram", os.environ.get("AUBEPILOT_SOCIAL_INSTAGRAM", "").strip()),
+        ("Facebook",  os.environ.get("AUBEPILOT_SOCIAL_FACEBOOK", "").strip()),
+        ("YouTube",   os.environ.get("AUBEPILOT_SOCIAL_YOUTUBE", "").strip()),
+    ) if url
+]
+
+# Rayons proposes dans les recherches « autour de » (km)
+SEARCH_RADIUS_CHOICES = [25, 50, 100, 250, 500]
+
 # Pays vedettes pour le selecteur (le reste reste libre)
 FEATURED_COUNTRIES = [
     "France", "Canada", "États-Unis", "Belgique", "Suisse", "Luxembourg",

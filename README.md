@@ -101,12 +101,34 @@ commentaire, après `completed`.
 ### Messagerie (`messages`)
 Thread par mission entre client et pilote, marquage lu/non-lu.
 
+### Recherche « autour de » (code postal / adresse / ville)
+`near=` sur `/pilotes`, `/missions`, `/api/pilotes`, `/api/missions` est
+géocodé côté serveur (`geocode.py` : Nominatim/OpenStreetMap, sans clé,
+1 req/s max, cache SQLite `geocode_cache` positif ET négatif). Résultats
+triés du plus proche au plus loin, `radius_km` (25 → 500) + `near_only=1`
+pour exclure hors rayon ; la carte affiche le centre et le cercle de rayon.
+
+### Filtres « confiance » (annuaire pro)
+`only_verified=1` (brevet contrôlé par l'admin ou compte vérifié),
+`only_insured=1` (RC pro déclarée), `authority=<code>` (ex. `Transport Canada`).
+Les cartes pilote affichent les autorités des brevets vérifiés (`✓ DGAC`).
+
+### FAQ, contact
+- `/faq` : FAQ bilingue centralisée dans `content.py` (mêmes textes que
+  l'aperçu de l'accueil et le JSON-LD `FAQPage`) ; les chiffres (commission,
+  auto-libération, annulation) viennent de `config.py`, jamais en dur.
+- `/contact` : formulaire (CSRF, rate limit 3/min, pot de miel) → courriel à
+  `AUBEPILOT_CONTACT_EMAIL` (défaut `rprp@aubemail.com`, Reply-To expéditeur)
+  + accusé de réception bilingue. Réseaux sociaux du pied de page via
+  `AUBEPILOT_SOCIAL_LINKEDIN|INSTAGRAM|FACEBOOK|YOUTUBE` (rien si vide).
+
 ## API JSON
 
 ```
 GET /api/stats
-GET /api/pilotes?country=&city=&mission_type=&capability=&lat=&lng=&radius_km=&min_rating=&only_available=
-GET /api/missions ?country=&mission_type=&status=&lat=&lng=&radius_km=&only_urgent=
+GET /api/geocode?q=<code postal | adresse | ville>&country=
+GET /api/pilotes?near=&radius_km=&near_only=&country=&city=&mission_type=&capability=&lat=&lng=&min_rating=&only_available=&only_verified=&only_insured=&authority=
+GET /api/missions?near=&radius_km=&near_only=&country=&mission_type=&status=&lat=&lng=&only_urgent=
 ```
 
 ## Auth & sécurité
@@ -124,7 +146,9 @@ GET /api/missions ?country=&mission_type=&status=&lat=&lng=&radius_km=&only_urge
 
 ```
 config.py         constantes : port, devises, types missions, certifs, drones
-schema.sql        14 tables SQLite
+content.py        FAQ bilingue (page /faq, accueil, JSON-LD)
+geocode.py        code postal / adresse -> lat,lng (Nominatim + cache)
+schema.sql        15 tables SQLite
 db.py             connexion par requête, haversine_km
 auth.py           PAM + fallback + sessions + create_user
 services.py       toute la logique métier (sans ORM, SQL à plat)

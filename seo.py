@@ -12,7 +12,8 @@ Tout est bilingue (fr/en) selon `lang`. Les fonctions renvoient des dicts ;
 les templates les sérialisent via le filtre Jinja `|tojson` (échappement sûr).
 """
 
-from config import CURRENT_SERVICE_SLUG, ROOT_DOMAIN
+import content
+from config import CONTACT_EMAIL, CURRENT_SERVICE_SLUG, ROOT_DOMAIN, SOCIAL_LINKS
 
 # Base canonique derivee du domaine central (pas de domaine code en dur).
 CANONICAL_BASE = f"https://{CURRENT_SERVICE_SLUG}.{ROOT_DOMAIN}"
@@ -24,6 +25,8 @@ PUBLIC_ROUTES = [
     ("/", "1.0", "daily"),
     ("/pilotes", "0.9", "daily"),
     ("/missions", "0.9", "daily"),
+    ("/faq", "0.6", "monthly"),
+    ("/contact", "0.5", "monthly"),
     ("/mentions-legales", "0.3", "yearly"),
     ("/confidentialite", "0.3", "yearly"),
     ("/cgu", "0.3", "yearly"),
@@ -64,6 +67,15 @@ def organization_ld(lang="fr"):
         "description": desc,
         "slogan": ("Le ciel n'a pas de frontière. Vos pilotes non plus."
                    if lang == "fr" else "The sky has no borders. Neither do your pilots."),
+        # Point de contact + reseaux : signaux de confiance (Knowledge Panel)
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": CONTACT_EMAIL,
+            "url": CANONICAL_BASE + "/contact",
+            "availableLanguage": ["fr", "en"],
+        },
+        **({"sameAs": [url for _name, url in SOCIAL_LINKS]} if SOCIAL_LINKS else {}),
     }
 
 
@@ -93,58 +105,68 @@ def global_ld(lang="fr"):
 # Pages
 # --------------------------------------------------------------------------- #
 
+def _faq_ld(entries):
+    return {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": e["question"],
+             "acceptedAnswer": {"@type": "Answer", "text": e["answer"]}}
+            for e in entries
+        ],
+    }
+
+
 def home(lang="fr"):
     if lang == "fr":
         title = "Louez un pilote de drone certifié — Devis gratuits | AubePilot"
         desc = ("Trouvez et réservez un pilote de drone certifié près de chez "
-                "vous : prises de vue aériennes, inspections, mariages, "
-                "immobilier. Devis gratuits, paiement sécurisé sous séquestre.")
-        faq = [
-            ("Comment trouver un pilote de drone ?",
-             "Recherchez par ville, pays et type de mission, comparez les "
-             "profils, avis et tarifs, puis demandez un devis gratuit. La mise "
-             "en relation et les devis sont sans frais."),
-            ("Combien coûte un pilote de drone ?",
-             "Chaque pilote fixe ses tarifs. Vous recevez des devis détaillés "
-             "(prestation, livrables, prix) et choisissez la meilleure offre. "
-             "Le paiement est conservé en séquestre jusqu'à la livraison."),
-            ("Les pilotes sont-ils certifiés et assurés ?",
-             "Les pilotes renseignent leurs brevets (DGAC, EASA, Transport "
-             "Canada, FAA...) et leur assurance responsabilité civile "
-             "professionnelle, vérifiables sur leur profil."),
-            ("Le paiement est-il sécurisé ?",
-             "Oui. Les fonds sont conservés en séquestre via AubePilot et "
-             "versés au pilote uniquement après validation de la livraison."),
-        ]
+                "vous par code postal ou adresse : prises de vue aériennes, "
+                "inspections, mariages, immobilier. Devis gratuits, paiement "
+                "sécurisé sous séquestre.")
     else:
         title = "Hire a Certified Drone Pilot — Free Quotes | AubePilot"
-        desc = ("Find and book a certified drone pilot near you for aerial "
-                "photography, inspections, weddings and real estate. Free "
-                "quotes, secure escrow payments.")
-        faq = [
-            ("How do I find a drone pilot?",
-             "Search by city, country and mission type, compare profiles, "
-             "reviews and rates, then request a free quote."),
-            ("How much does a drone pilot cost?",
-             "Each pilot sets their own rates. You receive detailed quotes and "
-             "pick the best offer; payment is held in escrow until delivery."),
-            ("Are pilots certified and insured?",
-             "Pilots list their licences (DGAC, EASA, Transport Canada, "
-             "FAA...) and liability insurance, visible on their profile."),
-            ("Is payment secure?",
-             "Yes. Funds are held in escrow by AubePilot and released to the "
-             "pilot only after you validate the delivery."),
-        ]
-    faq_ld = {
+        desc = ("Find and book a certified drone pilot near you by postal code "
+                "or address: aerial photography, inspections, weddings and real "
+                "estate. Free quotes, secure escrow payments.")
+    # Les questions visibles sur l'accueil (aperçu) = celles des rich results.
+    return {"title": title, "description": desc,
+            "jsonld": [_faq_ld(content.faq(lang, featured_only=True))]}
+
+
+def faq_page(lang="fr"):
+    if lang == "fr":
+        title = "Questions fréquentes — pilotes de drone, devis, paiement | AubePilot"
+        desc = ("Tout savoir sur AubePilot : trouver un pilote de drone par code "
+                "postal, coût, profils vérifiés, paiement sous séquestre, "
+                "certifications acceptées, versements aux pilotes.")
+    else:
+        title = "Frequently Asked Questions — drone pilots, quotes, payment | AubePilot"
+        desc = ("Everything about AubePilot: finding a drone pilot by postal code, "
+                "pricing, verified profiles, escrow payment, accepted licences, "
+                "pilot payouts.")
+    return {"title": title, "description": desc,
+            "jsonld": [_faq_ld(content.faq(lang))]}
+
+
+def contact_page(lang="fr"):
+    if lang == "fr":
+        title = "Nous joindre — AubePilot"
+        desc = ("Une question sur une mission, un devis, votre profil pilote ou "
+                "un partenariat ? Écrivez-nous, on répond vite.")
+    else:
+        title = "Contact us — AubePilot"
+        desc = ("A question about a mission, a quote, your pilot profile or a "
+                "partnership? Write to us, we answer fast.")
+    ld = {
         "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {"@type": "Question", "name": q,
-             "acceptedAnswer": {"@type": "Answer", "text": a}}
-            for q, a in faq
-        ],
+        "@type": "ContactPage",
+        "name": title,
+        "url": CANONICAL_BASE + "/contact",
+        "mainEntity": {"@type": "Organization", "name": ORG_NAME,
+                       "email": CONTACT_EMAIL, "url": CANONICAL_BASE},
     }
-    return {"title": title, "description": desc, "jsonld": [faq_ld]}
+    return {"title": title, "description": desc, "jsonld": [ld]}
 
 
 def pilots_list(lang="fr", params=None):

@@ -293,6 +293,18 @@ CREATE TABLE IF NOT EXISTS booking_deliverables (
 );
 CREATE INDEX IF NOT EXISTS idx_deliv_booking ON booking_deliverables(booking_id);
 
+-- Cache de geocodage (code postal / adresse -> coordonnees), cf. geocode.py.
+-- found=0 : requete deja tentee sans resultat (evite de re-solliciter Nominatim).
+CREATE TABLE IF NOT EXISTS geocode_cache (
+    q          TEXT PRIMARY KEY,
+    lat        REAL,
+    lng        REAL,
+    label      TEXT,
+    country    TEXT,
+    found      INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Sessions
 CREATE TABLE IF NOT EXISTS sessions (
     sid          TEXT PRIMARY KEY,

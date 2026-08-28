@@ -1,18 +1,22 @@
 {# Carte interactive MapLibre GL — pilotes + missions geolocalises.
-   Parametres optionnels passes via include `with` :
+   Parametres optionnels passes via include `with` / contexte :
      map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
+     map_center : {lat, lng, label, radius_km} -> zone recherchee (code postal /
+                  adresse / geoloc) : marqueur + cercle de rayon + recadrage.
    Coords pilote floutees cote serveur (~11 km) pour la confidentialite. #}
 {% set _focus = map_focus|default('pilots') %}
+{% set _center = map_center|default({}) %}
 {# preconnect : unpkg sert <link>/<script> (no-CORS, sans crossorigin) ;
-   demotiles est requete par fetch() MapLibre (CORS, avec crossorigin). #}
+   les tuiles CARTO sont requetees par fetch() MapLibre (CORS, avec crossorigin). #}
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:360px;width:100%;background:var(--surface,#101014);"></div>
-  <div class="map-legend" style="display:flex;gap:18px;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
+  <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes' if lang == 'fr' else 'Pilots' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
+    {% if _center %}<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#7a5fc4;margin-right:6px;"></span>{{ 'Zone recherchée' if lang == 'fr' else 'Search area' }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
     <span class="muted" id="map-count"></span>
   </div>
 </div>
@@ -23,13 +27,13 @@
   if (!el || typeof maplibregl === 'undefined') return;
   var LANG = {{ ('"fr"' if lang == 'fr' else '"en"') | safe }};
   var FOCUS = {{ ('"' ~ _focus ~ '"') | safe }};
+  var CENTER = {{ (_center or none) | tojson }};
   var params = new URLSearchParams(window.location.search);
   var qs = new URLSearchParams();
   if (params.get('country')) qs.set('country', params.get('country'));
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
 
   // Fond de carte CARTO (épuré, gratuit, sans clé) adapté au thème jour/nuit.
-  // Bien plus détaillé/élégant que le fond générique (villes, rues, labels).
   var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
   var variant = DARK ? 'dark_all' : 'light_all';
   var TILES = ['a', 'b', 'c', 'd'].map(function (s) {
@@ -47,7 +51,9 @@
       },
       layers: [{ id: 'carto', type: 'raster', source: 'carto' }]
     },
-    center: [2.3, 46.6], zoom: 3, attributionControl: true
+    center: CENTER && CENTER.lng != null ? [CENTER.lng, CENTER.lat] : [2.3, 46.6],
+    zoom: CENTER && CENTER.lng != null ? 8 : 3,
+    attributionControl: true
   });
   map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
 
@@ -66,11 +72,43 @@
       '<a href="/missions/' + m.id + '">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div>';
   }
 
+  // Polygone GeoJSON approchant un cercle de `km` autour de [lng, lat].
+  function circlePolygon(lng, lat, km, steps) {
+    steps = steps || 64;
+    var coords = [];
+    var dLat = km / 110.574;
+    var dLng = km / (111.320 * Math.cos(lat * Math.PI / 180));
+    for (var i = 0; i <= steps; i++) {
+      var a = (i / steps) * 2 * Math.PI;
+      coords.push([lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)]);
+    }
+    return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} };
+  }
+
   map.on('load', function () {
+    var bounds = new maplibregl.LngLatBounds();
+    var hasArea = false;
+    if (CENTER && CENTER.lng != null && CENTER.lat != null) {
+      hasArea = true;
+      var km = CENTER.radius_km || 50;
+      var circle = circlePolygon(CENTER.lng, CENTER.lat, km);
+      map.addSource('search-area', { type: 'geojson', data: circle });
+      map.addLayer({ id: 'search-area-fill', type: 'fill', source: 'search-area',
+                     paint: { 'fill-color': '#7a5fc4', 'fill-opacity': 0.10 } });
+      map.addLayer({ id: 'search-area-line', type: 'line', source: 'search-area',
+                     paint: { 'line-color': '#7a5fc4', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
+      var c = document.createElement('div');
+      c.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#7a5fc4;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45)';
+      var mk = new maplibregl.Marker({element: c}).setLngLat([CENTER.lng, CENTER.lat]).addTo(map);
+      if (CENTER.label) mk.setPopup(new maplibregl.Popup({offset: 12}).setHTML(
+        '<div style="font:14px system-ui"><b>⌖ ' + CENTER.label.replace(/</g, '&lt;') + '</b><br>' +
+        (LANG === 'fr' ? 'rayon ' : 'radius ') + km + ' km</div>'));
+      circle.geometry.coordinates[0].forEach(function (pt) { bounds.extend(pt); });
+    }
+
     fetch('/api/map' + (qs.toString() ? ('?' + qs.toString()) : ''))
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        var bounds = new maplibregl.LngLatBounds();
         var n = 0;
         (data.pilots || []).forEach(function (p) {
           if (p.lng == null || p.lat == null) return;
@@ -78,7 +116,7 @@
           d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
           new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
             .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupPilot(p))).addTo(map);
-          if (FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);
+          if (!hasArea && FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);
           n++;
         });
         (data.missions || []).forEach(function (m) {
@@ -87,16 +125,20 @@
           d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
           new maplibregl.Marker({element: d}).setLngLat([m.lng, m.lat])
             .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupMission(m))).addTo(map);
-          if (FOCUS === 'missions') bounds.extend([m.lng, m.lat]);
+          if (!hasArea && FOCUS === 'missions') bounds.extend([m.lng, m.lat]);
           n++;
         });
-        if (FOCUS !== 'pilots') (data.pilots||[]).forEach(function(p){ if(p.lng!=null) bounds.extend([p.lng,p.lat]); });
-        if (FOCUS !== 'missions') (data.missions||[]).forEach(function(m){ if(m.lng!=null) bounds.extend([m.lng,m.lat]); });
+        if (!hasArea) {
+          if (FOCUS !== 'pilots') (data.pilots||[]).forEach(function(p){ if(p.lng!=null) bounds.extend([p.lng,p.lat]); });
+          if (FOCUS !== 'missions') (data.missions||[]).forEach(function(m){ if(m.lng!=null) bounds.extend([m.lng,m.lat]); });
+        }
         var lbl = document.getElementById('map-count');
         if (lbl) lbl.textContent = (LANG==='fr' ? (n + ' point(s) sur la carte') : (n + ' point(s) on the map'));
-        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: 9, duration: 0});
+        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: hasArea ? 11 : 9, duration: 0});
       })
-      .catch(function () {});
+      .catch(function () {
+        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: 11, duration: 0});
+      });
   });
 })();
 </script>

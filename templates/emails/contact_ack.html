@@ -1,0 +1,34 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Message bien reçu / Message received — AubePilot{% endblock %}
+{% block preview %}Nous avons bien reçu votre message · We received your message.{% endblock %}
+
+{% block content %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 16px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR, Accusé de réception</div>
+  <h1 style="font-family:Georgia,serif;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">
+    Bonjour {{ name }}, votre message est bien arrivé.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#6b6f7a;margin:0 0 12px;">
+    Sujet : <strong style="color:#15181f;">{{ topic }}</strong>. On vous répond sous
+    <strong style="color:#15181f;">{{ reply_hours }} h ouvrables</strong>. En attendant, la
+    <a href="{{ site_url }}/faq" style="color:#b87519;">FAQ</a> répond déjà aux questions les plus courantes.
+  </p>
+  <blockquote style="margin:18px 0;padding:14px 22px;background:#fbfaf6;border-left:3px solid #b87519;font:italic 400 15px/1.55 Georgia,serif;color:#15181f;white-space:pre-wrap;">{{ body }}</blockquote>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:18px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN, Acknowledgement</div>
+  <h1 style="font-family:Georgia,serif;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">
+    Hello {{ name }}, we received your message.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#6b6f7a;margin:0 0 12px;">
+    Topic: <strong style="color:#15181f;">{{ topic }}</strong>. We reply within
+    <strong style="color:#15181f;">{{ reply_hours }} business hours</strong>. Meanwhile, the
+    <a href="{{ site_url }}/faq" style="color:#b87519;">FAQ</a> already answers the most common questions.
+  </p>
+</td></tr>
+</table>
+{% endblock %}

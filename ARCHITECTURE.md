@@ -225,6 +225,25 @@ dans `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
+## Découverte : géocodage, filtres confiance, FAQ, contact
+
+- `geocode.lookup(q, country, lang)` : cache `geocode_cache` (créée par
+  `db.run_migrations()`), puis Nominatim (`_fetch`, throttle 1 req/s, timeout
+  5 s, jamais d'exception). Les échecs sont aussi mis en cache (`found=0`).
+  En test, `geocode._fetch` est monkeypatché : **aucun appel réseau**.
+- `app._resolve_near()` lit `near` / `lat` / `lng` / `radius_km` / `near_only`
+  et alimente `services.search_pilots` / `search_missions` (tri par distance,
+  exclusion seulement si `near_only`). `_map_center()` passe le centre à
+  `_map.html` (marqueur violet + cercle GeoJSON du rayon).
+- `search_pilots` agrège les brevets en une requête (`certs_total`,
+  `certs_verified`, `verified_authorities`) pour les filtres `only_verified`,
+  `only_insured`, `authority` et les puces des cartes.
+- `content.faq(lang, featured_only)` : source unique de la FAQ (page, accueil,
+  `seo.home()`/`seo.faq_page()` → JSON-LD `FAQPage`).
+- `/contact` : GET `contact_form`, POST `contact_submit` (rate limit 3/min,
+  12/h, pot de miel `website`, validation) → `mailer.send_contact_message`
+  (Reply-To = expéditeur) + `mailer.send_contact_ack` + `audit_log`.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement
@@ -308,6 +327,11 @@ sur l'app via `before_request` / `after_request` hooks.
 | `STRIPE_PUBLISHABLE_KEY` | (vide) | `pk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | (vide) | `whsec_...` (depuis Stripe dashboard) |
 | `AUBEPILOT_AUTO_RELEASE_DAYS` | 7 | délai auto-release escrow |
+| `NOMINATIM_URL` | `https://nominatim.openstreetmap.org/search` | géocodeur (instance auto-hébergée possible) |
+| `AUBEPILOT_GEOCODE_CONTACT` | `rprp@aubemail.com` | contact dans le User-Agent Nominatim (politique d'usage) |
+| `AUBEPILOT_CONTACT_EMAIL` | `rprp@aubemail.com` | destinataire du formulaire `/contact` |
+| `AUBEPILOT_CONTACT_REPLY_HOURS` | 24 | délai de réponse annoncé |
+| `AUBEPILOT_SOCIAL_LINKEDIN` … `_YOUTUBE` | (vide) | liens réseaux du pied de page + `sameAs` |
 
 ---
 

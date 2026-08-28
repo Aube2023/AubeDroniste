@@ -1,0 +1,20 @@
+AUBEPILOT, MESSAGE BIEN REÇU / MESSAGE RECEIVED
+===============================================
+
+[FR]
+Bonjour {{ name }}, votre message (sujet : {{ topic }}) est bien arrivé.
+On vous répond sous {{ reply_hours }} h ouvrables.
+FAQ : {{ site_url }}/faq
+
+Copie de votre message :
+> {{ body }}
+
+------------------------------------------------------------
+
+[EN]
+Hello {{ name }}, we received your message (topic: {{ topic }}).
+We reply within {{ reply_hours }} business hours.
+FAQ: {{ site_url }}/faq
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

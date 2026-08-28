@@ -5,6 +5,7 @@ Point d'entree Flask. Auth PAM partagee, SQLite local, templates Jinja
 """
 import logging
 import os
+import re
 import time
 from datetime import datetime, timezone
 
@@ -14,7 +15,9 @@ from flask import (
 )
 
 import auth
+import content
 import db
+import geocode
 import i18n
 import payments
 import security
@@ -47,17 +50,22 @@ from config import (
     ALLOWED_DELIVERABLE_EXT,
     ALLOWED_AVATAR_EXT,
     ALLOWED_PORTFOLIO_EXT,
+    CONTACT_EMAIL,
+    CONTACT_REPLY_HOURS,
     MISSION_TYPES,
     PILOT_SHARE_PCT,
     PLATFORM_FEE_PCT,
     PORT,
+    SEARCH_RADIUS_CHOICES,
     SECRET_KEY,
     SESSION_COOKIE_NAME,
     SESSION_LIFETIME_DAYS,
+    SOCIAL_LINKS,
     STRIPE_PUBLISHABLE_KEY,
     UPLOAD_DIR,
 )
 import aube_push
+import mailer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -170,6 +178,11 @@ def _inject_globals():
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
+        # Contact public + reseaux (pied de page, page contact, accueil)
+        "contact_email": CONTACT_EMAIL,
+        "contact_reply_hours": CONTACT_REPLY_HOURS,
+        "social_links": SOCIAL_LINKS,
+        "search_radius_choices": SEARCH_RADIUS_CHOICES,
         # Economie plateforme : surface unique (jamais "30 %"/"70 %" en dur en vue)
         "platform_fee_pct": int(PLATFORM_FEE_PCT),
         "pilot_share_pct": int(PILOT_SHARE_PCT),
@@ -263,6 +276,44 @@ def _to_bool(v):
     return str(v).lower() in {"1", "true", "on", "yes", "oui"}
 
 
+def _resolve_near(country: str = "") -> dict:
+    """Lit les parametres geo d'une recherche : `lat`/`lng` explicites
+    (geoloc navigateur, pastille zone) ou `near` = code postal / adresse /
+    ville a geocoder (cf. geocode.py). Retourne un dict :
+      lat, lng        -> centre (ou None)
+      near            -> saisie brute (re-affichee dans le champ)
+      near_label      -> libelle resolu (« 75011 Paris, France »)
+      near_error      -> True si la saisie n'a pas pu etre localisee
+      radius_km       -> rayon choisi (borne)
+      near_only       -> True = exclure hors rayon (sinon tri seulement)
+    """
+    near = (request.args.get("near") or "").strip()[:geocode.MAX_QUERY_LEN]
+    lat = _to_float(request.args.get("lat"))
+    lng = _to_float(request.args.get("lng"))
+    radius_km = _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM)
+    radius_km = max(1, min(radius_km or DEFAULT_SEARCH_RADIUS_KM, SEARCH_RADIUS_CHOICES[-1]))
+    out = {"near": near, "near_label": "", "near_error": False,
+           "radius_km": radius_km,
+           "near_only": _to_bool(request.args.get("near_only", "0"))}
+    if near and (lat is None or lng is None):
+        geo = geocode.lookup(near, country or "", getattr(g, "lang", i18n.DEFAULT))
+        if geo:
+            lat, lng = geo["lat"], geo["lng"]
+            out["near_label"] = geo["label"]
+        else:
+            out["near_error"] = True
+    out["lat"], out["lng"] = lat, lng
+    return out
+
+
+def _map_center(geo: dict) -> dict:
+    """Centre a passer a la carte (_map.html) quand une zone est resolue."""
+    if geo.get("lat") is None or geo.get("lng") is None:
+        return {}
+    return {"lat": geo["lat"], "lng": geo["lng"],
+            "label": geo.get("near_label") or "", "radius_km": geo["radius_km"]}
+
+
 # ---------------------------------------------------------------------------
 # Selecteur de langue
 # ---------------------------------------------------------------------------
@@ -293,6 +344,7 @@ def index():
         featured_pilots=services.featured_pilots(8),
         latest_missions=services.latest_missions(8),
         country_breakdown=services.country_breakdown(12),
+        faq_entries=content.faq(getattr(g, "lang", i18n.DEFAULT), featured_only=True),
         seo=seo.home(getattr(g, "lang", i18n.DEFAULT)),
     )
 
@@ -386,6 +438,112 @@ def page_cookies():
     return render_template("legal_cookies.html")
 
 
+# ---------------------------------------------------------------------------
+# FAQ + contact (pages de confiance : ce qu'un annuaire local affiche, en
+# version marketplace mondiale)
+# ---------------------------------------------------------------------------
+
+@app.route("/faq")
+def faq():
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    return render_template(
+        "faq.html",
+        faq_entries=content.faq(lang),
+        faq_categories=content.faq_categories(lang),
+        seo=seo.faq_page(lang),
+    )
+
+
+CONTACT_TOPICS = [
+    ("client",      {"fr": "Je cherche un pilote / une mission en cours",
+                     "en": "I'm looking for a pilot / an ongoing mission"}),
+    ("pilot",       {"fr": "Je suis pilote (profil, brevets, paiements)",
+                     "en": "I'm a pilot (profile, licences, payouts)"}),
+    ("partnership", {"fr": "Partenariat, école, boutique, location",
+                     "en": "Partnership, school, shop, rental"}),
+    ("press",       {"fr": "Presse / média", "en": "Press / media"}),
+    ("other",       {"fr": "Autre question", "en": "Other question"}),
+]
+
+
+def _contact_topics(lang: str) -> list:
+    return [(code, labels["en" if lang == "en" else "fr"]) for code, labels in CONTACT_TOPICS]
+
+
+def _contact_context(form: dict) -> dict:
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    u = getattr(g, "user", None)
+    return {
+        "topics": _contact_topics(lang),
+        "form": {
+            "name": form.get("name") or (u.get("full_name") if u else "") or "",
+            "email": form.get("email") or (u.get("email") if u else "") or "",
+            "topic": form.get("topic") or "",
+            "message": form.get("message") or "",
+        },
+        "seo": seo.contact_page(lang),
+    }
+
+
+@app.route("/contact", methods=["GET"])
+def contact_form():
+    return render_template("contact.html", **_contact_context({}))
+
+
+@app.route("/contact", methods=["POST"])
+@security.rate_limit(per_minute=3, per_hour=12)
+def contact_submit():
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    fr = lang != "en"
+    form = {k: (request.form.get(k) or "").strip() for k in
+            ("name", "email", "topic", "message", "website")}
+    # Pot de miel : un humain ne voit pas le champ `website` (masque en CSS) ;
+    # un bot le remplit -> on fait semblant d'accepter, sans rien envoyer.
+    if form["website"]:
+        flash("Merci, votre message a bien été envoyé." if fr
+              else "Thank you, your message has been sent.", "success")
+        return redirect(url_for("contact_form"))
+    topics = dict(_contact_topics(lang))
+    errors = []
+    if len(form["name"]) < 2:
+        errors.append("Indiquez votre nom." if fr else "Please enter your name.")
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$", form["email"]):
+        errors.append("Adresse courriel invalide." if fr else "Invalid email address.")
+    if form["topic"] not in topics:
+        errors.append("Choisissez un sujet." if fr else "Please pick a topic.")
+    if len(form["message"]) < 10:
+        errors.append("Votre message est trop court (10 caractères minimum)." if fr
+                      else "Your message is too short (10 characters minimum).")
+    if len(form["message"]) > 5000:
+        errors.append("Votre message est trop long (5 000 caractères maximum)." if fr
+                      else "Your message is too long (5,000 characters maximum).")
+    if errors:
+        for e in errors:
+            flash(e, "error")
+        return render_template("contact.html", **_contact_context(form)), 400
+
+    topic_label = topics[form["topic"]]
+    user = getattr(g, "user", None)
+    mailer.send_contact_message(
+        to=CONTACT_EMAIL, name=form["name"], email=form["email"],
+        topic=topic_label, body=form["message"],
+        user={"id": user["id"], "username": user["username"]} if user else None,
+        ip=request.headers.get("X-Forwarded-For", request.remote_addr or ""),
+    )
+    mailer.send_contact_ack(
+        to=form["email"], name=form["name"], topic=topic_label,
+        body=form["message"], reply_hours=CONTACT_REPLY_HOURS,
+    )
+    security.audit(user["id"] if user else None, "contact_message",
+                   target=form["email"], payload={"topic": form["topic"]})
+    flash(("Merci, votre message a bien été envoyé. Une copie vous a été "
+           f"adressée ; on vous répond sous {CONTACT_REPLY_HOURS} h ouvrables.") if fr
+          else ("Thank you, your message has been sent. A copy was emailed to "
+                f"you; we reply within {CONTACT_REPLY_HOURS} business hours."),
+          "success")
+    return redirect(url_for("contact_form"))
+
+
 @app.route("/api/near")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_near():
@@ -418,24 +576,29 @@ def api_map():
 def pilots_search():
     # 'near_only' borne au rayon ; sinon lat/lng ne servent qu'au tri par
     # distance (les pilotes lointains restent visibles -> pilote de partout).
-    near_only = _to_bool(request.args.get("near_only", "0"))
-    lat = _to_float(request.args.get("lat"))
-    lng = _to_float(request.args.get("lng"))
-    radius_km = _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM)
+    # `near` (code postal / adresse / ville) est geocode cote serveur.
+    country = request.args.get("country", "").strip()
+    geo = _resolve_near(country)
     params = {
-        "country": request.args.get("country", "").strip(),
+        "country": country,
         "city": request.args.get("city", "").strip(),
         "mission_type": request.args.get("mission_type", "").strip(),
         "capability": request.args.get("capability", "").strip(),
         "min_rating": _to_float(request.args.get("min_rating"), 0) or 0,
         "only_available": _to_bool(request.args.get("only_available", "1")),
+        "only_verified": _to_bool(request.args.get("only_verified", "0")),
+        "only_insured": _to_bool(request.args.get("only_insured", "0")),
+        "authority": request.args.get("authority", "").strip(),
         "text": request.args.get("q", "").strip(),
     }
     pilots = services.search_pilots(
-        lat=lat, lng=lng, radius_km=radius_km, strict_radius=near_only, **params
+        lat=geo["lat"], lng=geo["lng"], radius_km=geo["radius_km"],
+        strict_radius=geo["near_only"], **params,
     )
+    params.update(geo)
     return render_template(
         "pilots_search.html", pilots=pilots, params=params,
+        map_center=_map_center(geo),
         seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
     )
 
@@ -446,29 +609,26 @@ def missions_search():
     # 'anywhere' (ou pays vide) = aucun filtre pays ; lat/lng servent au tri
     # par distance sans EXCLURE (strict_radius=False) sauf si 'near_only'.
     anywhere = _to_bool(request.args.get("anywhere", "0"))
-    near_only = _to_bool(request.args.get("near_only", "0"))
-    lat = _to_float(request.args.get("lat"))
-    lng = _to_float(request.args.get("lng"))
-    radius_km = _to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM)
+    country = "" if anywhere else request.args.get("country", "").strip()
+    geo = _resolve_near(country)
     params = {
-        "country": "" if anywhere else request.args.get("country", "").strip(),
+        "country": country,
         "city": request.args.get("city", "").strip(),
         "mission_type": request.args.get("mission_type", "").strip(),
         "only_urgent": _to_bool(request.args.get("only_urgent", "0")),
         "anywhere": anywhere,
-        "near_only": near_only,
-        "radius_km": radius_km,
-        "lat": lat,
-        "lng": lng,
+        **geo,
     }
     missions = services.search_missions(
         status="open",
         country=params["country"], city=params["city"],
         mission_type=params["mission_type"], only_urgent=params["only_urgent"],
-        lat=lat, lng=lng, radius_km=radius_km, strict_radius=near_only,
+        lat=geo["lat"], lng=geo["lng"], radius_km=geo["radius_km"],
+        strict_radius=geo["near_only"],
     )
     return render_template(
         "missions_search.html", missions=missions, params=params,
+        map_center=_map_center(geo),
         seo=seo.missions_list(getattr(g, "lang", i18n.DEFAULT)),
     )
 
@@ -2067,39 +2227,71 @@ def _api_limit(default: int) -> int:
     return min(max(_to_int(request.args.get("limit"), default) or default, 1), API_MAX_LIMIT)
 
 
+@app.route("/api/geocode")
+@security.rate_limit(per_minute=30, per_hour=300)
+def api_geocode():
+    """Code postal / adresse / ville -> coordonnees (cache serveur).
+    Utilise par les formulaires de recherche et l'app mobile."""
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 2:
+        return jsonify({"error": "q requis"}), 400
+    geo = geocode.lookup(q[:geocode.MAX_QUERY_LEN],
+                         (request.args.get("country") or "").strip(),
+                         getattr(g, "lang", i18n.DEFAULT))
+    if not geo:
+        return jsonify({"found": False, "q": q})
+    return jsonify({"found": True, "q": q, **geo})
+
+
 @app.route("/api/pilotes")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_pilots():
+    country = request.args.get("country", "").strip()
+    geo = _resolve_near(country)
     pilots = services.search_pilots(
-        country=request.args.get("country", "").strip(),
+        country=country,
         city=request.args.get("city", "").strip(),
         mission_type=request.args.get("mission_type", "").strip(),
         capability=request.args.get("capability", "").strip(),
-        lat=_to_float(request.args.get("lat")),
-        lng=_to_float(request.args.get("lng")),
-        radius_km=_to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
+        text=request.args.get("q", "").strip(),
+        lat=geo["lat"], lng=geo["lng"], radius_km=geo["radius_km"],
+        strict_radius=geo["near_only"],
         min_rating=_to_float(request.args.get("min_rating"), 0) or 0,
         only_available=_to_bool(request.args.get("only_available", "1")),
+        only_verified=_to_bool(request.args.get("only_verified", "0")),
+        only_insured=_to_bool(request.args.get("only_insured", "0")),
+        authority=request.args.get("authority", "").strip(),
         limit=_api_limit(50),
     )
-    return jsonify({"count": len(pilots), "pilots": pilots})
+    return jsonify({
+        "count": len(pilots), "pilots": pilots,
+        "near": {"query": geo["near"], "label": geo["near_label"],
+                 "lat": geo["lat"], "lng": geo["lng"],
+                 "radius_km": geo["radius_km"], "found": not geo["near_error"]},
+    })
 
 
 @app.route("/api/missions")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_missions():
+    country = request.args.get("country", "").strip()
+    geo = _resolve_near(country)
     missions = services.search_missions(
-        country=request.args.get("country", "").strip(),
+        country=country,
         city=request.args.get("city", "").strip(),
         mission_type=request.args.get("mission_type", "").strip(),
         status=request.args.get("status", "open"),
-        lat=_to_float(request.args.get("lat")),
-        lng=_to_float(request.args.get("lng")),
-        radius_km=_to_int(request.args.get("radius_km"), DEFAULT_SEARCH_RADIUS_KM),
+        lat=geo["lat"], lng=geo["lng"], radius_km=geo["radius_km"],
+        strict_radius=geo["near_only"],
         only_urgent=_to_bool(request.args.get("only_urgent", "0")),
         limit=_api_limit(100),
     )
-    return jsonify({"count": len(missions), "missions": missions})
+    return jsonify({
+        "count": len(missions), "missions": missions,
+        "near": {"query": geo["near"], "label": geo["near_label"],
+                 "lat": geo["lat"], "lng": geo["lng"],
+                 "radius_km": geo["radius_km"], "found": not geo["near_error"]},
+    })
 
 
 @app.route("/api/stats")

@@ -1748,3 +1748,133 @@ a, button { touch-action: manipulation; }
   .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
   .mission-brief { padding: 24px 18px; }
 }
+
+/* =========================================================================
+   Découverte : recherche « autour de » (code postal), filtres confiance,
+   sections accueil (pourquoi / rejoindre / FAQ / contact), page contact.
+   ========================================================================= */
+
+/* --- filtre « autour de » : saisie + rayon + case sur une ligne --- */
+.filters .filter-row {
+  display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(120px, .8fr) auto;
+  gap: 14px; align-items: end;
+}
+.filters .filter-row label.check { padding-bottom: 9px; }
+@media (max-width: 760px) { .filters .filter-row { grid-template-columns: 1fr; } }
+.near-note {
+  margin: 8px 0 4px;
+  font: 500 12px/1.5 var(--mono);
+  letter-spacing: .04em;
+  color: var(--ink-dim);
+}
+.near-note.err { color: var(--signal); }
+
+/* --- puces confiance sur les cartes pilote --- */
+.auth-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.auth-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: 600 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  padding: 5px 8px; border-radius: 999px;
+  color: var(--teal); border: 1px solid rgba(30,122,106,.35);
+  background: rgba(30,122,106,.06);
+}
+.auth-chip.insured { color: var(--amber); border-color: rgba(66,87,178,.35); background: rgba(66,87,178,.06); }
+.distance-chip { color: var(--amber); font-family: var(--mono); font-weight: 600; }
+.tag.distance-chip { border-color: rgba(66,87,178,.4); }
+
+/* --- accueil : pourquoi AubePilot --- */
+.trust-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 900px) { .trust-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .trust-grid { grid-template-columns: 1fr; } }
+.trust-tile {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+}
+.trust-tile .num {
+  display: block;
+  font: 600 12px/1 var(--mono); letter-spacing: .2em;
+  color: var(--amber); margin-bottom: 12px;
+}
+.trust-tile h3 { margin: 0 0 8px; font-size: 1.12rem; }
+.trust-tile p { margin: 0; font-size: .95rem; line-height: 1.5; }
+
+/* --- accueil : rejoindre le réseau --- */
+.join-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 760px) { .join-grid { grid-template-columns: 1fr; } }
+.join-card {
+  display: grid; gap: 6px; align-content: start;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  color: var(--ink);
+  transition: border-color .15s, transform .15s;
+}
+.join-card:hover { border-color: var(--amber); transform: translateY(-2px); color: var(--ink); }
+.join-card .icon {
+  font: 600 11px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--amber);
+}
+.join-card .name { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: -.01em; }
+.join-card .desc { color: var(--ink-dim); font-size: .92rem; line-height: 1.45; }
+.join-card .go { margin-top: 8px; font-weight: 600; color: var(--amber); font-size: .9rem; }
+
+/* --- FAQ (accueil + page) --- */
+.faq-list { border-top: 1px solid var(--rule); }
+.faq-item { border-bottom: 1px solid var(--rule); }
+.faq-item > summary {
+  cursor: pointer; list-style: none;
+  padding: 16px 40px 16px 0;
+  position: relative;
+  font-family: var(--display); font-weight: 600; font-size: 1.05rem;
+  color: var(--ink);
+}
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-item > summary::after {
+  content: "+"; position: absolute; right: 4px; top: 12px;
+  color: var(--amber); font-size: 1.5rem; font-weight: 300; line-height: 1;
+}
+.faq-item[open] > summary::after { content: "–"; }
+.faq-item > summary:hover { color: var(--amber); }
+.faq-item p { margin: 0 0 18px; color: var(--ink-soft); max-width: 72ch; line-height: 1.6; }
+.faq-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
+.faq-nav a {
+  font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+  padding: 9px 13px; border: 1px solid var(--rule); border-radius: 999px;
+  color: var(--ink-soft); background: var(--paper-2);
+}
+.faq-nav a:hover { border-color: var(--amber); color: var(--amber); }
+.faq-section { margin: 36px 0 44px; }
+.faq-section h2 { font-size: 1.4rem; margin-bottom: 6px; }
+
+/* --- bloc contact (accueil + FAQ) --- */
+.contact-block {
+  margin: 88px 0 40px;
+  padding: 32px;
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  background: var(--paper-2);
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: center;
+}
+.contact-block h2 { margin: 0 0 6px; }
+.contact-block p { margin: 0; }
+.contact-block .actions-row { justify-content: flex-end; }
+@media (max-width: 760px) {
+  .contact-block { grid-template-columns: 1fr; padding: 24px; margin-top: 56px; }
+  .contact-block .actions-row { justify-content: flex-start; }
+}
+
+/* --- formulaire contact : pot de miel invisible --- */
+.hp-field { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+
+/* --- pied de page : liens réseau + sociaux --- */
+.footer-links { padding-top: 22px; }
+.footer-social { display: inline-flex; gap: 14px; margin-left: auto; }

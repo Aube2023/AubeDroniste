@@ -1,0 +1,15 @@
+AUBEPILOT, FORMULAIRE DE CONTACT / CONTACT FORM
+===============================================
+
+De / From : {{ name }} <{{ email }}>
+Sujet / Topic : {{ topic }}
+{% if user %}Compte AubePilot : {{ user.username }} (#{{ user.id }})
+{% endif %}{% if ip %}IP : {{ ip }}
+{% endif %}
+------------------------------------------------------------
+
+{{ body }}
+
+------------------------------------------------------------
+Répondre / Reply : {{ email }}
+AubePilot · {{ year }} · pilot.aubeetoilee.com

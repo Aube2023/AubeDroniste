@@ -118,6 +118,23 @@ _ADD_INDEXES = [
 ]
 
 
+# Tables additives idempotentes (memes regles que les index : schema.sql ne
+# tourne que sur une base neuve, la prod passe par run_migrations()).
+_ADD_TABLES = [
+    # Cache de geocodage (code postal / adresse -> lat/lng), cf. geocode.py.
+    # `found=0` memorise aussi les echecs pour ne pas re-solliciter Nominatim.
+    """CREATE TABLE IF NOT EXISTS geocode_cache (
+        q          TEXT PRIMARY KEY,
+        lat        REAL,
+        lng        REAL,
+        label      TEXT,
+        country    TEXT,
+        found      INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""",
+]
+
+
 def run_migrations():
     """Applique les migrations additives manquantes (colonnes + index).
     Sûr et idempotent : a lancer a chaque demarrage."""
@@ -126,6 +143,8 @@ def run_migrations():
             if not _column_exists(c, table, column):
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
                 log.info("migration: %s.%s ajoutee", table, column)
+        for stmt in _ADD_TABLES:
+            c.execute(stmt)
         for stmt in _ADD_INDEXES:
             c.execute(stmt)
 

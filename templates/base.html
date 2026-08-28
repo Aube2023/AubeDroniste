@@ -137,6 +137,19 @@
 </main>
 
 <footer class="footer">
+  <nav class="footer-legal footer-links" aria-label="{{ t('footer.nav_label') }}">
+    <a href="{{ url_for('pilots_search') }}" class="muted">{{ t('nav.pilots') }}</a>
+    <a href="{{ url_for('missions_search') }}" class="muted">{{ t('nav.missions') }}</a>
+    <a href="{{ url_for('register') }}?role=pilot" class="muted">{{ t('footer.become_pilot') }}</a>
+    <a href="{{ url_for('index') }}#comment-ca-marche" class="muted">{{ t('footer.how') }}</a>
+    <a href="{{ url_for('faq') }}" class="muted">{{ t('footer.faq') }}</a>
+    <a href="{{ url_for('contact_form') }}" class="muted">{{ t('footer.contact') }}</a>
+    {% if social_links %}
+      <span class="footer-social">
+        {% for name, url in social_links %}<a href="{{ url }}" class="muted" rel="me noopener" target="_blank">{{ name }}</a>{% endfor %}
+      </span>
+    {% endif %}
+  </nav>
   <nav class="footer-legal" aria-label="Mentions légales">
     <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>

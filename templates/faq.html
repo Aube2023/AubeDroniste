@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+{% set fr = (lang == 'fr') %}
+
+<div class="search-head">
+  <span class="eyebrow">{{ 'Questions fréquentes' if fr else 'Frequently asked questions' }}</span>
+  <h1>{{ 'On répond à vos questions.' if fr else 'We answer your questions.' }}</h1>
+  <p class="lead muted">
+    {{ 'Clients, pilotes, paiement, plateforme : tout ce qu’il faut savoir avant de décoller. Vous ne trouvez pas votre réponse ?' if fr else 'Clients, pilots, payment, platform: everything you need to know before takeoff. Can’t find your answer?' }}
+    <a href="{{ url_for('contact_form') }}">{{ 'Écrivez-nous →' if fr else 'Write to us →' }}</a>
+  </p>
+</div>
+
+<nav class="faq-nav" aria-label="{{ 'Catégories' if fr else 'Categories' }}">
+  {% for code, label in faq_categories %}
+    <a href="#faq-{{ code }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% for code, label in faq_categories %}
+<section class="faq-section" id="faq-{{ code }}">
+  <h2>{{ label }}</h2>
+  <div class="faq-list">
+    {% for e in faq_entries if e.category == code %}
+    <details class="faq-item" id="q-{{ e.id }}" {% if loop.first and code == 'clients' %}open{% endif %}>
+      <summary>{{ e.question }}</summary>
+      <p>{{ e.answer }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<section class="contact-block">
+  <div>
+    <span class="eyebrow">{{ 'Nous joindre' if fr else 'Contact us' }}</span>
+    <h2>{{ 'Une question ? On répond vite.' if fr else 'A question? We answer fast.' }}</h2>
+    <p class="muted">{{ 'Réponse sous %d h ouvrables, en français ou en anglais.' % contact_reply_hours if fr else 'Reply within %d business hours, in French or English.' % contact_reply_hours }}</p>
+  </div>
+  <div class="actions-row">
+    <a class="cta" href="{{ url_for('contact_form') }}">{{ 'Écrire à l’équipe' if fr else 'Write to the team' }}</a>
+    <a class="ghost" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+  </div>
+</section>
+
+{% endblock %}

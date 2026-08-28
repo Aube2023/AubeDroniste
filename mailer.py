@@ -24,6 +24,7 @@ import threading
 from datetime import datetime
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
+from typing import Optional
 
 from flask import current_app, render_template
 from jinja2 import TemplateNotFound
@@ -58,7 +59,8 @@ def _strip_html(html: str) -> str:
 
 
 def _build_message(*, to: str, subject: str, template: str,
-                   context: dict, cfg: dict) -> EmailMessage:
+                   context: dict, cfg: dict,
+                   reply_to: str = "") -> EmailMessage:
     ctx = dict(context)
     ctx.setdefault("site_url", SITE_URL)
     ctx.setdefault("year", datetime.now().year)
@@ -78,6 +80,8 @@ def _build_message(*, to: str, subject: str, template: str,
     msg["Subject"] = subject
     msg["From"] = formataddr((cfg["from_name"], cfg["from_email"]))
     msg["To"] = to
+    if reply_to and "@" in reply_to:
+        msg["Reply-To"] = reply_to
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain="aubeetoilee.com")
     msg.set_content(text_body)
@@ -116,7 +120,7 @@ def _send_via_smtp(msg: EmailMessage, cfg: dict) -> bool:
 
 
 def send(*, to: str, subject: str, template: str, context: dict,
-         async_: bool = True) -> bool:
+         async_: bool = True, reply_to: str = "") -> bool:
     """Envoie un email (HTML + texte). Retourne True si l'envoi (ou le dump)
     a reussi, False sinon. Ne leve jamais.
 
@@ -131,7 +135,7 @@ def send(*, to: str, subject: str, template: str, context: dict,
     try:
         msg = _build_message(
             to=to, subject=subject, template=template,
-            context=context, cfg=cfg,
+            context=context, cfg=cfg, reply_to=reply_to,
         )
     except Exception as exc:  # rendu template defectueux
         log.error("template '%s' invalide: %s", template, exc)
@@ -262,3 +266,34 @@ def send_mission_alerts(pilots: list, mission: dict, cap: int = 200) -> int:
 
     threading.Thread(target=_run, daemon=True).start()
     return len(pilots)
+
+
+# ---------------------------------------------------------------------------
+# Formulaire de contact public (/contact)
+# ---------------------------------------------------------------------------
+
+def send_contact_message(*, to: str, name: str, email: str, topic: str,
+                         body: str, user: Optional[dict] = None,
+                         ip: str = "") -> bool:
+    """Transmet un message du formulaire /contact a l'equipe. Reply-To =
+    l'expediteur pour repondre d'un clic depuis la boite."""
+    return send(
+        to=to,
+        subject=f"[Contact] {topic} — {name}",
+        template="contact_message",
+        context={"name": name, "email": email, "topic": topic, "body": body,
+                 "user": user, "ip": ip},
+        reply_to=email,
+    )
+
+
+def send_contact_ack(*, to: str, name: str, topic: str, body: str,
+                     reply_hours: int = 24) -> bool:
+    """Accuse de reception bilingue a l'expediteur (copie de son message)."""
+    return send(
+        to=to,
+        subject="Message bien reçu / Message received — AubePilot",
+        template="contact_ack",
+        context={"name": name, "topic": topic, "body": body,
+                 "reply_hours": reply_hours},
+    )

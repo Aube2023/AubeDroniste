@@ -1,0 +1,32 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}[Contact] {{ topic }} — {{ name }}{% endblock %}
+{% block preview %}Nouveau message via le formulaire de contact · New contact form message.{% endblock %}
+
+{% block content %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 16px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">Formulaire de contact · Contact form</div>
+  <h1 style="font-family:Georgia,serif;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">
+    {{ name }} vous écrit.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#6b6f7a;margin:0 0 6px;">
+    Sujet · Topic : <strong style="color:#15181f;">{{ topic }}</strong>
+  </p>
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#6b6f7a;margin:0 0 6px;">
+    Courriel · Email : <a href="mailto:{{ email }}" style="color:#b87519;">{{ email }}</a>
+  </p>
+  {% if user %}
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#6b6f7a;margin:0 0 6px;">
+    Compte AubePilot : <strong style="color:#15181f;">{{ user.username }}</strong> (#{{ user.id }})
+  </p>
+  {% endif %}
+  {% if ip %}
+  <p style="font:500 11px/1.4 'Courier New',Courier,monospace;color:#9a9da4;margin:0 0 12px;">IP {{ ip }}</p>
+  {% endif %}
+  <blockquote style="margin:18px 0;padding:14px 22px;background:#fbfaf6;border-left:3px solid #b87519;font:400 16px/1.55 Georgia,serif;color:#15181f;white-space:pre-wrap;">{{ body }}</blockquote>
+  <p style="margin:20px 0 0;">
+    <a href="mailto:{{ email }}?subject=Re:%20{{ topic|urlencode }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:12px 22px;text-decoration:none;font:600 13px/1 'Helvetica Neue',Arial,sans-serif;">Répondre · Reply</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

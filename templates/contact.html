@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+{% set fr = (lang == 'fr') %}
+
+<section class="auth-split">
+  <aside class="auth-aside">
+    <span class="eyebrow">{{ 'Nous joindre' if fr else 'Contact us' }}</span>
+    <h1>{{ 'Une question ?' if fr else 'A question?' }} <em>{{ 'On répond vite.' if fr else 'We answer fast.' }}</em></h1>
+    <p class="lead muted">
+      {{ 'Clients, pilotes, écoles, boutiques, partenaires de location : écrivez-nous, on est du métier et on vous répond en français ou en anglais.' if fr else 'Clients, pilots, schools, shops, rental partners: write to us — we know the trade and we reply in French or English.' }}
+    </p>
+    <ul class="checklist">
+      <li>{{ 'Réponse sous %d h ouvrables.' % contact_reply_hours if fr else 'Reply within %d business hours.' % contact_reply_hours }}</li>
+      <li>{{ 'Un accusé de réception vous est envoyé immédiatement, avec la copie de votre message.' if fr else 'An acknowledgement is sent immediately, with a copy of your message.' }}</li>
+      <li>{{ 'Litige sur une mission en cours ? Ouvrez-le directement depuis la réservation : il est traité en priorité.' if fr else 'Dispute on an ongoing mission? Open it straight from the booking: it is handled first.' }}</li>
+      <li><a href="{{ url_for('faq') }}">{{ 'Consultez d’abord la FAQ →' if fr else 'Check the FAQ first →' }}</a></li>
+    </ul>
+    <p class="muted small" style="margin-top: 18px;">
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    </p>
+  </aside>
+
+  <form method="post" action="{{ url_for('contact_submit') }}" class="auth-form" novalidate>
+    {{ csrf_input() }}
+    <h2>{{ 'Écrire à l’équipe' if fr else 'Write to the team' }}</h2>
+
+    <div class="grid-2">
+      <label>{{ 'Votre nom' if fr else 'Your name' }}
+        <input name="name" value="{{ form.name }}" required maxlength="120" autocomplete="name">
+      </label>
+      <label>{{ 'Votre courriel' if fr else 'Your email' }}
+        <input name="email" type="email" value="{{ form.email }}" required maxlength="200" autocomplete="email">
+      </label>
+    </div>
+
+    <label>{{ 'Sujet' if fr else 'Topic' }}
+      <select name="topic" required>
+        <option value="">{{ '— choisir —' if fr else '— pick one —' }}</option>
+        {% for code, label in topics %}
+          <option value="{{ code }}" {% if form.topic == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>{{ 'Votre message' if fr else 'Your message' }}
+      <textarea name="message" rows="7" required minlength="10" maxlength="5000"
+                placeholder="{{ 'Décrivez votre besoin, la mission ou le souci rencontré. Un lien vers la mission ou le profil concerné aide beaucoup.' if fr else 'Describe your need, the mission or the issue. A link to the mission or profile involved helps a lot.' }}">{{ form.message }}</textarea>
+    </label>
+
+    {# Pot de miel anti-spam : invisible pour un humain, rempli par les bots. #}
+    <label class="hp-field" aria-hidden="true">Website
+      <input name="website" type="text" tabindex="-1" autocomplete="off">
+    </label>
+
+    <button class="cta btn-block" type="submit">{{ 'Envoyer le message' if fr else 'Send message' }}</button>
+    <p class="muted small" style="margin-top: 12px;">
+      {{ 'Vos coordonnées ne servent qu’à vous répondre (Loi 25 / RGPD).' if fr else 'Your details are only used to reply to you (Law 25 / GDPR).' }}
+      <a href="{{ url_for('page_privacy') }}">{{ 'Confidentialité' if fr else 'Privacy' }}</a>
+    </p>
+  </form>
+</section>
+
+{% endblock %}

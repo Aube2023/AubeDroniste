@@ -5,10 +5,30 @@
 <div class="search-head">
   <span class="eyebrow">{{ 'Annuaire pilote' if fr else 'Pilot directory' }}</span>
   <h1>{{ 'Trouver un pilote.' if fr else 'Find a pilot.' }}</h1>
-  <p class="lead muted">{{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage.' if fr else 'pilot(s) match your filters.' }}</p>
+  <p class="lead muted">
+    {{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage' if fr else 'pilot(s) match your filters' }}{% if params.near_label %}{{ ', du plus proche de ' if fr else ', nearest first around ' }}<strong>{{ params.near_label }}</strong>{% endif %}.
+  </p>
 </div>
 
 <form method="get" class="filters card">
+  <div class="filter-row">
+    <label>{{ 'Code postal, adresse ou ville' if fr else 'Postal code, address or city' }}
+      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code"
+             placeholder="{{ 'H2X 1Y4 · 75011 · G5Y · Casablanca' }}">
+    </label>
+    <label>{{ 'Rayon' if fr else 'Radius' }}
+      <select name="radius_km">
+        {% for r in search_radius_choices %}<option value="{{ r }}" {% if params.radius_km == r %}selected{% endif %}>{{ r }} km</option>{% endfor %}
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> {{ 'Limiter au rayon' if fr else 'Within radius only' }}</label>
+  </div>
+  {% if params.near_label %}
+    <p class="near-note">⌖ {{ 'Autour de' if fr else 'Around' }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ 'tri par distance, les pilotes plus loin restent visibles' if fr else 'sorted by distance, farther pilots stay visible' }}{% endif %}</p>
+  {% elif params.near_error %}
+    <p class="near-note err">{{ 'Lieu introuvable : essayez « code postal + pays » ou une ville.' if fr else 'Place not found: try “postal code + country” or a city.' }}</p>
+  {% endif %}
+
   <label>{{ 'Rechercher un pilote' if fr else 'Search for a pilot' }}
     <input name="q" value="{{ params.text }}" type="search"
            placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
@@ -24,7 +44,7 @@
     <label>{{ 'Spécialité' if fr else 'Specialty' }}
       <select name="mission_type">
         <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+        {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
@@ -33,13 +53,23 @@
         {% for cap in drone_capabilities %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap }}</option>{% endfor %}
       </select>
     </label>
+    <label>{{ 'Autorité de certification' if fr else 'Certification authority' }}
+      <select name="authority">
+        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
+        {% for code, lbl in licence_authorities %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+      </select>
+    </label>
     <label>{{ 'Note minimale' if fr else 'Min. rating' }}
       <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
     </label>
-    <label class="check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles uniquement' if fr else 'Available only' }}</label>
+  </div>
+  <div class="chips" style="margin-top: 12px;">
+    <label class="chip-check"><input type="checkbox" name="only_verified" value="1" {% if params.only_verified %}checked{% endif %}> ✓ {{ 'Brevet vérifié' if fr else 'Verified licence' }}</label>
+    <label class="chip-check"><input type="checkbox" name="only_insured" value="1" {% if params.only_insured %}checked{% endif %}> {{ 'Assuré RC pro' if fr else 'Liability insured' }}</label>
+    <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles uniquement' if fr else 'Available only' }}</label>
   </div>
   <div class="row-between" style="margin-top: 20px;">
-    <span></span>
+    <a href="{{ url_for('pilots_search') }}" class="muted small">{{ 'Réinitialiser' if fr else 'Reset' }}</a>
     <button class="cta" type="submit">{{ 'Filtrer' if fr else 'Filter' }}</button>
   </div>
 </form>
@@ -53,7 +83,7 @@
     <div class="strip">
       <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
-        {% if p.is_available %}<span class="dot-ok">{{ 'dispo' if fr else 'avail.' }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
+        {% if p.distance_km is not none %}<span class="distance-chip">≈ {{ p.distance_km|round|int }} km</span> · {% endif %}{% if p.is_available %}<span class="dot-ok">{{ 'dispo' if fr else 'avail.' }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
       </span>
     </div>
     <div class="body">
@@ -65,8 +95,14 @@
       {% endif %}
       <div>
         <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
-        <div class="loc">{{ p.country }}</div>
+        <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
         <div class="headline">« {{ p.headline or ('Disponible pour vos prises de vue.' if fr else 'Available for your aerial shots.') }} »</div>
+        {% if p.verified_authorities or p.insurance %}
+        <div class="auth-chips">
+          {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ a }}</span>{% endfor %}
+          {% if p.insurance %}<span class="auth-chip insured">{{ 'RC pro' if fr else 'Insured' }}</span>{% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
     <div class="foot">
@@ -77,9 +113,10 @@
   {% else %}
     <div class="empty-state">
       <strong>{{ 'Aucun pilote ne correspond.' if fr else 'No pilot matches.' }}</strong>
-      <p>{{ 'Élargissez votre recherche : retirez un filtre (pays, spécialité, note minimale) ou décochez « Disponibles uniquement ».' if fr else 'Broaden your search: remove a filter (country, specialty, min. rating) or uncheck “Available only”.' }}</p>
+      <p>{{ 'Élargissez votre recherche : agrandissez le rayon, retirez un filtre (pays, spécialité, brevet vérifié) ou décochez « Limiter au rayon ».' if fr else 'Broaden your search: widen the radius, remove a filter (country, specialty, verified licence) or uncheck “Within radius only”.' }}</p>
       <div class="actions-row">
         <a href="{{ url_for('pilots_search') }}" class="ghost">{{ 'Réinitialiser les filtres' if fr else 'Reset filters' }}</a>
+        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ 'Publier une mission et recevoir des devis' if fr else 'Post a mission and get quotes' }}</a>
       </div>
     </div>
   {% endfor %}
