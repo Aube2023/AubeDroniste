@@ -8,10 +8,14 @@
 """
 from config import (
     AUTO_RELEASE_DAYS,
+    CANCELLATION_GRACE_HOURS,
+    CANCELLATION_SERVICE_FEE_CAP,
+    CANCELLATION_SERVICE_FEE_PCT,
     LATE_CANCELLATION_FEE_PCT,
     LATE_CANCELLATION_HOURS,
     PILOT_SHARE_PCT,
     PLATFORM_FEE_PCT,
+    PLATFORM_FEE_TIERS,
 )
 
 _FMT = {
@@ -20,6 +24,14 @@ _FMT = {
     "auto_release_days": AUTO_RELEASE_DAYS,
     "late_hours": LATE_CANCELLATION_HOURS,
     "late_fee": int(LATE_CANCELLATION_FEE_PCT),
+    "grace_hours": CANCELLATION_GRACE_HOURS,
+    "service_fee": int(CANCELLATION_SERVICE_FEE_PCT),
+    "service_fee_cap": int(CANCELLATION_SERVICE_FEE_CAP),
+    # paliers degressifs (missions terminees entre les memes parties)
+    "tier2_from": PLATFORM_FEE_TIERS[1][0] + 1 if len(PLATFORM_FEE_TIERS) > 1 else 0,
+    "tier2_fee": int(PLATFORM_FEE_TIERS[1][1]) if len(PLATFORM_FEE_TIERS) > 1 else int(PLATFORM_FEE_PCT),
+    "tier3_from": PLATFORM_FEE_TIERS[2][0] + 1 if len(PLATFORM_FEE_TIERS) > 2 else 0,
+    "tier3_fee": int(PLATFORM_FEE_TIERS[2][1]) if len(PLATFORM_FEE_TIERS) > 2 else int(PLATFORM_FEE_PCT),
 }
 
 FAQ_CATEGORIES = [
@@ -49,13 +61,17 @@ _FAQ = [
             "gratuit, sans abonnement. Une commission de {fee} % est incluse dans "
             "le prix affiché et n'est prélevée que lorsqu'une mission est confirmée "
             "et payée : elle finance le paiement sous séquestre, la médiation, "
-            "l'hébergement des livrables et le support. Elle devient dégressive "
-            "pour les binômes client-pilote qui travaillent régulièrement ensemble.",
+            "l'hébergement des livrables et le support. Elle est dégressive pour "
+            "les binômes qui retravaillent ensemble : {tier2_fee} % à partir de la "
+            "{tier2_from}e mission terminée entre les mêmes parties, {tier3_fee} % à "
+            "partir de la {tier3_from}e.",
       "en": "Searching for a pilot, posting a mission and receiving quotes is free, "
             "with no subscription. A {fee}% fee is included in the displayed price "
             "and only charged when a mission is confirmed and paid: it funds escrow "
             "payment, mediation, deliverable hosting and support. It decreases for "
-            "client-pilot pairs who work together regularly."}),
+            "pairs who work together again: {tier2_fee}% from the {tier2_from}th "
+            "completed mission between the same parties, {tier3_fee}% from the "
+            "{tier3_from}th."}),
     ("payment", "payment", True,
      {"fr": "Comment se passe le paiement ?",
       "en": "How does payment work?"},
@@ -82,14 +98,22 @@ _FAQ = [
     ("cancel", "payment", False,
      {"fr": "Puis-je annuler une mission réservée ?",
       "en": "Can I cancel a booked mission?"},
-     {"fr": "Oui. Avant paiement, l'annulation est libre. Après paiement, vous "
-            "êtes remboursé intégralement si vous annulez plus de {late_hours} h "
-            "avant la mission ; en deçà, {late_fee} % du devis dédommagent le "
-            "pilote qui avait bloqué sa journée, et le reste vous est remboursé.",
-      "en": "Yes. Before payment, cancellation is free. After payment you get a "
-            "full refund if you cancel more than {late_hours} h before the mission; "
-            "closer than that, {late_fee}% of the quote compensates the pilot who "
-            "had blocked the day, and the rest is refunded."}),
+     {"fr": "Oui. Avant paiement, l'annulation est libre, et jusqu'à {grace_hours} h "
+            "après le paiement vous êtes remboursé intégralement. Passé ce délai, "
+            "des frais de service de {service_fee} % (max {service_fee_cap} dans la "
+            "devise de la mission) sont retenus, car le contact du pilote vous a été "
+            "révélé et sa date bloquée. Si vous annulez à moins de {late_hours} h de "
+            "la mission, {late_fee} % du devis dédommagent en plus le pilote. Le "
+            "reste vous est toujours remboursé. Si c'est le pilote qui se désiste, "
+            "vous êtes remboursé à 100 % et la mission est remise en ligne.",
+      "en": "Yes. Before payment, cancellation is free, and up to {grace_hours} h "
+            "after payment you get a full refund. After that, a {service_fee}% "
+            "service fee (max {service_fee_cap} in the mission currency) is kept, "
+            "because the pilot's contact was revealed and their date blocked. If "
+            "you cancel less than {late_hours} h before the mission, {late_fee}% of "
+            "the quote also compensates the pilot. The rest is always refunded. If "
+            "the pilot withdraws, you are refunded 100% and the mission goes back "
+            "online."}),
     ("verified", "clients", True,
      {"fr": "Qu'est-ce qu'un profil « vérifié » ?",
       "en": "What is a “verified” profile?"},

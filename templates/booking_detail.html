@@ -7,6 +7,7 @@
 {% set funded    = booking.status in ('funded','in_progress','completed','disputed') %}
 {% set platform_fee = booking.platform_fee or 0 %}
 {% set pilot_amount = booking.agreed_price - platform_fee %}
+{% set fee_pct = booking_fee_pct(booking)|round|int %}
 
 <div class="card">
   <div class="row-between" style="align-items: start;">
@@ -27,11 +28,11 @@
   <div class="stat-rail" style="margin-top: 22px;">
     <div>
       <span class="v">{{ pilot_amount|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Net pilote ({{ pilot_share_pct }}%)</span>
+      <span class="k">Net pilote ({{ 100 - fee_pct }}%)</span>
     </div>
     <div>
       <span class="v">{{ platform_fee|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Commission Aube ({{ platform_fee_pct }}%)</span>
+      <span class="k">Commission Aube ({{ fee_pct }}%)</span>
     </div>
     <div>
       <span class="v" style="font-size: 1.1rem;">
@@ -315,42 +316,66 @@
 {# ============ Annulation client (avec regle de preavis) ============ #}
 
 {% if cancellation_preview %}
+{% set cp = cancellation_preview %}
 <section class="card" style="border-left: 3px solid var(--terracotta, #c4633f);">
   <span class="eyebrow">Annuler la réservation</span>
   <h2 style="font-size: 1.2rem; margin-top: 6px;">Politique d'annulation</h2>
-  <p class="muted small" style="margin-top: 6px;">
-    Préavis ≥ {{ cancellation_preview.preavis_h }} h avant la mission · remboursement intégral.<br>
-    Préavis &lt; {{ cancellation_preview.preavis_h }} h · vous dédommagez le pilote à hauteur de
-    <strong>{{ '%g'|format(cancellation_preview.fee_pct if cancellation_preview.is_late else 25) }} %</strong>
-    du devis convenu.
-  </p>
+  <ul class="muted small" style="margin-top: 6px;">
+    <li>Avant paiement : annulation libre.</li>
+    <li>Jusqu'à <strong>{{ cp.grace_h }} h après le paiement</strong> : remboursement intégral (fenêtre de grâce).</li>
+    <li>Ensuite : des <strong>frais de service de {{ cancellation_service_fee_pct }} %</strong> (max {{ cancellation_service_fee_cap }} {{ booking.currency }}) sont retenus — le contact du pilote vous a été révélé et sa journée bloquée.</li>
+    <li>Préavis <strong>&lt; {{ cp.preavis_h }} h</strong> avant la mission : vous dédommagez en plus le pilote à hauteur de <strong>{{ late_cancellation_fee_pct }} %</strong> du devis.</li>
+    <li>Si c'est le pilote qui se désiste : remboursement intégral, sans frais.</li>
+  </ul>
 
-  {% if cancellation_preview.hours_until is not none %}
+  {% if booking.status == 'pending_payment' %}
+  <p class="mono small" style="margin-top: 10px;">Aucun paiement effectué : l'annulation est gratuite.</p>
+  {% else %}
   <div class="mono small" style="margin-top: 10px;">
-    Mission prévue dans
-    <strong>{{ '%.1f'|format(cancellation_preview.hours_until) }} h</strong>.
+    {% if cp.hours_until is not none %}Mission prévue dans <strong>{{ '%.1f'|format(cp.hours_until) }} h</strong>.{% else %}Date de mission non renseignée.{% endif %}
     Si vous annulez maintenant :
   </div>
   <ul class="muted small" style="margin-top: 6px;">
-    {% if cancellation_preview.is_late %}
-      <li>⚠ <strong>Annulation tardive</strong> ({{ '%g'|format(cancellation_preview.fee_pct) }} % au pilote)</li>
-      <li>Versé au pilote · <strong>{{ '%.2f'|format(cancellation_preview.fee_amount) }} {{ booking.currency }}</strong></li>
-      <li>Remboursé au client · <strong>{{ '%.2f'|format(cancellation_preview.refund_amount) }} {{ booking.currency }}</strong></li>
-    {% else %}
-      <li>✓ Préavis suffisant · pas de pénalité</li>
-      <li>Remboursé au client · <strong>{{ '%.2f'|format(cancellation_preview.refund_amount) }} {{ booking.currency }}</strong></li>
+    {% if cp.within_grace %}
+      <li>✓ Fenêtre de grâce (encore {{ '%.1f'|format(cp.grace_hours_left or 0) }} h) · aucun frais de service</li>
+    {% elif cp.service_fee_amount > 0 %}
+      <li>Frais de service {{ '%g'|format(cp.service_fee_pct) }} % · <strong>{{ '%.2f'|format(cp.service_fee_amount) }} {{ booking.currency }}</strong> retenus</li>
     {% endif %}
+    {% if cp.is_late %}
+      <li>⚠ <strong>Annulation tardive</strong> ({{ '%g'|format(cp.fee_pct) }} % au pilote) · <strong>{{ '%.2f'|format(cp.fee_amount) }} {{ booking.currency }}</strong></li>
+    {% else %}
+      <li>✓ Préavis suffisant · pas de dédommagement pilote</li>
+    {% endif %}
+    <li>Remboursé au client · <strong>{{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}</strong></li>
   </ul>
-  {% else %}
-  <p class="muted small" style="margin-top: 10px;">Date de mission non renseignée, annulation traitée comme tardive par défaut.</p>
   {% endif %}
 
   <form method="post" action="{{ url_for('booking_cancel_client', booking_id=booking.id) }}"
-        onsubmit="return confirm('Confirmer l\'annulation ?\n\n{% if cancellation_preview.is_late %}Annulation tardive : {{ '%.2f'|format(cancellation_preview.fee_amount) }} {{ booking.currency }} versés au pilote.{% else %}Préavis suffisant, remboursement intégral.{% endif %}')"
+        onsubmit="return confirm('Confirmer l\'annulation ?\n\n{% if booking.status == 'pending_payment' %}Aucun paiement effectué, annulation gratuite.{% else %}Remboursé : {{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}{% if cp.service_fee_amount > 0 %} (frais de service {{ '%.2f'|format(cp.service_fee_amount) }}){% endif %}{% if cp.is_late %} (dédommagement pilote {{ '%.2f'|format(cp.fee_amount) }}){% endif %}.{% endif %}')"
         style="margin-top: 14px;">
     {{ csrf_input() }}
     <label class="small">Motif (facultatif)<textarea name="reason" rows="2" maxlength="500" placeholder="Empêchement, météo, changement de planning…"></textarea></label>
     <button class="ghost danger" type="submit">Annuler la réservation</button>
+  </form>
+</section>
+{% endif %}
+
+{% if pilot_can_cancel %}
+<section class="card" style="border-left: 3px solid var(--terracotta, #c4633f);">
+  <span class="eyebrow">Me désister</span>
+  <h2 style="font-size: 1.2rem; margin-top: 6px;">Vous ne pouvez plus assurer cette mission ?</h2>
+  <p class="muted small" style="margin-top: 6px;">
+    Le client est <strong>remboursé intégralement</strong>{% if booking.status == 'pending_payment' %} (rien n'a encore été payé){% endif %},
+    votre devis est retiré et la mission est remise en ligne pour qu'il choisisse un autre pilote.
+    Aucun frais pour lui — mais les désistements répétés entraînent la suspension du profil.
+    Un empêchement météo ou réglementaire ? Parlez-en d'abord au client dans la messagerie.
+  </p>
+  <form method="post" action="{{ url_for('booking_cancel_pilot', booking_id=booking.id) }}"
+        onsubmit="return confirm('Confirmer votre désistement ? Le client sera remboursé intégralement et la mission remise en ligne.')"
+        style="margin-top: 14px;">
+    {{ csrf_input() }}
+    <label class="small">Motif (transmis au client)<textarea name="reason" rows="2" maxlength="500" placeholder="Météo, panne matériel, autorisation refusée…"></textarea></label>
+    <button class="ghost danger" type="submit">Me désister de la mission</button>
   </form>
 </section>
 {% endif %}

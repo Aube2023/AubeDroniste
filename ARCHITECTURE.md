@@ -79,7 +79,7 @@ AubePilot/
 2. Pilote enchérit : `POST /missions/<id>/enchere` → `services.place_bid`
    - Si nouvelle enchere (pas un update) → `mailer.send_new_bid` au client
 3. Client accepte : `POST /missions/<id>/accepter/<bid_id>` → `services.accept_bid`
-   - Crée `bookings` row, calcule `platform_fee` (30%)
+   - Crée `bookings` row, calcule `platform_fee` (commission dégressive, taux figé dans `platform_fee_pct`)
    - Reject les autres encheres
    - Mission passe en `assigned`
    - `mailer.send_bid_accepted` au pilote
@@ -140,7 +140,7 @@ Tester : `python scripts/send_test_email.py welcome demo@aubemail.com`
 3. Ajuster les `ON CONFLICT` (Postgres a la même syntaxe, OK)
 4. Lancer une migration via `scripts/migrate_to_postgres.py` (à écrire)
 
-Commission plateforme : `config.py:PLATFORM_FEE_PCT = 30.0`. Calculée à `accept_bid` et stockée dans `bookings.platform_fee`.
+Commission plateforme dégressive : `config.py:PLATFORM_FEE_TIERS` (20/15/10 % selon les missions terminées entre les mêmes parties, `services.platform_fee_pct_for`). Calculée à `accept_bid`, stockée dans `bookings.platform_fee` + `platform_fee_pct` (`services.booking_fee_pct` déduit le taux des anciens bookings).
 
 ---
 
@@ -178,7 +178,7 @@ fonctionne en deux modes :
 1. Client accepte une enchère     → bookings.status = pending_payment
 2. Client paie (Stripe Checkout)  → bookings.status = funded
    (webhook checkout.session.completed)
-3. Pilote livre, client valide    → Stripe.Transfer(70 %) vers pilote
+3. Pilote livre, client valide    → Stripe.Transfer(prix − commission) vers pilote
    (POST /reservations/<id>/valider) → bookings.status = completed
 4. Auto-release J+7               → idem si client absent
    (cron scripts/release_stale_bookings.py)
@@ -186,9 +186,22 @@ fonctionne en deux modes :
 
 ### Commission
 
-`config.py:PLATFORM_FEE_PCT = 30.0`. Calculée à `accept_bid` et stockée
-dans `bookings.platform_fee`. Le `Transfer` au pilote utilise
-`agreed_price - platform_fee`. La plateforme garde la diff.
+`config.py:PLATFORM_FEE_TIERS = [(0, 20.0), (3, 15.0), (9, 10.0)]` : le taux
+dépend du nombre de missions déjà `completed` entre le client et le pilote
+(`services.completed_missions_between`). `PLATFORM_FEE_PCT` = taux de base
+(affichage). Le taux est figé sur le booking (`platform_fee_pct`) ; le
+`Transfer` au pilote utilise `agreed_price - platform_fee`.
+
+### Annulation (anti-contournement)
+
+Le trou « payer → contact révélé → annuler → traiter en direct » est fermé :
+`services.compute_cancellation_fee` retient, si le client a payé et hors
+fenêtre de grâce (`CANCELLATION_GRACE_HOURS`), des frais de service
+(`CANCELLATION_SERVICE_FEE_PCT`, plafond `CANCELLATION_SERVICE_FEE_CAP`), plus
+le dédommagement pilote si préavis < `LATE_CANCELLATION_HOURS`. Le
+dédommagement est viré immédiatement (`release_to_pilot(kind="cancel-compensation")`,
+clé d'idempotence distincte). `cancel_booking_by_pilot` : remboursement
+intégral, devis `withdrawn`, mission `open`, courriel `booking_cancelled_by_pilot`.
 
 ### Onboarding pilote
 

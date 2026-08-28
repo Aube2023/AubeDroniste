@@ -91,8 +91,18 @@ cancelled.
 ### Enchères (`bids`) → Réservations (`bookings`)
 Un pilote soumissionne avec prix + délai + message. Le client accepte
 une enchère → création d'une réservation, autres enchères rejetées,
-mission passée en `assigned`. Commission plateforme **30%**
-(`PLATFORM_FEE_PCT`).
+mission passée en `assigned`. Commission plateforme **dégressive**
+(`PLATFORM_FEE_TIERS` : 20 % missions 1-3, 15 % missions 4-9, 10 % dès la
+10e mission terminée entre le même client et le même pilote ; taux figé sur
+le booking dans `platform_fee_pct`).
+
+### Annulation
+- Client, avant paiement : libre. Jusqu'à 2 h après paiement : remboursement
+  intégral (grâce). Ensuite : frais de service 10 % (max 150) retenus par la
+  plateforme — le contact du pilote a été révélé. Préavis < 24 h : + 25 % du
+  devis versés au pilote (Transfer Stripe immédiat, `stripe_transfer_id`).
+- Pilote (`/reservations/<id>/annuler-pilote`) : remboursement intégral du
+  client, devis retiré, mission remise en ligne, courriel au client.
 
 ### Avis (`reviews`)
 Bidirectionnels (client note pilote ET inverse) sur 5 étoiles +

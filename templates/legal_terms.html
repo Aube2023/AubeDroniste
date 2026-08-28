@@ -44,19 +44,24 @@ paiement en escrow et la médiation des litiges.
 <h2>5. Commission plateforme</h2>
 <p>
 Aube Pilot prélève <strong>{{ platform_fee_pct }} %</strong> sur chaque mission confirmée
-(commission incluse dans le prix affiché). Cette commission couvre la
-mise en relation, l'escrow Stripe, la médiation, l'hébergement et le
-support.
+(commission incluse dans le prix affiché ; le pilote reçoit le solde).
+Cette commission couvre la mise en relation, le paiement sous séquestre
+(Stripe), la médiation, l'hébergement des livrables et le support.
+Chercher, publier, recevoir et comparer des devis est gratuit.
 </p>
 <p>
 La commission est <strong>dégressive sur la fidélité plateforme</strong>
-pour récompenser les binômes client/pilote qui collaborent dans la durée :
+pour récompenser les binômes client/pilote qui collaborent dans la durée
+(missions <em>terminées</em> entre les mêmes parties) :
 </p>
 <ul>
-  <li>Missions 1 à 3 entre les mêmes parties : {{ platform_fee_pct }} %.</li>
-  <li>Missions 4 à 9 entre les mêmes parties : 20 %.</li>
-  <li>Missions 10 et au-delà : 12 %.</li>
+  {% for tier in platform_fee_tiers %}
+  <li>{% if tier.to %}Missions {{ tier.from }} à {{ tier.to }}{% else %}Missions {{ tier.from }} et au-delà{% endif %} entre les mêmes parties : <strong>{{ tier.pct }} %</strong>.</li>
+  {% endfor %}
 </ul>
+<p class="muted small">
+Le taux appliqué est figé à l'acceptation du devis et affiché sur la réservation.
+</p>
 
 <h2>6. Non-circonvention</h2>
 <p>
@@ -87,12 +92,33 @@ documentées (factures antérieures, contrat-cadre signé) à la première
 mise en relation Aube Pilot.
 </p>
 
-<h2>7. Annulation par le client</h2>
+<h2>7. Annulation</h2>
+<h3>7.1 Par le client</h3>
 <ul>
-  <li><strong>Préavis ≥ 24 h</strong> avant la mission : remboursement intégral.</li>
-  <li><strong>Préavis &lt; 24 h</strong> : le client dédommage le pilote à hauteur de
-      <strong>25 % du devis convenu</strong>, le reste lui étant remboursé.</li>
+  <li><strong>Avant paiement</strong> : annulation libre et sans frais.</li>
+  <li><strong>Fenêtre de grâce</strong> : jusqu'à {{ cancellation_grace_hours }} h après le paiement,
+      remboursement intégral.</li>
+  <li><strong>Après la fenêtre de grâce</strong> : des frais de service de
+      <strong>{{ cancellation_service_fee_pct }} % du devis</strong> (plafonnés à
+      {{ cancellation_service_fee_cap }} unités de la devise de la mission) sont retenus par
+      Aube Pilot — l'identité et les coordonnées du pilote ont été révélées et sa
+      disponibilité réservée.</li>
+  <li><strong>Préavis &lt; {{ late_cancellation_hours }} h</strong> avant la mission : le client
+      dédommage en outre le pilote à hauteur de <strong>{{ late_cancellation_fee_pct }} % du devis
+      convenu</strong>. Le solde lui est remboursé.</li>
 </ul>
+<h3>7.2 Par le pilote</h3>
+<ul>
+  <li>Le pilote peut se désister depuis la réservation. Le client est
+      <strong>remboursé intégralement</strong>, sans frais, et la mission est remise en ligne.</li>
+  <li>Le motif est transmis au client. Les désistements répétés ou de
+      complaisance (visant à traiter hors plateforme, cf. article 6) entraînent la
+      suspension du profil.</li>
+</ul>
+<p class="muted small">
+Les montants retenus sont détaillés avant confirmation de l'annulation et
+tracés dans la réservation.
+</p>
 
 <h2>8. Litiges et médiation</h2>
 <p>

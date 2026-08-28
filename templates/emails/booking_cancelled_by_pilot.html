@@ -1,0 +1,53 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Pilote désisté / Pilot withdrew, {{ booking.mission_title }}{% endblock %}
+{% block preview %}Le pilote s'est désisté, vous êtes remboursé · The pilot withdrew, you are refunded.{% endblock %}
+
+{% block content %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b1382c;text-transform:uppercase;margin-bottom:12px;">FR, Désistement du pilote</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    {{ pilot.full_name }} ne peut plus assurer votre mission.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    Mission : <strong>« {{ booking.mission_title }} »</strong>{% if booking.city %} à {{ booking.city }}{% endif %}.
+    {% if refund_amount and refund_amount > 0 %}
+    Vous êtes <strong>remboursé intégralement</strong> ({{ refund_amount|int }} {{ booking.currency }}), sans aucun frais ;
+    le montant réapparaît sur votre moyen de paiement sous 5 à 10 jours ouvrés.
+    {% else %}
+    Aucun paiement n'avait été effectué : rien ne vous est facturé.
+    {% endif %}
+  </p>
+  {% if reason %}
+  <blockquote style="margin:14px 0;padding:12px 20px;background:#fbfaf6;border-left:3px solid #b1382c;font:italic 400 15px/1.55 Georgia,serif;color:#15181f;white-space:pre-wrap;">{{ reason }}</blockquote>
+  {% endif %}
+  <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    Votre mission est <strong>remise en ligne</strong> : les autres pilotes peuvent y répondre et vous pouvez choisir un nouveau devis dès maintenant.
+  </p>
+  <p style="margin:24px 0 0;">
+    <a href="{{ site_url }}/missions/{{ booking.mission_id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Voir les devis reçus</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b1382c;text-transform:uppercase;margin-bottom:12px;">EN, Pilot withdrew</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    {{ pilot.full_name }} can no longer fly your mission.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    Mission: <strong>"{{ booking.mission_title }}"</strong>{% if booking.city %} in {{ booking.city }}{% endif %}.
+    {% if refund_amount and refund_amount > 0 %}
+    You are <strong>fully refunded</strong> ({{ refund_amount|int }} {{ booking.currency }}) with no fees; the amount shows up on your payment method within 5–10 business days.
+    {% else %}
+    No payment had been made: nothing is charged to you.
+    {% endif %}
+    Your mission is <strong>back online</strong>: other pilots can answer and you can pick a new quote right away.
+  </p>
+  <p style="margin:18px 0 0;">
+    <a href="{{ site_url }}/missions/{{ booking.mission_id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">See the quotes</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

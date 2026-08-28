@@ -9,7 +9,7 @@ Client          : {{ client.full_name }}
 Lieu            : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
 
 Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}
-Commission 30%  : {{ booking.platform_fee }} {{ booking.currency }}
+Commission {{ booking_fee_pct(booking)|int }}% : {{ booking.platform_fee }} {{ booking.currency }}
 Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
 
 Réservation : {{ site_url }}/reservations/{{ booking.id }}
@@ -27,7 +27,7 @@ Client        : {{ client.full_name }}
 Location      : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
 
 Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}
-Platform fee  : {{ booking.platform_fee }} {{ booking.currency }} (30%)
+Platform fee  : {{ booking.platform_fee }} {{ booking.currency }} ({{ booking_fee_pct(booking)|int }}%)
 You receive   : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
 
 Booking: {{ site_url }}/reservations/{{ booking.id }}

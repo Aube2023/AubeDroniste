@@ -121,10 +121,19 @@ DEFAULT_CURRENCY = "EUR"
 DEFAULT_SEARCH_RADIUS_KM = 50
 MAX_SEARCH_RADIUS_KM = 500
 
-# Commission plateforme (pourcent), preleve a la confirmation booking.
-# 30% : choix Nicolas — le materiel drone est cher, la mission a plus de valeur ajoutee.
-PLATFORM_FEE_PCT = 30.0
-# Part reversee au pilote (derivee : l'affichage ne doit JAMAIS coder "70 %" en dur).
+# Commission plateforme (pourcent), calculee a l'acceptation du devis et
+# DEGRESSIVE selon le nombre de missions deja terminees (completed) entre le
+# MEME client et le MEME pilote : recompense la fidelite plateforme et enleve
+# l'interet de « traiter en direct » une fois qu'on se connait.
+#   (missions terminees avant celle-ci, taux applique)
+#   0-2  -> 20 %   (missions 1 a 3)
+#   3-8  -> 15 %   (missions 4 a 9)
+#   9+   -> 10 %   (missions 10 et au-dela)
+# 2026-08-28 : 30 % -> 20 % (choix Nicolas apres analyse concurrence : a 30 %,
+# la commission valait la peine d'etre contournee).
+PLATFORM_FEE_TIERS = [(0, 20.0), (3, 15.0), (9, 10.0)]
+PLATFORM_FEE_PCT = PLATFORM_FEE_TIERS[0][1]     # taux de base (1re mission), affiche partout
+# Part reversee au pilote (derivee : l'affichage ne doit JAMAIS coder "80 %" en dur).
 PILOT_SHARE_PCT = 100.0 - PLATFORM_FEE_PCT
 
 # Annulation tardive cote client : preavis exige (heures) avant
@@ -133,6 +142,16 @@ PILOT_SHARE_PCT = 100.0 - PLATFORM_FEE_PCT
 # du reste. Au-dessus, refund integral et aucune penalite.
 LATE_CANCELLATION_HOURS = 24
 LATE_CANCELLATION_FEE_PCT = 25.0
+
+# Frais de service retenus par la plateforme quand le CLIENT annule APRES
+# paiement : ferme le contournement « payer pour obtenir le contact du pilote,
+# annuler avec preavis, traiter en direct ». Fenetre de grace juste apres le
+# paiement (erreur, changement d'avis immediat) : remboursement integral.
+# Le pilote qui se desiste ne coute jamais rien au client (remboursement
+# integral, mission remise en ligne).
+CANCELLATION_GRACE_HOURS = 2
+CANCELLATION_SERVICE_FEE_PCT = 10.0
+CANCELLATION_SERVICE_FEE_CAP = 150.0   # plafond, en unites de la devise de la mission
 
 # Statuts
 MISSION_STATUS = ("open", "assigned", "in_progress", "done", "cancelled")

@@ -1,0 +1,25 @@
+AUBEPILOT, PILOTE DÉSISTÉ / PILOT WITHDREW
+==========================================
+
+[FR]
+{{ pilot.full_name }} ne peut plus assurer la mission « {{ booking.mission_title }} ».
+{% if refund_amount and refund_amount > 0 %}Vous êtes remboursé intégralement ({{ refund_amount|int }} {{ booking.currency }}), sans frais
+(5 à 10 jours ouvrés selon votre banque).{% else %}Aucun paiement n'avait été effectué : rien ne vous est facturé.{% endif %}
+{% if reason %}
+Motif du pilote :
+> {{ reason }}
+{% endif %}
+La mission est remise en ligne : choisissez un nouveau devis.
+{{ site_url }}/missions/{{ booking.mission_id }}
+
+------------------------------------------------------------
+
+[EN]
+{{ pilot.full_name }} can no longer fly the mission "{{ booking.mission_title }}".
+{% if refund_amount and refund_amount > 0 %}You are fully refunded ({{ refund_amount|int }} {{ booking.currency }}) with no fees
+(5-10 business days depending on your bank).{% else %}No payment had been made: nothing is charged to you.{% endif %}
+The mission is back online: pick a new quote.
+{{ site_url }}/missions/{{ booking.mission_id }}
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

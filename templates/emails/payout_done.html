@@ -19,7 +19,7 @@
       <div style="font:500 16px/1 Georgia,serif;color:#15181f;">{{ amount_total|int }} {{ booking.currency }}</div>
     </td></tr>
     <tr><td style="padding:14px 18px;border-bottom:1px solid #efece2;">
-      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Commission AubePilot 30%</div>
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Commission AubePilot {{ booking_fee_pct(booking)|int }}%</div>
       <div style="font:500 14px/1 'Helvetica Neue',Arial,sans-serif;color:#6b6f7a;">−&nbsp;{{ fee|int }} {{ booking.currency }}</div>
     </td></tr>
     <tr><td style="padding:16px 18px;background:#fbfaf6;">
@@ -42,7 +42,7 @@
   </p>
   <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0;">
     Net to you: <strong>{{ amount_pilot|int }} {{ booking.currency }}</strong>
-    (mission {{ amount_total|int }} {{ booking.currency }} − 30% platform fee {{ fee|int }} {{ booking.currency }})
+    (mission {{ amount_total|int }} {{ booking.currency }} − {{ booking_fee_pct(booking)|int }}% platform fee {{ fee|int }} {{ booking.currency }})
   </p>
 </td></tr>
 </table>

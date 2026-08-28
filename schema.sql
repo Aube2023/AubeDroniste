@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     agreed_price    REAL NOT NULL,
     currency        TEXT NOT NULL DEFAULT 'EUR',
     platform_fee    REAL NOT NULL DEFAULT 0,
+    platform_fee_pct REAL,                       -- taux applique (commission degressive)
     scheduled_at    TEXT,
     status          TEXT NOT NULL DEFAULT 'pending_payment',
     completed_at    TEXT,
@@ -202,7 +203,9 @@ CREATE TABLE IF NOT EXISTS bookings (
     -- (LATE_CANCELLATION_FEE_PCT) est versee au pilote a titre de
     -- dedommagement et le client est rembourse du reste.
     cancelled_at             TEXT,
-    cancellation_fee         REAL NOT NULL DEFAULT 0,
+    cancellation_fee         REAL NOT NULL DEFAULT 0,   -- dedommagement verse au pilote
+    cancellation_service_fee REAL NOT NULL DEFAULT 0,   -- frais de service retenus par la plateforme
+    cancelled_by             TEXT,                       -- 'client' | 'pilot' | 'admin'
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_booking_pilot  ON bookings(pilot_user_id);

@@ -24,7 +24,7 @@
       <div style="font:700 22px/1 Georgia,serif;color:#1e6f5e;">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
     </td></tr>
     <tr><td style="padding:14px 18px;">
-      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Vous toucherez (apres commission 30%)</div>
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Vous toucherez (apres commission {{ booking_fee_pct(booking)|int }} %)</div>
       <div style="font:700 18px/1 Georgia,serif;color:#15181f;">{{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}</div>
     </td></tr>
   </table>

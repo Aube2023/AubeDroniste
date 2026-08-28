@@ -10,7 +10,7 @@ n'est pas encore finalise. Tant que ce n'est pas fait, le client
 ne peut pas debloquer les fonds.
 
 Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}
-Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (apres 30% de commission)
+Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (apres {{ booking_fee_pct(booking)|int }} % de commission)
 
 Finaliser Stripe (3 min) : {{ site_url }}/espace/pilote/stripe
 
@@ -26,7 +26,7 @@ A payment is waiting for you, {{ pilot.full_name.split(' ')[0] }}.
 isn't finalized yet. Until it is, the client can't release the funds.
 
 Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}
-You'll get    : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (after 30% platform fee)
+You'll get    : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }} (after {{ booking_fee_pct(booking)|int }}% platform fee)
 
 Finalize Stripe (3 min): {{ site_url }}/espace/pilote/stripe
 

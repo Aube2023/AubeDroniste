@@ -25,6 +25,12 @@ import seo
 import services
 from config import (
     ALLOWED_DOC_EXT,
+    CANCELLATION_GRACE_HOURS,
+    CANCELLATION_SERVICE_FEE_CAP,
+    CANCELLATION_SERVICE_FEE_PCT,
+    LATE_CANCELLATION_FEE_PCT,
+    LATE_CANCELLATION_HOURS,
+    PLATFORM_FEE_TIERS,
     ANDROID_CERT_SHA256,
     ANDROID_PACKAGE,
     AUBECREW_URL,
@@ -183,9 +189,16 @@ def _inject_globals():
         "contact_reply_hours": CONTACT_REPLY_HOURS,
         "social_links": SOCIAL_LINKS,
         "search_radius_choices": SEARCH_RADIUS_CHOICES,
-        # Economie plateforme : surface unique (jamais "30 %"/"70 %" en dur en vue)
+        # Economie plateforme : surface unique (jamais "20 %"/"80 %" en dur en vue)
         "platform_fee_pct": int(PLATFORM_FEE_PCT),
         "pilot_share_pct": int(PILOT_SHARE_PCT),
+        "platform_fee_tiers": _fee_tiers_display(),
+        "booking_fee_pct": services.booking_fee_pct,   # taux reel d'un booking
+        "cancellation_grace_hours": CANCELLATION_GRACE_HOURS,
+        "cancellation_service_fee_pct": int(CANCELLATION_SERVICE_FEE_PCT),
+        "cancellation_service_fee_cap": int(CANCELLATION_SERVICE_FEE_CAP),
+        "late_cancellation_hours": LATE_CANCELLATION_HOURS,
+        "late_cancellation_fee_pct": int(LATE_CANCELLATION_FEE_PCT),
         # CSRF
         "csrf_token": security.csrf_token,
         "csrf_input": security.csrf_input,
@@ -197,6 +210,16 @@ def _inject_globals():
         "seo_global": seo.global_ld(getattr(g, "lang", i18n.DEFAULT)),
         "seo": {},   # defaut ; surcharge par page via render_template(seo=...)
     }
+
+
+def _fee_tiers_display() -> list:
+    """Paliers de commission lisibles : [{'from': 1, 'to': 3, 'pct': 20}, ...]
+    ('to' = None pour le dernier palier)."""
+    out = []
+    for i, (threshold, pct) in enumerate(PLATFORM_FEE_TIERS):
+        nxt = PLATFORM_FEE_TIERS[i + 1][0] if i + 1 < len(PLATFORM_FEE_TIERS) else None
+        out.append({"from": threshold + 1, "to": nxt, "pct": int(pct)})
+    return out
 
 
 def _static_v(filename: str) -> str:
@@ -1701,10 +1724,10 @@ def booking_detail(booking_id):
         abort(403)
     peer_id = booking["pilot_user_id"] if g.user["id"] == booking["client_user_id"] else booking["client_user_id"]
     is_client_view = g.user["id"] == booking["client_user_id"]
+    cancellable = booking["status"] in ("pending_payment", "funded", "in_progress")
     cancellation_preview = (
         services.compute_cancellation_fee(booking)
-        if is_client_view and booking["status"] in ("pending_payment", "funded", "in_progress")
-        else None
+        if is_client_view and cancellable else None
     )
     return render_template(
         "booking_detail.html",
@@ -1712,6 +1735,7 @@ def booking_detail(booking_id):
         peer_id=peer_id,
         thread=services.thread(booking["mission_id"], g.user["id"], peer_id),
         cancellation_preview=cancellation_preview,
+        pilot_can_cancel=(not is_client_view) and cancellable,
         is_client_view=is_client_view,
         deliverables=services.list_deliverables(booking_id),
         max_deliverable_mb=MAX_DELIVERABLE_MB,
@@ -1760,20 +1784,40 @@ def booking_cancel_client(booking_id):
     if not result.get("ok"):
         flash(result.get("reason") or "Annulation refusee.", "error")
         return redirect(url_for("booking_detail", booking_id=booking_id))
+    if not result.get("paid"):
+        flash("Réservation annulée (aucun paiement n'avait été effectué).", "success")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    parts = []
     if result["is_late"]:
-        flash(
-            f"Reservation annulee. Annulation tardive : "
-            f"{int(result['fee_pct'])}% du devis "
-            f"({result['fee_amount']:.2f}) verse au pilote, "
-            f"{result['refund_amount']:.2f} rembourse.",
-            "info",
-        )
+        parts.append(f"annulation tardive : {int(result['fee_pct'])} % du devis "
+                     f"({result['fee_amount']:.2f}) versés au pilote")
+    if result["service_fee_amount"] > 0:
+        parts.append(f"frais de service {int(result['service_fee_pct'])} % "
+                     f"({result['service_fee_amount']:.2f}) retenus")
+    if parts:
+        flash(f"Réservation annulée — {' ; '.join(parts)} ; "
+              f"{result['refund_amount']:.2f} remboursés.", "info")
     else:
-        flash(
-            f"Reservation annulee avec preavis suffisant. "
-            f"Refund integral : {result['refund_amount']:.2f}.",
-            "success",
-        )
+        flash(f"Réservation annulée. Remboursement intégral : "
+              f"{result['refund_amount']:.2f}.", "success")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/reservations/<int:booking_id>/annuler-pilote", methods=["POST"])
+@auth.login_required
+def booking_cancel_pilot(booking_id):
+    """Desistement du pilote : remboursement integral du client, devis retire,
+    mission remise en ligne. Jamais de frais pour le client."""
+    reason = (request.form.get("reason") or "").strip()
+    result = services.cancel_booking_by_pilot(booking_id, g.user["id"], reason=reason)
+    if not result.get("ok"):
+        flash(result.get("reason") or "Désistement refusé.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    if result.get("paid"):
+        flash(f"Vous vous êtes désisté. Le client est remboursé intégralement "
+              f"({result['refund_amount']:.2f}) et la mission est remise en ligne.", "info")
+    else:
+        flash("Vous vous êtes désisté. La mission est remise en ligne.", "info")
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 

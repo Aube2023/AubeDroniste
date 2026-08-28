@@ -297,3 +297,16 @@ def send_contact_ack(*, to: str, name: str, topic: str, body: str,
         context={"name": name, "topic": topic, "body": body,
                  "reply_hours": reply_hours},
     )
+
+
+def send_booking_cancelled_by_pilot(*, client: dict, pilot: dict, booking: dict,
+                                    refund_amount: float, reason: str = "") -> bool:
+    """Le pilote s'est desiste : previent le client (remboursement integral si
+    paye, mission remise en ligne pour choisir un autre devis)."""
+    return send(
+        to=client["email"],
+        subject=f"Pilote désisté / Pilot withdrew, {booking.get('mission_title') or 'AubePilot'}",
+        template="booking_cancelled_by_pilot",
+        context={"client": client, "pilot": pilot, "booking": booking,
+                 "refund_amount": refund_amount, "reason": reason},
+    )

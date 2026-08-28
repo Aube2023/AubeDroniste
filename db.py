@@ -100,6 +100,12 @@ def _column_exists(conn, table: str, column: str) -> bool:
 # base existante (CREATE TABLE IF NOT EXISTS ne modifie pas une table deja la).
 _ADD_COLUMNS = [
     ("pilot_profiles", "business_name", "TEXT"),
+    # Commission degressive : taux applique a CE booking (NULL sur les anciens
+    # bookings -> deduit de platform_fee / agreed_price, cf. services.booking_fee_pct).
+    ("bookings", "platform_fee_pct", "REAL"),
+    # Annulation : frais de service retenus par la plateforme + qui a annule.
+    ("bookings", "cancellation_service_fee", "REAL NOT NULL DEFAULT 0"),
+    ("bookings", "cancelled_by", "TEXT"),
 ]
 
 # Index additifs idempotents. schema.sql n'est execute QUE sur une base neuve

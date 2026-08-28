@@ -4,7 +4,7 @@ Modele : escrow plateforme.
 1. Client accepte une enchere -> booking en `pending_payment`
 2. Client paie via Stripe Checkout -> webhook -> `funded`
 3. Pilote livre, client valide -> Transfer Stripe vers connected account
-   du pilote (70 %) ; la plateforme garde 30 % (la commission)
+   du pilote (prix - commission) ; la plateforme garde la commission (degressive)
 4. Si dispute, on peut Refund total ou partiel via Stripe.
 
 Mode FAKE (sans cle Stripe) : on simule chaque appel et on retourne des
@@ -216,19 +216,21 @@ def get_payment_intent_from_session(session_id: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
-                     pilot_account_id: str) -> Optional[str]:
+                     pilot_account_id: str, kind: str = "release") -> Optional[str]:
     """Transfert depuis le compte plateforme vers le compte pilote.
 
     Le `pilot_amount` est le brut DESTINE au pilote (i.e. agreed_price -
     platform_fee). Retourne l'ID du transfer Stripe ou un fake.
 
-    IDEMPOTENCY : `booking-{id}-release` empeche un double-versement au
+    IDEMPOTENCY : `booking-{id}-{kind}` empeche un double-versement au
     pilote si le client clique 2x sur 'Valider la mission' ou si l'auto-
-    release J+7 tape en parallele d'une validation manuelle.
+    release J+7 tape en parallele d'une validation manuelle. `kind` distingue
+    la liberation normale ("release") du dedommagement d'annulation tardive
+    ("cancel-compensation") : montants differents, cles differentes.
     """
     s = _stripe()
     if s is None:
-        return f"tr_fake_{booking_id}_{int(time.time())}"
+        return f"tr_fake_{booking_id}_{kind}_{int(time.time())}"
     amount_cents = int(round(float(pilot_amount) * 100))
     try:
         tr = s.Transfer.create(
@@ -237,7 +239,7 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
             destination=pilot_account_id,
             transfer_group=f"booking_{booking_id}",
             metadata={"booking_id": str(booking_id)},
-            idempotency_key=f"booking-{booking_id}-release",
+            idempotency_key=f"booking-{booking_id}-{kind}",
         )
         log.info("transfer %s pour booking=%s (%d cents %s vers %s)",
                  tr.id, booking_id, amount_cents, currency.upper(), pilot_account_id)
@@ -383,12 +385,15 @@ def country_is_payable(country: str) -> bool:
 # Calcul commission
 # ---------------------------------------------------------------------------
 
-def split_amounts(total: float) -> dict:
-    """Calcule la repartition selon PLATFORM_FEE_PCT.
+def split_amounts(total: float, fee_pct: Optional[float] = None) -> dict:
+    """Calcule la repartition selon le taux de commission (defaut : taux de
+    base PLATFORM_FEE_PCT ; la commission reelle d'un booking est degressive,
+    cf. services.platform_fee_pct_for).
 
     Retourne {total, platform, pilot}. Tous en devise locale (pas en cents).
     """
-    fee = round(float(total) * PLATFORM_FEE_PCT / 100.0, 2)
+    pct = PLATFORM_FEE_PCT if fee_pct is None else float(fee_pct)
+    fee = round(float(total) * pct / 100.0, 2)
     return {
         "total":    round(float(total), 2),
         "platform": fee,

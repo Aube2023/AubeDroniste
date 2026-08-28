@@ -1,4 +1,4 @@
-"""Coeur monetaire : devis -> acceptation -> escrow -> liberation 70/30 -> refund.
+"""Coeur monetaire : devis -> acceptation -> escrow -> liberation (prix - commission) -> refund.
 
 Tout tourne en mode STRIPE_FAKE (aucune cle en test) : release_to_pilot et
 refund_payment sont simules et deterministes. On assert les transitions de
@@ -7,10 +7,13 @@ statut et la repartition de l'argent, pas l'envoi d'email (best-effort).
 import pytest
 
 
-def test_split_amounts_70_30():
+def test_split_amounts_base_rate():
     import payments
+    from config import PLATFORM_FEE_PCT
     s = payments.split_amounts(100.0)
-    assert s == {"total": 100.0, "platform": 30.0, "pilot": 70.0}
+    assert s == {"total": 100.0, "platform": PLATFORM_FEE_PCT, "pilot": 100.0 - PLATFORM_FEE_PCT}
+    # taux explicite (commission degressive)
+    assert payments.split_amounts(100.0, fee_pct=10) == {"total": 100.0, "platform": 10.0, "pilot": 90.0}
 
 
 def test_accept_creates_pending_payment_booking(app_ctx, open_mission,
@@ -19,7 +22,9 @@ def test_accept_creates_pending_payment_booking(app_ctx, open_mission,
     booking_id = services.accept_bid(open_mission, pending_bid, client_user["id"])
     b = services.get_booking(booking_id)
     assert b["status"] == "pending_payment"
-    assert b["platform_fee"] == 300.0          # 30 % de 1000
+    from config import PLATFORM_FEE_PCT
+    assert b["platform_fee"] == round(1000 * PLATFORM_FEE_PCT / 100, 2)   # taux de base (1re mission)
+    assert b["platform_fee_pct"] == PLATFORM_FEE_PCT
     assert b["agreed_price"] == 1000
     # le devis accepte passe 'accepted', la mission 'assigned'
     bid = services.list_bids(open_mission)
@@ -73,8 +78,9 @@ def test_confirm_completion_pays_pilot(funded_booking):
     assert b["status"] == "completed"
     assert b["stripe_transfer_id"]                       # transfer (fake) pose
     assert str(b["stripe_transfer_id"]).startswith("tr_fake_")
-    # 70 % au pilote
-    assert b["agreed_price"] - b["platform_fee"] == 700.0
+    # prix - commission au pilote
+    from config import PLATFORM_FEE_PCT
+    assert b["agreed_price"] - b["platform_fee"] == 1000 - round(1000 * PLATFORM_FEE_PCT / 100, 2)
 
 
 def test_confirm_completion_by_pilot_refused(funded_booking):

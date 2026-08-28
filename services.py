@@ -18,7 +18,11 @@ from config import (
     DEFAULT_SEARCH_RADIUS_KM,
     MAX_SEARCH_RADIUS_KM,
     MISSION_STATUS,
+    CANCELLATION_GRACE_HOURS,
+    CANCELLATION_SERVICE_FEE_CAP,
+    CANCELLATION_SERVICE_FEE_PCT,
     PLATFORM_FEE_PCT,
+    PLATFORM_FEE_TIERS,
 )
 
 
@@ -910,6 +914,39 @@ def list_bids(mission_id: int) -> list:
     return out
 
 
+def completed_missions_between(client_user_id: int, pilot_user_id: int) -> int:
+    """Nombre de missions deja TERMINEES (completed) entre ce client et ce
+    pilote : base de la commission degressive."""
+    row = db.fetchone(
+        "SELECT COUNT(*) AS n FROM bookings "
+        "WHERE client_user_id=? AND pilot_user_id=? AND status='completed'",
+        (client_user_id, pilot_user_id),
+    )
+    return int(row["n"]) if row else 0
+
+
+def platform_fee_pct_for(prior_completed: int) -> float:
+    """Taux de commission selon PLATFORM_FEE_TIERS [(seuil, taux), ...] :
+    le dernier palier dont le seuil est atteint s'applique."""
+    pct = float(PLATFORM_FEE_TIERS[0][1])
+    for threshold, rate in PLATFORM_FEE_TIERS:
+        if prior_completed >= threshold:
+            pct = float(rate)
+    return pct
+
+
+def booking_fee_pct(booking: dict) -> float:
+    """Taux effectivement applique a un booking. Les bookings anterieurs a la
+    commission degressive n'ont pas de colonne renseignee : on le deduit du
+    montant stocke (jamais du taux courant, qui a pu changer)."""
+    pct = booking.get("platform_fee_pct")
+    if pct is not None:
+        return float(pct)
+    price = float(booking.get("agreed_price") or 0)
+    fee = float(booking.get("platform_fee") or 0)
+    return round(fee * 100.0 / price, 1) if price else PLATFORM_FEE_PCT
+
+
 def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
     """Accepte une enchere : cree booking, ferme les autres encheres,
     passe la mission en 'assigned'. Retourne booking_id.
@@ -931,7 +968,10 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         raise ValueError("ce devis n'est plus disponible")
     if bid["pilot_user_id"] == client_user_id:
         raise ValueError("vous ne pouvez pas accepter votre propre devis")
-    fee = round(bid["price"] * PLATFORM_FEE_PCT / 100.0, 2)
+    # Commission degressive : selon les missions deja terminees entre les deux.
+    prior = completed_missions_between(client_user_id, bid["pilot_user_id"])
+    fee_pct = platform_fee_pct_for(prior)
+    fee = round(bid["price"] * fee_pct / 100.0, 2)
     # Tout-ou-rien : verrou conditionnel + creation booking + cloture des
     # autres devis dans UNE transaction. Si le verrou echoue (rowcount=0),
     # une autre acceptation a deja eu lieu -> rollback complet + ValueError.
@@ -946,11 +986,11 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         cur = db.execute(
             "INSERT INTO bookings "
             "(mission_id, bid_id, client_user_id, pilot_user_id, agreed_price, currency, "
-            " platform_fee, scheduled_at, status) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')",
+            " platform_fee, platform_fee_pct, scheduled_at, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')",
             (
                 mission_id, bid_id, client_user_id, bid["pilot_user_id"],
-                bid["price"], bid["currency"], fee, mission["start_date"],
+                bid["price"], bid["currency"], fee, fee_pct, mission["start_date"],
             ), commit=False,
         )
         booking_id = cur.lastrowid
@@ -964,7 +1004,8 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
             "INSERT INTO audit_log (user_id, action, target, payload) "
             "VALUES (?, 'accept_bid', ?, ?)",
             (client_user_id, f"mission:{mission_id}",
-             json.dumps({"booking": booking_id, "bid": bid_id})), commit=False,
+             json.dumps({"booking": booking_id, "bid": bid_id,
+                         "fee_pct": fee_pct, "prior_completed": prior})), commit=False,
         )
     # Notification email au pilote choisi
     try:
@@ -982,7 +1023,8 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
                 mission={"id": mission_id, "title": mission["title"],
                          "country": mission["country"], "city": mission["city"]},
                 booking={"id": booking_id, "agreed_price": bid["price"],
-                         "currency": bid["currency"], "platform_fee": fee},
+                         "currency": bid["currency"], "platform_fee": fee,
+                         "platform_fee_pct": fee_pct},
                 client=dict(client),
             )
     except Exception as exc:
@@ -1036,46 +1078,80 @@ def get_booking_by_bid(bid_id: int) -> Optional[dict]:
     return dict(row) if row else None
 
 
+def _parse_db_datetime(value) -> Optional["datetime"]:
+    """'YYYY-MM-DD' ou 'YYYY-MM-DD HH:MM:SS' (SQLite, UTC) -> datetime aware.
+    None si vide ou illisible."""
+    from datetime import datetime, timezone
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        if len(raw) <= 10:
+            return datetime.strptime(raw, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        dt = datetime.fromisoformat(raw.replace(" ", "T"))
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return None
+
+
 def compute_cancellation_fee(booking: dict) -> dict:
-    """Calcule la penalite client en cas d annulation.
+    """Calcule ce qui se passe si le CLIENT annule maintenant.
+
+    Deux retenues independantes sur le prix convenu :
+      - dedommagement PILOTE si annulation tardive
+        (< LATE_CANCELLATION_HOURS avant la mission) : LATE_CANCELLATION_FEE_PCT ;
+      - frais de service PLATEFORME si le client a deja paye (le contact du
+        pilote lui a ete revele) et que la fenetre de grace
+        CANCELLATION_GRACE_HOURS apres le paiement est passee :
+        CANCELLATION_SERVICE_FEE_PCT, plafonne a CANCELLATION_SERVICE_FEE_CAP.
+        Sans `paid_at` (pas encore paye, ou simple simulation) : aucun frais.
 
     Renvoie : {
-      "is_late":   True si annulation < LATE_CANCELLATION_HOURS de la mission,
-      "fee_pct":   % du prix verse au pilote (0 si preavis suffisant),
-      "fee_amount":   montant verse au pilote,
-      "refund_amount": montant rembourse au client,
-      "hours_until":  heures restantes avant la mission (ou None),
-      "preavis_h":    LATE_CANCELLATION_HOURS de reference,
+      "is_late", "fee_pct", "fee_amount",            # part pilote
+      "service_fee_pct", "service_fee_amount",       # part plateforme
+      "within_grace", "grace_h", "grace_hours_left",
+      "refund_amount",                               # rendu au client
+      "hours_until", "preavis_h",
     }
     """
     from datetime import datetime, timezone
     from config import LATE_CANCELLATION_HOURS, LATE_CANCELLATION_FEE_PCT
 
+    now = datetime.now(timezone.utc)
     price = float(booking.get("agreed_price") or 0)
-    start = (booking.get("scheduled_at") or booking.get("mission_start_date") or "").strip()
-    hours_until = None
-    if start:
-        # Parse "YYYY-MM-DD" ou "YYYY-MM-DD HH:MM:SS"
-        try:
-            if len(start) <= 10:
-                dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            else:
-                dt = datetime.fromisoformat(start.replace(" ", "T"))
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-            now = datetime.now(timezone.utc)
-            hours_until = (dt - now).total_seconds() / 3600.0
-        except (ValueError, TypeError):
-            hours_until = None
+    start_dt = _parse_db_datetime(
+        (booking.get("scheduled_at") or booking.get("mission_start_date") or "")
+    )
+    hours_until = ((start_dt - now).total_seconds() / 3600.0) if start_dt else None
 
     is_late = hours_until is not None and hours_until < LATE_CANCELLATION_HOURS
     fee_pct = LATE_CANCELLATION_FEE_PCT if is_late else 0.0
     fee_amount = round(price * fee_pct / 100.0, 2)
-    refund_amount = round(price - fee_amount, 2)
+
+    paid_dt = _parse_db_datetime(booking.get("paid_at"))
+    within_grace = False
+    grace_hours_left = None
+    service_fee_pct = 0.0
+    service_fee_amount = 0.0
+    if paid_dt is not None:
+        elapsed_h = (now - paid_dt).total_seconds() / 3600.0
+        within_grace = elapsed_h < CANCELLATION_GRACE_HOURS
+        grace_hours_left = round(max(0.0, CANCELLATION_GRACE_HOURS - elapsed_h), 1)
+        if not within_grace:
+            service_fee_pct = CANCELLATION_SERVICE_FEE_PCT
+            service_fee_amount = round(
+                min(price * service_fee_pct / 100.0, CANCELLATION_SERVICE_FEE_CAP), 2,
+            )
+    refund_amount = round(max(0.0, price - fee_amount - service_fee_amount), 2)
     return {
         "is_late": is_late,
         "fee_pct": fee_pct,
         "fee_amount": fee_amount,
+        "service_fee_pct": service_fee_pct,
+        "service_fee_amount": service_fee_amount,
+        "within_grace": within_grace,
+        "grace_h": CANCELLATION_GRACE_HOURS,
+        "grace_hours_left": grace_hours_left,
         "refund_amount": refund_amount,
         "hours_until": round(hours_until, 1) if hours_until is not None else None,
         "preavis_h": LATE_CANCELLATION_HOURS,
@@ -1100,14 +1176,17 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
                 "reason": f"statut {booking['status']} non annulable"}
 
     calc = compute_cancellation_fee(booking)
+    paid = bool(booking.get("stripe_payment_intent_id")) and \
+        booking["status"] in ("funded", "in_progress")
+    if not paid:
+        # Rien n'a ete encaisse : aucune retenue possible, aucun remboursement.
+        calc.update({"fee_amount": 0.0, "service_fee_amount": 0.0,
+                     "service_fee_pct": 0.0, "refund_amount": 0.0})
 
-    # Refund Stripe (si paye en escrow). Le 25 % reste dans l'escrow et sera
-    # transfere au pilote via un job ulterieur — pour l'MVP on track juste
-    # le montant en DB, le transfer effectif est traite cote payments/cron.
+    # 1) Refund Stripe partiel au client. Le reste (dedommagement pilote +
+    #    frais de service) demeure sur le solde plateforme.
     refund_done = True
-    if (booking.get("stripe_payment_intent_id")
-            and booking["status"] in ("funded", "in_progress")
-            and calc["refund_amount"] > 0):
+    if paid and calc["refund_amount"] > 0:
         try:
             import payments
             refund_done = bool(payments.refund_payment(
@@ -1120,12 +1199,34 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
             log.warning("refund Stripe a echoue : %s", exc)
             refund_done = False
 
+    # 2) Dedommagement pilote (annulation tardive) : Transfer immediat vers
+    #    son compte Connect, cle d'idempotence distincte de la liberation.
+    transfer_id = None
+    if paid and calc["fee_amount"] > 0:
+        pilot_acc = get_pilot_stripe_account(booking["pilot_user_id"])
+        if pilot_acc:
+            try:
+                import payments
+                transfer_id = payments.release_to_pilot(
+                    booking_id=booking_id, pilot_amount=calc["fee_amount"],
+                    currency=booking.get("currency", "EUR"),
+                    pilot_account_id=pilot_acc, kind="cancel-compensation",
+                )
+            except Exception as exc:
+                log.warning("transfer dedommagement a echoue : %s", exc)
+        if not transfer_id:
+            log.error("dedommagement pilote NON vire pour booking=%s (%.2f) : "
+                      "a traiter manuellement", booking_id, calc["fee_amount"])
+
     with db.transaction():
         db.execute(
-            "UPDATE bookings SET status='cancelled', "
-            "cancelled_at=datetime('now'), cancellation_fee=? "
+            "UPDATE bookings SET status='cancelled', cancelled_by='client', "
+            "cancelled_at=datetime('now'), cancellation_fee=?, "
+            "cancellation_service_fee=?, "
+            "stripe_transfer_id=COALESCE(?, stripe_transfer_id) "
             "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress')",
-            (calc["fee_amount"], booking_id), commit=False,
+            (calc["fee_amount"], calc["service_fee_amount"], transfer_id, booking_id),
+            commit=False,
         )
         update_mission_status(booking["mission_id"], "cancelled", commit=False)
 
@@ -1135,15 +1236,96 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
         (by_user, f"booking:{booking_id}",
          json.dumps({
              "reason": (reason or "")[:200],
+             "paid": paid,
              "is_late": calc["is_late"],
              "fee_pct": calc["fee_pct"],
              "fee_amount": calc["fee_amount"],
+             "service_fee_pct": calc["service_fee_pct"],
+             "service_fee_amount": calc["service_fee_amount"],
+             "within_grace": calc["within_grace"],
              "refund_amount": calc["refund_amount"],
              "hours_until": calc["hours_until"],
              "stripe_refund_done": refund_done,
+             "compensation_transfer": transfer_id,
          })),
     )
-    return {"ok": True, "reason": None, **calc,
+    return {"ok": True, "reason": None, "paid": paid, **calc,
+            "stripe_refund_done": refund_done,
+            "compensation_transfer": transfer_id}
+
+
+def cancel_booking_by_pilot(booking_id: int, by_user: int,
+                            reason: str = "") -> dict:
+    """Le PILOTE se desiste. Ne coute jamais rien au client : remboursement
+    integral s'il a paye, devis retire, mission remise en ligne (le client
+    peut choisir un autre devis). Trace en audit (desistements repetes ->
+    suspension manuelle)."""
+    booking = get_booking(booking_id)
+    if not booking:
+        return {"ok": False, "reason": "booking introuvable"}
+    if booking["pilot_user_id"] != by_user:
+        return {"ok": False, "reason": "seul le pilote peut se desister"}
+    if booking["status"] not in ("pending_payment", "funded", "in_progress"):
+        return {"ok": False,
+                "reason": f"statut {booking['status']} non annulable"}
+
+    price = float(booking.get("agreed_price") or 0)
+    paid = bool(booking.get("stripe_payment_intent_id")) and \
+        booking["status"] in ("funded", "in_progress")
+    refund_done = True
+    if paid and price > 0:
+        try:
+            import payments
+            refund_done = bool(payments.refund_payment(
+                booking["stripe_payment_intent_id"], amount=None,
+                currency=booking.get("currency", "EUR"),
+                reason=f"booking:{booking_id}:cancel_pilot",
+            ))
+        except Exception as exc:
+            log.warning("refund Stripe (desistement pilote) a echoue : %s", exc)
+            refund_done = False
+
+    with db.transaction():
+        cur = db.execute(
+            "UPDATE bookings SET status='cancelled', cancelled_by='pilot', "
+            "cancelled_at=datetime('now'), cancellation_fee=0, "
+            "cancellation_service_fee=0 "
+            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress')",
+            (booking_id,), commit=False,
+        )
+        if cur.rowcount == 0:
+            raise ValueError("reservation deja cloturee")
+        db.execute(
+            "UPDATE bids SET status='withdrawn', updated_at=datetime('now') WHERE id=?",
+            (booking["bid_id"],), commit=False,
+        )
+        # La mission redevient ouverte : nouveaux devis possibles, et les
+        # pilotes refuses peuvent resoumettre (revision).
+        update_mission_status(booking["mission_id"], "open", commit=False)
+
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'booking_cancel_pilot', ?, ?)",
+        (by_user, f"booking:{booking_id}",
+         json.dumps({"reason": (reason or "")[:200], "paid": paid,
+                     "refund_amount": price if paid else 0.0,
+                     "stripe_refund_done": refund_done})),
+    )
+    try:
+        import mailer
+        client = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?",
+                             (booking["client_user_id"],))
+        pilot = db.fetchone("SELECT id, full_name FROM users WHERE id=?",
+                            (booking["pilot_user_id"],))
+        if client and pilot:
+            mailer.send_booking_cancelled_by_pilot(
+                client=dict(client), pilot=dict(pilot), booking=booking,
+                refund_amount=price if paid else 0.0, reason=reason or "",
+            )
+    except Exception as exc:
+        log.warning("email booking_cancelled_by_pilot failed : %s", exc)
+    return {"ok": True, "reason": None, "paid": paid,
+            "refund_amount": price if paid else 0.0,
             "stripe_refund_done": refund_done}
 
 
