@@ -157,3 +157,27 @@ def test_register_creates_user_and_dumps_email(client):
     if r.status_code in (302, 303):
         post_count = len(os.listdir(MAIL_DUMP_DIR))
         assert post_count > pre_count, "welcome email non dumpé"
+
+
+def test_run_migrations_is_safe_under_concurrency(client):
+    """gunicorn lance N workers qui migrent en meme temps : aucun ne doit
+    mourir (course « duplicate column name », prod 502 du 2026-08-29)."""
+    import threading
+    import db
+    errors = []
+
+    def _run():
+        try:
+            db.run_migrations()
+        except Exception as exc:  # pragma: no cover - on veut le message
+            errors.append(repr(exc))
+
+    threads = [threading.Thread(target=_run) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=60)
+    assert errors == []
+    # et l'ALTER est bien idempotent sur une colonne deja presente
+    with db.standalone() as c:
+        assert db._column_exists(c, "pilot_certifications", "review_status")

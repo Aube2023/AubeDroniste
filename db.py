@@ -46,16 +46,29 @@ def _connect() -> sqlite3.Connection:
         check_same_thread=False,           # safe pour gunicorn threads
     )
     conn.row_factory = sqlite3.Row
-    # PRAGMAs : a executer a chaque ouverture (sauf journal_mode qui est persistant)
-    conn.executescript("""
+    # PRAGMAs : a executer a chaque ouverture (sauf journal_mode qui est
+    # persistant). busy_timeout EN PREMIER : le passage en WAL demande un
+    # verrou exclusif et, sans busy handler, echoue tout de suite en
+    # « database is locked » quand un autre worker gunicorn initialise la
+    # base en meme temps (premier demarrage). On reessaie quelques fois.
+    script = """
+        PRAGMA busy_timeout=30000;
         PRAGMA foreign_keys=ON;
         PRAGMA journal_mode=WAL;
         PRAGMA synchronous=NORMAL;
         PRAGMA cache_size=-64000;
         PRAGMA temp_store=MEMORY;
         PRAGMA mmap_size=134217728;
-        PRAGMA busy_timeout=30000;
-    """)
+    """
+    for attempt in range(40):
+        try:
+            conn.executescript(script)
+            break
+        except sqlite3.OperationalError as exc:
+            if "locked" not in str(exc).lower() or attempt == 39:
+                conn.close()
+                raise
+            time.sleep(0.25)
     return conn
 
 
@@ -94,6 +107,24 @@ def init_schema(schema_path: str):
 def _column_exists(conn, table: str, column: str) -> bool:
     cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
     return column in cols
+
+
+def _table_exists(conn, table: str) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+    ).fetchone() is not None
+
+
+def schema_ready(path: str = DB_PATH) -> bool:
+    """True si la base existe ET contient le schema (table users). Un fichier
+    vide cree par un autre worker en pleine initialisation compte pour NON."""
+    if not os.path.exists(path):
+        return False
+    try:
+        with standalone() as c:
+            return _table_exists(c, "users")
+    except sqlite3.Error:
+        return False
 
 
 # Migrations additives idempotentes : ajoutent les colonnes manquantes sur une
@@ -177,19 +208,46 @@ _ADD_TABLES = [
 
 def run_migrations():
     """Applique les migrations additives manquantes (colonnes + index).
-    Sûr et idempotent : a lancer a chaque demarrage."""
+    Sûr et idempotent : a lancer a chaque demarrage.
+
+    CONCURRENCE : gunicorn demarre plusieurs workers qui importent app.py en
+    meme temps -> plusieurs run_migrations() simultanes. Sans verrou, deux
+    workers voient la colonne absente, le second ALTER echoue en
+    « duplicate column name » et le worker meurt (prod 502 le 2026-08-29).
+    On prend donc un verrou d'ecriture (BEGIN IMMEDIATE, busy_timeout 30 s)
+    AVANT de verifier les colonnes : le premier worker migre, les suivants
+    attendent puis ne voient plus rien a faire. Ceinture et bretelles : un
+    « duplicate column » residuel est ignore.
+    """
     with standalone() as c:
+        c.execute("BEGIN IMMEDIATE")
         for table, column, decl in _ADD_COLUMNS:
-            if not _column_exists(c, table, column):
+            if not _table_exists(c, table):
+                # Base neuve en cours de creation par un autre worker : le
+                # schema complet (colonne incluse) arrive via init_schema.
+                log.info("migration: table %s absente, colonne %s ignoree", table, column)
+                continue
+            if _column_exists(c, table, column):
+                continue
+            try:
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
                 log.info("migration: %s.%s ajoutee", table, column)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column" not in str(exc).lower():
+                    raise
+                log.info("migration: %s.%s deja presente (course)", table, column)
         for stmt in _ADD_TABLES:
             c.execute(stmt)
+        if not _table_exists(c, "users"):
+            # Schema pas encore la (course d'initialisation) : index et
+            # rattrapages seront rejoues au prochain demarrage.
+            return
         for stmt in _ADD_INDEXES:
             c.execute(stmt)
         c.execute("CREATE INDEX IF NOT EXISTS idx_cert_review ON pilot_certifications(review_status)")
         for stmt in _POST_SQL:
             c.execute(stmt)
+        # commit par standalone() a la sortie du bloc
 
 
 def _timed(query: str, params: Iterable, action):

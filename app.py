@@ -114,7 +114,10 @@ def bootstrap_db():
 
 
 with app.app_context():
-    if not os.path.exists(db.DB_PATH):
+    # schema_ready() plutot que "fichier present" : avec plusieurs workers
+    # gunicorn, un worker peut voir le fichier cree par un autre avant que le
+    # schema n'y soit (init_schema est idempotent : CREATE ... IF NOT EXISTS).
+    if not db.schema_ready():
         bootstrap_db()
     db.run_migrations()
 
@@ -2479,6 +2482,6 @@ def _inject_payments():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    if not os.path.exists(db.DB_PATH):
+    if not db.schema_ready():
         bootstrap_db()
     app.run(host=HOST, port=PORT, debug=os.environ.get("FLASK_DEBUG", "1") == "1")
