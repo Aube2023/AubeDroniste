@@ -523,8 +523,8 @@ def contact_submit():
     # Pot de miel : un humain ne voit pas le champ `website` (masque en CSS) ;
     # un bot le remplit -> on fait semblant d'accepter, sans rien envoyer.
     if form["website"]:
-        flash("Merci, votre message a bien été envoyé." if fr
-              else "Thank you, your message has been sent.", "success")
+        flash("Merci, votre message est bien enregistré." if fr
+              else "Thank you, your message has been recorded.", "success")
         return redirect(url_for("contact_form"))
     topics = dict(_contact_topics(lang))
     errors = []
@@ -574,10 +574,10 @@ def contact_submit():
     security.audit(user["id"] if user else None, "contact_message",
                    target=form["email"],
                    payload={"topic": form["topic"], "id": msg_id, "notified": notified})
-    flash(("Merci, votre message a bien été envoyé. Une copie vous a été "
-           f"adressée ; on vous répond sous {CONTACT_REPLY_HOURS} h ouvrables.") if fr
-          else ("Thank you, your message has been sent. A copy was emailed to "
-                f"you; we reply within {CONTACT_REPLY_HOURS} business hours."),
+    flash((f"Merci, votre message est bien enregistré. On vous répond par courriel "
+           f"sous {CONTACT_REPLY_HOURS} h ouvrables.") if fr
+          else (f"Thank you, your message has been recorded. We reply by email "
+                f"within {CONTACT_REPLY_HOURS} business hours."),
           "success")
     return redirect(url_for("contact_form"))
 

@@ -11,7 +11,7 @@
     </p>
     <ul class="checklist">
       <li>{{ 'Réponse sous %d h ouvrables.' % contact_reply_hours if fr else 'Reply within %d business hours.' % contact_reply_hours }}</li>
-      <li>{{ 'Un accusé de réception vous est envoyé immédiatement, avec la copie de votre message.' if fr else 'An acknowledgement is sent immediately, with a copy of your message.' }}</li>
+      <li>{{ 'Votre message est enregistré immédiatement et lu par une vraie personne ; la réponse arrive par courriel.' if fr else 'Your message is recorded immediately and read by a real person; the answer comes by email.' }}</li>
       <li>{{ 'Litige sur une mission en cours ? Ouvrez-le directement depuis la réservation : il est traité en priorité.' if fr else 'Dispute on an ongoing mission? Open it straight from the booking: it is handled first.' }}</li>
       <li><a href="{{ url_for('faq') }}">{{ 'Consultez d’abord la FAQ →' if fr else 'Check the FAQ first →' }}</a></li>
     </ul>
