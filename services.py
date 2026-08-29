@@ -2269,3 +2269,102 @@ def stale_funded_bookings(days: int) -> list:
         (days,),
     )
     return [r["id"] for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Boite de reception /contact (back-office)
+# ---------------------------------------------------------------------------
+
+CONTACT_STATUSES = ("new", "replied", "archived")
+
+
+def create_contact_message(*, name: str, email: str, topic: str, body: str,
+                           user_id: Optional[int] = None, ip: str = "") -> int:
+    """Enregistre un message du formulaire public. Toujours appele AVANT
+    l'envoi de courriel : si le SMTP tombe, rien n'est perdu."""
+    cur = db.execute(
+        "INSERT INTO contact_messages (name, email, topic, body, user_id, ip) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (name.strip()[:120], email.strip()[:200], topic.strip()[:80],
+         body.strip()[:5000], user_id, (ip or "")[:64]),
+    )
+    return int(cur.lastrowid or 0)
+
+
+def mark_contact_notified(msg_id: int) -> None:
+    db.execute("UPDATE contact_messages SET notified_at=datetime('now') WHERE id=?",
+               (msg_id,))
+
+
+def get_contact_message(msg_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT c.*, u.username AS user_username, a.full_name AS replied_by_name "
+        "FROM contact_messages c "
+        "LEFT JOIN users u ON u.id = c.user_id "
+        "LEFT JOIN users a ON a.id = c.replied_by "
+        "WHERE c.id=?", (msg_id,),
+    )
+    return dict(row) if row else None
+
+
+def list_contact_messages(status: str = "new", limit: int = 200) -> list:
+    """`status` = new | replied | archived | all."""
+    q = ("SELECT c.*, u.username AS user_username, a.full_name AS replied_by_name "
+         "FROM contact_messages c "
+         "LEFT JOIN users u ON u.id = c.user_id "
+         "LEFT JOIN users a ON a.id = c.replied_by ")
+    args: list = []
+    if status and status != "all":
+        q += "WHERE c.status=? "
+        args.append(status)
+    q += "ORDER BY c.created_at DESC, c.id DESC LIMIT ?"
+    args.append(limit)
+    return [dict(r) for r in db.fetchall(q, args)]
+
+
+def count_contact_messages(status: str = "new") -> int:
+    row = db.fetchone("SELECT COUNT(*) AS n FROM contact_messages WHERE status=?",
+                      (status,))
+    return int(row["n"]) if row else 0
+
+
+def set_contact_status(msg_id: int, status: str) -> bool:
+    if status not in CONTACT_STATUSES:
+        raise ValueError(f"statut contact invalide: {status}")
+    cur = db.execute("UPDATE contact_messages SET status=? WHERE id=?", (status, msg_id))
+    return cur.rowcount > 0
+
+
+def reply_contact_message(msg_id: int, admin_user_id: int, reply_body: str) -> dict:
+    """Repond a un message : enregistre la reponse, tente l'envoi du courriel
+    (synchrone, pour savoir s'il est parti) et passe le message en 'replied'.
+    Retourne {"ok", "sent", "reason"} — `sent=False` si le SMTP a echoue :
+    la reponse est conservee, l'admin peut l'envoyer a la main (mailto)."""
+    msg = get_contact_message(msg_id)
+    if not msg:
+        return {"ok": False, "sent": False, "reason": "message introuvable"}
+    reply_body = (reply_body or "").strip()
+    if len(reply_body) < 2:
+        return {"ok": False, "sent": False, "reason": "reponse vide"}
+    sent = False
+    try:
+        import mailer
+        sent = bool(mailer.send_contact_reply(
+            to=msg["email"], name=msg["name"], topic=msg["topic"],
+            original_body=msg["body"], reply_body=reply_body,
+            original_date=str(msg.get("created_at") or "")[:16],
+        ))
+    except Exception as exc:
+        log.warning("reponse contact #%s : envoi echoue : %s", msg_id, exc)
+        sent = False
+    db.execute(
+        "UPDATE contact_messages SET status='replied', replied_at=datetime('now'), "
+        "replied_by=?, reply_body=?, reply_sent=? WHERE id=?",
+        (admin_user_id, reply_body[:5000], 1 if sent else 0, msg_id),
+    )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'contact_reply', ?, ?)",
+        (admin_user_id, f"contact:{msg_id}", json.dumps({"sent": sent})),
+    )
+    return {"ok": True, "sent": sent, "reason": None}

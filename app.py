@@ -547,18 +547,33 @@ def contact_submit():
 
     topic_label = topics[form["topic"]]
     user = getattr(g, "user", None)
-    mailer.send_contact_message(
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+    # 1) Enregistre d'abord (boite de reception admin) : un SMTP en panne ne
+    #    fait jamais perdre une demande.
+    msg_id = services.create_contact_message(
+        name=form["name"], email=form["email"], topic=topic_label,
+        body=form["message"], user_id=user["id"] if user else None, ip=ip,
+    )
+    # 2) Courriel a l'equipe, synchrone pour savoir s'il est parti.
+    notified = mailer.send_contact_message(
         to=CONTACT_EMAIL, name=form["name"], email=form["email"],
         topic=topic_label, body=form["message"],
         user={"id": user["id"], "username": user["username"]} if user else None,
-        ip=request.headers.get("X-Forwarded-For", request.remote_addr or ""),
+        ip=ip, async_=False,
     )
+    if notified:
+        services.mark_contact_notified(msg_id)
+    else:
+        log.error("contact #%s : courriel equipe NON transmis (SMTP) — visible "
+                  "dans /admin/messages", msg_id)
+    # 3) Accuse de reception a l'expediteur (best effort).
     mailer.send_contact_ack(
         to=form["email"], name=form["name"], topic=topic_label,
         body=form["message"], reply_hours=CONTACT_REPLY_HOURS,
     )
     security.audit(user["id"] if user else None, "contact_message",
-                   target=form["email"], payload={"topic": form["topic"]})
+                   target=form["email"],
+                   payload={"topic": form["topic"], "id": msg_id, "notified": notified})
     flash(("Merci, votre message a bien été envoyé. Une copie vous a été "
            f"adressée ; on vous répond sous {CONTACT_REPLY_HOURS} h ouvrables.") if fr
           else ("Thank you, your message has been sent. A copy was emailed to "
@@ -921,6 +936,8 @@ def dashboard():
         my_bids=services.list_missions_by_pilot(user["id"]) if is_pilot else [],
         my_bookings=services.list_bookings_for(user["id"]),
         unread=services.unread_count(user["id"]),
+        admin_new_messages=(services.count_contact_messages("new")
+                            if user.get("is_admin") else 0),
     )
 
 
@@ -1198,6 +1215,51 @@ def admin_reject_name_change(req_id):
 # ---------------------------------------------------------------------------
 # Admin — verification des certifications pilote
 # ---------------------------------------------------------------------------
+
+@app.route("/admin/messages")
+@auth.admin_required
+def admin_messages():
+    status = request.args.get("status", "new")
+    if status not in ("new", "replied", "archived", "all"):
+        status = "new"
+    return render_template(
+        "admin_messages.html",
+        messages=services.list_contact_messages(status),
+        status=status,
+        counts={st: services.count_contact_messages(st)
+                for st in ("new", "replied", "archived")},
+    )
+
+
+@app.route("/admin/messages/<int:msg_id>/repondre", methods=["POST"])
+@auth.admin_required
+def admin_message_reply(msg_id):
+    result = services.reply_contact_message(
+        msg_id, g.user["id"], request.form.get("reply") or "",
+    )
+    if not result["ok"]:
+        flash(result.get("reason") or "Réponse impossible.", "error")
+    elif result["sent"]:
+        flash("Réponse envoyée par courriel.", "success")
+    else:
+        flash("Réponse enregistrée, mais le courriel n'est PAS parti (SMTP "
+              "indisponible) : utilisez le bouton « Envoyer depuis ma messagerie ».",
+              "error")
+    return redirect(url_for("admin_messages",
+                            status="replied" if result["ok"] else "new"))
+
+
+@app.route("/admin/messages/<int:msg_id>/statut", methods=["POST"])
+@auth.admin_required
+def admin_message_status(msg_id):
+    status = request.form.get("status") or ""
+    try:
+        ok = services.set_contact_status(msg_id, status)
+    except ValueError:
+        ok = False
+    flash("Statut mis à jour." if ok else "Message introuvable.", "success" if ok else "error")
+    return redirect(url_for("admin_messages", status=request.form.get("back") or "new"))
+
 
 @app.route("/admin/certifications")
 @auth.admin_required

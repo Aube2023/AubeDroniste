@@ -1,0 +1,17 @@
+AUBEPILOT, RÉPONSE DE L'ÉQUIPE / REPLY FROM THE TEAM
+====================================================
+
+Re : {{ topic }}
+
+{{ reply_body }}
+
+Pour poursuivre l'échange, répondez simplement à ce courriel ({{ contact_email }}).
+To continue the conversation, just reply to this email.
+
+------------------------------------------------------------
+Votre message{% if original_date %} ({{ original_date }}){% endif %} · Your message :
+
+> {{ original_body }}
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

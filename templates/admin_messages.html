@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Messages reçus, AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 18px;">
+  <span class="eyebrow">Admin · Boîte de réception</span>
+  <h1>Messages reçus.</h1>
+  <p class="lead muted">
+    Tout ce qui arrive par le formulaire <a href="{{ url_for('contact_form') }}">/contact</a> est conservé ici,
+    même si le courriel vers <code>{{ contact_email }}</code> n'a pas pu partir.
+  </p>
+</div>
+
+<nav class="faq-nav" aria-label="Filtres">
+  <a href="{{ url_for('admin_messages', status='new') }}" {% if status == 'new' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>À traiter · {{ counts.new }}</a>
+  <a href="{{ url_for('admin_messages', status='replied') }}" {% if status == 'replied' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Répondus · {{ counts.replied }}</a>
+  <a href="{{ url_for('admin_messages', status='archived') }}" {% if status == 'archived' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Archivés · {{ counts.archived }}</a>
+  <a href="{{ url_for('admin_messages', status='all') }}" {% if status == 'all' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Tous</a>
+</nav>
+
+{% for m in messages %}
+{% set mailto_subject = 'Re: ' ~ m.topic ~ ' — AubePilot' %}
+<div class="card" id="msg-{{ m.id }}">
+  <div class="row-between" style="align-items: start; gap: 16px;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px; font-size: 1.25rem;">{{ m.topic }}</h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        #{{ m.id }} · {{ m.created_at[:16] }} ·
+        <strong style="text-transform: none; letter-spacing: 0;">{{ m.name }}</strong> ·
+        <a href="mailto:{{ m.email }}?subject={{ mailto_subject|urlencode }}" style="text-transform: none; letter-spacing: 0;">{{ m.email }}</a>
+        {% if m.user_username %} · compte <a href="{{ url_for('pilot_detail', user_id=m.user_id) }}" style="text-transform: none; letter-spacing: 0;">{{ m.user_username }}</a>{% endif %}
+        {% if m.ip %} · IP {{ m.ip }}{% endif %}
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <span class="tag {% if m.status == 'new' %}tag-open{% elif m.status == 'replied' %}tag-done{% else %}tag-cancelled{% endif %}">
+        {% if m.status == 'new' %}à traiter{% elif m.status == 'replied' %}répondu{% else %}archivé{% endif %}
+      </span>
+      {% if not m.notified_at %}
+      <div class="muted small" style="margin-top: 6px; color: var(--signal);">⚠ courriel équipe non transmis (SMTP)</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <p class="prewrap" style="background: var(--paper-3); padding: 14px 18px; border-left: 3px solid var(--amber); margin: 14px 0; white-space: pre-wrap;">{{ m.body }}</p>
+
+  {% if m.reply_body %}
+  <div style="margin: 14px 0;">
+    <div class="eyebrow">Réponse{% if m.replied_by_name %} de {{ m.replied_by_name }}{% endif %}{% if m.replied_at %} · {{ m.replied_at[:16] }}{% endif %}</div>
+    <p style="white-space: pre-wrap; margin: 6px 0 8px;">{{ m.reply_body }}</p>
+    {% if m.reply_sent %}
+      <span class="tag tag-done">courriel envoyé</span>
+    {% else %}
+      <span class="tag tag-urgent">courriel NON envoyé (SMTP)</span>
+      <a class="ghost" style="margin-left: 8px;" href="mailto:{{ m.email }}?subject={{ mailto_subject|urlencode }}&body={{ m.reply_body|urlencode }}">Envoyer depuis ma messagerie →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if m.status != 'archived' %}
+  <form method="post" action="{{ url_for('admin_message_reply', msg_id=m.id) }}" style="margin-top: 14px;">
+    {{ csrf_input() }}
+    <label class="small">{% if m.reply_body %}Nouvelle réponse{% else %}Répondre à {{ m.name }}{% endif %}
+      <textarea name="reply" rows="4" maxlength="5000" required placeholder="Bonjour {{ m.name.split(' ')[0] }},&#10;&#10;…"></textarea>
+    </label>
+    <div class="row-between" style="margin-top: 10px; flex-wrap: wrap; gap: 8px;">
+      <div class="actions-row">
+        <button class="cta" type="submit">Envoyer la réponse</button>
+        <a class="ghost" href="mailto:{{ m.email }}?subject={{ mailto_subject|urlencode }}">Répondre depuis ma messagerie</a>
+      </div>
+    </div>
+  </form>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('admin_message_status', msg_id=m.id) }}" style="margin-top: 10px;" class="actions-row">
+    {{ csrf_input() }}
+    <input type="hidden" name="back" value="{{ status }}">
+    {% if m.status != 'archived' %}
+      <button class="ghost" type="submit" name="status" value="archived">Archiver</button>
+    {% else %}
+      <button class="ghost" type="submit" name="status" value="new">Remettre à traiter</button>
+    {% endif %}
+    {% if m.status == 'replied' %}
+      <button class="ghost" type="submit" name="status" value="new">Remettre à traiter</button>
+    {% endif %}
+  </form>
+</div>
+{% else %}
+<div class="empty-state">
+  <strong>Aucun message {% if status == 'new' %}à traiter{% elif status == 'replied' %}répondu{% elif status == 'archived' %}archivé{% endif %}.</strong>
+  <p>Les demandes envoyées via le formulaire de contact apparaîtront ici.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

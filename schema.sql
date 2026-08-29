@@ -308,6 +308,27 @@ CREATE TABLE IF NOT EXISTS geocode_cache (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Messages du formulaire public /contact : stockes AVANT tout envoi de
+-- courriel, pour ne jamais perdre une demande si le SMTP est en panne.
+-- Traites depuis le back-office (/admin/messages) : reponse + archivage.
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL,
+    topic         TEXT NOT NULL,
+    body          TEXT NOT NULL,
+    user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    ip            TEXT,
+    status        TEXT NOT NULL DEFAULT 'new',     -- new | replied | archived
+    notified_at   TEXT,                            -- courriel a l'equipe effectivement parti
+    replied_at    TEXT,
+    replied_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reply_body    TEXT,
+    reply_sent    INTEGER NOT NULL DEFAULT 0,      -- 1 si le courriel de reponse est parti
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_contact_status ON contact_messages(status);
+
 -- Sessions
 CREATE TABLE IF NOT EXISTS sessions (
     sid          TEXT PRIMARY KEY,

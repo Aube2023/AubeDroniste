@@ -141,19 +141,19 @@ def send(*, to: str, subject: str, template: str, context: dict,
         log.error("template '%s' invalide: %s", template, exc)
         return False
 
-    def _do():
+    def _do() -> bool:
         if not cfg["host"]:
-            _dump_local(msg, to)
-        else:
-            _send_via_smtp(msg, cfg)
+            return _dump_local(msg, to)
+        return _send_via_smtp(msg, cfg)
 
     if async_:
         # On capture le contexte d'app avant de quitter le request handler
         # (render_template a deja eu lieu, plus besoin du contexte ici).
         threading.Thread(target=_do, daemon=True).start()
         return True
-    _do()
-    return True
+    # Synchrone : l'appelant veut savoir si le courriel est reellement parti
+    # (formulaire contact, reponse admin) — un SMTP en panne renvoie False.
+    return _do()
 
 
 # ---------------------------------------------------------------------------
@@ -274,16 +274,33 @@ def send_mission_alerts(pilots: list, mission: dict, cap: int = 200) -> int:
 
 def send_contact_message(*, to: str, name: str, email: str, topic: str,
                          body: str, user: Optional[dict] = None,
-                         ip: str = "") -> bool:
+                         ip: str = "", async_: bool = True) -> bool:
     """Transmet un message du formulaire /contact a l'equipe. Reply-To =
-    l'expediteur pour repondre d'un clic depuis la boite."""
+    l'expediteur pour repondre d'un clic depuis la boite. En synchrone
+    (`async_=False`), le retour dit si le courriel est reellement parti."""
     return send(
         to=to,
         subject=f"[Contact] {topic} — {name}",
         template="contact_message",
         context={"name": name, "email": email, "topic": topic, "body": body,
                  "user": user, "ip": ip},
-        reply_to=email,
+        reply_to=email, async_=async_,
+    )
+
+
+def send_contact_reply(*, to: str, name: str, topic: str, original_body: str,
+                       reply_body: str, original_date: str = "") -> bool:
+    """Reponse de l'equipe (back-office) a un message /contact. Synchrone :
+    l'admin doit savoir si le courriel est parti. Reply-To = boite contact."""
+    from config import CONTACT_EMAIL
+    return send(
+        to=to,
+        subject=f"Re: {topic} — AubePilot",
+        template="contact_reply",
+        context={"name": name, "topic": topic, "original_body": original_body,
+                 "reply_body": reply_body, "original_date": original_date,
+                 "contact_email": CONTACT_EMAIL},
+        reply_to=CONTACT_EMAIL, async_=False,
     )
 
 

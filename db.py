@@ -127,6 +127,24 @@ _ADD_INDEXES = [
 # Tables additives idempotentes (memes regles que les index : schema.sql ne
 # tourne que sur une base neuve, la prod passe par run_migrations()).
 _ADD_TABLES = [
+    # Boite de reception du formulaire /contact (cf. services.create_contact_message).
+    """CREATE TABLE IF NOT EXISTS contact_messages (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        name          TEXT NOT NULL,
+        email         TEXT NOT NULL,
+        topic         TEXT NOT NULL,
+        body          TEXT NOT NULL,
+        user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        ip            TEXT,
+        status        TEXT NOT NULL DEFAULT 'new',
+        notified_at   TEXT,
+        replied_at    TEXT,
+        replied_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        reply_body    TEXT,
+        reply_sent    INTEGER NOT NULL DEFAULT 0,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_contact_status ON contact_messages(status)",
     # Cache de geocodage (code postal / adresse -> lat/lng), cf. geocode.py.
     # `found=0` memorise aussi les echecs pour ne pas re-solliciter Nominatim.
     """CREATE TABLE IF NOT EXISTS geocode_cache (
