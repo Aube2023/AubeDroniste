@@ -57,6 +57,10 @@ def main():
             if not ok:
                 log.warning("auto-release échec pour booking #%s", booking_id)
 
+        # Badge « vérifié » : retombe quand le dernier brevet vérifié expire.
+        changed = services.refresh_all_user_verified()
+        log.info("badges profil recalculés : %d changement(s)", changed)
+
         g.db.close()
 
 

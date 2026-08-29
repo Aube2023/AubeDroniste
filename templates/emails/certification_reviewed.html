@@ -1,0 +1,43 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}{% if decision == 'verified' %}Brevet vérifié / Licence verified{% else %}Justificatif refusé / Document declined{% endif %} — {{ cert.title }}{% endblock %}
+{% block preview %}{% if decision == 'verified' %}Votre brevet est vérifié · Your licence is verified.{% else %}Votre justificatif n'a pas pu être validé · Your document could not be validated.{% endif %}{% endblock %}
+
+{% block content %}
+{% set ok = decision == 'verified' %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">FR, {% if ok %}Brevet vérifié{% else %}Justificatif refusé{% endif %}</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    {% if ok %}Votre brevet « {{ cert.title }} » est vérifié.{% else %}Le justificatif de « {{ cert.title }} » n'a pas pu être validé.{% endif %}
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Notre équipe a contrôlé votre justificatif ({{ cert.authority }}).
+      {% if profile_verified %}Le badge <strong>« vérifié »</strong> est maintenant actif sur votre profil : vous remontez dans les recherches et les clients peuvent vous filtrer parmi les pilotes vérifiés.{% else %}Attention : ce brevet est expiré, le badge profil ne s'active qu'avec un brevet en cours de validité.{% endif %}
+    {% else %}
+      Motif : <strong>{{ note or "document illisible ou incomplet" }}</strong>. Supprimez la ligne dans votre espace et ajoutez un justificatif lisible (PDF ou photo nette, nom identique à votre compte).
+    {% endif %}
+  </p>
+  <p style="margin:20px 0 0;">
+    <a href="{{ site_url }}/espace/pilote" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Mon espace pilote</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">EN, {% if ok %}Licence verified{% else %}Document declined{% endif %}</div>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Our team checked your document ({{ cert.authority }}) for "{{ cert.title }}".
+      {% if profile_verified %}The <strong>"verified"</strong> badge is now active on your profile: you rank higher in searches and clients can filter for verified pilots.{% else %}Note: this licence has expired; the profile badge only activates with a valid licence.{% endif %}
+    {% else %}
+      Your document for "{{ cert.title }}" could not be validated. Reason: <strong>{{ note or "unreadable or incomplete document" }}</strong>. Remove the line in your dashboard and upload a readable proof (PDF or sharp photo, same name as your account).
+    {% endif %}
+  </p>
+  <p style="margin:18px 0 0;">
+    <a href="{{ site_url }}/espace/pilote" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">My pilot dashboard</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

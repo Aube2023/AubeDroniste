@@ -327,3 +327,17 @@ def send_booking_cancelled_by_pilot(*, client: dict, pilot: dict, booking: dict,
         context={"client": client, "pilot": pilot, "booking": booking,
                  "refund_amount": refund_amount, "reason": reason},
     )
+
+
+def send_certification_reviewed(*, pilot: dict, cert: dict, decision: str,
+                                note: str = "", profile_verified: bool = False) -> bool:
+    """Resultat de la revue d'un justificatif de brevet (verifie / refuse)."""
+    ok = decision == "verified"
+    return send(
+        to=pilot["email"],
+        subject=(f"Brevet vérifié / Licence verified — {cert.get('title') or ''}" if ok
+                 else f"Justificatif refusé / Document declined — {cert.get('title') or ''}"),
+        template="certification_reviewed",
+        context={"pilot": pilot, "cert": cert, "decision": decision,
+                 "note": note, "profile_verified": profile_verified},
+    )

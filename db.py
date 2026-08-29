@@ -106,6 +106,22 @@ _ADD_COLUMNS = [
     # Annulation : frais de service retenus par la plateforme + qui a annule.
     ("bookings", "cancellation_service_fee", "REAL NOT NULL DEFAULT 0"),
     ("bookings", "cancelled_by", "TEXT"),
+    # Revue des brevets document par document (cf. services.review_certification).
+    ("pilot_certifications", "review_status", "TEXT NOT NULL DEFAULT 'pending'"),
+    ("pilot_certifications", "review_note", "TEXT"),
+    ("pilot_certifications", "reviewed_at", "TEXT"),
+    ("pilot_certifications", "reviewed_by", "INTEGER"),
+]
+
+# Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
+# brevets deja verifies (ancien flag seul) et le badge profil users.is_verified
+# (jamais pose par l'ancien code) sur le nouveau modele.
+_POST_SQL = [
+    "UPDATE pilot_certifications SET review_status='verified' "
+    "WHERE is_verified=1 AND review_status='pending'",
+    "UPDATE users SET is_verified=1 WHERE is_verified=0 AND id IN ("
+    "  SELECT pilot_user_id FROM pilot_certifications WHERE is_verified=1 "
+    "  AND (expires_at IS NULL OR expires_at='' OR expires_at >= date('now')))",
 ]
 
 # Index additifs idempotents. schema.sql n'est execute QUE sur une base neuve
@@ -170,6 +186,9 @@ def run_migrations():
         for stmt in _ADD_TABLES:
             c.execute(stmt)
         for stmt in _ADD_INDEXES:
+            c.execute(stmt)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_cert_review ON pilot_certifications(review_status)")
+        for stmt in _POST_SQL:
             c.execute(stmt)
 
 

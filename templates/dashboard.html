@@ -166,7 +166,7 @@
   <span class="eyebrow">Admin · Back-office</span>
   <h2 style="margin: 6px 0 14px;">Console de moderation.</h2>
   <div class="cta-row" style="flex-wrap: wrap; gap: 12px;">
-    <a class="ghost" href="{{ url_for('admin_certifications') }}">Brevets a verifier &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_certifications') }}">Brevets à vérifier{% if admin_pending_certs %} · <strong>{{ admin_pending_certs }} en attente</strong>{% endif %} &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_name_changes') }}">Demandes de changement de nom &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_disputes') }}">Litiges en cours &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_messages') }}">Messages reçus{% if admin_new_messages %} · <strong>{{ admin_new_messages }} à traiter</strong>{% endif %} &rarr;</a>

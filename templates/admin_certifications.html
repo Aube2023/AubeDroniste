@@ -1,64 +1,127 @@
 {% extends "base.html" %}
-{% block title %}Brevets a verifier · AubePilot admin{% endblock %}
+{% block title %}Brevets à vérifier · AubePilot admin{% endblock %}
 {% block content %}
 
-<div style="margin-bottom: 24px;">
-  <span class="eyebrow">Admin · Brevets pilote</span>
-  <h1>Brevets en attente de verification.</h1>
-  <p class="lead muted">{{ certifications|length }} brevet(s) avec justificatif a controler.</p>
+<div style="margin-bottom: 18px;">
+  <span class="eyebrow">Admin · Vérification des brevets</span>
+  <h1>Vérifier les profils, document par document.</h1>
+  <p class="lead muted">
+    Chaque justificatif est contrôlé à la main. Un brevet vérifié (et non expiré) active le badge
+    « vérifié » sur le profil du pilote et le fait remonter dans les recherches ; un refus est
+    expliqué au pilote, qui peut re-téléverser.
+  </p>
 </div>
+
+<nav class="faq-nav" aria-label="Filtres">
+  <a href="{{ url_for('admin_certifications', status='pending') }}" {% if status == 'pending' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>À vérifier · {{ counts.pending }}</a>
+  <a href="{{ url_for('admin_certifications', status='verified') }}" {% if status == 'verified' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Vérifiés · {{ counts.verified }}</a>
+  <a href="{{ url_for('admin_certifications', status='rejected') }}" {% if status == 'rejected' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Refusés · {{ counts.rejected }}</a>
+  <a href="{{ url_for('admin_certifications', status='all') }}" {% if status == 'all' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Tous</a>
+</nav>
 
 {% for c in certifications %}
-<div class="card">
-  <div class="row-between" style="align-items: start;">
+{% set ext = (c.document_path or '').rsplit('.', 1)[-1]|lower %}
+{% set doc_url = url_for('pilot_certification_document', user_id=c.pilot_user_id, cert_id=c.id) if c.document_path else '' %}
+<div class="card" id="cert-{{ c.id }}">
+  <div class="row-between" style="align-items: start; gap: 16px; flex-wrap: wrap;">
     <div>
-      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">
-        {{ c.authority }} <span class="muted">·</span> {{ c.title }}
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px; font-size: 1.3rem;">
+        {{ auth_label(c.authority) }} <span class="muted">·</span> {{ c.title }}
       </h2>
       <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
-        Brevet #{{ c.id }} · pilote {{ c.pilot_full_name }} (@{{ c.username }})
-        {% if c.pilot_city or c.pilot_country %}
-          · {{ c.pilot_city }}{% if c.pilot_city and c.pilot_country %}, {% endif %}{{ c.pilot_country }}
-        {% endif %}
+        Brevet #{{ c.id }}
+        {% if c.reference %} · n° <span style="text-transform: none; letter-spacing: 0;">{{ c.reference }}</span>{% endif %}
+        {% if c.issued_at %} · délivré {{ c.issued_at }}{% endif %}
+        {% if c.expires_at %} · expire {{ c.expires_at }}{% endif %}
+        · téléversé {{ c.created_at[:10] }}
       </div>
-      {% if c.reference %}
-      <div class="muted small" style="margin-top: 4px;">
-        Reference : <span class="mono">{{ c.reference }}</span>
-      </div>
+      {% if c.is_expired %}
+      <div class="small" style="color: var(--signal); margin-top: 6px;">⚠ Brevet expiré : même vérifié, il n'activera pas le badge profil.</div>
       {% endif %}
-      <div class="muted small" style="margin-top: 4px;">
-        {% if c.issued_at %}Emis le {{ c.issued_at }}{% endif %}
-        {% if c.expires_at %} · expire le {{ c.expires_at }}{% endif %}
-        · uploade le {{ c.created_at }}
-      </div>
     </div>
-    <div>
-      <a href="{{ url_for('pilot_certification_document', user_id=c.pilot_user_id, cert_id=c.id) }}"
-         target="_blank" rel="noopener noreferrer" class="ghost">
-        Voir le justificatif &rarr;
-      </a>
+    <div style="text-align: right;">
+      {% if c.review_status == 'verified' %}<span class="tag tag-done">vérifié</span>
+      {% elif c.review_status == 'rejected' %}<span class="tag tag-urgent">refusé</span>
+      {% else %}<span class="tag tag-open">à vérifier</span>{% endif %}
+      {% if c.reviewed_at %}<div class="muted small" style="margin-top: 6px;">{{ c.reviewed_at[:16] }}{% if c.reviewed_by_name %} · {{ c.reviewed_by_name }}{% endif %}</div>{% endif %}
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+  {# ---- Pilote : qui est-ce, quoi d'autre sur le profil ---- #}
+  <div class="pay-recap" style="margin: 14px 0;">
+    <div class="row-between">
+      <span class="muted">Pilote</span>
+      <span><a href="{{ url_for('pilot_detail', user_id=c.pilot_user_id) }}" target="_blank" rel="noopener">{{ c.pilot_full_name }}</a> <span class="muted">(@{{ c.username }})</span>{% if c.pilot_business_name %} · {{ c.pilot_business_name }}{% endif %}</span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Base · membre depuis</span>
+      <span>{{ c.pilot_city }}{% if c.pilot_city and c.pilot_country %}, {% endif %}{{ c.pilot_country }} · {{ (c.pilot_since or '')[:10] }}</span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Profil</span>
+      <span>{% if c.pilot_is_verified %}<span class="tag tag-ok">badge vérifié actif</span>{% else %}<span class="tag">pas encore vérifié</span>{% endif %} · {{ c.pilot_verified_certs }}/{{ c.pilot_total_certs }} brevet(s) vérifié(s)</span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Assurance RC pro</span>
+      <span>{% if c.pilot_insurance %}déclarée{% if c.pilot_insurance_company %} · {{ c.pilot_insurance_company }}{% endif %}{% if c.pilot_insurance_policy %} · n° {{ c.pilot_insurance_policy }}{% endif %}{% else %}<span class="muted">non déclarée</span>{% endif %}</span>
+    </div>
+  </div>
+
+  {# ---- Justificatif : aperçu intégré + ouverture ---- #}
+  {% if doc_url %}
+  <div class="row-between" style="margin: 6px 0 8px;">
+    <span class="eyebrow" style="margin: 0;">Justificatif ({{ ext|upper }})</span>
+    <a href="{{ doc_url }}" target="_blank" rel="noopener noreferrer" class="ghost">Ouvrir en plein écran →</a>
+  </div>
+  <div class="doc-preview">
+    {% if ext in ('png', 'jpg', 'jpeg', 'webp') %}
+      <img src="{{ doc_url }}" alt="Justificatif du brevet #{{ c.id }}" loading="lazy">
+    {% else %}
+      <iframe src="{{ doc_url }}#toolbar=1&view=FitH" title="Justificatif du brevet #{{ c.id }}" loading="lazy"></iframe>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="muted small" style="margin: 8px 0;">Aucun justificatif téléversé : brevet déclaratif, non vérifiable.</p>
+  {% endif %}
+
+  {% if c.review_note %}
+  <p class="small" style="margin: 10px 0 0; color: {% if c.review_status == 'rejected' %}var(--signal){% else %}var(--ink-dim){% endif %};">
+    Note : {{ c.review_note }}
+  </p>
+  {% endif %}
+
+  {# ---- Décision ---- #}
+  {% if c.review_status != 'verified' and doc_url %}
+  <div class="grid-2" style="margin-top: 16px; gap: 12px;">
     <form method="post" action="{{ url_for('admin_verify_certification', cert_id=c.id) }}">
       {{ csrf_input() }}
-      <button class="cta" type="submit"
-              onclick="return confirm('Marquer ce brevet comme verifie ?')">
-        Verifier
-      </button>
+      <input type="hidden" name="back" value="{{ status }}">
+      <label class="small">Note interne (facultatif)<input name="note" maxlength="1000" placeholder="ex. n° vérifié sur le registre TC"></label>
+      <button class="cta" type="submit" style="margin-top: 8px;" onclick="return confirm('Marquer ce brevet comme vérifié ? Le badge profil sera activé.')">✓ Vérifier ce brevet</button>
     </form>
-    <form method="post" action="{{ url_for('admin_unverify_certification', cert_id=c.id) }}">
+    <form method="post" action="{{ url_for('admin_reject_certification', cert_id=c.id) }}">
       {{ csrf_input() }}
-      <button class="ghost danger" type="submit"
-              onclick="return confirm('Garder ce brevet non-verifie (refus) ?')">
-        Refuser / laisser en attente
-      </button>
+      <input type="hidden" name="back" value="{{ status }}">
+      <label class="small">Motif du refus (transmis au pilote)<input name="note" maxlength="1000" required placeholder="ex. document illisible, nom différent, date expirée"></label>
+      <button class="ghost danger" type="submit" style="margin-top: 8px;" onclick="return confirm('Refuser ce justificatif ? Le pilote recevra le motif.')">✗ Refuser</button>
     </form>
   </div>
+  {% elif c.review_status == 'verified' %}
+  <form method="post" action="{{ url_for('admin_unverify_certification', cert_id=c.id) }}" style="margin-top: 16px;">
+    {{ csrf_input() }}
+    <input type="hidden" name="back" value="{{ status }}">
+    <div class="row-between" style="gap: 12px; flex-wrap: wrap;">
+      <label class="small" style="flex: 1; min-width: 240px;">Motif (facultatif)<input name="note" maxlength="1000" placeholder="ex. brevet révoqué, doute sur le document"></label>
+      <button class="ghost danger" type="submit" onclick="return confirm('Retirer la vérification de ce brevet ?')">Révoquer la vérification</button>
+    </div>
+  </form>
+  {% endif %}
 </div>
 {% else %}
-<p class="muted">Aucun brevet en attente. Tout est a jour.</p>
+<div class="empty-state">
+  <strong>{% if status == 'pending' %}Aucun brevet à vérifier.{% elif status == 'verified' %}Aucun brevet vérifié.{% elif status == 'rejected' %}Aucun justificatif refusé.{% else %}Aucun brevet.{% endif %}</strong>
+  <p>Les justificatifs téléversés par les pilotes apparaissent ici, dans l'ordre d'arrivée.</p>
+</div>
 {% endfor %}
 
 {% endblock %}

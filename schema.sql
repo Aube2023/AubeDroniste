@@ -62,9 +62,15 @@ CREATE TABLE IF NOT EXISTS pilot_certifications (
     expires_at     TEXT,
     document_path  TEXT,                          -- copie scan
     is_verified    INTEGER NOT NULL DEFAULT 0,    -- valide par l'admin
+    -- Revue admin document par document : pending | verified | rejected
+    review_status  TEXT NOT NULL DEFAULT 'pending',
+    review_note    TEXT,                          -- motif (refus, revocation), montre au pilote
+    reviewed_at    TEXT,
+    reviewed_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_cert_pilot ON pilot_certifications(pilot_user_id);
+CREATE INDEX IF NOT EXISTS idx_cert_review ON pilot_certifications(review_status);
 
 -- Drones du pilote
 CREATE TABLE IF NOT EXISTS pilot_drones (

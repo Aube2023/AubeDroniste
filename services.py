@@ -184,9 +184,23 @@ def add_certification(pilot_user_id: int, *, authority: str, title: str,
     return cur.lastrowid
 
 
+def cert_is_expired(expires_at) -> bool:
+    """True si la date d'expiration (YYYY-MM-DD) est passee."""
+    from datetime import date
+    raw = str(expires_at or "").strip()[:10]
+    return bool(raw) and raw < date.today().isoformat()
+
+
+def _decorate_cert(row) -> dict:
+    d = dict(row)
+    d["is_expired"] = cert_is_expired(d.get("expires_at"))
+    d.setdefault("review_status", "verified" if d.get("is_verified") else "pending")
+    return d
+
+
 def list_certifications(pilot_user_id: int) -> list:
     return [
-        dict(r) for r in db.fetchall(
+        _decorate_cert(r) for r in db.fetchall(
             "SELECT * FROM pilot_certifications WHERE pilot_user_id=? ORDER BY issued_at DESC",
             (pilot_user_id,),
         )
@@ -198,33 +212,141 @@ def delete_certification(cert_id: int, owner_user_id: int) -> bool:
         "DELETE FROM pilot_certifications WHERE id=? AND pilot_user_id=?",
         (cert_id, owner_user_id),
     )
+    if cur.rowcount > 0:
+        # Supprimer un brevet verifie peut faire tomber le badge profil.
+        refresh_user_verified(owner_user_id)
     return cur.rowcount > 0
 
 
 def get_certification(cert_id: int) -> Optional[dict]:
     row = db.fetchone("SELECT * FROM pilot_certifications WHERE id=?", (cert_id,))
-    return dict(row) if row else None
+    return _decorate_cert(row) if row else None
+
+
+CERT_REVIEW_STATUSES = ("pending", "verified", "rejected")
+
+_CERT_REVIEW_SELECT = (
+    "SELECT c.*, u.full_name AS pilot_full_name, u.username, "
+    "       u.country AS pilot_country, u.city AS pilot_city, "
+    "       u.is_verified AS pilot_is_verified, u.created_at AS pilot_since, "
+    "       p.insurance AS pilot_insurance, p.insurance_company AS pilot_insurance_company, "
+    "       p.insurance_policy AS pilot_insurance_policy, p.business_name AS pilot_business_name, "
+    "       (SELECT COUNT(*) FROM pilot_certifications x "
+    "         WHERE x.pilot_user_id=c.pilot_user_id AND x.is_verified=1) AS pilot_verified_certs, "
+    "       (SELECT COUNT(*) FROM pilot_certifications x "
+    "         WHERE x.pilot_user_id=c.pilot_user_id) AS pilot_total_certs, "
+    "       a.full_name AS reviewed_by_name "
+    "FROM pilot_certifications c "
+    "JOIN users u ON u.id = c.pilot_user_id "
+    "LEFT JOIN pilot_profiles p ON p.user_id = c.pilot_user_id "
+    "LEFT JOIN users a ON a.id = c.reviewed_by "
+)
+
+
+def list_certifications_for_review(status: str = "pending", limit: int = 200) -> list:
+    """File de revue admin. `pending` = a verifier ET justificatif present
+    (sans document, rien a controler : le brevet reste declaratif) ;
+    `verified` / `rejected` = historique ; `all`."""
+    q = _CERT_REVIEW_SELECT
+    args: list = []
+    if status == "pending":
+        q += ("WHERE c.review_status='pending' AND c.document_path IS NOT NULL "
+              "AND c.document_path <> '' ORDER BY c.created_at ASC LIMIT ?")
+    elif status in ("verified", "rejected"):
+        q += "WHERE c.review_status=? ORDER BY c.reviewed_at DESC, c.id DESC LIMIT ?"
+        args.append(status)
+    else:
+        q += "ORDER BY c.created_at DESC LIMIT ?"
+    args.append(limit)
+    return [_decorate_cert(r) for r in db.fetchall(q, args)]
 
 
 def list_pending_certifications() -> list:
-    """Brevets uploades avec un PDF mais pas encore valides par un admin."""
-    return [dict(r) for r in db.fetchall(
-        "SELECT c.*, u.full_name AS pilot_full_name, u.username, "
-        "       u.country AS pilot_country, u.city AS pilot_city "
-        "FROM pilot_certifications c "
-        "JOIN users u ON u.id = c.pilot_user_id "
-        "WHERE c.is_verified=0 AND c.document_path IS NOT NULL "
-        "  AND c.document_path <> '' "
-        "ORDER BY c.created_at ASC"
-    )]
+    """Compat : brevets avec justificatif en attente de revue."""
+    return list_certifications_for_review("pending")
+
+
+def count_certifications_pending() -> int:
+    row = db.fetchone(
+        "SELECT COUNT(*) AS n FROM pilot_certifications "
+        "WHERE review_status='pending' AND document_path IS NOT NULL AND document_path <> ''"
+    )
+    return int(row["n"]) if row else 0
+
+
+def refresh_user_verified(user_id: int) -> bool:
+    """Badge profil : users.is_verified = 1 ssi au moins un brevet verifie
+    par l'admin et non expire. Recalcule a chaque revue / suppression /
+    passage du cron (expirations)."""
+    row = db.fetchone(
+        "SELECT COUNT(*) AS n FROM pilot_certifications "
+        "WHERE pilot_user_id=? AND is_verified=1 "
+        "  AND (expires_at IS NULL OR expires_at='' OR expires_at >= date('now'))",
+        (user_id,),
+    )
+    flag = 1 if row and row["n"] else 0
+    db.execute("UPDATE users SET is_verified=? WHERE id=?", (flag, user_id))
+    return bool(flag)
+
+
+def refresh_all_user_verified() -> int:
+    """Cron : recalcule le badge de tous les pilotes ayant des brevets
+    (fait tomber le badge quand le dernier brevet verifie expire).
+    Retourne le nombre de profils dont le badge a change."""
+    changed = 0
+    ids = [r["pilot_user_id"] for r in db.fetchall(
+        "SELECT DISTINCT pilot_user_id FROM pilot_certifications")]
+    for uid in ids:
+        before = db.fetchone("SELECT is_verified FROM users WHERE id=?", (uid,))
+        after = refresh_user_verified(uid)
+        if before is not None and bool(before["is_verified"]) != after:
+            changed += 1
+    return changed
+
+
+def review_certification(cert_id: int, admin_user_id: Optional[int],
+                         decision: str, note: str = "") -> Optional[dict]:
+    """Revue d'un justificatif : `decision` = verified | rejected | pending
+    (pending = revocation / remise en attente). Met a jour le brevet, le
+    badge profil, l'audit, et previent le pilote (best effort)."""
+    if decision not in CERT_REVIEW_STATUSES:
+        raise ValueError(f"decision invalide: {decision}")
+    cert = get_certification(cert_id)
+    if not cert:
+        return None
+    note = (note or "").strip()[:1000]
+    db.execute(
+        "UPDATE pilot_certifications SET is_verified=?, review_status=?, "
+        "review_note=?, reviewed_at=datetime('now'), reviewed_by=? WHERE id=?",
+        (1 if decision == "verified" else 0, decision, note or None,
+         admin_user_id, cert_id),
+    )
+    profile_verified = refresh_user_verified(cert["pilot_user_id"])
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'certification_review', ?, ?)",
+        (admin_user_id, f"cert:{cert_id}",
+         json.dumps({"pilot": cert["pilot_user_id"], "decision": decision,
+                     "note": note, "profile_verified": profile_verified})),
+    )
+    if decision in ("verified", "rejected"):
+        try:
+            import mailer
+            pilot = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?",
+                                (cert["pilot_user_id"],))
+            if pilot:
+                mailer.send_certification_reviewed(
+                    pilot=dict(pilot), cert=cert, decision=decision, note=note,
+                    profile_verified=profile_verified,
+                )
+        except Exception as exc:
+            log.warning("email certification_reviewed failed for cert=%s : %s", cert_id, exc)
+    return {"cert": get_certification(cert_id), "profile_verified": profile_verified}
 
 
 def set_certification_verified(cert_id: int, verified: bool) -> bool:
-    cur = db.execute(
-        "UPDATE pilot_certifications SET is_verified=? WHERE id=?",
-        (1 if verified else 0, cert_id),
-    )
-    return cur.rowcount > 0
+    """Compat (tests / anciens appels) : verifie ou remet en attente."""
+    return review_certification(cert_id, None, "verified" if verified else "pending") is not None
 
 
 def is_identity_locked(user_id: int) -> bool:

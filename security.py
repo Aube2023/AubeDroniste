@@ -133,7 +133,7 @@ def apply_security_headers(resp):
         "img-src 'self' data: blob: https:; "
         "worker-src 'self' blob:; "
         "child-src 'self' blob:; "
-        "frame-src https://js.stripe.com https://hooks.stripe.com; "
+        "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
         "connect-src 'self' https://api.stripe.com https://*.basemaps.cartocdn.com https://aubemail.com; "
         "form-action 'self' https://checkout.stripe.com https://connect.stripe.com; "
         "frame-ancestors 'none'; "

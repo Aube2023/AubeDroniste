@@ -938,6 +938,8 @@ def dashboard():
         unread=services.unread_count(user["id"]),
         admin_new_messages=(services.count_contact_messages("new")
                             if user.get("is_admin") else 0),
+        admin_pending_certs=(services.count_certifications_pending()
+                             if user.get("is_admin") else 0),
     )
 
 
@@ -1187,6 +1189,12 @@ def admin_name_change_justif(req_id):
     resp = make_response(send_from_directory(UPLOAD_DIR, filename, as_attachment=False))
     resp.headers["Cache-Control"] = "private, no-store, max-age=0"
     resp.headers["X-Content-Type-Options"] = "nosniff"
+    # Apercu integre dans /admin/certifications (iframe / img same-origin) :
+    # les en-tetes globaux (DENY / frame-ancestors 'none') sont poses en
+    # setdefault, on les remplace ici par une version same-origin.
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    resp.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+    resp.headers["Content-Disposition"] = "inline"
     return resp
 
 
@@ -1264,30 +1272,54 @@ def admin_message_status(msg_id):
 @app.route("/admin/certifications")
 @auth.admin_required
 def admin_certifications():
+    status = request.args.get("status", "pending")
+    if status not in ("pending", "verified", "rejected", "all"):
+        status = "pending"
     return render_template(
         "admin_certifications.html",
-        certifications=services.list_pending_certifications(),
+        certifications=services.list_certifications_for_review(status),
+        status=status,
+        counts={
+            "pending": services.count_certifications_pending(),
+            "verified": len(services.list_certifications_for_review("verified", limit=10000)),
+            "rejected": len(services.list_certifications_for_review("rejected", limit=10000)),
+        },
     )
+
+
+def _admin_review(cert_id: int, decision: str, ok_msg: str):
+    note = (request.form.get("note") or "").strip()
+    if decision == "rejected" and len(note) < 3:
+        flash("Indiquez le motif du refus (le pilote le verra).", "error")
+        return redirect(url_for("admin_certifications", status="pending") + f"#cert-{cert_id}")
+    res = services.review_certification(cert_id, g.user["id"], decision, note)
+    if not res:
+        flash("Brevet introuvable.", "error")
+    else:
+        extra = " Badge « vérifié » actif sur le profil." if res["profile_verified"] else \
+            (" Le profil n'a plus de brevet vérifié valide : badge retiré."
+             if decision != "verified" else " (Brevet expiré : badge profil non activé.)")
+        flash(ok_msg + extra, "success" if decision == "verified" else "info")
+    return redirect(url_for("admin_certifications",
+                            status=request.form.get("back") or "pending"))
 
 
 @app.route("/admin/certifications/<int:cert_id>/verifier", methods=["POST"])
 @auth.admin_required
 def admin_verify_certification(cert_id):
-    if services.set_certification_verified(cert_id, True):
-        flash("Brevet verifie.", "success")
-    else:
-        flash("Brevet introuvable.", "error")
-    return redirect(url_for("admin_certifications"))
+    return _admin_review(cert_id, "verified", "Brevet vérifié.")
+
+
+@app.route("/admin/certifications/<int:cert_id>/refuser", methods=["POST"])
+@auth.admin_required
+def admin_reject_certification(cert_id):
+    return _admin_review(cert_id, "rejected", "Justificatif refusé, pilote prévenu.")
 
 
 @app.route("/admin/certifications/<int:cert_id>/devalider", methods=["POST"])
 @auth.admin_required
 def admin_unverify_certification(cert_id):
-    if services.set_certification_verified(cert_id, False):
-        flash("Brevet remis en attente.", "info")
-    else:
-        flash("Brevet introuvable.", "error")
-    return redirect(url_for("admin_certifications"))
+    return _admin_review(cert_id, "pending", "Brevet remis en attente.")
 
 
 # ---------------------------------------------------------------------------
@@ -1311,6 +1343,12 @@ def pilot_certification_document(user_id, cert_id):
     resp = make_response(send_from_directory(UPLOAD_DIR, filename, as_attachment=False))
     resp.headers["Cache-Control"] = "private, no-store, max-age=0"
     resp.headers["X-Content-Type-Options"] = "nosniff"
+    # Apercu integre dans /admin/certifications (iframe / img same-origin) :
+    # les en-tetes globaux (DENY / frame-ancestors 'none') sont poses en
+    # setdefault, on les remplace ici par une version same-origin.
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    resp.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+    resp.headers["Content-Disposition"] = "inline"
     return resp
 
 

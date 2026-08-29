@@ -1,0 +1,21 @@
+AUBEPILOT, {% if decision == 'verified' %}BREVET VÉRIFIÉ / LICENCE VERIFIED{% else %}JUSTIFICATIF REFUSÉ / DOCUMENT DECLINED{% endif %}
+============================================
+
+[FR]
+{% if decision == 'verified' %}Votre brevet « {{ cert.title }} » ({{ cert.authority }}) est vérifié.
+{% if profile_verified %}Le badge « vérifié » est actif sur votre profil.{% else %}Ce brevet est expiré : le badge profil ne s'active qu'avec un brevet valide.{% endif %}{% else %}Le justificatif de « {{ cert.title }} » n'a pas pu être validé.
+Motif : {{ note or "document illisible ou incomplet" }}
+Supprimez la ligne dans votre espace et ajoutez un justificatif lisible.{% endif %}
+{{ site_url }}/espace/pilote
+
+------------------------------------------------------------
+
+[EN]
+{% if decision == 'verified' %}Your licence "{{ cert.title }}" ({{ cert.authority }}) is verified.
+{% if profile_verified %}The "verified" badge is active on your profile.{% else %}This licence has expired: the badge only activates with a valid licence.{% endif %}{% else %}Your document for "{{ cert.title }}" could not be validated.
+Reason: {{ note or "unreadable or incomplete document" }}
+Remove the line in your dashboard and upload a readable proof.{% endif %}
+{{ site_url }}/espace/pilote
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

@@ -46,13 +46,13 @@ def test_search_pilots_filtre_par_pays(app_ctx, make_user):
     sn = make_user("anywhere_sn", role="both", country="Senegal",
                    city="Dakar", lat=14.6928, lng=-17.4467)
 
-    found = _ids(services.search_pilots(country="France"))
+    found = _ids(services.search_pilots(limit=500, country="France"))
     assert fr["id"] in found
     # Le pilote Senegal (sans territoire France) ne doit PAS apparaitre.
     assert sn["id"] not in found
 
     # Reciproquement, le pilote Senegal apparait bien pour country='Senegal'.
-    found_sn = _ids(services.search_pilots(country="Senegal"))
+    found_sn = _ids(services.search_pilots(limit=500, country="Senegal"))
     assert sn["id"] in found_sn
     assert fr["id"] not in found_sn
 
@@ -68,12 +68,12 @@ def test_search_pilots_non_exclusion_sauf_strict_radius(app_ctx, make_user):
                     city="Toulouse", lat=TOULOUSE[0], lng=TOULOUSE[1])
 
     # Sans strict_radius : les deux restent visibles (le lointain aussi).
-    loose = _ids(services.search_pilots(lat=PARIS[0], lng=PARIS[1]))
+    loose = _ids(services.search_pilots(limit=500, lat=PARIS[0], lng=PARIS[1]))
     assert near["id"] in loose
     assert far["id"] in loose
 
     # Avec strict_radius + rayon 50 km : seul le proche subsiste.
-    strict = _ids(services.search_pilots(
+    strict = _ids(services.search_pilots(limit=500, 
         lat=PARIS[0], lng=PARIS[1], strict_radius=True, radius_km=50))
     assert near["id"] in strict
     assert far["id"] not in strict
@@ -90,12 +90,12 @@ def test_search_pilots_indisponible_exclu(app_ctx, make_user):
                     city="Paris", lat=PARIS[0], lng=PARIS[1])
     services.upsert_pilot_profile(off["id"], is_available=0)
 
-    available = _ids(services.search_pilots(country="France", only_available=True))
+    available = _ids(services.search_pilots(limit=500, country="France", only_available=True))
     assert on["id"] in available
     assert off["id"] not in available
 
     # only_available=False : l'indisponible reapparait.
-    everyone = _ids(services.search_pilots(country="France", only_available=False))
+    everyone = _ids(services.search_pilots(limit=500, country="France", only_available=False))
     assert off["id"] in everyone
 
 

@@ -141,7 +141,7 @@
             {% endif %}
           {% endif %}
         </div>
-        {% if c.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+        {% if c.is_expired %}<span class="tag tag-cancelled">expiré</span>{% elif c.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
       </div>
       {% else %}
         <p class="muted">Aucun brevet déclaré pour le moment.</p>

@@ -192,8 +192,15 @@
     <div class="cert row-between">
       <div>
         <strong>{{ c.title }}</strong>, {{ auth_label(c.authority) }}
-        {% if c.is_verified %}<span class="tag tag-ok">vérifié</span>{% endif %}
+        {% if c.is_expired %}<span class="tag tag-cancelled">expiré</span>
+        {% elif c.is_verified %}<span class="tag tag-ok">vérifié</span>
+        {% elif c.review_status == 'rejected' %}<span class="tag tag-urgent">justificatif refusé</span>
+        {% elif c.document_path %}<span class="tag tag-open">en cours de vérification</span>
+        {% else %}<span class="tag">déclaratif — ajoutez le justificatif pour être vérifié</span>{% endif %}
         <div class="muted small">{{ c.reference or '' }}{% if c.issued_at %} · {{ c.issued_at }}{% endif %}{% if c.expires_at %} → {{ c.expires_at }}{% endif %}</div>
+        {% if c.review_status == 'rejected' and c.review_note %}
+        <div class="small" style="color: var(--signal); margin-top: 4px;">Motif : {{ c.review_note }} — supprimez cette ligne et ajoutez un justificatif lisible.</div>
+        {% endif %}
       </div>
       <form method="post" action="{{ url_for('pilot_delete_certification', cert_id=c.id) }}">
         {{ csrf_input() }}
