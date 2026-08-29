@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Paramètres · AubePilot{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Mon compte · Paramètres</span>
+  <h1>Paramètres du profil.</h1>
+  <p class="lead muted">
+    Identité, base d'opération, langue, notifications, sécurité et vos données.
+    {% if is_pilot %}Les tarifs, spécialités, brevets et drones se règlent dans <a href="{{ url_for('pilot_edit') }}">Mon profil pilote</a>.{% endif %}
+  </p>
+</div>
+
+<div class="grid-2" style="align-items: start; gap: 24px;">
+
+  {# ================= Identité & base ================= #}
+  <form method="post" action="{{ url_for('settings_account') }}" class="card">
+    {{ csrf_input() }}
+    <span class="eyebrow">Identité &amp; base</span>
+    <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">Qui vous êtes, d'où vous opérez</h2>
+
+    <label>Nom complet
+      <input name="full_name" value="{{ user.full_name }}" maxlength="120" {% if name_locked %}disabled{% endif %}>
+      {% if name_locked %}
+      <small class="muted" style="display: block; margin-top: 4px;">
+        Verrouillé : un justificatif de brevet a été téléversé sous ce nom.
+        <a href="{{ url_for('request_name_change') }}">Demander un changement de nom →</a>
+      </small>
+      {% endif %}
+    </label>
+    <label>Identifiant / courriel de connexion
+      <input value="{{ user.username }} · {{ user.email }}" disabled>
+      <small class="muted" style="display: block; margin-top: 4px;">Ne se modifie pas : c'est votre identité dans l'écosystème Aube.</small>
+    </label>
+    <label>Téléphone <span class="muted small">(jamais public, révélé au partenaire d'une mission payée)</span>
+      <input name="phone" value="{{ user.phone or '' }}" maxlength="40" autocomplete="tel">
+    </label>
+    <div class="grid-2">
+      <label>Pays
+        <input name="country" value="{{ user.country or '' }}" list="country-suggest" maxlength="80">
+        <datalist id="country-suggest">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
+      </label>
+      <label>Ville
+        <input name="city" value="{{ user.city or '' }}" maxlength="120">
+      </label>
+    </div>
+    <div class="geo-row">
+      <label>Latitude<input name="lat" type="number" step="any" value="{{ user.lat if user.lat is not none else '' }}"></label>
+      <label>Longitude<input name="lng" type="number" step="any" value="{{ user.lng if user.lng is not none else '' }}"></label>
+      <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
+    </div>
+    <p class="muted small">Votre position sert au tri par distance et aux alertes dans votre rayon ; sur la carte elle est floutée d'environ 10 km.</p>
+
+    <label>Langue préférée
+      <select name="lang">
+        <option value="fr" {% if (user.lang or lang) == 'fr' %}selected{% endif %}>Français</option>
+        <option value="en" {% if (user.lang or lang) == 'en' %}selected{% endif %}>English</option>
+      </select>
+    </label>
+    <button class="cta" type="submit">Enregistrer</button>
+  </form>
+
+  <div style="display: grid; gap: 24px;">
+    {# ================= Notifications ================= #}
+    <form method="post" action="{{ url_for('settings_notifications') }}" class="card">
+      {{ csrf_input() }}
+      <span class="eyebrow">Notifications par courriel</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">Ce qu'on vous envoie</h2>
+      {% if is_client %}
+      <label class="check"><input type="checkbox" name="notify_bids" value="1" {% if user.notify_bids %}checked{% endif %}> Nouveau devis ou devis révisé sur mes missions</label>
+      {% endif %}
+      <label class="check"><input type="checkbox" name="notify_messages" value="1" {% if user.notify_messages %}checked{% endif %}> Nouveau message dans une mission</label>
+      {% if is_pilot %}
+      <label class="check"><input type="checkbox" name="notify_alerts" value="1" {% if user.notify_alerts %}checked{% endif %}> Missions publiées dans mon rayon d'intervention</label>
+      {% endif %}
+      <label class="check"><input type="checkbox" name="notify_news" value="1" {% if user.notify_news %}checked{% endif %}> Nouveautés de la plateforme (rare, jamais de publicité)</label>
+      <p class="muted small" style="margin-top: 10px;">Les courriels liés à l'argent (devis accepté, paiement, virement, litige, annulation) sont toujours envoyés.</p>
+      <button class="cta" type="submit">Enregistrer</button>
+    </form>
+
+    {# ================= Mot de passe ================= #}
+    <form method="post" action="{{ url_for('settings_password') }}" class="card" autocomplete="off">
+      {{ csrf_input() }}
+      <span class="eyebrow">Sécurité</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">Mot de passe</h2>
+      {% if password_managed_elsewhere %}
+      <p class="muted">Votre mot de passe est celui de votre compte <strong>AubeMail</strong> (identité centrale Aube) : modifiez-le sur <a href="{{ aubemail_url }}" target="_blank" rel="noopener">AubeMail</a>, il s'applique ici automatiquement.</p>
+      {% else %}
+      <label>Mot de passe actuel<input name="current" type="password" required autocomplete="current-password"></label>
+      <label>Nouveau mot de passe <span class="muted small">(8 caractères minimum)</span><input name="new" type="password" required minlength="8" autocomplete="new-password"></label>
+      <label>Confirmer<input name="confirm" type="password" required minlength="8" autocomplete="new-password"></label>
+      <button class="cta" type="submit">Changer le mot de passe</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{# ================= Sessions ================= #}
+<section class="card" style="margin-top: 24px;">
+  <div class="row-between" style="align-items: end; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <span class="eyebrow">Sécurité</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 6px;">Appareils connectés</h2>
+      <p class="muted small" style="margin: 0;">{{ sessions|length }} session(s) active(s). Les sessions se prolongent tant que vous revenez, et expirent après 30 jours d'inactivité.</p>
+    </div>
+    <form method="post" action="{{ url_for('settings_sessions_revoke') }}">
+      {{ csrf_input() }}
+      <button class="ghost danger" type="submit" onclick="return confirm('Déconnecter tous les autres appareils ?')">Déconnecter les autres appareils</button>
+    </form>
+  </div>
+  <ul class="stack-list">
+    {% for s in sessions %}
+    <li>
+      <div class="who">{{ s.created_at[:16] }} · {{ s.ip or '—' }}{% if s.is_current %} · <strong style="color: var(--teal);">cet appareil</strong>{% endif %}</div>
+      <div class="body small muted">{{ s.user_agent or 'navigateur inconnu' }} · expire le {{ s.expires_at[:10] }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{# ================= Données ================= #}
+<section class="card" style="margin-top: 24px; border-left: 3px solid var(--signal);">
+  <span class="eyebrow">Vos données · Loi 25 / RGPD</span>
+  <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">Exporter ou supprimer</h2>
+  <div class="grid-2" style="gap: 24px; align-items: start;">
+    <div>
+      <p class="muted small">Téléchargez tout ce que la plateforme détient sur vous (compte, profil, missions, devis, réservations, avis, messages) au format JSON.</p>
+      <a class="ghost" href="{{ url_for('settings_export') }}">Télécharger mes données (JSON)</a>
+    </div>
+    <form method="post" action="{{ url_for('settings_delete') }}" onsubmit="return confirm('Supprimer définitivement votre compte ?')">
+      {{ csrf_input() }}
+      <p class="muted small">
+        Vos données personnelles sont effacées et votre compte devient inutilisable. Les missions, devis et avis passés restent visibles de l'autre partie sous « Compte supprimé » (obligations comptables).
+        {% if deletion_blockers %}<br><strong style="color: var(--signal);">Impossible pour l'instant :</strong> {{ deletion_blockers|join(' ; ') }}.{% endif %}
+      </p>
+      {% if not deletion_blockers %}
+      <label class="small">Tapez <strong>SUPPRIMER</strong> pour confirmer<input name="confirm_word" required pattern="SUPPRIMER" autocomplete="off"></label>
+      {% if not password_managed_elsewhere %}
+      <label class="small">Mot de passe actuel<input name="password" type="password" required autocomplete="current-password"></label>
+      {% endif %}
+      <button class="ghost danger" type="submit">Supprimer mon compte</button>
+      {% endif %}
+    </form>
+  </div>
+</section>
+
+{% endblock %}

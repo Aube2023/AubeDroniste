@@ -62,6 +62,16 @@
       <span>{% if c.pilot_is_verified %}<span class="tag tag-ok">badge vérifié actif</span>{% else %}<span class="tag">pas encore vérifié</span>{% endif %} · {{ c.pilot_verified_certs }}/{{ c.pilot_total_certs }} brevet(s) vérifié(s)</span>
     </div>
     <div class="row-between">
+      <span class="muted">Nom du compte (à comparer au document)</span>
+      <span><strong style="font-size: 1.05rem;">{{ c.pilot_full_name }}</strong>
+        {% if c.pilot_name_change_pending %}<span class="tag tag-urgent">changement de nom demandé</span>{% else %}<span class="tag tag-ok" title="Verrouillé depuis le 1er justificatif ; toute modification passe par une demande validée par l'admin">nom verrouillé</span>{% endif %}
+      </span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Identité vérifiée par Stripe (KYC)</span>
+      <span>{% if c.pilot_stripe_kyc %}<span class="tag tag-ok">oui — pièce d'identité + compte bancaire contrôlés</span>{% elif c.pilot_stripe_account_id %}<span class="tag tag-open">en cours (compte Stripe créé)</span>{% else %}<span class="muted">non (paiements pas encore activés)</span>{% endif %}</span>
+    </div>
+    <div class="row-between">
       <span class="muted">Assurance RC pro</span>
       <span>{% if c.pilot_insurance %}déclarée{% if c.pilot_insurance_company %} · {{ c.pilot_insurance_company }}{% endif %}{% if c.pilot_insurance_policy %} · n° {{ c.pilot_insurance_policy }}{% endif %}{% else %}<span class="muted">non déclarée</span>{% endif %}</span>
     </div>
@@ -90,13 +100,26 @@
   </p>
   {% endif %}
 
+  {# ---- Où vérifier ---- #}
+  {% set hint = verify_hints.get(c.authority) %}
+  {% if hint %}
+  <p class="muted small" style="margin: 12px 0 0;">
+    <strong>Comment contrôler ({{ auth_label(c.authority) }})</strong> — {{ hint[1] }}
+    {% if hint[0] %}<a href="{{ hint[0] }}" target="_blank" rel="noopener noreferrer">Ouvrir le registre officiel →</a>{% endif %}
+  </p>
+  {% endif %}
+
   {# ---- Décision ---- #}
   {% if c.review_status != 'verified' and doc_url %}
   <div class="grid-2" style="margin-top: 16px; gap: 12px;">
     <form method="post" action="{{ url_for('admin_verify_certification', cert_id=c.id) }}">
       {{ csrf_input() }}
       <input type="hidden" name="back" value="{{ status }}">
-      <label class="small">Note interne (facultatif)<input name="note" maxlength="1000" placeholder="ex. n° vérifié sur le registre TC"></label>
+      <div class="small" style="margin-bottom: 6px;"><strong>Contrôles obligatoires</strong> (comparer le document au compte) :</div>
+      <label class="check"><input type="checkbox" name="check_name" value="1" required> Le nom sur le document est <strong>{{ c.pilot_full_name }}</strong></label>
+      <label class="check"><input type="checkbox" name="check_number" value="1" required> Autorité, intitulé{% if c.reference %} et n° <span class="mono">{{ c.reference }}</span>{% endif %} identiques au document</label>
+      <label class="check"><input type="checkbox" name="check_valid" value="1" required> Document lisible, authentique{% if c.expires_at %}, valide jusqu'au {{ c.expires_at }}{% else %}, en cours de validité{% endif %}</label>
+      <label class="small" style="margin-top: 8px;">Note interne (facultatif)<input name="note" maxlength="1000" placeholder="ex. n° confirmé sur le registre"></label>
       <button class="cta" type="submit" style="margin-top: 8px;" onclick="return confirm('Marquer ce brevet comme vérifié ? Le badge profil sera activé.')">✓ Vérifier ce brevet</button>
     </form>
     <form method="post" action="{{ url_for('admin_reject_certification', cert_id=c.id) }}">

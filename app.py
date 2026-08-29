@@ -48,6 +48,7 @@ from config import (
     HOST,
     LICENCE_AUTHORITIES,
     LICENCE_TITLES_BY_AUTHORITY,
+    LICENCE_VERIFY_HINTS,
     MAX_UPLOAD_MB,
     MAX_DELIVERABLE_MB,
     MAX_AVATAR_MB,
@@ -135,6 +136,11 @@ def _teardown(exc):
 def _attach():
     auth.attach_user()
     g.lang = i18n.resolve_lang()
+    # Langue preferee du compte (parametres) si aucun choix explicite (cookie)
+    u = getattr(g, "user", None)
+    if u and u.get("lang") in i18n.SUPPORTED \
+            and request.cookies.get(i18n.COOKIE) not in i18n.SUPPORTED:
+        g.lang = u["lang"]
 
 
 @app.before_request
@@ -888,7 +894,10 @@ def login():
         # Si le compte AubeMail existe mais pas encore le profil AubePilot,
         # on le cree a la volee — cas d'un user qui se cree sur AubeMail
         # puis vient ici pour la 1ere fois.
-        row = db.fetchone("SELECT id FROM users WHERE username=?", (username,))
+        row = db.fetchone("SELECT id, deleted_at FROM users WHERE username=?", (username,))
+        if row and row["deleted_at"]:
+            flash("Ce compte a été supprimé.", "error")
+            return render_template("login.html", next_url=next_url)
         if not row:
             email = auth.normalize_email(username, None)
             cur = db.execute(
@@ -944,6 +953,126 @@ def dashboard():
         admin_pending_certs=(services.count_certifications_pending()
                              if user.get("is_admin") else 0),
     )
+
+
+# ---------------------------------------------------------------------------
+# Parametres du compte
+# ---------------------------------------------------------------------------
+
+def _settings_context():
+    uid = g.user["id"]
+    user = dict(db.fetchone("SELECT * FROM users WHERE id=?", (uid,)) or g.user)
+    return {
+        "user": user,
+        "is_pilot": user["role"] in ("pilot", "both"),
+        "is_client": user["role"] in ("client", "both"),
+        "name_locked": services.is_identity_locked(uid),
+        "password_managed_elsewhere": auth.password_managed_by_aubemail(user["username"]),
+        "sessions": services.list_sessions(uid, auth.current_sid()),
+        "deletion_blockers": services.account_deletion_blockers(uid),
+    }
+
+
+@app.route("/espace/parametres")
+@auth.login_required
+def settings():
+    return render_template("settings.html", **_settings_context())
+
+
+@app.route("/espace/parametres/compte", methods=["POST"])
+@auth.login_required
+def settings_account():
+    lang = (request.form.get("lang") or "").strip()
+    res = services.update_account(
+        g.user["id"],
+        full_name=request.form.get("full_name"),
+        phone=request.form.get("phone"),
+        country=request.form.get("country"),
+        city=request.form.get("city"),
+        lat=_to_float(request.form.get("lat")),
+        lng=_to_float(request.form.get("lng")),
+        lang=lang,
+    )
+    flash("Paramètres enregistrés." + (" (Le nom est verrouillé : passez par une demande de changement de nom.)"
+                                       if res["name_locked"] and request.form.get("full_name") else ""),
+          "success")
+    resp = make_response(redirect(url_for("settings")))
+    if lang in i18n.SUPPORTED:
+        resp.set_cookie(i18n.COOKIE, lang, max_age=i18n.COOKIE_MAX_AGE, httponly=False, samesite="Lax")
+    return resp
+
+
+@app.route("/espace/parametres/notifications", methods=["POST"])
+@auth.login_required
+def settings_notifications():
+    services.update_notification_prefs(
+        g.user["id"], {k: _to_bool(request.form.get(k, "0")) for k in services.NOTIFY_KEYS},
+    )
+    flash("Préférences de notification enregistrées.", "success")
+    return redirect(url_for("settings"))
+
+
+@app.route("/espace/parametres/mot-de-passe", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=5, per_hour=20)
+def settings_password():
+    new = request.form.get("new") or ""
+    if new != (request.form.get("confirm") or ""):
+        flash("Les deux nouveaux mots de passe ne correspondent pas.", "error")
+        return redirect(url_for("settings"))
+    ok, reason = auth.change_password(g.user["username"], request.form.get("current") or "", new)
+    if ok:
+        # Les autres appareils sont deconnectes ; celui-ci reste connecte.
+        auth.revoke_all_sessions(g.user["id"], keep_sid=auth.current_sid())
+        security.audit(g.user["id"], "password_changed")
+        flash("Mot de passe modifié. Les autres appareils ont été déconnectés.", "success")
+    else:
+        flash({"aubemail": "Ce mot de passe se change sur AubeMail.",
+               "wrong": "Mot de passe actuel incorrect.",
+               "weak": "Le nouveau mot de passe doit faire au moins 8 caractères."}.get(reason, "Échec."),
+              "error")
+    return redirect(url_for("settings"))
+
+
+@app.route("/espace/parametres/sessions/deconnecter", methods=["POST"])
+@auth.login_required
+def settings_sessions_revoke():
+    n = auth.revoke_all_sessions(g.user["id"], keep_sid=auth.current_sid())
+    flash(f"{n} autre(s) appareil(s) déconnecté(s).", "success")
+    return redirect(url_for("settings"))
+
+
+@app.route("/espace/parametres/export.json")
+@auth.login_required
+@security.rate_limit(per_minute=3, per_hour=10)
+def settings_export():
+    data = services.export_user_data(g.user["id"])
+    security.audit(g.user["id"], "data_export")
+    resp = jsonify(data)
+    resp.headers["Content-Disposition"] = f'attachment; filename="aubepilot-{g.user["username"]}.json"'
+    resp.headers["Cache-Control"] = "private, no-store"
+    return resp
+
+
+@app.route("/espace/parametres/supprimer", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=3, per_hour=10)
+def settings_delete():
+    if (request.form.get("confirm_word") or "").strip() != "SUPPRIMER":
+        flash("Tapez SUPPRIMER pour confirmer.", "error")
+        return redirect(url_for("settings"))
+    if not auth.password_managed_by_aubemail(g.user["username"]) and \
+            not auth.authenticate(g.user["username"], request.form.get("password") or ""):
+        flash("Mot de passe incorrect.", "error")
+        return redirect(url_for("settings"))
+    res = services.delete_account(g.user["id"])
+    if not res["ok"]:
+        flash("Suppression impossible : " + " ; ".join(res["blockers"]) + ".", "error")
+        return redirect(url_for("settings"))
+    resp = make_response(redirect(url_for("index")))
+    resp.delete_cookie(SESSION_COOKIE_NAME)
+    flash("Votre compte a été supprimé. Merci d'avoir volé avec nous.", "info")
+    return resp
 
 
 # ---------------------------------------------------------------------------
@@ -1282,6 +1411,7 @@ def admin_certifications():
         "admin_certifications.html",
         certifications=services.list_certifications_for_review(status),
         status=status,
+        verify_hints=LICENCE_VERIFY_HINTS,
         counts={
             "pending": services.count_certifications_pending(),
             "verified": len(services.list_certifications_for_review("verified", limit=10000)),
@@ -1290,11 +1420,26 @@ def admin_certifications():
     )
 
 
+# Controles que l'admin doit attester avant de verifier un brevet : on
+# verifie le DOCUMENT contre le COMPTE (nom identique), pas seulement le PDF.
+VERIFY_CHECKS = (
+    ("check_name", "nom du document identique au nom du compte"),
+    ("check_number", "autorité, intitulé et numéro identiques au document"),
+    ("check_valid", "document lisible, authentique et en cours de validité"),
+)
+
+
 def _admin_review(cert_id: int, decision: str, ok_msg: str):
     note = (request.form.get("note") or "").strip()
     if decision == "rejected" and len(note) < 3:
         flash("Indiquez le motif du refus (le pilote le verra).", "error")
         return redirect(url_for("admin_certifications", status="pending") + f"#cert-{cert_id}")
+    if decision == "verified":
+        missing = [label for key, label in VERIFY_CHECKS if not _to_bool(request.form.get(key))]
+        if missing:
+            flash("Vérification refusée : cochez chaque contrôle (" + " ; ".join(missing) + ").", "error")
+            return redirect(url_for("admin_certifications", status="pending") + f"#cert-{cert_id}")
+        note = ("contrôles : nom ✓ numéro ✓ validité ✓" + (f" — {note}" if note else ""))
     res = services.review_certification(cert_id, g.user["id"], decision, note)
     if not res:
         flash("Brevet introuvable.", "error")
@@ -1567,6 +1712,7 @@ def pilot_portfolio():
         stored = f"portfolio_u{user['id']}/{int(time.time())}_{safe_base}"
         os.makedirs(os.path.join(UPLOAD_DIR, f"portfolio_u{user['id']}"),
                     exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.join(UPLOAD_DIR, stored)) or UPLOAD_DIR, exist_ok=True)
         f.save(os.path.join(UPLOAD_DIR, stored))
 
         mime = f.mimetype or "application/octet-stream"
@@ -1993,6 +2139,7 @@ def booking_deliverable_upload(booking_id):
 
     safe_base = "".join(c for c in f.filename if c.isalnum() or c in "._-")[:80] or "file"
     stored = f"booking_{booking_id}/{int(time.time())}_{safe_base}"
+    os.makedirs(os.path.dirname(os.path.join(UPLOAD_DIR, stored)) or UPLOAD_DIR, exist_ok=True)
     f.save(os.path.join(UPLOAD_DIR, stored))
 
     services.add_deliverable(

@@ -380,6 +380,27 @@ LICENCE_AUTHORITIES = [
     ("autre",    "Autre / declarative"),
 ]
 
+# Aide a la verification manuelle des justificatifs (back-office) : pour
+# chaque autorite, comment controler l'authenticite. (url, conseil) ; url vide
+# = pas de registre public, on s'appuie sur le document + une capture du
+# portail officiel du pilote en cas de doute.
+LICENCE_VERIFY_HINTS = {
+    "Transport Canada": ("", "Pas de registre public. Le certificat de pilote (opérations de base / avancées) "
+                             "est un PDF émis par le Portail de gestion des drones : vérifier le nom, le numéro "
+                             "de certificat et la date d'émission ; en cas de doute, demander une capture "
+                             "d'écran du portail (connecté) au pilote."),
+    "FAA": ("https://amsrvs.registry.faa.gov/airmeninquiry/", "Registre public FAA Airmen Inquiry : "
+            "chercher le nom, vérifier « Remote Pilot » et la date."),
+    "DGAC": ("", "Pas de registre public. Le certificat A1/A3, A2 ou STS vient d'AlphaTango : demander "
+                 "une capture de la page AlphaTango si le PDF ne suffit pas."),
+    "EASA": ("", "Certificat émis par l'autorité nationale (AlphaTango, LBA, ENAC…) : vérifier nom, "
+                 "numéro d'opérateur/pilote, autorité émettrice et validité."),
+    "CAA_UK": ("", "GVC / A2 CofC émis par un organisme agréé (RAE) : vérifier le nom, le numéro et la "
+                   "validité (GVC : 5 ans)."),
+    "CASA": ("https://www.casa.gov.au/drones/drone-registration", "RePL : vérifier le numéro ARN et le nom ; "
+             "le ReOC est consultable dans la liste publique CASA."),
+}
+
 # Catalogue indicatif des intitules de brevet par autorite. Le pilote peut
 # choisir une option suggeree (datalist) ou taper un intitule libre.
 # Cle = code autorite, valeur = liste d'intitules pretablis.

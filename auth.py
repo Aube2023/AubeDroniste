@@ -187,6 +187,54 @@ def set_dev_password(username: str, password: str):
     _dev_save(username, password)
 
 
+def password_managed_by_aubemail(username: str) -> bool:
+    """True si le mot de passe est celui du compte systeme PAM (AubeMail) :
+    il ne se change pas ici, mais sur AubeMail."""
+    return sys.platform.startswith("linux") and system_user_exists(username)
+
+
+def change_password(username: str, current: str, new: str):
+    """Change le mot de passe LOCAL apres verification de l'actuel.
+    Retourne (ok, raison) — raison : 'aubemail' (gere ailleurs),
+    'wrong' (actuel incorrect), 'weak' (trop court)."""
+    if password_managed_by_aubemail(username):
+        return False, "aubemail"
+    if len(new or "") < 8:
+        return False, "weak"
+    if not _dev_check(username, current or ""):
+        return False, "wrong"
+    _dev_save(username, new)
+    return True, None
+
+
+def remove_local_password(username: str) -> None:
+    """Supprime l'entree locale (compte supprime) : plus aucune connexion."""
+    rows = _dev_load()
+    if username in rows:
+        del rows[username]
+        _dev_save_all(rows)
+
+
+def revoke_all_sessions(user_id: int, keep_sid: Optional[str] = None) -> int:
+    """Deconnecte tous les appareils (sauf la session courante si keep_sid)."""
+    if keep_sid:
+        cur = db.execute("DELETE FROM sessions WHERE user_id=? AND sid<>?", (user_id, keep_sid))
+    else:
+        cur = db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
+    return cur.rowcount
+
+
+def current_sid() -> Optional[str]:
+    """sid (non signe) de la session courante, pour la distinguer des autres."""
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    if not token:
+        return None
+    try:
+        return _signer.loads(token)
+    except BadSignature:
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Sessions
 # ---------------------------------------------------------------------------
@@ -223,7 +271,7 @@ def load_user_from_request() -> Optional[dict]:
     row = db.fetchone(
         "SELECT u.*, s.expires_at AS session_expires_at FROM sessions s "
         "JOIN users u ON u.id = s.user_id "
-        "WHERE s.sid=? AND s.expires_at > datetime('now')",
+        "WHERE s.sid=? AND s.expires_at > datetime('now') AND u.deleted_at IS NULL",
         (sid,),
     )
     if not row:

@@ -18,6 +18,7 @@
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
     {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Mon profil pilote</a>{% endif %}
     {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Devenir pilote</a>{% endif %}
+    <a class="ghost" href="{{ url_for('settings') }}">⚙ Paramètres</a>
   </div>
 </section>
 

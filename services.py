@@ -5,6 +5,7 @@ voir les requetes a plat. Les fonctions retournent des dicts (sqlite3.Row
 converti) pour rester serialisables JSON.
 """
 import json
+import os
 import logging
 from typing import Iterable, Optional
 
@@ -231,6 +232,10 @@ _CERT_REVIEW_SELECT = (
     "       u.is_verified AS pilot_is_verified, u.created_at AS pilot_since, "
     "       p.insurance AS pilot_insurance, p.insurance_company AS pilot_insurance_company, "
     "       p.insurance_policy AS pilot_insurance_policy, p.business_name AS pilot_business_name, "
+    "       p.stripe_account_id AS pilot_stripe_account_id, "
+    "       p.stripe_charges_enabled AS pilot_stripe_kyc, "
+    "       (SELECT COUNT(*) FROM name_change_requests n "
+    "         WHERE n.user_id=c.pilot_user_id AND n.status='pending') AS pilot_name_change_pending, "
     "       (SELECT COUNT(*) FROM pilot_certifications x "
     "         WHERE x.pilot_user_id=c.pilot_user_id AND x.is_verified=1) AS pilot_verified_certs, "
     "       (SELECT COUNT(*) FROM pilot_certifications x "
@@ -553,7 +558,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "           AS verified_auths "
         "  FROM pilot_certifications GROUP BY pilot_user_id"
         ") c ON c.pilot_user_id = u.id "
-        "WHERE u.role IN ('pilot', 'both')",
+        "WHERE u.role IN ('pilot', 'both') AND u.deleted_at IS NULL",
     ]
     args: list = []
     if only_available:
@@ -682,6 +687,7 @@ def pilots_for_mission_alert(mission: dict, exclude_user_id: int = 0) -> list:
         "       p.travel_radius_km, p.accepts_remote "
         "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
         "WHERE u.role IN ('pilot', 'both') AND p.is_available = 1 "
+        "  AND u.deleted_at IS NULL AND COALESCE(u.notify_alerts, 1) = 1 "
         "  AND u.id != ?",
         (exclude_user_id,),
     )
@@ -728,7 +734,7 @@ def sitemap_pilots(limit: int = 5000) -> list:
     rows = db.fetchall(
         "SELECT u.id, COALESCE(p.updated_at, u.created_at) AS lastmod "
         "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
-        "WHERE u.role IN ('pilot', 'both') ORDER BY u.id LIMIT ?",
+        "WHERE u.role IN ('pilot', 'both') AND u.deleted_at IS NULL ORDER BY u.id LIMIT ?",
         (limit,),
     )
     return [dict(r) for r in rows]
@@ -2038,7 +2044,7 @@ def featured_pilots(limit: int = 6) -> list:
         "  SELECT target_user_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count "
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
-        "WHERE u.role IN ('pilot','both') AND p.is_available=1 "
+        "WHERE u.role IN ('pilot','both') AND p.is_available=1 AND u.deleted_at IS NULL "
         "ORDER BY u.is_verified DESC, u.last_seen_at DESC LIMIT ?",
         (limit,),
     )
@@ -2490,3 +2496,174 @@ def reply_contact_message(msg_id: int, admin_user_id: int, reply_body: str) -> d
         (admin_user_id, f"contact:{msg_id}", json.dumps({"sent": sent})),
     )
     return {"ok": True, "sent": sent, "reason": None}
+
+
+# ---------------------------------------------------------------------------
+# Parametres du compte (/espace/parametres)
+# ---------------------------------------------------------------------------
+
+NOTIFY_KEYS = ("notify_bids", "notify_messages", "notify_alerts", "notify_news")
+ACTIVE_BOOKING_STATUSES = ("pending_payment", "funded", "in_progress", "disputed")
+
+
+def update_account(user_id: int, *, full_name: Optional[str] = None, phone: Optional[str] = None,
+                   country: Optional[str] = None, city: Optional[str] = None,
+                   lat: Optional[float] = None, lng: Optional[float] = None,
+                   lang: Optional[str] = None) -> dict:
+    """Identite + base + langue. Le nom n'est modifiable que tant qu'aucun
+    justificatif n'a ete televerse (sinon : demande de changement de nom).
+    Retourne {"name_locked": bool}."""
+    locked = is_identity_locked(user_id)
+    fields = {
+        "phone": (phone or "").strip()[:40] or None,
+        "country": (country or "").strip()[:80] or None,
+        "city": (city or "").strip()[:120] or None,
+        "lat": lat, "lng": lng,
+        "lang": lang if lang in ("fr", "en") else None,
+    }
+    if full_name is not None and not locked and len(full_name.strip()) >= 2:
+        fields["full_name"] = full_name.strip()[:120]
+    sets = ", ".join(f"{k}=?" for k in fields)
+    db.execute(f"UPDATE users SET {sets} WHERE id=?", (*fields.values(), user_id))
+    return {"name_locked": locked}
+
+
+def update_notification_prefs(user_id: int, prefs: dict) -> None:
+    sets = ", ".join(f"{k}=?" for k in NOTIFY_KEYS)
+    db.execute(f"UPDATE users SET {sets} WHERE id=?",
+               (*[1 if prefs.get(k) else 0 for k in NOTIFY_KEYS], user_id))
+
+
+def wants_notification(user_id: Optional[int], key: str) -> bool:
+    """Prefs courriel : par defaut True (anciens comptes / cle inconnue)."""
+    if not user_id or key not in NOTIFY_KEYS:
+        return True
+    row = db.fetchone(f"SELECT {key} AS v, deleted_at FROM users WHERE id=?", (user_id,))
+    if not row or row["deleted_at"]:
+        return False
+    return bool(row["v"]) if row["v"] is not None else True
+
+
+def list_sessions(user_id: int, current_sid: Optional[str] = None) -> list:
+    rows = db.fetchall(
+        "SELECT sid, created_at, expires_at, user_agent, ip FROM sessions "
+        "WHERE user_id=? AND expires_at > datetime('now') ORDER BY created_at DESC",
+        (user_id,),
+    )
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["is_current"] = bool(current_sid) and d["sid"] == current_sid
+        d.pop("sid")
+        out.append(d)
+    return out
+
+
+def export_user_data(user_id: int) -> dict:
+    """Portabilite (Loi 25 / RGPD) : tout ce que la plateforme detient sur le
+    compte, en JSON. Les justificatifs (fichiers) ne sont pas inclus, seules
+    leurs metadonnees ; les mots de passe ne sont jamais exportes."""
+    def rows(sql, args=()):
+        return [dict(r) for r in db.fetchall(sql, args)]
+    user = db.fetchone("SELECT * FROM users WHERE id=?", (user_id,))
+    if not user:
+        return {}
+    u = dict(user)
+    return {
+        "exported_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+        "account": {k: u.get(k) for k in (
+            "id", "username", "email", "full_name", "phone", "country", "city", "lat", "lng",
+            "role", "bio", "is_verified", "lang", "notify_bids", "notify_messages",
+            "notify_alerts", "notify_news", "created_at", "last_seen_at")},
+        "pilot_profile": (dict(r) if (r := db.fetchone(
+            "SELECT * FROM pilot_profiles WHERE user_id=?", (user_id,))) else None),
+        "specialties": [r["mission_type"] for r in rows(
+            "SELECT mission_type FROM pilot_specialties WHERE pilot_user_id=?", (user_id,))],
+        "territories": rows("SELECT country, region FROM pilot_territories WHERE pilot_user_id=?", (user_id,)),
+        "certifications": rows(
+            "SELECT id, authority, title, reference, issued_at, expires_at, is_verified, "
+            "review_status, review_note, created_at FROM pilot_certifications WHERE pilot_user_id=?",
+            (user_id,)),
+        "drones": rows("SELECT * FROM pilot_drones WHERE pilot_user_id=?", (user_id,)),
+        "packages": rows("SELECT * FROM pilot_packages WHERE pilot_user_id=?", (user_id,)),
+        "portfolio": rows("SELECT id, title, description, kind, original_filename, size_bytes, "
+                          "created_at FROM pilot_portfolio_items WHERE pilot_user_id=?", (user_id,)),
+        "missions_published": rows("SELECT * FROM missions WHERE client_user_id=?", (user_id,)),
+        "bids": rows("SELECT * FROM bids WHERE pilot_user_id=?", (user_id,)),
+        "bookings": rows("SELECT * FROM bookings WHERE client_user_id=? OR pilot_user_id=?",
+                         (user_id, user_id)),
+        "reviews_written": rows("SELECT * FROM reviews WHERE author_user_id=?", (user_id,)),
+        "reviews_received": rows("SELECT * FROM reviews WHERE target_user_id=?", (user_id,)),
+        "messages": rows("SELECT id, mission_id, sender_user_id, recipient_user_id, body, "
+                         "read_at, created_at FROM messages WHERE sender_user_id=? OR recipient_user_id=?",
+                         (user_id, user_id)),
+        "contact_messages": rows("SELECT id, topic, body, status, created_at FROM contact_messages "
+                                 "WHERE user_id=?", (user_id,)),
+        "sessions": rows("SELECT created_at, expires_at, user_agent, ip FROM sessions WHERE user_id=?",
+                         (user_id,)),
+    }
+
+
+def account_deletion_blockers(user_id: int) -> list:
+    """Raisons empechant la suppression immediate (argent ou mission en cours)."""
+    out = []
+    n = db.fetchone(
+        "SELECT COUNT(*) AS n FROM bookings WHERE (client_user_id=? OR pilot_user_id=?) "
+        "AND status IN ('pending_payment','funded','in_progress','disputed')",
+        (user_id, user_id))["n"]
+    if n:
+        out.append(f"{n} réservation(s) en cours (paiement, mission ou litige non soldé)")
+    m = db.fetchone(
+        "SELECT COUNT(*) AS n FROM missions WHERE client_user_id=? AND status IN ('assigned','in_progress')",
+        (user_id,))["n"]
+    if m:
+        out.append(f"{m} mission(s) attribuée(s) non terminée(s)")
+    return out
+
+
+def delete_account(user_id: int) -> dict:
+    """Suppression (Loi 25 / RGPD) par ANONYMISATION : les missions, devis,
+    reservations et avis restent pour l'autre partie et la comptabilite, mais
+    plus aucune donnee personnelle ; connexion impossible ; retire de toutes
+    les listes. Refuse s'il reste de l'argent ou une mission en cours."""
+    blockers = account_deletion_blockers(user_id)
+    if blockers:
+        return {"ok": False, "blockers": blockers}
+    user = db.fetchone("SELECT username, avatar_path FROM users WHERE id=?", (user_id,))
+    if not user:
+        return {"ok": False, "blockers": ["compte introuvable"]}
+    with db.transaction():
+        db.execute("UPDATE missions SET status='cancelled', updated_at=datetime('now') "
+                   "WHERE client_user_id=? AND status='open'", (user_id,), commit=False)
+        db.execute("UPDATE bids SET status='withdrawn' WHERE pilot_user_id=? AND status='pending'",
+                   (user_id,), commit=False)
+        for table in ("pilot_certifications", "pilot_drones", "pilot_specialties",
+                      "pilot_territories", "pilot_packages", "pilot_portfolio_items"):
+            db.execute(f"DELETE FROM {table} WHERE pilot_user_id=?", (user_id,), commit=False)
+        db.execute("UPDATE pilot_profiles SET headline=NULL, business_name=NULL, insurance_company=NULL, "
+                   "insurance_policy=NULL, portfolio_url=NULL, languages=NULL, is_available=0 "
+                   "WHERE user_id=?", (user_id,), commit=False)
+        db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,), commit=False)
+        db.execute(
+            "UPDATE users SET full_name='Compte supprimé', email=?, phone=NULL, bio=NULL, "
+            "avatar_path=NULL, lat=NULL, lng=NULL, city=NULL, is_verified=0, is_admin=0, "
+            "notify_bids=0, notify_messages=0, notify_alerts=0, notify_news=0, "
+            "deleted_at=datetime('now') WHERE id=?",
+            (f"deleted-{user_id}@invalid.local", user_id), commit=False,
+        )
+        db.execute("INSERT INTO audit_log (user_id, action, target, payload) "
+                   "VALUES (?, 'account_deleted', ?, '{}')", (user_id, f"user:{user_id}"),
+                   commit=False)
+    try:
+        import auth
+        auth.remove_local_password(user["username"])
+    except Exception as exc:
+        log.warning("suppression mdp local de %s : %s", user["username"], exc)
+    if user["avatar_path"]:
+        try:
+            from config import DATA_DIR
+            os.remove(os.path.join(DATA_DIR, user["avatar_path"]))
+        except OSError:
+            pass
+    return {"ok": True, "blockers": []}

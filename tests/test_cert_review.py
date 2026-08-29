@@ -139,10 +139,18 @@ def test_admin_page_lists_pending_with_preview_and_counts(client, auth_client, m
     assert f'id="cert-{cid}"' in html and f"@{pilot['username']}" in html
     assert f'<iframe src="/pilotes/{uid}/brevets/{cid}/document' in html      # apercu PDF integre
     assert "À vérifier ·" in html and "Vérifier ce brevet" in html and "Refuser" in html
+    assert "Le nom sur le document est" in html and "Contrôles obligatoires" in html
+    # sans les 3 controles cochés : refus (le brevet reste en attente)
     r = c.post(f"/admin/certifications/{cid}/verifier", data={"note": "ok", "back": "pending"})
+    assert r.status_code in (302, 303)
+    assert f'id="cert-{cid}"' in c.get("/admin/certifications").data.decode()
+    r = c.post(f"/admin/certifications/{cid}/verifier",
+               data={"note": "ok", "back": "pending", "check_name": "1",
+                     "check_number": "1", "check_valid": "1"})
     assert r.status_code in (302, 303)
     html = c.get("/admin/certifications?status=verified").data.decode()
     assert f'id="cert-{cid}"' in html and "Révoquer la vérification" in html
+    assert "nom ✓ numéro ✓ validité ✓" in html
     dash = c.get("/espace").data.decode()
     assert "Brevets à vérifier" in dash
 
@@ -167,6 +175,7 @@ def test_review_routes_forbidden_for_non_admin(client, auth_client, make_user):
         pilot = make_user("cert_p9", role="pilot")
         cid = _add_cert(pilot["id"])
     c = auth_client(pilot["id"])
-    assert c.post(f"/admin/certifications/{cid}/verifier", data={}).status_code == 403
+    assert c.post(f"/admin/certifications/{cid}/verifier",
+                  data={"check_name": "1", "check_number": "1", "check_valid": "1"}).status_code == 403
     assert c.post(f"/admin/certifications/{cid}/refuser", data={"note": "x"}).status_code == 403
     assert c.get("/admin/certifications").status_code == 403

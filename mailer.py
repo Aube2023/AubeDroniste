@@ -169,7 +169,18 @@ def send_welcome(user: dict) -> bool:
     )
 
 
+def _wants(user: dict, key: str) -> bool:
+    """Prefs courriel du compte (parametres) ; True par defaut."""
+    try:
+        import services
+        return services.wants_notification((user or {}).get("id"), key)
+    except Exception:
+        return True
+
+
 def send_new_bid(client: dict, mission: dict, bid: dict, pilot: dict) -> bool:
+    if not _wants(client, "notify_bids"):
+        return False
     return send(
         to=client["email"],
         subject=i18n.t("email.new_bid.subject", title=mission["title"]),
@@ -188,6 +199,8 @@ def send_bid_accepted(pilot: dict, mission: dict, booking: dict, client: dict) -
 
 
 def send_new_message(recipient: dict, sender: dict, mission: dict, body: str) -> bool:
+    if not _wants(recipient, "notify_messages"):
+        return False
     return send(
         to=recipient["email"],
         subject=i18n.t("email.new_message.subject", title=mission["title"]),
@@ -213,6 +226,8 @@ def send_bid_rejected(pilot: dict, mission: dict, bid: dict,
 def send_bid_revised(client: dict, mission: dict, bid: dict, pilot: dict) -> bool:
     """Notifie le client que le pilote a soumis une version revisee
     de son devis (revision_no > 1)."""
+    if not _wants(client, "notify_bids"):
+        return False
     return send(
         to=client["email"],
         subject=f"Devis revise / Revised bid, {mission['title']}",

@@ -142,6 +142,13 @@ _ADD_COLUMNS = [
     ("pilot_certifications", "review_note", "TEXT"),
     ("pilot_certifications", "reviewed_at", "TEXT"),
     ("pilot_certifications", "reviewed_by", "INTEGER"),
+    # Parametres du compte (cf. /espace/parametres).
+    ("users", "lang", "TEXT"),
+    ("users", "notify_bids", "INTEGER NOT NULL DEFAULT 1"),
+    ("users", "notify_messages", "INTEGER NOT NULL DEFAULT 1"),
+    ("users", "notify_alerts", "INTEGER NOT NULL DEFAULT 1"),
+    ("users", "notify_news", "INTEGER NOT NULL DEFAULT 0"),
+    ("users", "deleted_at", "TEXT"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
