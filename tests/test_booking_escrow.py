@@ -122,3 +122,21 @@ def test_confirm_completion_without_stripe_account_returns_false(
     assert services.confirm_completion(booking_id, client_user["id"]) is False
     # le booking reste finance (fonds non perdus, rejouable)
     assert services.get_booking(booking_id)["status"] == "funded"
+
+
+def test_connect_account_kwargs_same_country_vs_cross_border(monkeypatch):
+    """Meme pays que la plateforme : compte Express standard ; autre pays :
+    accord « recipient » (cross-border payouts) et capacite transfers seule."""
+    import payments
+    import config
+    monkeypatch.setattr(config, "STRIPE_PLATFORM_COUNTRY", "CA")
+    user = {"id": 7, "email": "p@x.org", "username": "p"}
+    same = payments.account_create_kwargs(user, "CA")
+    assert same["type"] == "express" and same["country"] == "CA"
+    assert same["capabilities"] == {"transfers": {"requested": True}}
+    assert "card_payments" not in same["capabilities"] and "business_type" not in same
+    assert "tos_acceptance" not in same
+    abroad = payments.account_create_kwargs(user, "FR")
+    assert abroad["tos_acceptance"] == {"service_agreement": "recipient"}
+    assert abroad["capabilities"] == {"transfers": {"requested": True}}
+    assert abroad["metadata"]["user_id"] == "7"

@@ -90,17 +90,7 @@ def create_pilot_account(user: dict) -> Tuple[str, str]:
     country = _country_for_stripe(user.get("country") or "")
     if country is None:
         raise StripeCountryUnsupportedError(user.get("country") or "")
-    account = s.Account.create(
-        type="express",
-        country=country,
-        email=user["email"],
-        capabilities={
-            "transfers": {"requested": True},
-            "card_payments": {"requested": True},
-        },
-        business_type="individual",
-        metadata={"user_id": str(user["id"]), "username": user.get("username", "")},
-    )
+    account = s.Account.create(**account_create_kwargs(user, country))
     link = s.AccountLink.create(
         account=account.id,
         refresh_url=f"{SITE_URL}/espace/pilote/stripe",
@@ -108,6 +98,33 @@ def create_pilot_account(user: dict) -> Tuple[str, str]:
         type="account_onboarding",
     )
     return account.id, link.url
+
+
+def account_create_kwargs(user: dict, country: str) -> dict:
+    """Parametres du compte Connect Express d'un pilote.
+
+    - Capacite `transfers` seule : notre modele est « la plateforme encaisse,
+      puis vire au pilote » (separate charges and transfers). Demander
+      `card_payments` imposerait au pilote un KYC marchand complet, inutile,
+      et indisponible dans plusieurs pays.
+    - Pas de `business_type` force : Stripe le demande a l'onboarding (une
+      ecole ou une societe choisit « entreprise », un pilote « particulier »).
+    - Pilote hors du pays de la plateforme : accord de service « recipient »
+      (cross-border payouts), obligatoire pour recevoir des virements depuis
+      une plateforme d'un autre pays. Le pays du compte plateforme est
+      STRIPE_PLATFORM_COUNTRY (env), CA par defaut.
+    """
+    from config import STRIPE_PLATFORM_COUNTRY
+    kwargs = {
+        "type": "express",
+        "country": country,
+        "email": user["email"],
+        "capabilities": {"transfers": {"requested": True}},
+        "metadata": {"user_id": str(user["id"]), "username": user.get("username", "")},
+    }
+    if country.upper() != STRIPE_PLATFORM_COUNTRY:
+        kwargs["tos_acceptance"] = {"service_agreement": "recipient"}
+    return kwargs
 
 
 def fresh_onboarding_link(account_id: str) -> str:

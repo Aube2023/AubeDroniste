@@ -205,6 +205,15 @@ intégral, devis `withdrawn`, mission `open`, courriel `booking_cancelled_by_pil
 
 ### Onboarding pilote
 
+Compte Express avec la capacite `transfers` seule (la plateforme encaisse
+via Checkout, puis `Transfer` au pilote) ; pas de `business_type` force
+(ecole/societe choisissent « entreprise » a l'onboarding). Pilote hors du
+pays de la plateforme (`STRIPE_PLATFORM_COUNTRY`, CA) : accord de service
+`recipient` (cross-border payouts — a activer dans Dashboard → Connect).
+Webhook LIVE : `checkout.session.completed`, `charge.refunded`,
+`account.updated`.
+
+
 - `GET /espace/pilote/stripe` → crée un compte Connect Express et
   redirige vers l'URL d'onboarding Stripe (KYC)
 - `GET /stripe/return` → après onboarding, vérifie le statut Stripe et
