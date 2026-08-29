@@ -14,7 +14,9 @@
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:360px;width:100%;background:var(--surface,#101014);"></div>
   <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes' if lang == 'fr' else 'Pilots' }}</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes pro' if lang == 'fr' else 'Pro pilots' }}</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#14b8a6;margin-right:6px;"></span>{{ 'Pilotes récréatifs' if lang == 'fr' else 'Recreational pilots' }}</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:6px;"></span>{{ 'Écoles' if lang == 'fr' else 'Schools' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
     {% if _center %}<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#7a5fc4;margin-right:6px;"></span>{{ 'Zone recherchée' if lang == 'fr' else 'Search area' }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
     <span class="muted" id="map-count"></span>
@@ -32,6 +34,11 @@
   var qs = new URLSearchParams();
   if (params.get('country')) qs.set('country', params.get('country'));
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
+  if (params.get('kind')) qs.set('kind', params.get('kind'));
+  var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', school: '#22c55e' };
+  var KIND_LABEL = LANG === 'fr'
+    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', school: 'École de formation' }
+    : { pro: 'Pro pilot', recreational: 'Recreational pilot', school: 'Training school' };
 
   // Fond de carte CARTO (épuré, gratuit, sans clé) adapté au thème jour/nuit.
   var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -60,7 +67,9 @@
   function popupPilot(p) {
     var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count) : (LANG === 'fr' ? 'nouveau' : 'new');
     var verif = p.verified ? ' <b style="color:#3b82f6">✓</b>' : '';
-    return '<div style="font:14px system-ui"><b>' + (LANG==='fr'?'Pilote':'Pilot') + verif + '</b><br>' +
+    var kind = KIND_LABEL[p.kind] || KIND_LABEL.pro;
+    var title = (p.kind === 'school' && p.name) ? (p.name.replace(/</g, '&lt;') + ' · ' + kind) : kind;
+    return '<div style="font:14px system-ui"><b>' + title + verif + '</b><br>' +
       (p.country || '') + '<br><span style="color:#666">' + stars + '</span><br>' +
       '<a href="/pilotes/' + p.id + '">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div>';
   }
@@ -113,7 +122,7 @@
         (data.pilots || []).forEach(function (p) {
           if (p.lng == null || p.lat == null) return;
           var d = document.createElement('div');
-          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:' + (KIND_COLOR[p.kind] || KIND_COLOR.pro) + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
           new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
             .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupPilot(p))).addTo(map);
           if (!hasArea && FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);

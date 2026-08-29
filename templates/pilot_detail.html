@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% set display_name = pilot.full_name if reveal_identity else masked_name %}
+{% set is_school = (pilot.kind == 'school') %}
+{% set display_name = (pilot.business_name or pilot.full_name) if is_school else (pilot.full_name if reveal_identity else masked_name) %}
 {% block content %}
 
 <section class="flightbook-hero">
@@ -12,14 +13,22 @@
     {% endif %}
     <div>
       <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (display_name|first)|upper }} · CDB</span>
-      <h1>{{ display_name }} {% if pilot.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</h1>
+      <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
-      {% if not reveal_identity %}
+      {% if not reveal_identity and not is_school %}
       <p class="muted small mono" style="margin-top: 6px;">
         Identité complète révélée après acceptation et paiement d'une mission.
       </p>
+      {% endif %}
+      {% if is_school and pilot.school_programs %}
+      <div style="margin-top: 14px;">
+        <span class="eyebrow" style="margin-bottom: 6px;">Formations proposées</span>
+        <ul class="badges" style="margin: 0;">
+          {% for line in pilot.school_programs.replace('\r', '').split('\n') if line.strip() %}<li>{{ line.strip() }}</li>{% endfor %}
+        </ul>
+      </div>
       {% endif %}
       {% if pilot.headline %}
       <p class="serif-italic" style="margin-top: 16px; font-size: 1.2rem; color: var(--ink-soft); max-width: 56ch;">
@@ -28,7 +37,7 @@
       {% endif %}
       {% if not current_user or current_user.id != pilot.id %}
       <div class="actions-row" style="margin-top: 18px;">
-        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">Contacter ce pilote</a>
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}Contacter cette école{% else %}Contacter ce pilote{% endif %}</a>
         <a href="{{ url_for('missions_search') }}" class="ghost">Voir les missions ouvertes</a>
       </div>
       {% endif %}

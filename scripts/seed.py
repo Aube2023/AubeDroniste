@@ -34,6 +34,8 @@ def seed():
         ("yacine.haddad",  "Yacine Haddad",     "pilot", "Algerie", "Alger",       36.7538,  3.0588),
         ("linh.dupont",    "Linh Dupont",       "pilot", "France",  "Lyon",        45.7640,  4.8357),
         ("kofi.adjei",     "Kofi Adjei",        "pilot", "Cote d'Ivoire", "Abidjan", 5.3600, -4.0083),
+        ("ecole.drone.qc", "École Drone Québec", "pilot",  "Canada",  "Quebec",      46.8139, -71.2080),
+        ("lucas.fpv",      "Lucas Martin",      "pilot",  "France",  "Nantes",      47.2184, -1.5536),
         ("client.alpha",   "Marie Dubois",      "client",   "France",  "Paris",       48.8566,  2.3522),
         ("client.beta",    "Pierre Lavigne",    "client",   "Canada",  "Quebec",      46.8139, -71.2080),
         ("client.gamma",   "Imane Cherif",      "client",   "Tunisie", "Tunis",       36.8065, 10.1815),
@@ -72,6 +74,20 @@ def seed():
             # territoire d'operation principal — c'est le seul pre-remplissage.
             services.upsert_pilot_profile(uid, is_available=1)
             services.set_pilot_territories(uid, [{"country": country, "region": ""}])
+        # Types de profil de demo : une ecole (nom en clair + formations) et un
+        # pilote recreatif, pour les onglets de l'annuaire.
+        by_name = {u: uid for (uid, u, _r, _c) in needed}
+        if "ecole.drone.qc" in by_name:
+            services.upsert_pilot_profile(
+                by_name["ecole.drone.qc"], kind="school", business_name="École Drone Québec",
+                headline="Formation RPAS de base et avancée, en présentiel et à distance.",
+                school_programs="Opérations de base (Transports Canada)\n"
+                                "Opérations avancées (Transports Canada)\n"
+                                "Préparation à l'examen en vol\nFormation thermographie",
+            )
+        if "lucas.fpv" in by_name:
+            services.upsert_pilot_profile(by_name["lucas.fpv"], kind="recreational",
+                                          headline="FPV freestyle le week-end, cinewhoop en forêt.")
 
         # Quelques missions ouvertes
         clients = [(u, c) for (u, _, r, c) in needed if r == "client"]
@@ -114,7 +130,7 @@ def seed():
         flask.g.db.commit()
         flask.g.db.close()
 
-    print(f"seed: ok ({len(samples)} comptes, mdp '{pwd}')")
+    print(f"seed: ok ({len(samples)} comptes dont 1 école + 1 récréatif, mdp '{pwd}')")
 
 
 if __name__ == "__main__":

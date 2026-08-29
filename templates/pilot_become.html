@@ -14,7 +14,18 @@
   <form method="post">
         {{ csrf_input() }}
     <input type="hidden" name="become_pilot" value="1">
-    <button class="cta" type="submit">Activer mon profil pilote</button>
+    <fieldset class="fieldset-block">
+      <legend>Type de profil</legend>
+      <div class="role-cards">
+        {% for code, lbl in profile_kinds %}
+        <label>
+          <input type="radio" name="kind" value="{{ code }}" {% if loop.first %}checked{% endif %}>
+          <span class="role-card"><span class="icon">▴ {{ kind_label(code, true) }}</span><span class="name">{{ kind_label(code) }}</span></span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <button class="cta" type="submit">Activer mon profil</button>
   </form>
 </div>
 {% endblock %}

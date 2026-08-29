@@ -24,6 +24,7 @@ from config import (
     CANCELLATION_SERVICE_FEE_PCT,
     PLATFORM_FEE_PCT,
     PLATFORM_FEE_TIERS,
+    PROFILE_KIND_CODES,
 )
 
 
@@ -54,6 +55,7 @@ def upsert_pilot_profile(user_id: int, **fields) -> Optional[dict]:
         "currency", "travel_radius_km", "accepts_remote", "insurance",
         "insurance_company", "insurance_policy", "is_available",
         "languages", "portfolio_url", "accepts_urgent",
+        "kind", "school_programs",
     }
     data = {k: fields[k] for k in fields if k in allowed and fields[k] is not None}
     if not existing:
@@ -90,6 +92,29 @@ def mask_full_name(full_name: str) -> str:
     return f"{parts[0]} {parts[1][0].upper()}."
 
 
+def public_name(p: dict) -> str:
+    """Nom affiche dans les listes/cartes : les ecoles (organisations) sous
+    leur nom d'ecole en clair ; les personnes sous leur nom masque."""
+    if (p.get("kind") == "school") and (p.get("business_name") or "").strip():
+        return p["business_name"].strip()
+    return mask_full_name(p.get("full_name") or "")
+
+
+def count_pilots_by_kind(only_available: bool = True) -> dict:
+    """Effectifs par type de profil pour les onglets de l'annuaire."""
+    q = ("SELECT COALESCE(p.kind, 'pro') AS kind, COUNT(*) AS n "
+         "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
+         "WHERE u.role IN ('pilot', 'both') AND u.deleted_at IS NULL ")
+    if only_available:
+        q += "AND p.is_available = 1 "
+    q += "GROUP BY COALESCE(p.kind, 'pro')"
+    out = {k: 0 for k in PROFILE_KIND_CODES}
+    for r in db.fetchall(q):
+        out[r["kind"] if r["kind"] in out else "pro"] += int(r["n"])
+    out["all"] = sum(out[k] for k in PROFILE_KIND_CODES)
+    return out
+
+
 def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
     """True si le viewer (probablement un client) a au moins un booking
     paye en escrow avec ce pilote (funded / in_progress / completed /
@@ -115,7 +140,8 @@ def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
 
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
-        "SELECT u.*, p.headline, p.business_name, p.years_experience, p.hourly_rate, p.daily_rate, "
+        "SELECT u.*, p.headline, p.business_name, p.kind, p.school_programs, "
+        "p.years_experience, p.hourly_rate, p.daily_rate, "
         "p.currency AS p_currency, p.travel_radius_km, p.accepts_remote, p.insurance, "
         "p.insurance_company, p.insurance_policy, p.is_available, p.languages, "
         "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at "
@@ -519,7 +545,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
                   only_verified: bool = False, only_insured: bool = False,
-                  authority: str = "",
+                  authority: str = "", kind: str = "",
                   strict_radius: bool = False, limit: int = 50) -> list:
     """Annuaire pilotes.
 
@@ -539,6 +565,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "       u.is_verified, u.avatar_path, u.bio, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
+        "       COALESCE(p.kind, 'pro') AS kind, p.business_name, p.school_programs, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
         "       COALESCE(r.review_count, 0) AS rating_count, "
         "       COALESCE(c.n_certs, 0) AS certs_total, "
@@ -563,6 +590,9 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
     args: list = []
     if only_available:
         q.append("AND p.is_available = 1")
+    if kind in PROFILE_KIND_CODES:
+        q.append("AND COALESCE(p.kind, 'pro') = ?")
+        args.append(kind)
     if only_verified:
         q.append("AND (u.is_verified = 1 OR COALESCE(c.n_verified, 0) > 0)")
     if only_insured:
@@ -2037,6 +2067,7 @@ def featured_pilots(limit: int = 6) -> list:
     rows = db.fetchall(
         "SELECT u.id, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
         "       p.headline, p.hourly_rate, p.currency AS p_currency, "
+        "       COALESCE(p.kind, 'pro') AS kind, p.business_name, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
         "       COALESCE(r.review_count, 0) AS rating_count "
         "FROM users u JOIN pilot_profiles p ON p.user_id=u.id "
@@ -2126,7 +2157,7 @@ def _fuzz_coord(value: Optional[float], decimals: int) -> Optional[float]:
     return round(float(value), decimals)
 
 
-def map_markers(*, country: str = "", mission_type: str = "",
+def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
                 limit: int = 500) -> dict:
     """Marqueurs cartographiques pilotes + missions, coords floutees.
 
@@ -2134,7 +2165,7 @@ def map_markers(*, country: str = "", mission_type: str = "",
     a ~1 km. Seuls les enregistrements geolocalises sont renvoyes.
     """
     pilots = search_pilots(
-        country=country, mission_type=mission_type,
+        country=country, mission_type=mission_type, kind=kind,
         only_available=True, limit=limit,
     )
     missions = search_missions(
@@ -2153,6 +2184,10 @@ def map_markers(*, country: str = "", mission_type: str = "",
             "rating": p.get("rating", {}),
             "verified": bool(p.get("is_verified")),
             "headline": (p.get("headline") or "")[:90],
+            "kind": p.get("kind") or "pro",
+            # Une ecole est une organisation : son nom n'est pas une donnee
+            # personnelle, on l'affiche tel quel sur la carte.
+            "name": public_name(p),
         })
     m_out = []
     for m in missions:

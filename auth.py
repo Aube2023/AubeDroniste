@@ -365,7 +365,7 @@ def create_user(*, username: str, password: str, full_name: str,
                 role: str = "client", country: Optional[str] = None,
                 city: Optional[str] = None, phone: Optional[str] = None,
                 lat: Optional[float] = None, lng: Optional[float] = None,
-                send_welcome_email: bool = True) -> int:
+                send_welcome_email: bool = True, kind: str = "pro") -> int:
     """Cree le profil AubePilot local. En prod Linux, exige que le compte
     AubeMail (= compte systeme PAM) existe au prealable — l'inscription au
     sens credentiel se fait sur AubeMail, pas ici. Si le compte systeme est
@@ -394,9 +394,12 @@ def create_user(*, username: str, password: str, full_name: str,
     if not has_pam_account:
         set_dev_password(username, password)
     if role in ("pilot", "both"):
+        from config import PROFILE_KIND_CODES
+        if kind not in PROFILE_KIND_CODES:
+            kind = "pro"
         db.execute(
-            "INSERT INTO pilot_profiles (user_id) VALUES (?)",
-            (user_id,),
+            "INSERT INTO pilot_profiles (user_id, kind) VALUES (?, ?)",
+            (user_id, kind),
         )
     if send_welcome_email:
         try:

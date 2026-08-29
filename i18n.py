@@ -233,6 +233,20 @@ _T = {
                            "en": "Clients, pilots, schools, shops: write to us, we know the trade. Reply within {hours} business hours, in French or English."},
     "home.contact.cta":   {"fr": "Écrire à l'équipe", "en": "Write to the team"},
 
+    # ---- Types de profil (onglets annuaire)
+    "kind.pro":          {"fr": "Pilote pro",        "en": "Pro pilot"},
+    "kind.recreational": {"fr": "Pilote récréatif", "en": "Recreational pilot"},
+    "kind.school":       {"fr": "École de formation", "en": "Training school"},
+    "kind.pro.short":          {"fr": "Pro",        "en": "Pro"},
+    "kind.recreational.short": {"fr": "Récréatif", "en": "Recreational"},
+    "kind.school.short":       {"fr": "École",     "en": "School"},
+
+    # ---- Landing : rejoindre — ecole
+    "home.join.school.tag": {"fr": "École de formation", "en": "Training school"},
+    "home.join.school.h":   {"fr": "Je forme des pilotes", "en": "I train pilots"},
+    "home.join.school.p":   {"fr": "Votre école sur la carte : formations proposées (opérations de base, avancées, A2, STS…), coordonnées, avis des élèves devenus pilotes.",
+                             "en": "Your school on the map: programmes offered (basic, advanced, A2, STS…), contact details, reviews from students who became pilots."},
+
     # ---- Common
     "common.verified":     {"fr": "vérifié", "en": "verified"},
     "common.urgent":       {"fr": "urgent",  "en": "urgent"},

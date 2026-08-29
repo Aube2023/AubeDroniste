@@ -1806,9 +1806,10 @@ a, button { touch-action: manipulation; }
 /* --- accueil : rejoindre le réseau --- */
 .join-grid {
   display: grid; gap: 14px;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
-@media (max-width: 760px) { .join-grid { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .join-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .join-grid { grid-template-columns: 1fr; } }
 .join-card {
   display: grid; gap: 6px; align-content: start;
   background: var(--paper-2);
@@ -1886,3 +1887,34 @@ a, button { touch-action: manipulation; }
 }
 .doc-preview iframe { display: block; width: 100%; height: 520px; border: 0; background: #fff; }
 .doc-preview img { display: block; max-width: 100%; max-height: 640px; margin: 0 auto; }
+
+/* --- annuaire : onglets par type de profil + badges --- */
+.dir-tabs {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 0 0 12px; padding: 6px;
+  border: 1px solid var(--rule); border-radius: 999px; background: var(--paper-2);
+  width: fit-content; max-width: 100%;
+}
+.dir-tabs a {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: 999px;
+  font: 600 13px/1 var(--display); color: var(--ink-soft);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.dir-tabs a:hover { color: var(--ink); background: var(--paper-3); }
+.dir-tabs a.on { background: var(--amber); color: var(--cta-fg); }
+.dir-tabs a .n { font: 600 11px/1 var(--mono); opacity: .75; }
+.spec-chips { margin: 0 0 14px; }
+.spec-chips .chip-check.on { border-color: var(--amber); color: var(--amber); }
+.kind-badge {
+  display: inline-block; vertical-align: middle;
+  font: 700 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  padding: 4px 7px; border-radius: 999px; margin-left: 4px;
+  color: #3b82f6; border: 1px solid rgba(59,130,246,.4); background: rgba(59,130,246,.06);
+}
+.kind-badge.kind-recreational { color: #0f9c8c; border-color: rgba(20,184,166,.45); background: rgba(20,184,166,.08); }
+.kind-badge.kind-school { color: #15803d; border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.08); }
+[data-theme="dark"] .kind-badge.kind-recreational { color: #5eead4; }
+[data-theme="dark"] .kind-badge.kind-school { color: #86efac; }
+.pilot-card.kind-school { border-color: rgba(34,197,94,.35); }
+.pilot-card.kind-recreational { border-color: rgba(20,184,166,.35); }

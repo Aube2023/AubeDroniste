@@ -242,6 +242,15 @@ MISSION_TYPE_GROUPS = [
     ("Logistique & autres",      ["livraison", "formation", "autre"]),
 ]
 
+# Types de profil dans l'annuaire (onglets Tous / Pro / Recreatif / Ecoles).
+# Pas de « boutique » : choix Nicolas (2026-08-29).
+PROFILE_KINDS = [
+    ("pro",          "Pilote professionnel"),
+    ("recreational", "Pilote récréatif"),
+    ("school",       "École de formation"),
+]
+PROFILE_KIND_CODES = tuple(k for k, _ in PROFILE_KINDS)
+
 # Types de drones (catalogue)
 DRONE_CATEGORIES = [
     ("micro",        "Micro / sous 250 g"),

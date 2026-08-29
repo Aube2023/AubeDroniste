@@ -54,10 +54,45 @@
       </div>
     </fieldset>
 
+    {% set sel_kind = request.args.get('kind', 'pro') %}
+    <fieldset class="fieldset-block" id="kind-block">
+      <legend>Type de profil</legend>
+      <div class="role-cards">
+        {% for code, lbl in profile_kinds %}
+        <label>
+          <input type="radio" name="kind" value="{{ code }}" {% if sel_kind == code %}checked{% endif %}>
+          <span class="role-card">
+            <span class="icon">▴ {{ kind_label(code, true) }}</span>
+            <span class="name">{{ kind_label(code) }}</span>
+            <span class="desc">{% if code == 'pro' %}Missions rémunérées, devis, paiements sécurisés.{% elif code == 'recreational' %}Vous volez pour le plaisir : visible sur la carte, échanges avec la communauté.{% else %}Vous formez des pilotes : votre école sur la carte avec ses formations.{% endif %}</span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+      <p class="muted small" style="margin: 0;">Modifiable plus tard dans votre profil.</p>
+    </fieldset>
+    <script>
+      // Le type de profil ne concerne que les pilotes / mixtes.
+      (function () {
+        var block = document.getElementById('kind-block');
+        var radios = document.querySelectorAll('input[name="role"]');
+        function sync() {
+          var role = (document.querySelector('input[name="role"]:checked') || {}).value;
+          block.style.display = (role === 'client') ? 'none' : '';
+        }
+        radios.forEach(function (r) { r.addEventListener('change', sync); });
+        {% if request.args.get('kind') %}
+        var pilotRadio = document.querySelector('input[name="role"][value="pilot"]');
+        if (pilotRadio && (document.querySelector('input[name="role"]:checked') || {}).value === 'client') pilotRadio.checked = true;
+        {% endif %}
+        sync();
+      })();
+    </script>
+
     <fieldset class="fieldset-block">
       <legend>Identité</legend>
       <div class="grid-2">
-        <label>Nom et prénom
+        <label>Nom et prénom <span class="muted small">(ou nom de l'école)</span>
           <input name="full_name" required placeholder="ex. Sophie Tremblay">
         </label>
         <label>Identifiant

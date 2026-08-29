@@ -93,8 +93,8 @@
   </div>
   <div class="grid-cards">
     {% for p in featured_pilots %}
-    {% set masked = mask_name(p.full_name) %}
-    <a class="pilot-card" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+    {% set masked = public_name(p) %}
+    <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
       <div class="strip">
         <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
         <span class="fh">{% if p.rating.count %}{{ t('common.reviews', n=p.rating.count) }}{% else %}{{ t('common.new_pilot') }}{% endif %}</span>
@@ -107,7 +107,7 @@
         <div class="avatar">{{ masked[:1] }}</div>
         {% endif %}
         <div>
-          <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
+          <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
           <div class="loc">{{ p.country }}</div>
           {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
         </div>
@@ -177,10 +177,16 @@
       <span class="desc">{{ t('home.join.both.p') }}</span>
       <span class="go">{{ t('home.join.cta') }} →</span>
     </a>
+    <a class="join-card" href="{{ url_for('register') }}?role=pilot&kind=school">
+      <span class="icon">▴ {{ t('home.join.school.tag') }}</span>
+      <span class="name">{{ t('home.join.school.h') }}</span>
+      <span class="desc">{{ t('home.join.school.p') }}</span>
+      <span class="go">{{ t('home.join.cta') }} →</span>
+    </a>
   </div>
   <div class="cta-row" style="margin-top: 22px;">
     <a href="#comment-ca-marche" class="ghost">{{ t('home.join.how') }}</a>
-    <a href="{{ url_for('contact_form') }}" class="ghost">{{ t('home.join.partner') }}</a>
+    <a href="{{ url_for('pilots_search', kind='school') }}" class="ghost">{{ 'Voir les écoles →' if lang == 'fr' else 'See the schools →' }}</a>
   </div>
 </section>
 

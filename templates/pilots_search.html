@@ -10,7 +10,28 @@
   </p>
 </div>
 
+{% set base_args = request.args.to_dict() %}
+{% set _ = base_args.pop('kind', None) %}
+<nav class="dir-tabs" aria-label="{{ 'Type de profil' if fr else 'Profile type' }}">
+  <a href="{{ url_for('pilots_search', **base_args) }}" class="{{ 'on' if not params.kind else '' }}">{{ 'Tous' if fr else 'All' }} <span class="n">{{ kind_counts.all }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='pro', **base_args) }}" class="{{ 'on' if params.kind == 'pro' else '' }}">{{ 'Pilotes pro' if fr else 'Pro pilots' }} <span class="n">{{ kind_counts.pro }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='recreational', **base_args) }}" class="{{ 'on' if params.kind == 'recreational' else '' }}">{{ 'Pilotes récréatifs' if fr else 'Recreational pilots' }} <span class="n">{{ kind_counts.recreational }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='school', **base_args) }}" class="{{ 'on' if params.kind == 'school' else '' }}">{{ 'Écoles' if fr else 'Schools' }} <span class="n">{{ kind_counts.school }}</span></a>
+  <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" onclick="var d=document.getElementById('specialites'); d.open=true;">{{ 'Spécialités' if fr else 'Specialties' }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
+</nav>
+<details class="disclosure spec-chips" id="specialites" {% if params.mission_type %}open{% endif %}>
+  <summary>{{ 'Choisir une spécialité' if fr else 'Pick a specialty' }}</summary>
+  <div class="chips" style="margin-top: 10px;">
+    {% set spec_args = request.args.to_dict() %}{% set _ = spec_args.pop('mission_type', None) %}
+    <a class="chip-check {{ 'on' if not params.mission_type else '' }}" href="{{ url_for('pilots_search', **spec_args) }}">{{ 'Toutes' if fr else 'All' }}</a>
+    {% for code, lbl in mission_types %}
+    <a class="chip-check {{ 'on' if params.mission_type == code else '' }}" href="{{ url_for('pilots_search', mission_type=code, **spec_args) }}">{{ mission_label(code) }}</a>
+    {% endfor %}
+  </div>
+</details>
+
 <form method="get" class="filters card">
+  {% if params.kind %}<input type="hidden" name="kind" value="{{ params.kind }}">{% endif %}
   <div class="filter-row">
     <label>{{ 'Code postal, adresse ou ville' if fr else 'Postal code, address or city' }}
       <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code"
@@ -78,8 +99,8 @@
 
 <div class="grid-cards">
   {% for p in pilots %}
-  {% set masked = mask_name(p.full_name) %}
-  <a class="pilot-card" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+  {% set masked = public_name(p) %}
+  <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
     <div class="strip">
       <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
       <span class="fh">
@@ -94,9 +115,13 @@
       <div class="avatar">{{ masked[:1] }}</div>
       {% endif %}
       <div>
-        <div class="name">{{ masked }} {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
+        <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
         <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
+        {% if p.kind == 'school' and p.school_programs %}
+        <div class="headline">{{ p.school_programs.replace('\r', '').split('\n')|reject('equalto', '')|join(' · ') }}</div>
+        {% else %}
         <div class="headline">« {{ p.headline or ('Disponible pour vos prises de vue.' if fr else 'Available for your aerial shots.') }} »</div>
+        {% endif %}
         {% if p.verified_authorities or p.insurance %}
         <div class="auth-chips">
           {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ a }}</span>{% endfor %}
@@ -107,7 +132,7 @@
     </div>
     <div class="foot">
       <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }} · {{ p.rating.count }}{% else %}— · —{% endif %}</span>
-      <span class="rate">{% if p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
+      <span class="rate">{% if p.kind == 'school' %}{{ 'formations' if fr else 'training' }}{% elif p.kind == 'recreational' %}{{ 'loisir' if fr else 'hobby' }}{% elif p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
     </div>
   </a>
   {% else %}

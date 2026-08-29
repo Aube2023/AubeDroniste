@@ -131,6 +131,9 @@ def schema_ready(path: str = DB_PATH) -> bool:
 # base existante (CREATE TABLE IF NOT EXISTS ne modifie pas une table deja la).
 _ADD_COLUMNS = [
     ("pilot_profiles", "business_name", "TEXT"),
+    # Type de profil (onglets annuaire) + formations des ecoles.
+    ("pilot_profiles", "kind", "TEXT NOT NULL DEFAULT 'pro'"),
+    ("pilot_profiles", "school_programs", "TEXT"),
     # Commission degressive : taux applique a CE booking (NULL sur les anciens
     # bookings -> deduit de platform_fee / agreed_price, cf. services.booking_fee_pct).
     ("bookings", "platform_fee_pct", "REAL"),

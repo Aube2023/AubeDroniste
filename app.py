@@ -49,6 +49,8 @@ from config import (
     LICENCE_AUTHORITIES,
     LICENCE_TITLES_BY_AUTHORITY,
     LICENCE_VERIFY_HINTS,
+    PROFILE_KINDS,
+    PROFILE_KIND_CODES,
     MAX_UPLOAD_MB,
     MAX_DELIVERABLE_MB,
     MAX_AVATAR_MB,
@@ -275,6 +277,12 @@ def _inject_helpers():
     from i18n import status_label
     return {
         "mission_label": _mission_label,
+        "profile_kinds": PROFILE_KINDS,
+        "kind_label": lambda c, short=False: i18n.t(
+            f"kind.{c if c in PROFILE_KIND_CODES else 'pro'}" + (".short" if short else ""),
+            lang=getattr(g, "lang", i18n.DEFAULT)),
+        # Nom public d'une fiche : ecole en clair, personne masquee
+        "public_name": services.public_name,
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
         "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
@@ -306,6 +314,12 @@ def _to_int(v, default=None):
 
 def _to_bool(v):
     return str(v).lower() in {"1", "true", "on", "yes", "oui"}
+
+
+def _profile_kind(value) -> str:
+    """Type de profil valide ('' = tous)."""
+    v = (value or "").strip()
+    return v if v in PROFILE_KIND_CODES else ""
 
 
 def _resolve_near(country: str = "") -> dict:
@@ -615,6 +629,7 @@ def api_map():
     return jsonify(services.map_markers(
         country=request.args.get("country", "").strip(),
         mission_type=request.args.get("mission_type", "").strip(),
+        kind=_profile_kind(request.args.get("kind")),
         limit=_api_limit(500),
     ))
 
@@ -636,6 +651,7 @@ def pilots_search():
         "only_verified": _to_bool(request.args.get("only_verified", "0")),
         "only_insured": _to_bool(request.args.get("only_insured", "0")),
         "authority": request.args.get("authority", "").strip(),
+        "kind": _profile_kind(request.args.get("kind")),
         "text": request.args.get("q", "").strip(),
     }
     pilots = services.search_pilots(
@@ -645,6 +661,7 @@ def pilots_search():
     params.update(geo)
     return render_template(
         "pilots_search.html", pilots=pilots, params=params,
+        kind_counts=services.count_pilots_by_kind(params["only_available"]),
         map_center=_map_center(geo),
         seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
     )
@@ -847,6 +864,7 @@ def register():
 
         if role not in ("client", "pilot", "both"):
             role = "client"
+        kind = _profile_kind(request.form.get("kind")) or "pro"
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
             return render_template("register.html")
@@ -861,7 +879,12 @@ def register():
             user_id = auth.create_user(
                 username=username, password=password, full_name=full_name,
                 role=role, country=country, city=city, phone=phone, lat=lat, lng=lng,
+                kind=kind,
             )
+            if role in ("pilot", "both") and kind == "school":
+                # Une ecole s'affiche sous son nom d'ecole : on l'initialise avec
+                # le nom saisi, modifiable ensuite dans le profil.
+                services.upsert_pilot_profile(user_id, business_name=full_name)
         except auth.AubeMailRequiredError:
             flash(
                 "Ce compte n'existe pas dans AubeMail. Créez-le d'abord sur "
@@ -1089,6 +1112,7 @@ def pilot_edit():
             new_role = "both" if user["role"] == "client" else "pilot"
             db.execute("UPDATE users SET role=? WHERE id=?", (new_role, user["id"]))
             db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (user["id"],))
+            services.upsert_pilot_profile(user["id"], kind=_profile_kind(request.form.get("kind")) or "pro")
             return redirect(url_for("pilot_edit"))
         return render_template("pilot_become.html")
 
@@ -1110,6 +1134,8 @@ def pilot_edit():
             languages=(request.form.get("languages") or "").strip() or None,
             portfolio_url=(request.form.get("portfolio_url") or "").strip() or None,
             accepts_urgent=1 if _to_bool(request.form.get("accepts_urgent")) else 0,
+            kind=_profile_kind(request.form.get("kind")) or "pro",
+            school_programs=(request.form.get("school_programs") or "").strip()[:2000],
         )
         services.set_pilot_specialties(user["id"], request.form.getlist("specialties"))
         countries = request.form.getlist("territory_country")
@@ -2555,6 +2581,7 @@ def api_pilots():
         only_verified=_to_bool(request.args.get("only_verified", "0")),
         only_insured=_to_bool(request.args.get("only_insured", "0")),
         authority=request.args.get("authority", "").strip(),
+        kind=_profile_kind(request.args.get("kind")),
         limit=_api_limit(50),
     )
     return jsonify({
