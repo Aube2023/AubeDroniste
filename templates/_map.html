@@ -97,11 +97,25 @@
 
   var markers = {};            // id pilote -> {marker, el, lngLat}
   var allBounds = new maplibregl.LngLatBounds();
+  // IMPORTANT : MapLibre positionne le marqueur via `style.transform` de
+  // l'element qu'on lui donne. Tout effet visuel (agrandissement au survol)
+  // doit donc s'appliquer a un element INTERIEUR, jamais a l'enveloppe —
+  // sinon le point saute hors de sa position puis revient (bug constate).
   function markerEl(color, size) {
-    var d = document.createElement('div');
-    d.className = 'aube-marker';
-    d.style.cssText = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;transition:transform .15s';
-    return d;
+    var wrap = document.createElement('div');
+    wrap.className = 'aube-marker';
+    wrap.style.cssText = 'width:' + size + 'px;height:' + size + 'px;cursor:pointer';
+    var dot = document.createElement('div');
+    dot.className = 'aube-marker-dot';
+    dot.style.cssText = 'width:100%;height:100%;border-radius:50%;background:' + color + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .15s;transform-origin:center center';
+    wrap.appendChild(dot);
+    wrap._dot = dot;
+    return wrap;
+  }
+  function setScale(wrap, on) {
+    if (!wrap || !wrap._dot) return;
+    wrap._dot.style.transform = on ? 'scale(1.5)' : '';
+    wrap.style.zIndex = on ? '5' : '';
   }
   function fitAll() {
     if (!allBounds.isEmpty()) map.fitBounds(allBounds, {padding: 56, maxZoom: 9, duration: 600});
@@ -123,8 +137,7 @@
     highlight: function (id, on) {
       var m = markers[id];
       if (!m) return;
-      m.el.style.transform = on ? 'scale(1.6)' : '';
-      m.el.style.zIndex = on ? '5' : '';
+      setScale(m.el, on);
     }
   };
 
@@ -158,8 +171,8 @@
           var mk = new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
             .setPopup(new maplibregl.Popup({offset: 12, maxWidth: '280px'}).setHTML(popupPilot(p))).addTo(map);
           markers[p.id] = {marker: mk, el: d, lngLat: [p.lng, p.lat]};
-          d.addEventListener('mouseenter', function () { d.style.transform = 'scale(1.4)'; });
-          d.addEventListener('mouseleave', function () { d.style.transform = ''; });
+          d.addEventListener('mouseenter', function () { setScale(d, true); });
+          d.addEventListener('mouseleave', function () { setScale(d, false); });
           d.addEventListener('click', function () {
             var card = document.querySelector('[data-pilot-id="' + p.id + '"]');
             if (card) { card.classList.add('is-focused'); setTimeout(function () { card.classList.remove('is-focused'); }, 1600); }
