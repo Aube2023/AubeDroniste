@@ -123,7 +123,7 @@ def apply_security_headers(resp):
         "geolocation=(self), camera=(), microphone=(), payment=(self)",
     )
     # CSP — autorise Google Fonts (typo), Stripe (frames + js) et MapLibre GL
-    # (carte interactive : JS/CSS via unpkg, tuiles CARTO basemaps,
+    # (carte interactive : JS/CSS via unpkg, style + tuiles vectorielles OpenFreeMap,
     # web workers via blob:).
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; "
@@ -134,7 +134,7 @@ def apply_security_headers(resp):
         "worker-src 'self' blob:; "
         "child-src 'self' blob:; "
         "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
-        "connect-src 'self' https://api.stripe.com https://*.basemaps.cartocdn.com https://aubemail.com; "
+        "connect-src 'self' https://api.stripe.com https://tiles.openfreemap.org https://aubemail.com; "
         "form-action 'self' https://checkout.stripe.com https://connect.stripe.com; "
         "frame-ancestors 'none'; "
         "base-uri 'self';"

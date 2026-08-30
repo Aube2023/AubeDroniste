@@ -1918,3 +1918,11 @@ a, button { touch-action: manipulation; }
 [data-theme="dark"] .kind-badge.kind-school { color: #86efac; }
 .pilot-card.kind-school { border-color: rgba(34,197,94,.35); }
 .pilot-card.kind-recreational { border-color: rgba(20,184,166,.35); }
+
+/* --- carte interactive : liaison liste <-> marqueurs --- */
+.pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-left: 4px; }
+.pilot-card .map-pin:hover { opacity: 1; }
+.pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(66,87,178,.25); }
+.map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
+.map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
+@media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }

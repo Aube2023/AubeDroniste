@@ -100,9 +100,9 @@
 <div class="grid-cards">
   {% for p in pilots %}
   {% set masked = public_name(p) %}
-  <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+  <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}" data-pilot-id="{{ p.id }}">
     <div class="strip">
-      <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }}</span>
+      <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }} <span class="map-pin" title="{{ 'Voir sur la carte' if fr else 'Show on map' }}">📍</span></span>
       <span class="fh">
         {% if p.distance_km is not none %}<span class="distance-chip">≈ {{ p.distance_km|round|int }} km</span> · {% endif %}{% if p.is_available %}<span class="dot-ok">{{ 'dispo' if fr else 'avail.' }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
       </span>

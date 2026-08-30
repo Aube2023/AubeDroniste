@@ -1,25 +1,31 @@
 {# Carte interactive MapLibre GL — pilotes + missions geolocalises.
+   Fond de carte : OpenFreeMap (tuiles vectorielles OpenMapTiles / OpenStreetMap),
+   gratuit, SANS cle d'API ni quota — CARTO exige une cle depuis 2026 (filigrane
+   « API KEY REQUIRED » sur les tuiles). Styles : positron (jour) / dark (nuit).
    Parametres optionnels passes via include `with` / contexte :
      map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
      map_center : {lat, lng, label, radius_km} -> zone recherchee (code postal /
                   adresse / geoloc) : marqueur + cercle de rayon + recadrage.
-   Coords pilote floutees cote serveur (~11 km) pour la confidentialite. #}
+     map_height : hauteur CSS (defaut 440px)
+   Interactif : zoom/deplacement, popup au clic, survol d'une carte pilote de la
+   liste => marqueur mis en avant, `window.AubeMap.focus(id)` => vol vers le
+   marqueur + popup. Coords pilote floutees cote serveur (~11 km). #}
 {% set _focus = map_focus|default('pilots') %}
 {% set _center = map_center|default({}) %}
-{# preconnect : unpkg sert <link>/<script> (no-CORS, sans crossorigin) ;
-   les tuiles CARTO sont requetees par fetch() MapLibre (CORS, avec crossorigin). #}
+{% set _height = map_height|default('440px') %}
 <link rel="preconnect" href="https://unpkg.com">
-<link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
-  <div id="aube-map" style="height:360px;width:100%;background:var(--surface,#101014);"></div>
-  <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
+  <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ 'Carte interactive des pilotes et missions' if lang == 'fr' else 'Interactive map of pilots and missions' }}"></div>
+  <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>{{ 'Pilotes pro' if lang == 'fr' else 'Pro pilots' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#14b8a6;margin-right:6px;"></span>{{ 'Pilotes récréatifs' if lang == 'fr' else 'Recreational pilots' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:6px;"></span>{{ 'Écoles' if lang == 'fr' else 'Schools' }}</span>
     <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
     {% if _center %}<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#7a5fc4;margin-right:6px;"></span>{{ 'Zone recherchée' if lang == 'fr' else 'Search area' }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
     <span class="muted" id="map-count"></span>
+    <button type="button" class="ghost" id="map-fit" style="margin-left:auto;padding:6px 10px;font-size:.8rem;">{{ 'Tout afficher' if lang == 'fr' else 'Show all' }}</button>
   </div>
 </div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -40,45 +46,40 @@
     ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', school: 'École de formation' }
     : { pro: 'Pro pilot', recreational: 'Recreational pilot', school: 'Training school' };
 
-  // Fond de carte CARTO (épuré, gratuit, sans clé) adapté au thème jour/nuit.
+  // Fond de carte OpenFreeMap : vectoriel, gratuit, sans cle. Jour / nuit.
   var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
-  var variant = DARK ? 'dark_all' : 'light_all';
-  var TILES = ['a', 'b', 'c', 'd'].map(function (s) {
-    return 'https://' + s + '.basemaps.cartocdn.com/' + variant + '/{z}/{x}/{y}.png';
-  });
+  var STYLE = DARK ? 'https://tiles.openfreemap.org/styles/dark'
+                   : 'https://tiles.openfreemap.org/styles/positron';
   var map = new maplibregl.Map({
     container: 'aube-map',
-    style: {
-      version: 8,
-      sources: {
-        carto: {
-          type: 'raster', tiles: TILES, tileSize: 256,
-          attribution: '© OpenStreetMap · © CARTO'
-        }
-      },
-      layers: [{ id: 'carto', type: 'raster', source: 'carto' }]
-    },
-    center: CENTER && CENTER.lng != null ? [CENTER.lng, CENTER.lat] : [2.3, 46.6],
-    zoom: CENTER && CENTER.lng != null ? 8 : 3,
-    attributionControl: true
+    style: STYLE,
+    center: CENTER && CENTER.lng != null ? [CENTER.lng, CENTER.lat] : [-20, 40],
+    zoom: CENTER && CENTER.lng != null ? 8 : 1.6,
+    attributionControl: true,
+    cooperativeGestures: false
   });
   map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+  map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+  map.addControl(new maplibregl.GeolocateControl({positionOptions: {enableHighAccuracy: false}, trackUserLocation: false}), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({maxWidth: 120, unit: 'metric'}), 'bottom-left');
 
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
   function popupPilot(p) {
-    var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count) : (LANG === 'fr' ? 'nouveau' : 'new');
-    var verif = p.verified ? ' <b style="color:#3b82f6">✓</b>' : '';
+    var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count + (LANG==='fr'?' avis':' reviews')) : (LANG === 'fr' ? 'nouveau' : 'new');
+    var verif = p.verified ? ' <span style="color:#1e7a6a;font-weight:700">✓ ' + (LANG==='fr'?'vérifié':'verified') + '</span>' : '';
     var kind = KIND_LABEL[p.kind] || KIND_LABEL.pro;
-    var title = (p.kind === 'school' && p.name) ? (p.name.replace(/</g, '&lt;') + ' · ' + kind) : kind;
-    return '<div style="font:14px system-ui"><b>' + title + verif + '</b><br>' +
-      (p.country || '') + '<br><span style="color:#666">' + stars + '</span><br>' +
-      '<a href="/pilotes/' + p.id + '">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div>';
+    var title = (p.kind === 'school' && p.name) ? esc(p.name) : (p.name ? esc(p.name) : kind);
+    return '<div style="font:14px/1.45 system-ui;min-width:180px"><b>' + title + '</b> <span style="color:#666;font-size:12px">· ' + kind + '</span>' + verif + '<br>' +
+      esc(p.country || '') + (p.headline ? '<br><i style="color:#555">« ' + esc(p.headline) + ' »</i>' : '') +
+      '<br><span style="color:#666">' + stars + '</span><br>' +
+      '<a href="/pilotes/' + p.id + '" style="font-weight:600">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div>';
   }
   function popupMission(m) {
     var budget = (m.budget_min || m.budget_max) ? ((m.budget_min||'') + (m.budget_max?('–'+m.budget_max):'') + ' ' + (m.currency||'')) : '';
     var urgent = m.is_urgent ? ' 🔥' : '';
-    return '<div style="font:14px system-ui"><b>' + (m.title || (LANG==='fr'?'Mission':'Mission')) + urgent + '</b><br>' +
-      [m.city, m.country].filter(Boolean).join(', ') + '<br><span style="color:#666">' + budget + '</span><br>' +
-      '<a href="/missions/' + m.id + '">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div>';
+    return '<div style="font:14px/1.45 system-ui;min-width:180px"><b>' + esc(m.title || (LANG==='fr'?'Mission':'Mission')) + urgent + '</b><br>' +
+      esc([m.city, m.country].filter(Boolean).join(', ')) + '<br><span style="color:#666">' + esc(budget) + '</span><br>' +
+      '<a href="/missions/' + m.id + '" style="font-weight:600">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div>';
   }
 
   // Polygone GeoJSON approchant un cercle de `km` autour de [lng, lat].
@@ -94,6 +95,39 @@
     return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} };
   }
 
+  var markers = {};            // id pilote -> {marker, el, lngLat}
+  var allBounds = new maplibregl.LngLatBounds();
+  function markerEl(color, size) {
+    var d = document.createElement('div');
+    d.className = 'aube-marker';
+    d.style.cssText = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;transition:transform .15s';
+    return d;
+  }
+  function fitAll() {
+    if (!allBounds.isEmpty()) map.fitBounds(allBounds, {padding: 56, maxZoom: 9, duration: 600});
+  }
+  var fitBtn = document.getElementById('map-fit');
+  if (fitBtn) fitBtn.addEventListener('click', fitAll);
+
+  // API publique : la liste des pilotes (cartes) pilote la carte.
+  window.AubeMap = {
+    focus: function (id) {
+      var m = markers[id];
+      if (!m) return false;
+      map.flyTo({center: m.lngLat, zoom: Math.max(map.getZoom(), 8), duration: 700});
+      m.marker.togglePopup();
+      if (!m.marker.getPopup().isOpen()) m.marker.togglePopup();
+      el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      return true;
+    },
+    highlight: function (id, on) {
+      var m = markers[id];
+      if (!m) return;
+      m.el.style.transform = on ? 'scale(1.6)' : '';
+      m.el.style.zIndex = on ? '5' : '';
+    }
+  };
+
   map.on('load', function () {
     var bounds = new maplibregl.LngLatBounds();
     var hasArea = false;
@@ -106,13 +140,12 @@
                      paint: { 'fill-color': '#7a5fc4', 'fill-opacity': 0.10 } });
       map.addLayer({ id: 'search-area-line', type: 'line', source: 'search-area',
                      paint: { 'line-color': '#7a5fc4', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
-      var c = document.createElement('div');
-      c.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#7a5fc4;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45)';
+      var c = markerEl('#7a5fc4', 16);
       var mk = new maplibregl.Marker({element: c}).setLngLat([CENTER.lng, CENTER.lat]).addTo(map);
       if (CENTER.label) mk.setPopup(new maplibregl.Popup({offset: 12}).setHTML(
-        '<div style="font:14px system-ui"><b>⌖ ' + CENTER.label.replace(/</g, '&lt;') + '</b><br>' +
+        '<div style="font:14px system-ui"><b>⌖ ' + esc(CENTER.label) + '</b><br>' +
         (LANG === 'fr' ? 'rayon ' : 'radius ') + km + ' km</div>'));
-      circle.geometry.coordinates[0].forEach(function (pt) { bounds.extend(pt); });
+      circle.geometry.coordinates[0].forEach(function (pt) { bounds.extend(pt); allBounds.extend(pt); });
     }
 
     fetch('/api/map' + (qs.toString() ? ('?' + qs.toString()) : ''))
@@ -121,19 +154,26 @@
         var n = 0;
         (data.pilots || []).forEach(function (p) {
           if (p.lng == null || p.lat == null) return;
-          var d = document.createElement('div');
-          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:' + (KIND_COLOR[p.kind] || KIND_COLOR.pro) + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
-          new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
-            .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupPilot(p))).addTo(map);
+          var d = markerEl(KIND_COLOR[p.kind] || KIND_COLOR.pro, 16);
+          var mk = new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
+            .setPopup(new maplibregl.Popup({offset: 12, maxWidth: '280px'}).setHTML(popupPilot(p))).addTo(map);
+          markers[p.id] = {marker: mk, el: d, lngLat: [p.lng, p.lat]};
+          d.addEventListener('mouseenter', function () { d.style.transform = 'scale(1.4)'; });
+          d.addEventListener('mouseleave', function () { d.style.transform = ''; });
+          d.addEventListener('click', function () {
+            var card = document.querySelector('[data-pilot-id="' + p.id + '"]');
+            if (card) { card.classList.add('is-focused'); setTimeout(function () { card.classList.remove('is-focused'); }, 1600); }
+          });
+          allBounds.extend([p.lng, p.lat]);
           if (!hasArea && FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);
           n++;
         });
         (data.missions || []).forEach(function (m) {
           if (m.lng == null || m.lat == null) return;
-          var d = document.createElement('div');
-          d.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+          var d = markerEl('#f59e0b', 14);
           new maplibregl.Marker({element: d}).setLngLat([m.lng, m.lat])
-            .setPopup(new maplibregl.Popup({offset: 12}).setHTML(popupMission(m))).addTo(map);
+            .setPopup(new maplibregl.Popup({offset: 12, maxWidth: '280px'}).setHTML(popupMission(m))).addTo(map);
+          allBounds.extend([m.lng, m.lat]);
           if (!hasArea && FOCUS === 'missions') bounds.extend([m.lng, m.lat]);
           n++;
         });
@@ -143,10 +183,23 @@
         }
         var lbl = document.getElementById('map-count');
         if (lbl) lbl.textContent = (LANG==='fr' ? (n + ' point(s) sur la carte') : (n + ' point(s) on the map'));
-        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: hasArea ? 11 : 9, duration: 0});
+        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 56, maxZoom: hasArea ? 11 : 9, duration: 0});
+
+        // Survol des cartes pilote de la liste -> marqueur mis en avant ; clic sur
+        // le lien « voir sur la carte » -> vol + popup.
+        document.querySelectorAll('[data-pilot-id]').forEach(function (card) {
+          var id = card.getAttribute('data-pilot-id');
+          card.addEventListener('mouseenter', function () { window.AubeMap.highlight(id, true); });
+          card.addEventListener('mouseleave', function () { window.AubeMap.highlight(id, false); });
+          var pin = card.querySelector('.map-pin');
+          if (pin) {
+            if (!markers[id]) { pin.style.display = 'none'; }
+            pin.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); window.AubeMap.focus(id); });
+          }
+        });
       })
       .catch(function () {
-        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 48, maxZoom: 11, duration: 0});
+        if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 56, maxZoom: 11, duration: 0});
       });
   });
 })();

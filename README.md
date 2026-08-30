@@ -200,6 +200,6 @@ Configurer un vrai SMTP via les variables d'env `SMTP_HOST`, `SMTP_PORT`, etc.
 - Vérification administrative des certifications (back-office)
 - Paiements via **AubePay** (escrow → libération à `completed`)
 - Notifications email (alertes nouvelle mission dans rayon)
-- Carte interactive MapLibre (déjà présente sur AubeMonument / AubeSIG)
+- ~~Carte interactive MapLibre~~ (faite : OpenFreeMap, accueil + annuaire + missions)
 - Application mobile Flutter (réutiliser le pattern AubeSIG offline-first)
 - Webhooks vers AubeStatus

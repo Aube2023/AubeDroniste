@@ -103,8 +103,11 @@ def test_api_map_coords_are_fuzzed(client):
 def test_csp_allows_maplibre(client):
     csp = client.get("/").headers.get("Content-Security-Policy", "")
     assert "https://unpkg.com" in csp
-    # Fond de carte CARTO (raster) chargé en fetch -> doit être en connect-src.
-    assert "basemaps.cartocdn.com" in csp
+    # Fond de carte OpenFreeMap (style JSON + tuiles vectorielles + glyphes +
+    # sprites, tous charges en fetch) -> doit etre en connect-src. CARTO
+    # (ancien fond) exige une cle d'API depuis 2026 : filigrane sur les tuiles.
+    assert "tiles.openfreemap.org" in csp
+    assert "cartocdn" not in csp
     assert "worker-src 'self' blob:" in csp
 
 
@@ -181,3 +184,12 @@ def test_run_migrations_is_safe_under_concurrency(client):
     # et l'ALTER est bien idempotent sur une colonne deja presente
     with db.standalone() as c:
         assert db._column_exists(c, "pilot_certifications", "review_status")
+
+
+def test_home_and_directory_embed_interactive_map(client):
+    home = client.get("/").data.decode()
+    assert 'id="aube-map"' in home and "tiles.openfreemap.org/styles/positron" in home
+    assert "cartocdn" not in home
+    directory = client.get("/pilotes").data.decode()
+    assert 'id="aube-map"' in directory and 'window.AubeMap' in directory
+    assert 'data-pilot-id=' in directory or "Aucun pilote" in directory

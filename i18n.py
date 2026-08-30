@@ -149,10 +149,10 @@ _T = {
     "home.featured.h":       {"fr": "Pilotes que l'on suit.",  "en": "Pilots we follow."},
     "home.featured.all":     {"fr": "Voir tous les pilotes →", "en": "Browse all pilots →"},
 
-    "home.map.eyebrow":      {"fr": "Carte des opérations", "en": "Operating map"},
-    "home.map.h":            {"fr": "Le réseau, par pays.", "en": "The network, by country."},
-    "home.map.lead":         {"fr": "Cliquez un pays pour filtrer pilotes et missions de cette zone. Du Maghreb au Québec, en passant par l'Hexagone et l'Afrique de l'Ouest.",
-                               "en": "Click a country to filter pilots and missions in that area. From the Maghreb to Quebec, France and West Africa."},
+    "home.map.eyebrow":      {"fr": "Carte interactive", "en": "Interactive map"},
+    "home.map.h":            {"fr": "Les pilotes et les missions, sur la carte.", "en": "Pilots and missions, on the map."},
+    "home.map.lead":         {"fr": "Zoomez, déplacez, cliquez un marqueur pour ouvrir le profil ou la mission. Bleu : pilotes pro · turquoise : récréatifs · vert : écoles · orange : missions ouvertes. Les positions des pilotes sont floutées d'environ 10 km. Puis cliquez un pays pour filtrer.",
+                               "en": "Zoom, pan, click a marker to open the profile or the mission. Blue: pro pilots · teal: recreational · green: schools · orange: open missions. Pilot positions are blurred by about 10 km. Then click a country to filter."},
     "home.map.all":          {"fr": "Annuaire complet →",  "en": "Full directory →"},
 
     "home.manifesto.eyebrow":{"fr": "Manifeste", "en": "Manifesto"},

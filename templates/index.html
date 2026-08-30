@@ -138,6 +138,7 @@
     <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.map.all') }}</a>
   </div>
   <p class="muted" style="max-width: 60ch;">{{ t('home.map.lead') }}</p>
+  {% set map_height = '480px' %}{% include "_map.html" with context %}
   <div class="country-grid">
     {% for c in country_breakdown %}
     <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
