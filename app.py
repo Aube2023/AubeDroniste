@@ -888,7 +888,7 @@ def register():
         except auth.AubeMailRequiredError:
             flash(
                 "Ce compte n'existe pas dans AubeMail. Créez-le d'abord sur "
-                "<a href='https://mail.aubeetoilee.com'>mail.aubeetoilee.com</a>, "
+                "<a href='https://aubemail.com'>aubemail.com</a>, "
                 "puis revenez ici pour compléter votre profil pilote.",
                 "error",
             )
