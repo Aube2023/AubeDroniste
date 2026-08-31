@@ -70,17 +70,33 @@
         {% endfor %}
       </div>
       <p class="muted small" style="margin: 0;">Modifiable plus tard dans votre profil.</p>
+      <div id="school-extra" style="display:none; margin-top: 12px;">
+        <div class="grid-2">
+          <label>Site web de l'organisme <span class="muted small">(optionnel)</span>
+            <input name="website" type="url" placeholder="https://votre-ecole.ca">
+          </label>
+          <label>Formations proposées <span class="muted small">(une par ligne, optionnel)</span>
+            <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)"></textarea>
+          </label>
+        </div>
+        <p class="muted small" style="margin: 0;">Le nom saisi plus bas devient le nom public de l'école ; formations et site apparaissent sur votre fiche et sur la carte dès l'inscription.</p>
+      </div>
     </fieldset>
     <script>
       // Le type de profil ne concerne que les pilotes / mixtes.
       (function () {
         var block = document.getElementById('kind-block');
         var radios = document.querySelectorAll('input[name="role"]');
+        var kindRadios = document.querySelectorAll('input[name="kind"]');
+        var extra = document.getElementById('school-extra');
         function sync() {
           var role = (document.querySelector('input[name="role"]:checked') || {}).value;
           block.style.display = (role === 'client') ? 'none' : '';
+          var kind = (document.querySelector('input[name="kind"]:checked') || {}).value;
+          if (extra) extra.style.display = (role !== 'client' && kind === 'school') ? '' : 'none';
         }
         radios.forEach(function (r) { r.addEventListener('change', sync); });
+        kindRadios.forEach(function (r) { r.addEventListener('change', sync); });
         {% if request.args.get('kind') %}
         var pilotRadio = document.querySelector('input[name="role"][value="pilot"]');
         if (pilotRadio && (document.querySelector('input[name="role"]:checked') || {}).value === 'client') pilotRadio.checked = true;

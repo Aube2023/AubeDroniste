@@ -128,5 +128,36 @@ def test_become_pilot_with_kind(client, auth_client, make_user):
 
 def test_home_has_school_card_and_no_shop(client):
     html = client.get("/").data.decode()
-    assert "role=pilot&amp;kind=school" in html or "role=pilot&kind=school" in html
+    # la carte « École de formation » mene a la page dediee /ecoles
+    assert 'href="/ecoles"' in html
     assert "Boutique" not in html
+
+
+def test_schools_page_and_full_school_signup(client):
+    import services
+    # inscription complete d'un organisme : site + formations des l'inscription
+    r = client.post("/inscription", data={
+        "username": "kind_org_x", "password": "demo1234", "confirm": "demo1234",
+        "full_name": "Centre RPAS Beauce", "role": "pilot", "kind": "school",
+        "country": "Canada", "city": "Saint-Georges",
+        "website": "https://rpas-beauce.ca",
+        "school_programs": "Opérations de base (TC)\nOpérations avancées (TC)"})
+    assert r.status_code in (302, 303)
+    with client.application.app_context():
+        import db
+        uid = db.fetchone("SELECT id FROM users WHERE username='kind_org_x'")["id"]
+        prof = services.get_pilot_profile(uid)
+        assert prof["business_name"] == "Centre RPAS Beauce"
+        assert prof["portfolio_url"] == "https://rpas-beauce.ca"
+        assert "avancées" in prof["school_programs"]
+    client.get("/deconnexion")
+    html = client.get("/ecoles").data.decode()
+    assert "Votre école," in html and "Inscrire mon école" in html
+    assert "Centre RPAS Beauce" in html and "Opérations de base (TC)" in html
+    assert "role=pilot&amp;kind=school" in html or "role=pilot&kind=school" in html
+    # champs ecole presents sur le formulaire d'inscription
+    reg = client.get("/inscription?role=pilot&kind=school").data.decode()
+    assert 'name="website"' in reg and 'name="school_programs"' in reg and 'id="school-extra"' in reg
+    # sitemap + pied de page
+    assert "/ecoles</loc>" in client.get("/sitemap.xml").data.decode()
+    assert 'href="/ecoles"' in client.get("/missions").data.decode()

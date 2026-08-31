@@ -489,6 +489,18 @@ def page_cookies():
 # version marketplace mondiale)
 # ---------------------------------------------------------------------------
 
+@app.route("/ecoles")
+def schools():
+    """Page publique « Écoles & organismes de formation » : pourquoi
+    s'inscrire, la liste des ecoles deja presentes, l'inscription directe."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    schools_list = services.search_pilots(kind="school", only_available=False, limit=100)
+    return render_template(
+        "schools.html", schools=schools_list,
+        seo=seo.schools_page(lang),
+    )
+
+
 @app.route("/faq")
 def faq():
     lang = getattr(g, "lang", i18n.DEFAULT)
@@ -882,9 +894,14 @@ def register():
                 kind=kind,
             )
             if role in ("pilot", "both") and kind == "school":
-                # Une ecole s'affiche sous son nom d'ecole : on l'initialise avec
-                # le nom saisi, modifiable ensuite dans le profil.
-                services.upsert_pilot_profile(user_id, business_name=full_name)
+                # Une ecole / un organisme s'affiche sous son nom : initialise
+                # avec le nom saisi + les champs propres aux organismes
+                # (site web, formations proposees), modifiables dans le profil.
+                services.upsert_pilot_profile(
+                    user_id, business_name=full_name,
+                    portfolio_url=(request.form.get("website") or "").strip()[:300] or None,
+                    school_programs=(request.form.get("school_programs") or "").strip()[:2000] or None,
+                )
         except auth.AubeMailRequiredError:
             flash(
                 "Ce compte n'existe pas dans AubeMail. Créez-le d'abord sur "

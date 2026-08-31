@@ -25,6 +25,7 @@ PUBLIC_ROUTES = [
     ("/", "1.0", "daily"),
     ("/pilotes", "0.9", "daily"),
     ("/missions", "0.9", "daily"),
+    ("/ecoles", "0.7", "weekly"),
     ("/faq", "0.6", "monthly"),
     ("/contact", "0.5", "monthly"),
     ("/mentions-legales", "0.3", "yearly"),
@@ -147,6 +148,21 @@ def faq_page(lang="fr"):
                 "pilot payouts.")
     return {"title": title, "description": desc,
             "jsonld": [_faq_ld(content.faq(lang))]}
+
+
+def schools_page(lang="fr"):
+    if lang == "fr":
+        title = "Écoles et organismes de formation drone | AubePilot"
+        desc = ("Inscrivez votre école ou organisme de formation drone : fiche "
+                "publique avec vos formations (opérations de base, avancées, A2, "
+                "STS…), visibilité sur la carte du réseau, demandes des futurs "
+                "pilotes. Gratuit.")
+    else:
+        title = "Drone Training Schools & Organisations | AubePilot"
+        desc = ("List your drone training school or organisation: public page with "
+                "your programmes (basic, advanced, A2, STS…), visibility on the "
+                "network map, requests from future pilots. Free.")
+    return {"title": title, "description": desc}
 
 
 def contact_page(lang="fr"):

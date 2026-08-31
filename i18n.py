@@ -387,6 +387,7 @@ _T = {
     "footer.nav_label":{"fr": "Le réseau",           "en": "The network"},
     "footer.become_pilot": {"fr": "Devenir pilote",  "en": "Become a pilot"},
     "footer.how":      {"fr": "Comment ça marche",   "en": "How it works"},
+    "footer.schools":  {"fr": "Écoles & organismes", "en": "Schools & organisations"},
     "footer.faq":      {"fr": "FAQ",                 "en": "FAQ"},
     "footer.contact":  {"fr": "Nous joindre",        "en": "Contact us"},
 
