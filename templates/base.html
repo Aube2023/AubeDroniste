@@ -243,6 +243,32 @@
 })();
 </script>
 {% endif %}
+<script>
+// Œil « afficher / masquer » : marche pour tout champ mot de passe enveloppé
+// dans .password-field (délégué, donc valable sur connexion, inscription…).
+document.addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('.password-toggle') : null;
+  if (!b) return;
+  var champ = b.closest('.password-field');
+  var input = champ && champ.querySelector('input');
+  if (!input) return;
+  var visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  var maintenantVisible = !visible;
+  b.setAttribute('aria-pressed', maintenantVisible ? 'true' : 'false');
+  b.setAttribute('aria-label', maintenantVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  // Sur un <svg> (SVGElement) la propriété .hidden ne reflète pas l'attribut :
+  // on bascule donc l'attribut « hidden » explicitement.
+  var on = champ.querySelector('[data-eye="on"]');
+  var off = champ.querySelector('[data-eye="off"]');
+  function afficher(el, visible) {
+    if (!el) return;
+    if (visible) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+  }
+  afficher(on, !maintenantVisible);   // œil normal quand le mot de passe est masqué
+  afficher(off, maintenantVisible);   // œil barré quand il est révélé
+});
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

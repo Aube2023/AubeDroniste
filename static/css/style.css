@@ -1159,6 +1159,21 @@ img.avatar { object-fit: cover; }
 }
 .phone-field input { flex: 1; min-width: 0; }
 
+/* Champ mot de passe avec œil « afficher / masquer » */
+.password-field { position: relative; display: block; }
+.password-field input { width: 100%; padding-right: 44px; }
+.password-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 0;
+  background: none; border: 0; border-radius: 8px;
+  color: var(--ink-dim); cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.password-toggle:hover { color: var(--amber); background: rgba(66,87,178,.08); }
+.password-toggle svg { width: 19px; height: 19px; display: block; }
+.password-toggle svg[hidden] { display: none; }
+
 /* Petit indice sous un champ (ex. adresse AubeMail générée) */
 .field-hint {
   display: block; margin-top: 6px;
@@ -1174,6 +1189,10 @@ img.avatar { object-fit: cover; }
   flex-wrap: wrap; gap: 12px;
 }
 .auth-form .form-foot .small { color: var(--ink-dim); font-size: 13px; }
+
+/* Lien discret sous un champ (ex. « Mot de passe oublié ? ») */
+.form-aside { text-align: right; margin-top: 8px; }
+.form-aside a { font-size: 12.5px; }
 
 /* ============ Carnet de vol (pilot_detail) ============ */
 
