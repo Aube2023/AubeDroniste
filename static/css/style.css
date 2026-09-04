@@ -218,7 +218,8 @@ form.inline { display: inline; margin: 0; }
 
 .cta, button.cta, a.cta {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--ink); color: var(--paper);
+  background: linear-gradient(135deg, var(--amber), var(--gold));
+  color: var(--cta-fg);
   border: 0;
   padding: 13px 22px;
   border-radius: 10px;
@@ -226,10 +227,11 @@ form.inline { display: inline; margin: 0; }
   letter-spacing: -.01em;
   cursor: pointer;
   text-transform: none;
-  transition: transform .12s ease, opacity .15s ease, background .15s ease;
+  box-shadow: 0 6px 18px rgba(66, 87, 178, 0.28);
+  transition: transform .12s ease, box-shadow .18s ease, filter .15s ease;
 }
-.cta:hover { background: var(--ink-soft); color: var(--paper); transform: translateY(-1px); }
-.cta:active { transform: translateY(0); }
+.cta:hover { filter: brightness(1.07); color: var(--cta-fg); transform: translateY(-1px); box-shadow: 0 9px 24px rgba(66, 87, 178, 0.36); }
+.cta:active { transform: translateY(0); filter: brightness(.98); }
 .cta-accent, button.cta-accent { background: var(--amber); color: var(--cta-fg); }
 .cta-accent:hover { background: var(--amber-soft); color: var(--cta-fg); }
 .cta-big { font-size: 16px; padding: 16px 30px; border-radius: 12px; }
