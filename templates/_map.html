@@ -2,6 +2,10 @@
    Fond de carte : OpenFreeMap (tuiles vectorielles OpenMapTiles / OpenStreetMap),
    gratuit, SANS cle d'API ni quota — CARTO exige une cle depuis 2026 (filigrane
    « API KEY REQUIRED » sur les tuiles). Styles : positron (jour) / dark (nuit).
+   Marqueurs : pins « goutte » avec icone SVG (drone / chapeau d'ecole / drapeau
+   mission), badge vérifié, et regroupement en pilule « N membres » quand des
+   marqueurs se chevauchent — frequent car les coords pilotes sont floutees
+   (~11 km) : les pilotes d'une meme ville tombent au meme point.
    Parametres optionnels passes via include `with` / contexte :
      map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
      map_center : {lat, lng, label, radius_km} -> zone recherchee (code postal /
@@ -16,6 +20,26 @@
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+/* Popups restyles (jour / nuit). Le contenu peint lui-meme son fond. */
+#aube-map .maplibregl-popup-content{padding:0;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.28);font:13.5px/1.5 system-ui;background:#fff}
+#aube-map .maplibregl-popup-close-button{color:#fff;font-size:17px;line-height:1;padding:3px 7px;right:0;top:0}
+#aube-map .aube-pop-head{display:flex;align-items:center;gap:7px;color:#fff;padding:8px 30px 8px 12px;font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+#aube-map .aube-pop-verif{font-weight:700;font-size:10.5px;background:rgba(255,255,255,.24);padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+#aube-map .aube-pop-body{padding:10px 12px 12px;min-width:195px;max-width:250px;background:#fff;color:#1c1d22}
+#aube-map .aube-pop-muted{color:#6b7280;font-size:12.5px}
+#aube-map .aube-pop-quote{font-style:italic;color:#555;margin:3px 0;font-size:12.5px}
+#aube-map .aube-pop-cta{display:inline-block;margin-top:8px;color:#fff;font-weight:700;font-size:12.5px;padding:6px 13px;border-radius:999px;text-decoration:none}
+#aube-map .aube-pop-cta:hover{filter:brightness(1.1)}
+#aube-map .aube-pop-list{margin:0;padding:0 0 0 2px;list-style:none;max-height:180px;overflow:auto}
+#aube-map .aube-pop-list li{padding:3px 0;border-bottom:1px solid rgba(128,128,128,.15)}
+#aube-map .aube-pop-list li:last-child{border-bottom:0}
+html[data-theme="dark"] #aube-map .maplibregl-popup-content{background:#17181d}
+html[data-theme="dark"] #aube-map .aube-pop-body{background:#17181d;color:#e8e8ea}
+html[data-theme="dark"] #aube-map .aube-pop-muted{color:#9ca3af}
+html[data-theme="dark"] #aube-map .aube-pop-quote{color:#b3b3b8}
+html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d;border-bottom-color:#17181d}
+</style>
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ 'Carte interactive des pilotes et missions' if lang == 'fr' else 'Interactive map of pilots and missions' }}"></div>
   <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
@@ -41,23 +65,27 @@
   if (params.get('country')) qs.set('country', params.get('country'));
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
   if (params.get('kind')) qs.set('kind', params.get('kind'));
-  var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', school: '#22c55e' };
+  var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', school: '#22c55e', mission: '#f59e0b', area: '#7a5fc4' };
+  var KIND_LABEL = LANG === 'fr'
+    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', school: 'École de formation', mission: 'Mission' }
+    : { pro: 'Pro pilot', recreational: 'Recreational pilot', school: 'Training school', mission: 'Mission' };
+
   // Icones blanches dessinees en SVG (nettes a toute taille, pas d'emoji dont
   // le rendu varie selon la plateforme) : drone = pilote, chapeau de diplome =
   // ecole, drapeau = mission, cible = zone recherchee.
-  function iconSvg(inner) {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:64%;height:64%;display:block" aria-hidden="true">' + inner + '</svg>';
-  }
-  var ICONS = {
-    pro: iconSvg('<circle cx="4.5" cy="4.5" r="2.2"/><circle cx="19.5" cy="4.5" r="2.2"/><circle cx="4.5" cy="19.5" r="2.2"/><circle cx="19.5" cy="19.5" r="2.2"/><path d="M6.3 6.3l2.9 2.9M17.7 6.3l-2.9 2.9M6.3 17.7l2.9-2.9M17.7 17.7l-2.9-2.9"/><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.6"/>'),
-    school: iconSvg('<path d="M12 4L2 9.2l10 5.2 10-5.2L12 4z"/><path d="M6.5 12v4.2c0 1.6 2.5 2.8 5.5 2.8s5.5-1.2 5.5-2.8V12"/>'),
-    mission: iconSvg('<path d="M6 21V4"/><path d="M6 5h11.5L15 9l2.5 4H6"/>'),
-    area: iconSvg('<circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/>')
+  var PATHS = {
+    pro: '<circle cx="4.5" cy="4.5" r="2.2"/><circle cx="19.5" cy="4.5" r="2.2"/><circle cx="4.5" cy="19.5" r="2.2"/><circle cx="19.5" cy="19.5" r="2.2"/><path d="M6.3 6.3l2.9 2.9M17.7 6.3l-2.9 2.9M6.3 17.7l2.9-2.9M17.7 17.7l-2.9-2.9"/><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.6"/>',
+    school: '<path d="M12 4L2 9.2l10 5.2 10-5.2L12 4z"/><path d="M6.5 12v4.2c0 1.6 2.5 2.8 5.5 2.8s5.5-1.2 5.5-2.8V12"/>',
+    mission: '<path d="M6 21V4"/><path d="M6 5h11.5L15 9l2.5 4H6"/>',
+    area: '<circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/>',
+    check: '<path d="M5 13l4.5 4.5L19 7"/>'
   };
-  ICONS.recreational = ICONS.pro;
-  var KIND_LABEL = LANG === 'fr'
-    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', school: 'École de formation' }
-    : { pro: 'Pro pilot', recreational: 'Recreational pilot', school: 'Training school' };
+  PATHS.recreational = PATHS.pro;
+  function iconSvg(kind, css, stroke, width) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="' + (stroke || '#fff') + '" stroke-width="' + (width || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" style="' + css + '" aria-hidden="true">' + (PATHS[kind] || PATHS.pro) + '</svg>';
+  }
+  var ICONS = {};
+  Object.keys(PATHS).forEach(function (k) { ICONS[k] = iconSvg(k, 'width:64%;height:64%;display:block'); });
 
   // Fond de carte OpenFreeMap : vectoriel, gratuit, sans cle. Jour / nuit.
   var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -77,22 +105,30 @@
   map.addControl(new maplibregl.ScaleControl({maxWidth: 120, unit: 'metric'}), 'bottom-left');
 
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  function popHead(kind, extra) {
+    return '<div class="aube-pop-head" style="background:' + (KIND_COLOR[kind] || KIND_COLOR.pro) + '">' +
+      iconSvg(kind, 'width:14px;height:14px;flex:none') + '<span>' + (KIND_LABEL[kind] || KIND_LABEL.pro) + '</span>' + (extra || '') + '</div>';
+  }
   function popupPilot(p) {
+    var color = KIND_COLOR[p.kind] || KIND_COLOR.pro;
     var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count + (LANG==='fr'?' avis':' reviews')) : (LANG === 'fr' ? 'nouveau' : 'new');
-    var verif = p.verified ? ' <span style="color:#1e7a6a;font-weight:700">✓ ' + (LANG==='fr'?'vérifié':'verified') + '</span>' : '';
-    var kind = KIND_LABEL[p.kind] || KIND_LABEL.pro;
-    var title = (p.kind === 'school' && p.name) ? esc(p.name) : (p.name ? esc(p.name) : kind);
-    return '<div style="font:14px/1.45 system-ui;min-width:180px"><b>' + title + '</b> <span style="color:#666;font-size:12px">· ' + kind + '</span>' + verif + '<br>' +
-      esc(p.country || '') + (p.headline ? '<br><i style="color:#555">« ' + esc(p.headline) + ' »</i>' : '') +
-      '<br><span style="color:#666">' + stars + '</span><br>' +
-      '<a href="/pilotes/' + p.id + '" style="font-weight:600">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div>';
+    var verif = p.verified ? '<span class="aube-pop-verif">✓ ' + (LANG==='fr'?'vérifié':'verified') + '</span>' : '';
+    var title = p.name ? esc(p.name) : (KIND_LABEL[p.kind] || KIND_LABEL.pro);
+    return '<div class="aube-pop">' + popHead(p.kind, verif) +
+      '<div class="aube-pop-body"><b>' + title + '</b>' +
+      (p.country ? '<div class="aube-pop-muted">' + esc(p.country) + '</div>' : '') +
+      (p.headline ? '<div class="aube-pop-quote">« ' + esc(p.headline) + ' »</div>' : '') +
+      '<div class="aube-pop-muted">' + stars + '</div>' +
+      '<a class="aube-pop-cta" style="background:' + color + '" href="/pilotes/' + p.id + '">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div></div>';
   }
   function popupMission(m) {
     var budget = (m.budget_min || m.budget_max) ? ((m.budget_min||'') + (m.budget_max?('–'+m.budget_max):'') + ' ' + (m.currency||'')) : '';
-    var urgent = m.is_urgent ? ' 🔥' : '';
-    return '<div style="font:14px/1.45 system-ui;min-width:180px"><b>' + esc(m.title || (LANG==='fr'?'Mission':'Mission')) + urgent + '</b><br>' +
-      esc([m.city, m.country].filter(Boolean).join(', ')) + '<br><span style="color:#666">' + esc(budget) + '</span><br>' +
-      '<a href="/missions/' + m.id + '" style="font-weight:600">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div>';
+    var urgent = m.is_urgent ? '<span class="aube-pop-verif">🔥 ' + (LANG==='fr'?'urgent':'urgent') + '</span>' : '';
+    return '<div class="aube-pop">' + popHead('mission', urgent) +
+      '<div class="aube-pop-body"><b>' + esc(m.title || (LANG==='fr'?'Mission':'Mission')) + '</b>' +
+      '<div class="aube-pop-muted">' + esc([m.city, m.country].filter(Boolean).join(', ')) + '</div>' +
+      (budget ? '<div class="aube-pop-muted">' + esc(budget) + '</div>' : '') +
+      '<a class="aube-pop-cta" style="background:#f59e0b" href="/missions/' + m.id + '">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div></div>';
   }
 
   // Polygone GeoJSON approchant un cercle de `km` autour de [lng, lat].
@@ -108,50 +144,186 @@
     return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} };
   }
 
-  var markers = {};            // id pilote -> {marker, el, lngLat}
-  var allBounds = new maplibregl.LngLatBounds();
   // IMPORTANT : MapLibre positionne le marqueur via `style.transform` de
-  // l'element qu'on lui donne. Tout effet visuel (agrandissement au survol)
-  // doit donc s'appliquer a un element INTERIEUR, jamais a l'enveloppe —
-  // sinon le point saute hors de sa position puis revient (bug constate).
-  function markerEl(color, size, icon) {
+  // l'element qu'on lui donne. Tout effet visuel (soulevement au survol)
+  // doit donc s'appliquer a un element INTERIEUR (.aube-pin-lift), jamais a
+  // l'enveloppe — sinon le point saute hors de sa position (bug constate).
+  // Pin « goutte » : carre tourne de 45° a coin inferieur pointu, icone
+  // contre-tournee, badge ✓ pour les profils verifies. Ancre : pointe en bas.
+  function pinEl(kind, opts) {
+    opts = opts || {};
+    var body = opts.size || 30;                    // cote du carre tourne
+    var w = Math.ceil(body * 1.42) + 2;            // diagonale = encombrement
+    var h = Math.ceil(body * 1.42) + 4;
+    var wrap = document.createElement('div');
+    wrap.className = 'aube-marker';
+    wrap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;cursor:pointer';
+    var lift = document.createElement('div');
+    lift.style.cssText = 'position:relative;width:100%;height:100%;transition:transform .16s;transform-origin:center bottom';
+    var pin = document.createElement('div');
+    pin.style.cssText = 'position:absolute;left:50%;top:' + Math.round((h - body) / 2 - body * 0.21) + 'px;width:' + body + 'px;height:' + body + 'px;margin-left:' + (-body / 2) + 'px;' +
+      'background:' + (KIND_COLOR[kind] || KIND_COLOR.pro) + ';border:2px solid #fff;box-sizing:border-box;' +
+      'border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 10px rgba(0,0,0,.35);' +
+      'display:flex;align-items:center;justify-content:center';
+    pin.innerHTML = '<div style="transform:rotate(45deg);width:60%;height:60%;display:flex;align-items:center;justify-content:center">' + iconSvg(kind, 'width:100%;height:100%;display:block') + '</div>';
+    lift.appendChild(pin);
+    if (opts.verified) {
+      var badge = document.createElement('div');
+      badge.style.cssText = 'position:absolute;right:2px;top:0;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center';
+      badge.innerHTML = iconSvg('check', 'width:9px;height:9px;display:block', '#16a34a', 3.4);
+      lift.appendChild(badge);
+    }
+    wrap.appendChild(lift);
+    wrap._lift = lift;
+    return wrap;
+  }
+  // Pastille ronde (zone recherchee).
+  function dotEl(kind, size) {
     var wrap = document.createElement('div');
     wrap.className = 'aube-marker';
     wrap.style.cssText = 'width:' + size + 'px;height:' + size + 'px;cursor:pointer';
     var dot = document.createElement('div');
-    dot.className = 'aube-marker-dot';
-    dot.style.cssText = 'width:100%;height:100%;border-radius:50%;background:' + color + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);transition:transform .15s;transform-origin:center center;box-sizing:border-box;display:flex;align-items:center;justify-content:center';
-    if (icon && ICONS[icon]) dot.innerHTML = ICONS[icon];
+    dot.style.cssText = 'width:100%;height:100%;border-radius:50%;background:' + (KIND_COLOR[kind] || KIND_COLOR.area) + ';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);transition:transform .15s;transform-origin:center center;box-sizing:border-box;display:flex;align-items:center;justify-content:center';
+    dot.innerHTML = iconSvg(kind, 'width:64%;height:64%;display:block');
     wrap.appendChild(dot);
-    wrap._dot = dot;
+    wrap._lift = dot;
     return wrap;
   }
+  // Pilule de regroupement « N membres », inspiree des clusters d'annuaires
+  // concurrents, aux couleurs Aube.
+  function clusterEl(count) {
+    var wrap = document.createElement('div');
+    wrap.className = 'aube-marker';
+    wrap.style.cssText = 'cursor:pointer';
+    var lift = document.createElement('div');
+    lift.style.cssText = 'display:inline-flex;align-items:baseline;gap:6px;padding:7px 13px;border-radius:999px;background:#14151c;border:2px solid #7a5fc4;box-shadow:0 4px 12px rgba(0,0,0,.45);transition:transform .16s;transform-origin:center center;white-space:nowrap';
+    lift.innerHTML = '<span style="color:#fff;font:800 13px/1 system-ui">' + count + '</span>' +
+      '<span style="color:#b9a8ec;font:700 9px/1 system-ui;letter-spacing:.14em;text-transform:uppercase">' + (LANG==='fr'?'membres':'members') + '</span>';
+    wrap.appendChild(lift);
+    wrap._lift = lift;
+    return wrap;
+  }
+  function setScale(wrap, on) {
+    if (!wrap || !wrap._lift) return;
+    wrap._lift.style.transform = on ? 'translateY(-3px) scale(1.12)' : '';
+    wrap.style.zIndex = on ? '5' : '';
+  }
+
   // La legende reprend les memes icones que les marqueurs.
   document.querySelectorAll('.map-legend-icon').forEach(function (s) {
     s.style.cssText += ';display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;margin-right:6px;vertical-align:-4px';
     var ic = ICONS[s.getAttribute('data-kind')];
     if (ic) s.innerHTML = ic;
   });
-  function setScale(wrap, on) {
-    if (!wrap || !wrap._dot) return;
-    wrap._dot.style.transform = on ? 'scale(1.5)' : '';
-    wrap.style.zIndex = on ? '5' : '';
-  }
+
+  var pointById = {};          // id pilote -> {p, lngLat}  (donnees stables)
+  var markers = {};            // id pilote -> {type:'single'|'cluster', marker, el, lngLat}
+  var liveMarkers = [];        // marqueurs pilotes/clusters actuellement poses
+  var pilotPts = [];
+  var lastSig = null;
+  var allBounds = new maplibregl.LngLatBounds();
   function fitAll() {
     if (!allBounds.isEmpty()) map.fitBounds(allBounds, {padding: 56, maxZoom: 9, duration: 600});
   }
   var fitBtn = document.getElementById('map-fit');
   if (fitBtn) fitBtn.addEventListener('click', fitAll);
 
+  function addSingle(pt) {
+    var d = pinEl(pt.p.kind, {verified: pt.p.verified, size: 30});
+    var mk = new maplibregl.Marker({element: d, anchor: 'bottom'}).setLngLat(pt.lngLat)
+      .setPopup(new maplibregl.Popup({offset: 46, maxWidth: '270px'}).setHTML(popupPilot(pt.p))).addTo(map);
+    markers[pt.p.id] = {type: 'single', marker: mk, el: d, lngLat: pt.lngLat};
+    liveMarkers.push(mk);
+    d.addEventListener('mouseenter', function () { setScale(d, true); });
+    d.addEventListener('mouseleave', function () { setScale(d, false); });
+    d.addEventListener('click', function () {
+      var card = document.querySelector('[data-pilot-id="' + pt.p.id + '"]');
+      if (card) { card.classList.add('is-focused'); setTimeout(function () { card.classList.remove('is-focused'); }, 1600); }
+    });
+  }
+  function addCluster(arr) {
+    var lng = 0, lat = 0;
+    arr.forEach(function (pt) { lng += pt.lngLat[0]; lat += pt.lngLat[1]; });
+    var center = [lng / arr.length, lat / arr.length];
+    var d = clusterEl(arr.length);
+    var mk = new maplibregl.Marker({element: d, anchor: 'center'}).setLngLat(center).addTo(map);
+    liveMarkers.push(mk);
+    arr.forEach(function (pt) { markers[pt.p.id] = {type: 'cluster', marker: mk, el: d, lngLat: center}; });
+    d.addEventListener('mouseenter', function () { setScale(d, true); });
+    d.addEventListener('mouseleave', function () { setScale(d, false); });
+    // Les points du groupe partagent-ils tous ~la meme coordonnee ? (les
+    // pilotes d'une meme ville ont des coords floutees identiques -> zoomer
+    // ne les separera jamais : on liste directement les membres.)
+    var sameSpot = arr.every(function (pt) {
+      return Math.abs(pt.lngLat[0] - center[0]) < 0.02 && Math.abs(pt.lngLat[1] - center[1]) < 0.02;
+    });
+    function showList() {
+      var items = arr.map(function (pt) {
+        var nm = esc(pt.p.name || KIND_LABEL[pt.p.kind] || KIND_LABEL.pro);
+        return '<li><a href="/pilotes/' + pt.p.id + '" style="font-weight:600">' + nm + '</a>' +
+          ' <span class="aube-pop-muted">· ' + (KIND_LABEL[pt.p.kind] || KIND_LABEL.pro) + (pt.p.verified ? ' ✓' : '') + '</span></li>';
+      }).join('');
+      new maplibregl.Popup({offset: 20, maxWidth: '270px'})
+        .setLngLat(center)
+        .setHTML('<div class="aube-pop"><div class="aube-pop-head" style="background:#7a5fc4">' +
+          '<span>' + arr.length + ' ' + (LANG==='fr'?'membres':'members') + '</span></div>' +
+          '<div class="aube-pop-body"><ul class="aube-pop-list">' + items + '</ul></div></div>')
+        .addTo(map);
+    }
+    d.addEventListener('click', function () {
+      if (sameSpot || map.getZoom() >= 11) showList();
+      else map.flyTo({center: center, zoom: map.getZoom() + 2.2, duration: 500});
+    });
+  }
+  // Regroupement par grille ecran (~54 px), recalcule apres chaque deplacement.
+  function renderPilots() {
+    var cell = 54;
+    var buckets = {};
+    pilotPts.forEach(function (pt) {
+      var px = map.project(pt.lngLat);
+      var k = Math.round(px.x / cell) + '_' + Math.round(px.y / cell);
+      (buckets[k] = buckets[k] || []).push(pt);
+    });
+    var sig = Object.keys(buckets).map(function (k) {
+      return buckets[k].map(function (pt) { return pt.p.id; }).sort().join(',');
+    }).sort().join('|');
+    if (sig === lastSig) return;
+    lastSig = sig;
+    var openId = null;
+    Object.keys(markers).forEach(function (id) {
+      var m = markers[id];
+      if (m.type === 'single' && m.marker.getPopup() && m.marker.getPopup().isOpen()) openId = id;
+    });
+    liveMarkers.forEach(function (mk) { mk.remove(); });
+    liveMarkers = [];
+    markers = {};
+    Object.keys(buckets).forEach(function (k) {
+      if (buckets[k].length === 1) addSingle(buckets[k][0]);
+      else addCluster(buckets[k]);
+    });
+    if (openId && markers[openId] && markers[openId].type === 'single') markers[openId].marker.togglePopup();
+  }
+
   // API publique : la liste des pilotes (cartes) pilote la carte.
   window.AubeMap = {
     focus: function (id) {
-      var m = markers[id];
-      if (!m) return false;
-      map.flyTo({center: m.lngLat, zoom: Math.max(map.getZoom(), 8), duration: 700});
-      m.marker.togglePopup();
-      if (!m.marker.getPopup().isOpen()) m.marker.togglePopup();
+      var pt = pointById[id];
+      if (!pt) return false;
       el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      var m = markers[id];
+      if (m && m.type === 'single') {
+        map.flyTo({center: m.lngLat, zoom: Math.max(map.getZoom(), 8), duration: 700});
+        m.marker.togglePopup();
+        if (!m.marker.getPopup().isOpen()) m.marker.togglePopup();
+      } else {
+        // Membre regroupe : on zoome dessus, puis popup si le pin s'est separe.
+        map.flyTo({center: pt.lngLat, zoom: Math.max(map.getZoom() + 2.5, 10), duration: 700});
+        map.once('idle', function () {
+          var mm = markers[id];
+          if (mm && mm.type === 'single' && !mm.marker.getPopup().isOpen()) mm.marker.togglePopup();
+          else if (mm && mm.type === 'cluster') setScale(mm.el, true);
+        });
+      }
       return true;
     },
     highlight: function (id, on) {
@@ -173,11 +345,12 @@
                      paint: { 'fill-color': '#7a5fc4', 'fill-opacity': 0.10 } });
       map.addLayer({ id: 'search-area-line', type: 'line', source: 'search-area',
                      paint: { 'line-color': '#7a5fc4', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
-      var c = markerEl('#7a5fc4', 22, 'area');
+      var c = dotEl('area', 22);
       var mk = new maplibregl.Marker({element: c}).setLngLat([CENTER.lng, CENTER.lat]).addTo(map);
-      if (CENTER.label) mk.setPopup(new maplibregl.Popup({offset: 12}).setHTML(
-        '<div style="font:14px system-ui"><b>⌖ ' + esc(CENTER.label) + '</b><br>' +
-        (LANG === 'fr' ? 'rayon ' : 'radius ') + km + ' km</div>'));
+      if (CENTER.label) mk.setPopup(new maplibregl.Popup({offset: 14}).setHTML(
+        '<div class="aube-pop"><div class="aube-pop-head" style="background:#7a5fc4">' +
+        iconSvg('area', 'width:14px;height:14px;flex:none') + '<span>' + esc(CENTER.label) + '</span></div>' +
+        '<div class="aube-pop-body"><div class="aube-pop-muted">' + (LANG === 'fr' ? 'rayon ' : 'radius ') + km + ' km</div></div></div>'));
       circle.geometry.coordinates[0].forEach(function (pt) { bounds.extend(pt); allBounds.extend(pt); });
     }
 
@@ -187,25 +360,20 @@
         var n = 0;
         (data.pilots || []).forEach(function (p) {
           if (p.lng == null || p.lat == null) return;
-          var d = markerEl(KIND_COLOR[p.kind] || KIND_COLOR.pro, 22, ICONS[p.kind] ? p.kind : 'pro');
-          var mk = new maplibregl.Marker({element: d}).setLngLat([p.lng, p.lat])
-            .setPopup(new maplibregl.Popup({offset: 12, maxWidth: '280px'}).setHTML(popupPilot(p))).addTo(map);
-          markers[p.id] = {marker: mk, el: d, lngLat: [p.lng, p.lat]};
-          d.addEventListener('mouseenter', function () { setScale(d, true); });
-          d.addEventListener('mouseleave', function () { setScale(d, false); });
-          d.addEventListener('click', function () {
-            var card = document.querySelector('[data-pilot-id="' + p.id + '"]');
-            if (card) { card.classList.add('is-focused'); setTimeout(function () { card.classList.remove('is-focused'); }, 1600); }
-          });
-          allBounds.extend([p.lng, p.lat]);
-          if (!hasArea && FOCUS === 'pilots') bounds.extend([p.lng, p.lat]);
+          var pt = {p: p, lngLat: [p.lng, p.lat]};
+          pilotPts.push(pt);
+          pointById[p.id] = pt;
+          allBounds.extend(pt.lngLat);
+          if (!hasArea && FOCUS === 'pilots') bounds.extend(pt.lngLat);
           n++;
         });
         (data.missions || []).forEach(function (m) {
           if (m.lng == null || m.lat == null) return;
-          var d = markerEl('#f59e0b', 20, 'mission');
-          new maplibregl.Marker({element: d}).setLngLat([m.lng, m.lat])
-            .setPopup(new maplibregl.Popup({offset: 12, maxWidth: '280px'}).setHTML(popupMission(m))).addTo(map);
+          var d = pinEl('mission', {size: 26});
+          new maplibregl.Marker({element: d, anchor: 'bottom'}).setLngLat([m.lng, m.lat])
+            .setPopup(new maplibregl.Popup({offset: 42, maxWidth: '270px'}).setHTML(popupMission(m))).addTo(map);
+          d.addEventListener('mouseenter', function () { setScale(d, true); });
+          d.addEventListener('mouseleave', function () { setScale(d, false); });
           allBounds.extend([m.lng, m.lat]);
           if (!hasArea && FOCUS === 'missions') bounds.extend([m.lng, m.lat]);
           n++;
@@ -217,6 +385,8 @@
         var lbl = document.getElementById('map-count');
         if (lbl) lbl.textContent = (LANG==='fr' ? (n + ' point(s) sur la carte') : (n + ' point(s) on the map'));
         if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 56, maxZoom: hasArea ? 11 : 9, duration: 0});
+        renderPilots();
+        map.on('moveend', renderPilots);
 
         // Survol des cartes pilote de la liste -> marqueur mis en avant ; clic sur
         // le lien « voir sur la carte » -> vol + popup.
@@ -226,7 +396,7 @@
           card.addEventListener('mouseleave', function () { window.AubeMap.highlight(id, false); });
           var pin = card.querySelector('.map-pin');
           if (pin) {
-            if (!markers[id]) { pin.style.display = 'none'; }
+            if (!pointById[id]) { pin.style.display = 'none'; }
             pin.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); window.AubeMap.focus(id); });
           }
         });
