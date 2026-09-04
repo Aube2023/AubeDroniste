@@ -368,6 +368,17 @@ _T = {
     "mission.formation":      {"fr": "Formation / accompagnement vol",       "en": "Training / flight mentorship"},
     "mission.autre":          {"fr": "Autre / sur mesure",                   "en": "Other / custom"},
 
+    # ---- Groupes de spécialités (regroupement à l'affichage)
+    "mission_group.Médias & cinéma":          {"fr": "Médias & cinéma",          "en": "Media & film"},
+    "mission_group.Immobilier & patrimoine":  {"fr": "Immobilier & patrimoine",  "en": "Real estate & heritage"},
+    "mission_group.Cartographie & mesure":    {"fr": "Cartographie & mesure",    "en": "Mapping & surveying"},
+    "mission_group.Inspection technique":     {"fr": "Inspection technique",     "en": "Technical inspection"},
+    "mission_group.Construction & BTP":       {"fr": "Construction & BTP",       "en": "Construction"},
+    "mission_group.Agriculture & foresterie": {"fr": "Agriculture & foresterie", "en": "Agriculture & forestry"},
+    "mission_group.Sécurité & urgence":       {"fr": "Sécurité & urgence",       "en": "Safety & emergency"},
+    "mission_group.Environnement":            {"fr": "Environnement",            "en": "Environment"},
+    "mission_group.Logistique & autres":      {"fr": "Logistique & autres",      "en": "Logistics & other"},
+
     # ---- Emails (sujets)
     "email.welcome.subject":      {"fr": "Bienvenue sur AubePilot",
                                     "en": "Welcome to AubePilot"},

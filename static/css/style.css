@@ -742,6 +742,15 @@ img.avatar { object-fit: cover; }
 .chip-check:hover { border-color: var(--amber); color: var(--ink); }
 .chip-check input { margin: 0; accent-color: var(--amber); }
 
+/* Spécialités regroupées par thème (au lieu d'une liste éparpillée) */
+.spec-groups { display: flex; flex-direction: column; gap: 14px; }
+.spec-group { display: flex; flex-direction: column; gap: 8px; }
+.spec-group-title {
+  font: 700 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-soft); opacity: .85;
+  padding-bottom: 4px; border-bottom: 1px solid var(--rule);
+}
+
 .row-territory {
   display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; margin: 6px 0;
   align-items: center;

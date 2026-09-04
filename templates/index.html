@@ -25,7 +25,7 @@
     <label>{{ t('home.search_type') }}
       <select name="mission_type">
         <option value="">{{ t('home.search_type_any') }}</option>
-        {% for code, lbl in mission_types %}<option value="{{ code }}">{{ mission_label(code) }}</option>{% endfor %}
+        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}">{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
       </select>
     </label>
     <button class="cta btn-block" type="submit">{{ t('home.search_btn') }}</button>

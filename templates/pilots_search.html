@@ -21,11 +21,20 @@
 </nav>
 <details class="disclosure spec-chips" id="specialites" {% if params.mission_type %}open{% endif %}>
   <summary>{{ 'Choisir une spécialité' if fr else 'Pick a specialty' }}</summary>
-  <div class="chips" style="margin-top: 10px;">
-    {% set spec_args = request.args.to_dict() %}{% set _ = spec_args.pop('mission_type', None) %}
-    <a class="chip-check {{ 'on' if not params.mission_type else '' }}" href="{{ url_for('pilots_search', **spec_args) }}">{{ 'Toutes' if fr else 'All' }}</a>
-    {% for code, lbl in mission_types %}
-    <a class="chip-check {{ 'on' if params.mission_type == code else '' }}" href="{{ url_for('pilots_search', mission_type=code, **spec_args) }}">{{ mission_label(code) }}</a>
+  {% set spec_args = request.args.to_dict() %}{% set _ = spec_args.pop('mission_type', None) %}
+  <div class="spec-groups" style="margin-top: 10px;">
+    <div class="chips">
+      <a class="chip-check {{ 'on' if not params.mission_type else '' }}" href="{{ url_for('pilots_search', **spec_args) }}">{{ 'Toutes' if fr else 'All' }}</a>
+    </div>
+    {% for gname, codes in mission_groups %}
+    <div class="spec-group">
+      <div class="spec-group-title">{{ mission_group_label(gname) }}</div>
+      <div class="chips">
+        {% for code in codes %}
+        <a class="chip-check {{ 'on' if params.mission_type == code else '' }}" href="{{ url_for('pilots_search', mission_type=code, **spec_args) }}">{{ mission_label(code) }}</a>
+        {% endfor %}
+      </div>
+    </div>
     {% endfor %}
   </div>
 </details>
@@ -65,7 +74,7 @@
     <label>{{ 'Spécialité' if fr else 'Specialty' }}
       <select name="mission_type">
         <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}
+        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
       </select>
     </label>
     <label>{{ 'Capacité drone' if fr else 'Drone capability' }}

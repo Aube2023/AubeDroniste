@@ -38,7 +38,7 @@
     <label>{{ 'Type' if fr else 'Type' }}
       <select name="mission_type">
         <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        {% for code, lbl in mission_types %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}
+        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
       </select>
     </label>
     <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}" placeholder="{{ 'ex. Marrakech' if fr else 'e.g. Toronto' }}"></label>

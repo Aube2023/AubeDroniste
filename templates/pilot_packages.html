@@ -28,7 +28,7 @@
       <label>Type de mission
         <select name="mission_type">
           <option value="">Général (tous types)</option>
-          {% for code, lbl in mission_types %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+          {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}">{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
         </select>
       </label>
     </div>
@@ -119,7 +119,7 @@
         <label>Type
           <select name="mission_type">
             <option value="">Général</option>
-            {% for code, lbl in mission_types %}<option value="{{ code }}" {% if p.mission_type==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+            {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if p.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
           </select>
         </label>
       </div>

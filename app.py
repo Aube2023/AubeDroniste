@@ -259,6 +259,15 @@ def _mission_label(code: str) -> str:
     return _label(MISSION_TYPES, code, code)
 
 
+def _mission_group_label(name: str) -> str:
+    """Libelle d'un groupe de specialites, traduit via i18n (cle mission_group.<nom>)."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    key = f"mission_group.{name}"
+    if i18n._T.get(key):
+        return i18n.t(key, lang=lang)
+    return name
+
+
 def _pilot_payout_context() -> dict:
     """Contexte du bandeau « Activez vos paiements » pour le pilote connecte.
     Non-pilote / anonyme -> pas de bandeau (valeurs True)."""
@@ -286,6 +295,7 @@ def _inject_helpers():
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
         "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
+        "mission_group_label": _mission_group_label,
         "status_label": status_label,
         # Anti-bypass : nom anonymise dans toutes les listes / cartes
         # (la fiche detail decide cas par cas via has_funded_relation).

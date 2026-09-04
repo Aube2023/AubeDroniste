@@ -37,7 +37,7 @@
       </label>
       <label>Type
         <select name="mission_type" required>
-          {% for code, lbl in mission_types %}<option value="{{ code }}" {% if form.get('mission_type')==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+          {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if form.get('mission_type')==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
         </select>
       </label>
       <label>Brief détaillé

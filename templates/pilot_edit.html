@@ -160,9 +160,16 @@
   </div>
 
   <h2>Spécialités</h2>
-  <div class="chips check-grid">
-    {% for code, lbl in mission_types %}
-    <label class="chip-check"><input type="checkbox" name="specialties" value="{{ code }}" {% if code in profile.specialties %}checked{% endif %}> {{ lbl }}</label>
+  <div class="spec-groups">
+    {% for gname, codes in mission_groups %}
+    <div class="spec-group">
+      <div class="spec-group-title">{{ mission_group_label(gname) }}</div>
+      <div class="chips check-grid">
+        {% for code in codes %}
+        <label class="chip-check"><input type="checkbox" name="specialties" value="{{ code }}" {% if code in profile.specialties %}checked{% endif %}> {{ mission_label(code) }}</label>
+        {% endfor %}
+      </div>
+    </div>
     {% endfor %}
   </div>
 
