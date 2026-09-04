@@ -1151,6 +1151,22 @@ img.avatar { object-fit: cover; }
 .geo-row > .geo-input { flex: 1; }
 .geo-row > button { flex-shrink: 0; }
 
+/* Téléphone : indicatif pays + numéro, comme un seul champ */
+.phone-field { display: flex; gap: 8px; align-items: stretch; }
+.phone-field select {
+  flex: 0 0 auto; width: auto; min-width: 116px; max-width: 178px;
+  text-overflow: ellipsis;
+}
+.phone-field input { flex: 1; min-width: 0; }
+
+/* Petit indice sous un champ (ex. adresse AubeMail générée) */
+.field-hint {
+  display: block; margin-top: 6px;
+  font-size: 12px; color: var(--ink-dim); font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.field-hint b { color: var(--amber); font-weight: 600; }
+
 .auth-form .form-foot {
   margin-top: 28px; padding-top: 20px;
   border-top: 1px dashed var(--rule);

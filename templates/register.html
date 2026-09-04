@@ -112,7 +112,8 @@
           <input name="full_name" required placeholder="ex. Sophie Tremblay">
         </label>
         <label>Identifiant
-          <input name="username" required minlength="3" pattern="[a-z0-9_.\-]{3,32}" placeholder="sophie.tremblay">
+          <input name="username" id="reg-username" required minlength="3" pattern="[a-z0-9_.\-]{3,32}" placeholder="sophie.tremblay">
+          <span class="field-hint">Votre adresse AubeMail : <b id="aubemail-preview">identifiant</b>@aubemail.com</span>
         </label>
         <label>Mot de passe
           <input type="password" name="password" required minlength="6" autocomplete="new-password">
@@ -120,14 +121,14 @@
         <label>Confirmer le mot de passe
           <input type="password" name="confirm" required minlength="6" autocomplete="new-password">
         </label>
-        <label>Téléphone
-          <input name="phone" type="tel" placeholder="+212 6 …">
-        </label>
-        <label style="display: flex; flex-direction: column; justify-content: center;">
-          <span class="muted small mono" style="text-transform: uppercase; letter-spacing: .14em;">Email AubeMail</span>
-          <span class="serif-italic" style="color: var(--ink-soft);">{{ '<identifiant>@aubemail.com' }}</span>
-        </label>
       </div>
+      <label style="margin-top: 4px;">Téléphone <span class="muted small">(optionnel)</span>
+        <div class="phone-field">
+          <select id="phone-code" aria-label="Indicatif du pays"></select>
+          <input id="phone-number" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="6 12 34 56 78">
+        </div>
+        <input type="hidden" name="phone">
+      </label>
     </fieldset>
 
     <fieldset class="fieldset-block">
@@ -156,5 +157,82 @@
     </div>
   </form>
 </section>
+
+<script>
+(function () {
+  // ── Adresse AubeMail affichée en direct sous l'identifiant ──
+  var champUser = document.getElementById('reg-username');
+  var apercuMail = document.getElementById('aubemail-preview');
+  if (champUser && apercuMail) {
+    champUser.addEventListener('input', function () {
+      var v = champUser.value.toLowerCase().replace(/[^a-z0-9_.\-]/g, '');
+      apercuMail.textContent = v || 'identifiant';
+    });
+  }
+
+  // ── Téléphone : indicatif pays + numéro ──
+  // [ indicatif, drapeau, nom FR ] — les pays du réseau d'abord, puis le monde.
+  var INDICATIFS = [
+    ['+1','🇨🇦','Canada'], ['+33','🇫🇷','France'], ['+32','🇧🇪','Belgique'],
+    ['+41','🇨🇭','Suisse'], ['+352','🇱🇺','Luxembourg'], ['+212','🇲🇦','Maroc'],
+    ['+213','🇩🇿','Algérie'], ['+216','🇹🇳','Tunisie'], ['+1','🇺🇸','États-Unis'],
+    ['+221','🇸🇳','Sénégal'], ['+225','🇨🇮','Côte d’Ivoire'], ['+237','🇨🇲','Cameroun'],
+    ['+241','🇬🇦','Gabon'], ['+243','🇨🇩','Congo (RDC)'], ['+44','🇬🇧','Royaume-Uni'],
+    ['+353','🇮🇪','Irlande'], ['+34','🇪🇸','Espagne'], ['+351','🇵🇹','Portugal'],
+    ['+39','🇮🇹','Italie'], ['+49','🇩🇪','Allemagne'], ['+31','🇳🇱','Pays-Bas'],
+    ['+43','🇦🇹','Autriche'], ['+45','🇩🇰','Danemark'], ['+46','🇸🇪','Suède'],
+    ['+47','🇳🇴','Norvège'], ['+358','🇫🇮','Finlande'], ['+48','🇵🇱','Pologne'],
+    ['+30','🇬🇷','Grèce'], ['+420','🇨🇿','Tchéquie'], ['+36','🇭🇺','Hongrie'],
+    ['+40','🇷🇴','Roumanie'], ['+380','🇺🇦','Ukraine'], ['+7','🇷🇺','Russie'],
+    ['+90','🇹🇷','Turquie'], ['+972','🇮🇱','Israël'], ['+971','🇦🇪','Émirats arabes unis'],
+    ['+966','🇸🇦','Arabie saoudite'], ['+974','🇶🇦','Qatar'], ['+965','🇰🇼','Koweït'],
+    ['+961','🇱🇧','Liban'], ['+20','🇪🇬','Égypte'], ['+27','🇿🇦','Afrique du Sud'],
+    ['+234','🇳🇬','Nigéria'], ['+254','🇰🇪','Kenya'], ['+91','🇮🇳','Inde'],
+    ['+92','🇵🇰','Pakistan'], ['+86','🇨🇳','Chine'], ['+81','🇯🇵','Japon'],
+    ['+82','🇰🇷','Corée du Sud'], ['+84','🇻🇳','Vietnam'], ['+66','🇹🇭','Thaïlande'],
+    ['+62','🇮🇩','Indonésie'], ['+63','🇵🇭','Philippines'], ['+60','🇲🇾','Malaisie'],
+    ['+65','🇸🇬','Singapour'], ['+61','🇦🇺','Australie'], ['+64','🇳🇿','Nouvelle-Zélande'],
+    ['+52','🇲🇽','Mexique'], ['+55','🇧🇷','Brésil'], ['+54','🇦🇷','Argentine'],
+    ['+56','🇨🇱','Chili'], ['+57','🇨🇴','Colombie'], ['+51','🇵🇪','Pérou']
+  ];
+  var selCode = document.getElementById('phone-code');
+  var numero = document.getElementById('phone-number');
+  var champPhone = document.querySelector('input[name="phone"]');
+  var champPays = document.querySelector('input[name="country"]');
+  var parPays = {};   // nom pays (normalisé) -> index d'option
+  if (selCode && numero && champPhone) {
+    INDICATIFS.forEach(function (e, i) {
+      var opt = document.createElement('option');
+      opt.value = e[0];
+      opt.textContent = e[1] + ' ' + e[0] + ' · ' + e[2];
+      selCode.appendChild(opt);
+      parPays[e[2].toLowerCase()] = i;
+    });
+    selCode.selectedIndex = 0;   // Canada par défaut
+
+    function combiner() {
+      var n = numero.value.trim();
+      champPhone.value = n ? (selCode.value + ' ' + n) : '';
+    }
+    selCode.addEventListener('change', combiner);
+    numero.addEventListener('input', combiner);
+
+    // Choisit l'indicatif d'après le pays saisi, tant que l'usager n'a pas
+    // touché lui-même au sélecteur.
+    var codeManuel = false;
+    selCode.addEventListener('change', function () { codeManuel = true; });
+    function synchroniserPays() {
+      if (codeManuel || !champPays) return;
+      var p = champPays.value.trim().toLowerCase();
+      if (parPays[p] != null) { selCode.selectedIndex = parPays[p]; combiner(); }
+    }
+    if (champPays) {
+      champPays.addEventListener('change', synchroniserPays);
+      champPays.addEventListener('blur', synchroniserPays);
+      synchroniserPays();
+    }
+  }
+})();
+</script>
 
 {% endblock %}
