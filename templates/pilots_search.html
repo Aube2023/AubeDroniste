@@ -80,13 +80,13 @@
     <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
       <select name="capability">
         <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for cap in drone_capabilities %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap }}</option>{% endfor %}
+        {% for gname, codes in drone_capability_groups %}<optgroup label="{{ gname }}">{% for cap in codes %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap_label(cap) }}</option>{% endfor %}</optgroup>{% endfor %}
       </select>
     </label>
     <label>{{ 'Autorité de certification' if fr else 'Certification authority' }}
       <select name="authority">
         <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for code, lbl in licence_authorities %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+        {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
       </select>
     </label>
     <label>{{ 'Note minimale' if fr else 'Min. rating' }}

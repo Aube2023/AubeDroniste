@@ -280,6 +280,30 @@ DRONE_CAPABILITIES = [
     "largage", "epandage",
 ]
 
+# Libelles lisibles des capacites (au lieu du code brut « camera_4k »).
+DRONE_CAPABILITY_LABELS = {
+    "camera_4k":      "Caméra 4K",
+    "camera_6k":      "Caméra 6K",
+    "camera_8k":      "Caméra 8K",
+    "thermique":      "Caméra thermique",
+    "multispectrale": "Caméra multispectrale",
+    "zoom_optique":   "Zoom optique",
+    "lidar":          "LiDAR",
+    "rtk":            "RTK / PPK",
+    "haut_parleur":   "Haut-parleur",
+    "projecteur":     "Projecteur / éclairage",
+    "largage":        "Largage de charge",
+    "epandage":       "Épandage / pulvérisation",
+}
+
+# Regroupement des capacites pour l'affichage en sections de chips.
+DRONE_CAPABILITY_GROUPS = [
+    ("Caméra & imagerie",          ["camera_4k", "camera_6k", "camera_8k",
+                                    "thermique", "multispectrale", "zoom_optique"]),
+    ("Capteurs & mesure",          ["lidar", "rtk"]),
+    ("Charge utile & équipements", ["haut_parleur", "projecteur", "largage", "epandage"]),
+]
+
 # Marques de drones connues (catalogue indicatif, non exhaustif)
 DRONE_BRANDS = [
     "DJI", "Autel Robotics", "Parrot", "Skydio", "Yuneec",
@@ -395,6 +419,18 @@ LICENCE_AUTHORITIES = [
     ("CAAI_IL",  "CAAI (Israel)"),
     # Generique
     ("autre",    "Autre / declarative"),
+]
+
+# Regroupement des autorites par region, pour l'affichage en sections de chips.
+LICENCE_AUTHORITY_GROUPS = [
+    ("Europe",             ["EASA", "DGAC", "CAA_UK", "OFAC", "LBA_DE", "ENAC_IT", "AESA_ES"]),
+    ("Amérique du Nord",   ["Transport Canada", "FAA"]),
+    ("Amérique latine",    ["ANAC_BR", "DGAC_CL"]),
+    ("Maghreb & Afrique",  ["DGAC_MA", "ANAC_TN", "DACM_DZ", "ASECNA", "SACAA_ZA"]),
+    ("Russie & CEI",       ["Rosaviatsia"]),
+    ("Asie-Pacifique",     ["CAAC", "JCAB", "KOCA", "CASA", "CAANZ", "DGCA_IN", "CAAS_SG"]),
+    ("Moyen-Orient",       ["GCAA_AE", "GACA_SA", "CAAI_IL"]),
+    ("Autre",              ["autre"]),
 ]
 
 # Aide a la verification manuelle des justificatifs (back-office) : pour

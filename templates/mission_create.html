@@ -103,17 +103,31 @@
         <label class="check"><input type="checkbox" name="requires_insurance" value="1"> RC pro requise</label>
       </div>
 
-      <h3 style="font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-top: 24px;">Capacités drone</h3>
-      <div class="chips" style="margin-top: 8px;">
-        {% for cap in drone_capabilities %}
-        <label class="chip-check"><input type="checkbox" name="requires_capabilities" value="{{ cap }}"> {{ cap }}</label>
+      <h4 class="req-subtitle">Capacités drone</h4>
+      <div class="spec-groups" style="margin-top: 10px;">
+        {% for gname, codes in drone_capability_groups %}
+        <div class="spec-group">
+          <div class="spec-group-title">{{ gname }}</div>
+          <div class="chips">
+            {% for cap in codes %}
+            <label class="chip-check"><input type="checkbox" name="requires_capabilities" value="{{ cap }}"> {{ cap_label(cap) }}</label>
+            {% endfor %}
+          </div>
+        </div>
         {% endfor %}
       </div>
 
-      <h3 style="font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-top: 24px;">Brevets exigés</h3>
-      <div class="chips" style="margin-top: 8px;">
-        {% for code, lbl in licence_authorities %}
-        <label class="chip-check"><input type="checkbox" name="requires_certifications" value="{{ code }}"> {{ lbl }}</label>
+      <h4 class="req-subtitle">Brevets exigés</h4>
+      <div class="spec-groups" style="margin-top: 10px;">
+        {% for gname, codes in licence_authority_groups %}
+        <div class="spec-group">
+          <div class="spec-group-title">{{ gname }}</div>
+          <div class="chips">
+            {% for code in codes %}
+            <label class="chip-check"><input type="checkbox" name="requires_certifications" value="{{ code }}"> {{ auth_label(code) }}</label>
+            {% endfor %}
+          </div>
+        </div>
         {% endfor %}
       </div>
     </section>

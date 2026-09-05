@@ -1461,6 +1461,13 @@ img.avatar { object-fit: cover; }
   flex-shrink: 0;
 }
 .numbered-section > p.muted { margin-top: 0; max-width: 60ch; }
+/* Sous-titre d'un bloc de la section (ex. « Capacités drone ») : hors
+   numérotation, style discret mono. */
+.req-subtitle {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim);
+  margin: 24px 0 0;
+}
 
 .section-form { counter-reset: numseq; }
 

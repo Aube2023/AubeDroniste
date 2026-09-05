@@ -232,7 +232,7 @@
       <div class="grid-2">
         <label>Autorité
           <select name="authority" id="cert-authority">
-            {% for code, lbl in licence_authorities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
+            {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}">{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
           </select>
         </label>
         <label>Intitulé du brevet
@@ -328,9 +328,16 @@
         <label>Photo<input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
       </div>
       <h4>Capacités</h4>
-      <div class="chips check-grid">
-        {% for cap in drone_capabilities %}
-        <label class="chip-check"><input type="checkbox" name="capabilities" value="{{ cap }}"> {{ cap }}</label>
+      <div class="spec-groups" style="margin-top: 8px;">
+        {% for gname, codes in drone_capability_groups %}
+        <div class="spec-group">
+          <div class="spec-group-title">{{ gname }}</div>
+          <div class="chips check-grid">
+            {% for cap in codes %}
+            <label class="chip-check"><input type="checkbox" name="capabilities" value="{{ cap }}"> {{ cap_label(cap) }}</label>
+            {% endfor %}
+          </div>
+        </div>
         {% endfor %}
       </div>
 
