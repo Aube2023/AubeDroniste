@@ -107,6 +107,14 @@ AUBEMAIL_URL = os.environ.get("AUBEMAIL_URL", "https://aubemail.com")
 # autoriser via verification du username en clair).
 AUBE_INTERNAL_API_KEY = os.environ.get("AUBE_INTERNAL_API_KEY", "")
 
+# AubeCaptcha (anti-robot ecosysteme). Tant que la SITEKEY/le SECRET ne sont
+# pas fournis (variables d'env), le widget ne s'affiche pas et la verification
+# est ignoree -> inscription inchangee. Creez le site sur
+# https://captcha.aubeetoilee.com/tableau-de-bord pour obtenir les cles.
+AUBECAPTCHA_URL = os.environ.get("AUBECAPTCHA_URL", "https://captcha.aubeetoilee.com").rstrip("/")
+AUBECAPTCHA_SITEKEY = os.environ.get("AUBECAPTCHA_SITEKEY", "")
+AUBECAPTCHA_SECRET = os.environ.get("AUBECAPTCHA_SECRET", "")
+
 # Domaine racine de l'ecosysteme : chaque service vit sur <slug>.<ROOT_DOMAIN>.
 ROOT_DOMAIN = os.environ.get("AUBE_ROOT_DOMAIN", "aubeetoilee.com")
 

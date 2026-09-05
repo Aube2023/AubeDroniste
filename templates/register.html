@@ -162,6 +162,20 @@
       <p class="muted" style="margin-top:4px;font-size:.85em">Optionnel mais recommandé : permet aux clients de vous trouver « autour de moi », où que vous soyez dans le monde.</p>
     </fieldset>
 
+    {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
+    <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px; height:0; overflow:hidden;">
+      <label>Ne pas remplir ce champ
+        <input type="text" name="website_confirm" tabindex="-1" autocomplete="off">
+      </label>
+    </div>
+
+    {% if aubecaptcha_sitekey %}
+    <div style="margin: 4px 0 16px;">
+      <script src="{{ aubecaptcha_url }}/widget.js" async defer></script>
+      <div class="aubecaptcha" data-sitekey="{{ aubecaptcha_sitekey }}"></div>
+    </div>
+    {% endif %}
+
     <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">Créer mon compte</button>
     <div class="form-foot">
       <span class="small">Déjà membre ? <a href="{{ url_for('login') }}">Connexion</a></span>

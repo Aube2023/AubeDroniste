@@ -15,6 +15,7 @@ from flask import (
 )
 
 import auth
+import config
 import content
 import db
 import geocode
@@ -195,6 +196,9 @@ def _inject_globals():
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
+        # AubeCaptcha : widget affiche seulement si une sitekey est configuree
+        "aubecaptcha_sitekey": config.AUBECAPTCHA_SITEKEY,
+        "aubecaptcha_url": config.AUBECAPTCHA_URL,
         # Contact public + reseaux (pied de page, page contact, accueil)
         "contact_email": CONTACT_EMAIL,
         "contact_reply_hours": CONTACT_REPLY_HOURS,
@@ -928,6 +932,27 @@ def register():
         if db.fetchone("SELECT 1 FROM users WHERE username=?", (username,)):
             flash("Cet identifiant est deja pris.", "error")
             return render_template("register.html")
+
+        # Anti-robot 1 : piege « honeypot ». Champ cache aux humains (hors
+        # ecran, aria-hidden). Un robot qui remplit tous les champs le remplit
+        # aussi -> on refuse en silence (le bot croit avoir reussi).
+        if (request.form.get("website_confirm") or "").strip():
+            log.warning("inscription honeypot declenchee ip=%s", request.remote_addr)
+            return render_template("register.html")
+
+        # Anti-robot 2 : AubeCaptcha. Inerte tant qu'aucune sitekey/secret
+        # n'est configuree (variables d'env) -> inscription inchangee. Une fois
+        # les cles posees, un jeton valide resolu sur notre domaine est exige.
+        if config.AUBECAPTCHA_SITEKEY and config.AUBECAPTCHA_SECRET:
+            import aubecaptcha
+            ok_cap, raison = aubecaptcha.verifier(
+                request.form.get("aubecaptcha-token"),
+                hote_attendu="pilot.aubeetoilee.com",
+            )
+            if not ok_cap:
+                log.warning("aubecaptcha refuse a l'inscription : %s", raison)
+                flash("Vérification anti-robot échouée. Réessayez.", "error")
+                return render_template("register.html")
 
         # SECURITE : si l'identifiant correspond a un compte systeme AubeMail
         # (mot de passe gere par PAM, prod Linux), l'inscription ne doit PAS
