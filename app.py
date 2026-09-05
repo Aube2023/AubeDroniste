@@ -158,6 +158,31 @@ def _csrf_check():
     security.validate_csrf()
 
 
+# Cache-busting des assets statiques : ajoute ?v=<mtime> a chaque URL
+# url_for('static', ...). Les fichiers sont mis en cache 30 jours cote nginx ;
+# sans version, un app.js/style.css modifie n'etait pas recharge (le bouton
+# « Nuit » et les autres data-action cassaient pour les visiteurs recurrents).
+# Le cache mtime est vide au demarrage du process (donc rafraichi a chaque
+# `systemctl restart aubepilot` apres deploiement).
+_static_ver_cache: dict = {}
+
+
+@app.url_defaults
+def _static_cache_bust(endpoint, values):
+    if endpoint != "static" or not values.get("filename"):
+        return
+    filename = values["filename"]
+    version = _static_ver_cache.get(filename)
+    if version is None:
+        try:
+            version = int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+        except OSError:
+            version = 0
+        _static_ver_cache[filename] = version
+    if version:
+        values["v"] = version
+
+
 @app.after_request
 def _security_headers(resp):
     return security.apply_security_headers(resp)
@@ -250,13 +275,9 @@ def _fee_tiers_display() -> list:
 
 
 def _static_v(filename: str) -> str:
-    """URL d'un asset statique avec un suffixe ?v=<mtime> pour casser le cache navigateur."""
-    url = url_for("static", filename=filename)
-    try:
-        path = os.path.join(app.static_folder or "static", filename)
-        return f"{url}?v={int(os.path.getmtime(path))}"
-    except OSError:
-        return url
+    """URL d'un asset statique. Le suffixe ?v=<mtime> est ajoute automatiquement
+    par @app.url_defaults (_static_cache_bust) : on delegue donc a url_for."""
+    return url_for("static", filename=filename)
 
 
 def _label(pairs, code, fallback=""):

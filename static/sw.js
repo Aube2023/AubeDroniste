@@ -4,7 +4,7 @@
 // affiche /offline. Les assets statiques et les polices sont servis du cache
 // puis rafraîchis en arrière-plan (stale-while-revalidate).
 
-const VERSION = 'aube-sw-v1';
+const VERSION = 'aube-sw-v2';
 const STATIC_CACHE = VERSION + '-static';
 const FONT_CACHE = VERSION + '-fonts';
 const OFFLINE_URL = '/offline';
