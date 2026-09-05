@@ -627,6 +627,34 @@ def contact_submit():
     return redirect(url_for("contact_form"))
 
 
+# Les API JSON publiques (/api/near, /api/pilotes, /api/missions) ne sont pas
+# authentifiees : elles ne doivent exposer QUE ce que voit un visiteur anonyme
+# sur les pages HTML (nom masque « Prenom X. », coordonnees floutees). Les
+# routines de recherche renvoient les lignes brutes (nom complet, lat/lng
+# exacts, username, bio, nom du client, adresse de mission) pour l'usage
+# serveur : on les assainit ici avant serialisation (minimisation, Loi 25).
+def _public_pilot_json(p: dict) -> dict:
+    out = dict(p)
+    # Nom public masque (les ecoles gardent leur raison sociale, non nominative).
+    out["full_name"] = services.public_name(p)
+    # Coordonnees floutees ~11 km, comme /api/map — jamais l'adresse exacte.
+    out["lat"] = services._fuzz_coord(p.get("lat"), 1)
+    out["lng"] = services._fuzz_coord(p.get("lng"), 1)
+    out.pop("username", None)   # handle d'identite AubeMail -> pas public
+    out.pop("bio", None)        # texte libre potentiellement nominatif
+    return out
+
+
+def _public_mission_json(m: dict) -> dict:
+    out = dict(m)
+    out.pop("client_name", None)     # nom du donneur d'ordre -> non public
+    out.pop("client_user_id", None)
+    out.pop("address", None)         # adresse precise du chantier -> non public
+    out["lat"] = services._fuzz_coord(m.get("lat"), 2)
+    out["lng"] = services._fuzz_coord(m.get("lng"), 2)
+    return out
+
+
 @app.route("/api/near")
 @security.rate_limit(per_minute=60, per_hour=600)
 def api_near():
@@ -635,7 +663,11 @@ def api_near():
     radius = _to_int(request.args.get("radius_km"), 100)
     if lat is None or lng is None:
         return jsonify({"error": "lat/lng requis"}), 400
-    return jsonify(services.near_geo(lat, lng, radius_km=radius))
+    res = services.near_geo(lat, lng, radius_km=radius)
+    return jsonify({
+        "pilots": [_public_pilot_json(p) for p in res.get("pilots", [])],
+        "missions": [_public_mission_json(m) for m in res.get("missions", [])],
+    })
 
 
 @app.route("/api/country-breakdown")
@@ -897,6 +929,22 @@ def register():
             flash("Cet identifiant est deja pris.", "error")
             return render_template("register.html")
 
+        # SECURITE : si l'identifiant correspond a un compte systeme AubeMail
+        # (mot de passe gere par PAM, prod Linux), l'inscription ne doit PAS
+        # provisionner un profil et ouvrir une session sans preuve que la
+        # personne detient ce compte. Sinon, un attaquant reclame l'identite
+        # AubeMail de quelqu'un d'autre (qui n'a pas encore de profil AubePilot)
+        # et se retrouve connecte sous son nom. On EXIGE donc que le mot de
+        # passe AubeMail fourni soit valide. (No-op en dev/macOS : pas de PAM.)
+        if auth.password_managed_by_aubemail(username) \
+                and not auth.authenticate(username, password):
+            flash(
+                "Ce compte AubeMail existe déjà. Connectez-vous avec son mot "
+                "de passe AubeMail pour compléter votre profil AubePilot.",
+                "error",
+            )
+            return render_template("register.html")
+
         try:
             user_id = auth.create_user(
                 username=username, password=password, full_name=full_name,
@@ -922,7 +970,9 @@ def register():
             return render_template("register.html")
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
-        resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=60 * 60 * 24 * 30)
+        resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
+                        secure=app.config.get("SESSION_COOKIE_SECURE", False),
+                        max_age=60 * 60 * 24 * 30)
         flash("Bienvenue sur AubePilot.", "success")
         return resp
     return render_template("register.html")
@@ -1654,12 +1704,29 @@ def pilot_delete_avatar():
 # (XSS stocke). Les images / videos / PDF legitimes passent.
 _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 
+# /media est PUBLIC (aucune authentification). On n'y sert donc QUE des medias
+# publics par nature : avatars, photos de drone et pieces du portfolio (le
+# showreel affiche sur les fiches). Tout le reste est refuse en dur.
+# Les fichiers PRIVES vivent dans le meme UPLOAD_DIR mais ont chacun leur route
+# authentifiee avec controle du proprietaire, et ne doivent JAMAIS passer ici :
+#   - u<id>_cert_*         documents de brevet   -> pilot_certification_document
+#   - u<id>_namechange_*   pieces d'identite      -> admin_name_change_justif
+#   - booking_<id>/*       livrables payants      -> booking_deliverable_download
+# Sans cette liste blanche, /media/u1_cert_....pdf servait la piece d'identite
+# d'un pilote a n'importe quel visiteur (contournement total du controle).
+_MEDIA_PUBLIC_RE = re.compile(
+    r"^(?:avatar_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+)$"
+)
+
 
 @app.route("/media/<path:filename>")
 def media_file(filename):
     # Pas de traversee de chemin : send_from_directory gere deja
     # le ".." ; on accepte uniquement sous-dossiers connus.
     if ".." in filename or filename.startswith("/"):
+        abort(404)
+    # Liste blanche des medias publics : refuse cert / namechange / livrables.
+    if not _MEDIA_PUBLIC_RE.match(filename):
         abort(404)
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext in _MEDIA_BLOCKED_EXT:
@@ -2612,7 +2679,7 @@ def api_pilots():
         limit=_api_limit(50),
     )
     return jsonify({
-        "count": len(pilots), "pilots": pilots,
+        "count": len(pilots), "pilots": [_public_pilot_json(p) for p in pilots],
         "near": {"query": geo["near"], "label": geo["near_label"],
                  "lat": geo["lat"], "lng": geo["lng"],
                  "radius_km": geo["radius_km"], "found": not geo["near_error"]},
@@ -2635,7 +2702,7 @@ def api_missions():
         limit=_api_limit(100),
     )
     return jsonify({
-        "count": len(missions), "missions": missions,
+        "count": len(missions), "missions": [_public_mission_json(m) for m in missions],
         "near": {"query": geo["near"], "label": geo["near_label"],
                  "lat": geo["lat"], "lng": geo["lng"],
                  "radius_km": geo["radius_km"], "found": not geo["near_error"]},
