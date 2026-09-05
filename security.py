@@ -19,7 +19,7 @@ from functools import wraps
 from typing import Optional
 from urllib.parse import urlparse
 
-from flask import abort, current_app, request, session
+from flask import abort, current_app, g, request, session
 from markupsafe import Markup
 
 log = logging.getLogger("aubepilot.security")
@@ -125,9 +125,14 @@ def apply_security_headers(resp):
     # CSP — autorise Google Fonts (typo), Stripe (frames + js) et MapLibre GL
     # (carte interactive : JS/CSS via unpkg, style + tuiles vectorielles OpenFreeMap,
     # web workers via blob:).
+    # script-src : plus de 'unsafe-inline' — les <script> inline legitimes portent
+    # nonce="{{ csp_nonce }}" (genere par requete dans app._attach). Un nonce present
+    # fait ignorer 'unsafe-inline' par le navigateur : tous les gestionnaires inline
+    # (onclick=...) ont donc ete convertis en ecouteurs delegues (static/js/app.js).
+    nonce = getattr(g, "csp_nonce", "") or secrets.token_urlsafe(16)
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com https://aubemail.com https://captcha.aubeetoilee.com; "
+        "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com https://unpkg.com https://aubemail.com https://captcha.aubeetoilee.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; "
         "font-src 'self' data: https://fonts.gstatic.com; "
         "img-src 'self' data: blob: https:; "

@@ -31,11 +31,18 @@
 </head>
 <body>
   <div class="wrap">
-    <img src="/static/brand/logo-mark.svg" alt="" onerror="this.style.display='none'">
+    <img src="/static/brand/logo-mark.svg" alt="" data-hide-on-error>
     <h1>Vous êtes hors ligne</h1>
     <p>Impossible de joindre Aube Pilot pour l'instant. Vérifiez votre connexion, puis réessayez.</p>
     <p class="en">You're offline — check your connection and try again.</p>
-    <button onclick="location.reload()">Réessayer</button>
+    <button id="retry">Réessayer</button>
   </div>
+  <script nonce="{{ csp_nonce }}">
+    // Page autonome (servie hors ligne par le SW), sans app.js : cablage local.
+    var _img = document.querySelector('[data-hide-on-error]');
+    if (_img) _img.addEventListener('error', function () { this.style.display = 'none'; });
+    var _retry = document.getElementById('retry');
+    if (_retry) _retry.addEventListener('click', function () { location.reload(); });
+  </script>
 </body>
 </html>

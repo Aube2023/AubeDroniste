@@ -29,7 +29,7 @@
       </select>
     </label>
     <button class="cta btn-block" type="submit">{{ t('home.search_btn') }}</button>
-    <button class="ghost btn-block" type="button" onclick="findNearMe('{{ url_for('pilots_search') }}')" style="margin-top: 8px;">{{ t('home.nearby.cta') }}</button>
+    <button class="ghost btn-block" type="button" data-action="near-me" data-url="{{ url_for('pilots_search') }}" style="margin-top: 8px;">{{ t('home.nearby.cta') }}</button>
   </form>
 </section>
 

@@ -53,7 +53,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
   </div>
 </div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
   var el = document.getElementById('aube-map');
   if (!el || typeof maplibregl === 'undefined') return;

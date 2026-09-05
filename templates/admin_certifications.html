@@ -120,13 +120,13 @@
       <label class="check"><input type="checkbox" name="check_number" value="1" required> Autorité, intitulé{% if c.reference %} et n° <span class="mono">{{ c.reference }}</span>{% endif %} identiques au document</label>
       <label class="check"><input type="checkbox" name="check_valid" value="1" required> Document lisible, authentique{% if c.expires_at %}, valide jusqu'au {{ c.expires_at }}{% else %}, en cours de validité{% endif %}</label>
       <label class="small" style="margin-top: 8px;">Note interne (facultatif)<input name="note" maxlength="1000" placeholder="ex. n° confirmé sur le registre"></label>
-      <button class="cta" type="submit" style="margin-top: 8px;" onclick="return confirm('Marquer ce brevet comme vérifié ? Le badge profil sera activé.')">✓ Vérifier ce brevet</button>
+      <button class="cta" type="submit" style="margin-top: 8px;" data-confirm="Marquer ce brevet comme vérifié ? Le badge profil sera activé.">✓ Vérifier ce brevet</button>
     </form>
     <form method="post" action="{{ url_for('admin_reject_certification', cert_id=c.id) }}">
       {{ csrf_input() }}
       <input type="hidden" name="back" value="{{ status }}">
       <label class="small">Motif du refus (transmis au pilote)<input name="note" maxlength="1000" required placeholder="ex. document illisible, nom différent, date expirée"></label>
-      <button class="ghost danger" type="submit" style="margin-top: 8px;" onclick="return confirm('Refuser ce justificatif ? Le pilote recevra le motif.')">✗ Refuser</button>
+      <button class="ghost danger" type="submit" style="margin-top: 8px;" data-confirm="Refuser ce justificatif ? Le pilote recevra le motif.">✗ Refuser</button>
     </form>
   </div>
   {% elif c.review_status == 'verified' %}
@@ -135,7 +135,7 @@
     <input type="hidden" name="back" value="{{ status }}">
     <div class="row-between" style="gap: 12px; flex-wrap: wrap;">
       <label class="small" style="flex: 1; min-width: 240px;">Motif (facultatif)<input name="note" maxlength="1000" placeholder="ex. brevet révoqué, doute sur le document"></label>
-      <button class="ghost danger" type="submit" onclick="return confirm('Retirer la vérification de ce brevet ?')">Révoquer la vérification</button>
+      <button class="ghost danger" type="submit" data-confirm="Retirer la vérification de ce brevet ?">Révoquer la vérification</button>
     </div>
   </form>
   {% endif %}

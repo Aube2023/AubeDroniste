@@ -6,6 +6,7 @@ Point d'entree Flask. Auth PAM partagee, SQLite local, templates Jinja
 import logging
 import os
 import re
+import secrets
 import time
 from datetime import datetime, timezone
 
@@ -137,6 +138,9 @@ def _teardown(exc):
 
 @app.before_request
 def _attach():
+    # Nonce CSP par requete : autorise les <script> inline legitimes (marques
+    # nonce="{{ csp_nonce }}") sans 'unsafe-inline'. Voir security.py.
+    g.csp_nonce = secrets.token_urlsafe(16)
     auth.attach_user()
     g.lang = i18n.resolve_lang()
     # Langue preferee du compte (parametres) si aucun choix explicite (cookie)
@@ -199,6 +203,8 @@ def _inject_globals():
         # AubeCaptcha : widget affiche seulement si une sitekey est configuree
         "aubecaptcha_sitekey": config.AUBECAPTCHA_SITEKEY,
         "aubecaptcha_url": config.AUBECAPTCHA_URL,
+        # Nonce CSP pour les <script> inline
+        "csp_nonce": getattr(g, "csp_nonce", ""),
         # Contact public + reseaux (pied de page, page contact, accueil)
         "contact_email": CONTACT_EMAIL,
         "contact_reply_hours": CONTACT_REPLY_HOURS,

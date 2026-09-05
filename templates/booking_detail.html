@@ -142,11 +142,11 @@
   <p class="muted">
     Le pilote a {{ auto_release_days }} jours pour livrer. À réception des rushs, validez la mission pour libérer les fonds. Sans action de votre part, les fonds seront automatiquement libérés au pilote au bout de {{ auto_release_days }} jours.
   </p>
-  <form method="post" action="{{ url_for('booking_confirm', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Valider la livraison ? Les fonds seront libérés au pilote.')">
+  <form method="post" action="{{ url_for('booking_confirm', booking_id=booking.id) }}" style="display: inline-block;" data-confirm="Valider la livraison ? Les fonds seront libérés au pilote.">
         {{ csrf_input() }}
     <button class="cta cta-big" type="submit">✓ Valider la mission terminée</button>
   </form>
-  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige sur cette mission ?')">
+  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" data-confirm="Ouvrir un litige sur cette mission ?">
         {{ csrf_input() }}
     <input type="hidden" name="reason" value="">
     <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
@@ -160,7 +160,7 @@
   <p class="muted">
     Les fonds sont en escrow chez AubePilot. Exécutez la mission, livrez les rushs au client. Dès qu'il valide la livraison, votre part ({{ pilot_amount|int }} {{ booking.currency }}) est virée sur votre compte.
   </p>
-  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" onsubmit="return confirm('Ouvrir un litige ?')">
+  <form method="post" action="{{ url_for('booking_dispute_open', booking_id=booking.id) }}" style="display: inline-block;" data-confirm="Ouvrir un litige ?">
         {{ csrf_input() }}
     <button class="ghost danger" type="submit">⚠ Signaler un problème</button>
   </form>
@@ -267,7 +267,7 @@
             {% endif %}
           {% endif %}
           {% if is_pilot %}
-          <form method="post" action="{{ url_for('booking_deliverable_delete', booking_id=booking.id, deliv_id=d.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer ce livrable ?')">
+          <form method="post" action="{{ url_for('booking_deliverable_delete', booking_id=booking.id, deliv_id=d.id) }}" style="display: inline-block;" data-confirm="Supprimer ce livrable ?">
                 {{ csrf_input() }}
             <button class="ghost danger" type="submit">Supprimer</button>
           </form>
@@ -351,7 +351,9 @@
   {% endif %}
 
   <form method="post" action="{{ url_for('booking_cancel_client', booking_id=booking.id) }}"
-        onsubmit="return confirm('Confirmer l\'annulation ?\n\n{% if booking.status == 'pending_payment' %}Aucun paiement effectué, annulation gratuite.{% else %}Remboursé : {{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}{% if cp.service_fee_amount > 0 %} (frais de service {{ '%.2f'|format(cp.service_fee_amount) }}){% endif %}{% if cp.is_late %} (dédommagement pilote {{ '%.2f'|format(cp.fee_amount) }}){% endif %}.{% endif %}')"
+        data-confirm="Confirmer l'annulation ?
+
+{% if booking.status == 'pending_payment' %}Aucun paiement effectué, annulation gratuite.{% else %}Remboursé : {{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}{% if cp.service_fee_amount > 0 %} (frais de service {{ '%.2f'|format(cp.service_fee_amount) }}){% endif %}{% if cp.is_late %} (dédommagement pilote {{ '%.2f'|format(cp.fee_amount) }}){% endif %}.{% endif %}"
         style="margin-top: 14px;">
     {{ csrf_input() }}
     <label class="small">Motif (facultatif)<textarea name="reason" rows="2" maxlength="500" placeholder="Empêchement, météo, changement de planning…"></textarea></label>
@@ -371,7 +373,7 @@
     Un empêchement météo ou réglementaire ? Parlez-en d'abord au client dans la messagerie.
   </p>
   <form method="post" action="{{ url_for('booking_cancel_pilot', booking_id=booking.id) }}"
-        onsubmit="return confirm('Confirmer votre désistement ? Le client sera remboursé intégralement et la mission remise en ligne.')"
+        data-confirm="Confirmer votre désistement ? Le client sera remboursé intégralement et la mission remise en ligne."
         style="margin-top: 14px;">
     {{ csrf_input() }}
     <label class="small">Motif (transmis au client)<textarea name="reason" rows="2" maxlength="500" placeholder="Météo, panne matériel, autorisation refusée…"></textarea></label>

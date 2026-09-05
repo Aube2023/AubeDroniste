@@ -38,7 +38,7 @@
           <button class="ghost" type="submit">Téléverser</button>
         </form>
         {% if profile.avatar_path %}
-        <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" onsubmit="return confirm('Retirer la photo locale ?')">
+        <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" data-confirm="Retirer la photo locale ?">
               {{ csrf_input() }}
           <button class="ghost danger" type="submit">Retirer la photo locale</button>
         </form>
@@ -84,7 +84,7 @@
   <h2>Identité & zone</h2>
   <div class="grid-2">
     <label>Type de profil
-      <select name="kind" id="kind-select" onchange="document.getElementById('school-programs').style.display = (this.value === 'school') ? '' : 'none';">
+      <select name="kind" id="kind-select">
         {% for code, lbl in profile_kinds %}<option value="{{ code }}" {% if (profile.kind or 'pro') == code %}selected{% endif %}>{{ kind_label(code) }}</option>{% endfor %}
       </select>
       <small class="muted" style="display:block; margin-top:4px;">Onglet de l'annuaire où vous apparaissez : pro, récréatif ou école.</small>
@@ -123,7 +123,7 @@
     <input type="hidden" name="lat" value="{{ profile.lat or '' }}">
     <input type="hidden" name="lng" value="{{ profile.lng or '' }}">
     <label>Position GPS <span class="muted">(visibilité « autour de moi » + alertes mission)</span>
-      <button type="button" class="ghost" onclick="useMyLocation()" style="margin-top:6px">📍 Utiliser ma position actuelle</button>
+      <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 Utiliser ma position actuelle</button>
     </label>
   </div>
 
@@ -180,16 +180,16 @@
     <div class="row-territory">
       <input name="territory_country" placeholder="Pays" value="{{ t.country }}">
       <input name="territory_region" placeholder="Région (optionnel)" value="{{ t.region or '' }}">
-      <button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>
+      <button type="button" class="ghost danger row-remove" title="Retirer">✕</button>
     </div>
     {% endfor %}
     <div class="row-territory">
       <input name="territory_country" placeholder="Pays">
       <input name="territory_region" placeholder="Région (optionnel)">
-      <button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>
+      <button type="button" class="ghost danger row-remove" title="Retirer">✕</button>
     </div>
   </div>
-  <button type="button" class="ghost" onclick="addTerritory()">+ Ajouter un territoire</button>
+  <button type="button" class="ghost" id="add-territory">+ Ajouter un territoire</button>
 
   <label>URL portfolio<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
 
@@ -231,7 +231,7 @@
       <h3>Ajouter une formation</h3>
       <div class="grid-2">
         <label>Autorité
-          <select name="authority" id="cert-authority" onchange="updateTitleSuggestions(this.value)">
+          <select name="authority" id="cert-authority">
             {% for code, lbl in licence_authorities %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
           </select>
         </label>
@@ -255,7 +255,7 @@
       </div>
       <button class="cta" type="submit">Ajouter</button>
     </form>
-    <script>
+    <script nonce="{{ csp_nonce }}">
       const CERT_TITLES = {{ licence_titles_by_authority | tojson }};
       function updateTitleSuggestions(authority) {
         const dl = document.getElementById('cert-title-suggest');
@@ -355,7 +355,7 @@
 
 {% endblock %}
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 function addTerritory() {
   const wrap = document.getElementById('territories');
   const div = document.createElement('div');
@@ -363,7 +363,7 @@ function addTerritory() {
   div.innerHTML =
     '<input name="territory_country" placeholder="Pays">' +
     '<input name="territory_region" placeholder="Région (optionnel)">' +
-    '<button type="button" class="ghost danger row-remove" onclick="removeTerritory(this)" title="Retirer">✕</button>';
+    '<button type="button" class="ghost danger row-remove" title="Retirer">✕</button>';
   wrap.appendChild(div);
   div.querySelector('input').focus();
 }
@@ -379,6 +379,25 @@ function removeTerritory(btn) {
   }
   row.remove();
 }
+
+// Cablage sans gestionnaires inline (CSP a nonce). La delegation sur
+// #territories couvre aussi les lignes ajoutees dynamiquement.
+(function () {
+  var add = document.getElementById('add-territory');
+  if (add) add.addEventListener('click', addTerritory);
+  var terr = document.getElementById('territories');
+  if (terr) terr.addEventListener('click', function (e) {
+    var btn = e.target.closest('.row-remove');
+    if (btn) removeTerritory(btn);
+  });
+  var kind = document.getElementById('kind-select');
+  if (kind) kind.addEventListener('change', function () {
+    var sp = document.getElementById('school-programs');
+    if (sp) sp.style.display = (this.value === 'school') ? '' : 'none';
+  });
+  var certAuth = document.getElementById('cert-authority');
+  if (certAuth) certAuth.addEventListener('change', function () { updateTitleSuggestions(this.value); });
+})();
 
 // ───────────── Drone : datalist marque/modele + detection custom ─────────────
 const DRONE_MODELS = {{ drone_models_by_brand | tojson }};

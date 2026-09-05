@@ -105,11 +105,11 @@
             {{ csrf_input() }}
         <button class="ghost" type="submit">{% if p.is_active %}Masquer{% else %}Afficher{% endif %}</button>
       </form>
-      <form method="post" action="{{ url_for('pilot_package_delete', package_id=p.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer ce forfait ?')">
+      <form method="post" action="{{ url_for('pilot_package_delete', package_id=p.id) }}" style="display: inline-block;" data-confirm="Supprimer ce forfait ?">
             {{ csrf_input() }}
         <button class="ghost danger" type="submit">Supprimer</button>
       </form>
-      <button class="ghost" type="button" onclick="document.getElementById('edit-{{ p.id }}').style.display='block';">Modifier</button>
+      <button class="ghost" type="button" data-action="show" data-target="edit-{{ p.id }}">Modifier</button>
     </div>
 
     <form id="edit-{{ p.id }}" method="post" action="{{ url_for('pilot_package_update', package_id=p.id) }}" style="display:none; margin-top: 14px; border-top: 1px dashed var(--ink-dim); padding-top: 14px;">

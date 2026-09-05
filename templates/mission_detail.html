@@ -28,7 +28,7 @@
   </ul>
 
   {% if current_user and current_user.id == mission.client_user_id and mission.status == 'open' %}
-  <form method="post" action="{{ url_for('mission_close', mission_id=mission.id) }}" onsubmit="return confirm('Annuler cette mission ?')">
+  <form method="post" action="{{ url_for('mission_close', mission_id=mission.id) }}" data-confirm="Annuler cette mission ?">
         {{ csrf_input() }}
     <button class="ghost danger" type="submit">Annuler la mission</button>
   </form>
@@ -202,7 +202,7 @@
             {{ csrf_input() }}
           <button class="cta" type="submit">Valider ce devis</button>
         </form>
-        <button class="ghost" type="button" onclick="document.getElementById('reject-{{ b.id }}').style.display='block';">Refuser</button>
+        <button class="ghost" type="button" data-action="show" data-target="reject-{{ b.id }}">Refuser</button>
       </div>
       <form id="reject-{{ b.id }}" method="post" action="{{ url_for('bid_reject', mission_id=mission.id, bid_id=b.id) }}" style="display: none; margin-top: 12px;">
             {{ csrf_input() }}

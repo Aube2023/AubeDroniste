@@ -42,7 +42,7 @@
       {{ csrf_input() }}
       <label>Note (optionnel)<input name="note" placeholder="Justificatif verifie le ..."></label>
       <button class="cta" type="submit"
-              onclick="return confirm('Approuver et appliquer le nouveau nom ?')">
+              data-confirm="Approuver et appliquer le nouveau nom ?">
         Approuver
       </button>
     </form>
@@ -50,7 +50,7 @@
       {{ csrf_input() }}
       <label>Note (optionnel)<input name="note" placeholder="Motif du refus"></label>
       <button class="ghost danger" type="submit"
-              onclick="return confirm('Refuser cette demande ?')">
+              data-confirm="Refuser cette demande ?">
         Refuser
       </button>
     </form>

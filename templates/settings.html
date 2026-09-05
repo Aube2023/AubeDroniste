@@ -47,7 +47,7 @@
     <div class="geo-row">
       <label>Latitude<input name="lat" type="number" step="any" value="{{ user.lat if user.lat is not none else '' }}"></label>
       <label>Longitude<input name="lng" type="number" step="any" value="{{ user.lng if user.lng is not none else '' }}"></label>
-      <button type="button" class="ghost" onclick="useMyLocation()">⌖ Ma position</button>
+      <button type="button" class="ghost" data-action="use-location">⌖ Ma position</button>
     </div>
     <p class="muted small">Votre position sert au tri par distance et aux alertes dans votre rayon ; sur la carte elle est floutée d'environ 10 km.</p>
 
@@ -105,7 +105,7 @@
     </div>
     <form method="post" action="{{ url_for('settings_sessions_revoke') }}">
       {{ csrf_input() }}
-      <button class="ghost danger" type="submit" onclick="return confirm('Déconnecter tous les autres appareils ?')">Déconnecter les autres appareils</button>
+      <button class="ghost danger" type="submit" data-confirm="Déconnecter tous les autres appareils ?">Déconnecter les autres appareils</button>
     </form>
   </div>
   <ul class="stack-list">
@@ -127,7 +127,7 @@
       <p class="muted small">Téléchargez tout ce que la plateforme détient sur vous (compte, profil, missions, devis, réservations, avis, messages) au format JSON.</p>
       <a class="ghost" href="{{ url_for('settings_export') }}">Télécharger mes données (JSON)</a>
     </div>
-    <form method="post" action="{{ url_for('settings_delete') }}" onsubmit="return confirm('Supprimer définitivement votre compte ?')">
+    <form method="post" action="{{ url_for('settings_delete') }}" data-confirm="Supprimer définitivement votre compte ?">
       {{ csrf_input() }}
       <p class="muted small">
         Vos données personnelles sont effacées et votre compte devient inutilisable. Les missions, devis et avis passés restent visibles de l'autre partie sous « Compte supprimé » (obligations comptables).

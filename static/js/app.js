@@ -116,6 +116,59 @@ function autofillFromZone() {
   });
 }
 
+// ----- Délégation d'évènements (remplace les gestionnaires inline onclick/
+// onsubmit/onchange, incompatibles avec une CSP à nonce sans 'unsafe-inline').
+
+// Confirmation avant action : data-confirm="message".
+//  - sur un <form> : intercepte l'envoi.
+//  - sur un <a>/<button type=button> : intercepte le clic.
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  if (f && f.matches && f.matches('form[data-confirm]')) {
+    if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
+  }
+}, true);
+
+document.addEventListener('click', function (e) {
+  var t = e.target.closest ? e.target.closest('[data-confirm], [data-action]') : null;
+  if (!t) return;
+
+  // data-confirm sur un <a> ou un <button> (submit inclus) : on demande au
+  // clic. preventDefault sur le clic d'un bouton submit stoppe l'envoi. Les
+  // <form data-confirm> sont geres par l'ecouteur 'submit' ci-dessus (le clic
+  // remonte jusqu'au form mais on l'ignore ici via tagName !== 'FORM').
+  var msg = t.getAttribute('data-confirm');
+  if (msg !== null && t.tagName !== 'FORM') {
+    if (!window.confirm(msg)) { e.preventDefault(); return; }
+  }
+
+  var action = t.getAttribute('data-action');
+  if (!action) return;
+  switch (action) {
+    case 'use-location': e.preventDefault(); useMyLocation(); break;
+    case 'near-me': e.preventDefault(); findNearMe(t.getAttribute('data-url') || '/pilotes'); break;
+    case 'toggle-theme': toggleTheme(); break;
+    case 'reload': e.preventDefault(); location.reload(); break;
+    case 'open-details': {
+      var d = document.getElementById(t.getAttribute('data-target'));
+      if (d) d.open = true;
+      break;
+    }
+    case 'show': {
+      var el = document.getElementById(t.getAttribute('data-target'));
+      if (el) el.style.display = 'block';
+      break;
+    }
+  }
+});
+
+// Masque un élément si son chargement échoue : data-hide-on-error (ex. logo).
+// 'error' ne bulle pas -> écoute en phase de capture.
+document.addEventListener('error', function (e) {
+  var t = e.target;
+  if (t && t.matches && t.matches('[data-hide-on-error]')) t.style.display = 'none';
+}, true);
+
 document.addEventListener('DOMContentLoaded', function () {
   refreshZonePill();
   autofillFromZone();

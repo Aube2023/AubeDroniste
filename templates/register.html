@@ -82,7 +82,7 @@
         <p class="muted small" style="margin: 0;">Le nom saisi plus bas devient le nom public de l'école ; formations et site apparaissent sur votre fiche et sur la carte dès l'inscription.</p>
       </div>
     </fieldset>
-    <script>
+    <script nonce="{{ csp_nonce }}">
       // Le type de profil ne concerne que les pilotes / mixtes.
       (function () {
         var block = document.getElementById('kind-block');
@@ -158,7 +158,7 @@
       </div>
       <input type="hidden" name="lat" value="">
       <input type="hidden" name="lng" value="">
-      <button type="button" class="ghost" onclick="useMyLocation()" style="margin-top:8px">📍 Utiliser ma position</button>
+      <button type="button" class="ghost" data-action="use-location" style="margin-top:8px">📍 Utiliser ma position</button>
       <p class="muted" style="margin-top:4px;font-size:.85em">Optionnel mais recommandé : permet aux clients de vous trouver « autour de moi », où que vous soyez dans le monde.</p>
     </fieldset>
 
@@ -184,7 +184,7 @@
   </form>
 </section>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
   // ── Adresse AubeMail affichée en direct sous l'identifiant ──
   var champUser = document.getElementById('reg-username');

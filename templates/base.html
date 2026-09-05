@@ -43,7 +43,7 @@
   {% for ld in (seo_global or []) %}<script type="application/ld+json">{{ ld | tojson }}</script>
   {% endfor %}{% for ld in (_seo.jsonld or []) %}<script type="application/ld+json">{{ ld | tojson }}</script>
   {% endfor %}
-  <script>
+  <script nonce="{{ csp_nonce }}">
     // Anti-FOUC : applique le thème avant le rendu
     (function () {
       try {
@@ -102,7 +102,7 @@
            class="{{ 'on' if code == lang else '' }}">{{ code|upper }}</a>
       {% endfor %}
     </div>
-    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Theme">
+    <button type="button" class="theme-toggle" data-action="toggle-theme" aria-label="Theme">
       <span class="dot"></span>
       <span class="label-dark">{{ t('nav.theme_dark') }}</span>
       <span class="label-light">{{ t('nav.theme_light') }}</span>
@@ -198,7 +198,7 @@
 </nav>
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
   // PWA : offline de secours + cache statiques (voir static/sw.js)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -207,7 +207,7 @@
   }
 </script>
 {% if current_user %}
-<script>
+<script nonce="{{ csp_nonce }}">
 // Avatar unifié AubeMail (source de vérité cross-Aube) : applique TA photo à
 // tous TES avatars (.js-self-avatar : pastille header, profil…). Ciblé sur
 // l'utilisateur courant uniquement — jamais les .avatar des pilotes listés,
@@ -243,7 +243,7 @@
 })();
 </script>
 {% endif %}
-<script>
+<script nonce="{{ csp_nonce }}">
 // Œil « afficher / masquer » : marche pour tout champ mot de passe enveloppé
 // dans .password-field (délégué, donc valable sur connexion, inscription…).
 document.addEventListener('click', function (e) {

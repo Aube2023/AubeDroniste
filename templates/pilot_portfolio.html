@@ -84,8 +84,8 @@
         {% endif %}
 
         <div class="actions-row" style="margin-top: 12px;">
-          <button class="ghost" type="button" onclick="document.getElementById('edit-pf-{{ it.id }}').style.display='block';">Modifier</button>
-          <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" onsubmit="return confirm('Supprimer cette réalisation ?')">
+          <button class="ghost" type="button" data-action="show" data-target="edit-pf-{{ it.id }}">Modifier</button>
+          <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" data-confirm="Supprimer cette réalisation ?">
                 {{ csrf_input() }}
             <button class="ghost danger" type="submit">Supprimer</button>
           </form>

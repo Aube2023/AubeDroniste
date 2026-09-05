@@ -17,7 +17,7 @@
   <a href="{{ url_for('pilots_search', kind='pro', **base_args) }}" class="{{ 'on' if params.kind == 'pro' else '' }}">{{ 'Pilotes pro' if fr else 'Pro pilots' }} <span class="n">{{ kind_counts.pro }}</span></a>
   <a href="{{ url_for('pilots_search', kind='recreational', **base_args) }}" class="{{ 'on' if params.kind == 'recreational' else '' }}">{{ 'Pilotes récréatifs' if fr else 'Recreational pilots' }} <span class="n">{{ kind_counts.recreational }}</span></a>
   <a href="{{ url_for('pilots_search', kind='school', **base_args) }}" class="{{ 'on' if params.kind == 'school' else '' }}">{{ 'Écoles' if fr else 'Schools' }} <span class="n">{{ kind_counts.school }}</span></a>
-  <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" onclick="var d=document.getElementById('specialites'); d.open=true;">{{ 'Spécialités' if fr else 'Specialties' }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
+  <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" data-action="open-details" data-target="specialites">{{ 'Spécialités' if fr else 'Specialties' }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
 </nav>
 <details class="disclosure spec-chips" id="specialites" {% if params.mission_type %}open{% endif %}>
   <summary>{{ 'Choisir une spécialité' if fr else 'Pick a specialty' }}</summary>
