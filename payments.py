@@ -120,6 +120,18 @@ def account_create_kwargs(user: dict, country: str) -> dict:
         "country": country,
         "email": user["email"],
         "capabilities": {"transfers": {"requested": True}},
+        # Pre-remplit le profil d'entreprise : evite au pilote l'etape
+        # « fournir un site web » a l'onboarding (la plupart n'en ont pas). On
+        # pointe vers son profil public AubePilot et on decrit l'activite. Le
+        # nom du representant et le compte bancaire restent a sa charge.
+        "business_profile": {
+            "url": f"{SITE_URL}/pilotes/{user['id']}",
+            "product_description": (
+                "Prestations de pilote de drone : photo et vidéo aériennes, "
+                "inspection technique, cartographie."
+            ),
+            "mcc": "7333",
+        },
         "metadata": {"user_id": str(user["id"]), "username": user.get("username", "")},
     }
     if country.upper() != STRIPE_PLATFORM_COUNTRY:
