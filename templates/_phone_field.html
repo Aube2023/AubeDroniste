@@ -1,0 +1,9 @@
+{# Champ téléphone réutilisable : indicatif pays + numéro auto-espacé.
+   Le sélecteur et le champ numéro sont construits par static/js/phone.js ;
+   la valeur (« +33 06 12 34 56 78 ») vit dans l'input caché name="phone".
+   Paramètres (via {% with %}) :
+     phone_value : valeur existante (édition), optionnel.
+   La synchro indicatif <- pays (data-country) ne joue que sur un champ vide. #}
+<div class="js-phone phone-field" data-country="input[name=country]">
+  <input type="hidden" name="phone" value="{{ phone_value or '' }}">
+</div>

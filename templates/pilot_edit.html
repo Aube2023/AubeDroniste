@@ -112,7 +112,9 @@
         </small>
       {% endif %}
     </label>
-    <label>Téléphone<input name="phone" value="{{ profile.phone or '' }}"></label>
+    <label>Téléphone
+      {% with phone_value = profile.phone or '' %}{% include "_phone_field.html" %}{% endwith %}
+    </label>
     <label>Pays
       <input name="country" list="countries" value="{{ profile.country or '' }}">
       <datalist id="countries">

@@ -135,11 +135,7 @@
         </label>
       </div>
       <label style="margin-top: 4px;">Téléphone <span class="muted small">(optionnel)</span>
-        <div class="phone-field">
-          <select id="phone-code" aria-label="Indicatif du pays"></select>
-          <input id="phone-number" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="6 12 34 56 78">
-        </div>
-        <input type="hidden" name="phone">
+        {% with phone_value = form.get('phone','') if form else '' %}{% include "_phone_field.html" %}{% endwith %}
       </label>
     </fieldset>
 
@@ -194,117 +190,6 @@
       var v = champUser.value.toLowerCase().replace(/[^a-z0-9_.\-]/g, '');
       apercuMail.textContent = v || 'identifiant';
     });
-  }
-
-  // ── Téléphone : indicatif pays + numéro ──
-  // [ indicatif, drapeau, nom FR ] — les pays du réseau d'abord, puis le monde.
-  var INDICATIFS = [
-    ['+1','🇨🇦','Canada'], ['+33','🇫🇷','France'], ['+32','🇧🇪','Belgique'],
-    ['+41','🇨🇭','Suisse'], ['+352','🇱🇺','Luxembourg'], ['+212','🇲🇦','Maroc'],
-    ['+213','🇩🇿','Algérie'], ['+216','🇹🇳','Tunisie'], ['+1','🇺🇸','États-Unis'],
-    ['+221','🇸🇳','Sénégal'], ['+225','🇨🇮','Côte d’Ivoire'], ['+237','🇨🇲','Cameroun'],
-    ['+241','🇬🇦','Gabon'], ['+243','🇨🇩','Congo (RDC)'], ['+44','🇬🇧','Royaume-Uni'],
-    ['+353','🇮🇪','Irlande'], ['+34','🇪🇸','Espagne'], ['+351','🇵🇹','Portugal'],
-    ['+39','🇮🇹','Italie'], ['+49','🇩🇪','Allemagne'], ['+31','🇳🇱','Pays-Bas'],
-    ['+43','🇦🇹','Autriche'], ['+45','🇩🇰','Danemark'], ['+46','🇸🇪','Suède'],
-    ['+47','🇳🇴','Norvège'], ['+358','🇫🇮','Finlande'], ['+48','🇵🇱','Pologne'],
-    ['+30','🇬🇷','Grèce'], ['+420','🇨🇿','Tchéquie'], ['+36','🇭🇺','Hongrie'],
-    ['+40','🇷🇴','Roumanie'], ['+380','🇺🇦','Ukraine'], ['+7','🇷🇺','Russie'],
-    ['+90','🇹🇷','Turquie'], ['+972','🇮🇱','Israël'], ['+971','🇦🇪','Émirats arabes unis'],
-    ['+966','🇸🇦','Arabie saoudite'], ['+974','🇶🇦','Qatar'], ['+965','🇰🇼','Koweït'],
-    ['+961','🇱🇧','Liban'], ['+20','🇪🇬','Égypte'], ['+27','🇿🇦','Afrique du Sud'],
-    ['+234','🇳🇬','Nigéria'], ['+254','🇰🇪','Kenya'], ['+91','🇮🇳','Inde'],
-    ['+92','🇵🇰','Pakistan'], ['+86','🇨🇳','Chine'], ['+81','🇯🇵','Japon'],
-    ['+82','🇰🇷','Corée du Sud'], ['+84','🇻🇳','Vietnam'], ['+66','🇹🇭','Thaïlande'],
-    ['+62','🇮🇩','Indonésie'], ['+63','🇵🇭','Philippines'], ['+60','🇲🇾','Malaisie'],
-    ['+65','🇸🇬','Singapour'], ['+61','🇦🇺','Australie'], ['+64','🇳🇿','Nouvelle-Zélande'],
-    ['+52','🇲🇽','Mexique'], ['+55','🇧🇷','Brésil'], ['+54','🇦🇷','Argentine'],
-    ['+56','🇨🇱','Chili'], ['+57','🇨🇴','Colombie'], ['+51','🇵🇪','Pérou']
-  ];
-  // Regroupement des chiffres par pays (le reste : paires de 2, la norme
-  // en Europe / Maghreb). Ex. Canada 3-3-4, France 2-2-2-2-2.
-  var GROUPES = {
-    '+1':  [3, 3, 4],       // 438 530 3396
-    '+44': [4, 3, 3],       // 07xx xxx xxx
-    '+61': [4, 3, 3],       // 04xx xxx xxx
-    '+91': [5, 5]           // 98765 43210
-  };
-  function formater(code, valeur) {
-    var chiffres = (valeur || '').replace(/\D/g, '').slice(0, 14);
-    var motif = GROUPES[code] || null;
-    var out = [], i = 0, g = 0;
-    while (i < chiffres.length) {
-      var taille = motif ? (motif[g] || motif[motif.length - 1] || 2) : 2;
-      out.push(chiffres.substr(i, taille));
-      i += taille; g++;
-    }
-    return out.join(' ');
-  }
-
-  var selCode = document.getElementById('phone-code');
-  var numero = document.getElementById('phone-number');
-  var champPhone = document.querySelector('input[name="phone"]');
-  var champPays = document.querySelector('input[name="country"]');
-  var parPays = {};   // nom pays (normalisé) -> index d'option
-  if (selCode && numero && champPhone) {
-    INDICATIFS.forEach(function (e, i) {
-      var opt = document.createElement('option');
-      opt.value = e[0];
-      opt.textContent = e[1] + ' ' + e[0] + ' · ' + e[2];
-      selCode.appendChild(opt);
-      parPays[e[2].toLowerCase()] = i;
-    });
-    selCode.selectedIndex = 0;   // Canada par défaut
-
-    function combiner() {
-      var n = numero.value.trim();
-      champPhone.value = n ? (selCode.value + ' ' + n) : '';
-    }
-    // Le placeholder montre le regroupement attendu pour le pays choisi.
-    function majPlaceholder() { numero.placeholder = formater(selCode.value, '5551234567'); }
-    majPlaceholder();
-    // Reformate pendant la frappe en gardant le curseur au bon endroit
-    // (on compte les chiffres à gauche du curseur avant/après).
-    function reformater() {
-      var avant = numero.value;
-      var pos = numero.selectionStart == null ? avant.length : numero.selectionStart;
-      var chiffresAvant = avant.slice(0, pos).replace(/\D/g, '').length;
-      var apres = formater(selCode.value, avant);
-      numero.value = apres;
-      var p = 0, vus = 0;
-      while (p < apres.length && vus < chiffresAvant) {
-        if (/\d/.test(apres.charAt(p))) vus++;
-        p++;
-      }
-      try { numero.setSelectionRange(p, p); } catch (e) { /* champ masqué */ }
-      combiner();
-    }
-    numero.addEventListener('input', reformater);
-
-    // Choisit l'indicatif d'après le pays saisi, tant que l'usager n'a pas
-    // touché lui-même au sélecteur ; reformate au changement d'indicatif.
-    var codeManuel = false;
-    selCode.addEventListener('change', function () {
-      codeManuel = true;
-      numero.value = formater(selCode.value, numero.value);
-      majPlaceholder();
-      combiner();
-    });
-    function synchroniserPays() {
-      if (codeManuel || !champPays) return;
-      var p = champPays.value.trim().toLowerCase();
-      if (parPays[p] != null) {
-        selCode.selectedIndex = parPays[p];
-        numero.value = formater(selCode.value, numero.value);
-        majPlaceholder();
-        combiner();
-      }
-    }
-    if (champPays) {
-      champPays.addEventListener('change', synchroniserPays);
-      champPays.addEventListener('blur', synchroniserPays);
-      synchroniserPays();
-    }
   }
 })();
 </script>
