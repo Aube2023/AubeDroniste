@@ -147,13 +147,13 @@
       <legend>Base d'opération</legend>
       <div class="grid-2">
         <label>Pays
-          <input name="country" list="countries" placeholder="ex. Maroc">
+          <input name="country" list="countries" placeholder="ex. Canada">
           <datalist id="countries">
             {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}
           </datalist>
         </label>
         <label>Ville
-          <input name="city" placeholder="ex. Casablanca">
+          <input name="city" placeholder="ex. Montréal">
         </label>
       </div>
       <input type="hidden" name="lat" value="">

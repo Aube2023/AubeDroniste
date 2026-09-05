@@ -31,9 +31,9 @@
 
     <section class="numbered-section">
       <h3>L'essentiel</h3>
-      <p class="muted">Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d'un riad à Marrakech ».</p>
+      <p class="muted">Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d'un chalet dans les Laurentides ».</p>
       <label>Titre de la mission
-        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="Captation aérienne d'un mariage à Sidi Bou Said">
+        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="Captation aérienne d'un mariage à Charlevoix">
       </label>
       <label>Type
         <select name="mission_type" required>
@@ -50,20 +50,20 @@
       <p class="muted">Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.</p>
       <div class="grid-2">
         <label>Pays
-          <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Maroc">
+          <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Canada">
           <datalist id="countries">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
         </label>
         <label>Ville
-          <input name="city" value="{{ form.get('city','') }}" placeholder="Marrakech">
+          <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal">
           <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 Ma position</button>
         </label>
         <input type="hidden" name="lat" value="{{ form.get('lat','') }}">
         <input type="hidden" name="lng" value="{{ form.get('lng','') }}">
         <label>Région ou département
-          <input name="region" value="{{ form.get('region','') }}" placeholder="Marrakech-Safi">
+          <input name="region" value="{{ form.get('region','') }}" placeholder="Québec">
         </label>
         <label>Adresse / point de RDV
-          <input name="address" value="{{ form.get('address','') }}" placeholder="Riad Yasmine, Médina">
+          <input name="address" value="{{ form.get('address','') }}" placeholder="Vieux-Port de Montréal">
         </label>
       </div>
     </section>
