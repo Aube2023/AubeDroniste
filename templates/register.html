@@ -1,54 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Rejoindre · AubePilot{% endblock %}
+{% set fr = (lang == 'fr') %}
+{% block title %}{{ 'Rejoindre' if fr else 'Join' }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="auth-split">
   <aside class="auth-aside">
-    <span class="eyebrow">Rejoindre le réseau</span>
-    <h1>Embarquez dans <em>l'équipage</em>.</h1>
+    <span class="eyebrow">{{ 'Rejoindre le réseau' if fr else 'Join the network' }}</span>
+    <h1>{% if fr %}Embarquez dans <em>l'équipage</em>.{% else %}Come aboard the <em>crew</em>.{% endif %}</h1>
     <p class="lead muted">
-      Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul
-      compte AubePilot. Bascule entre les rôles à tout moment depuis votre espace.
+      {{ 'Que vous cherchiez un pilote ou que vous le soyez, vous gardez un seul compte AubePilot. Bascule entre les rôles à tout moment depuis votre espace.' if fr else 'Whether you are looking for a pilot or you are one, you keep a single AubePilot account. Switch roles anytime from your dashboard.' }}
     </p>
     <ul class="checklist">
-      <li>Compte unique pour publier <em>et</em> piloter, sans abonnement.</li>
-      <li>Vos brevets mis en avant, DGAC, EASA, TC, FAA, ASECNA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA…</li>
-      <li>Recherche géolocalisée mondiale : Europe, Amérique, Maghreb, Afrique, Russie, Asie-Pacifique, Moyen-Orient.</li>
-      <li>Commission plateforme uniquement sur missions livrées ({{ platform_fee_pct }} %, dégressive).</li>
-      <li>Auth partagée avec l'écosystème <a href="https://aubeetoilee.com">L'Aube Étoilée</a>.</li>
+      <li>{% if fr %}Compte unique pour publier <em>et</em> piloter, sans abonnement.{% else %}One account to post jobs <em>and</em> fly them, no subscription.{% endif %}</li>
+      <li>{{ 'Vos brevets mis en avant, DGAC, EASA, TC, FAA, ASECNA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA…' if fr else 'Your licences front and centre: DGAC, EASA, TC, FAA, ASECNA, CAA UK, Rosaviatsia, CAAC, JCAB, CASA…' }}</li>
+      <li>{{ 'Recherche géolocalisée mondiale : Europe, Amérique, Maghreb, Afrique, Russie, Asie-Pacifique, Moyen-Orient.' if fr else 'Worldwide location-based search: Europe, the Americas, Maghreb, Africa, Russia, Asia-Pacific, Middle East.' }}</li>
+      <li>{{ 'Commission plateforme uniquement sur missions livrées (' ~ platform_fee_pct ~ ' %, dégressive).' if fr else 'Platform fee only on delivered jobs (' ~ platform_fee_pct ~ '%, tapering down).' }}</li>
+      <li>{{ 'Auth partagée avec l\'écosystème' if fr else 'Shared login with the' }} <a href="https://aubeetoilee.com">L'Aube Étoilée</a>{{ '' if fr else ' ecosystem' }}.</li>
     </ul>
   </aside>
 
   <form method="post" class="auth-form">
         {{ csrf_input() }}
-    <h2>Créer mon compte</h2>
+    <h2>{{ 'Créer mon compte' if fr else 'Create my account' }}</h2>
 
     <fieldset class="fieldset-block">
-      <legend>Mon rôle au décollage</legend>
+      <legend>{{ 'Mon rôle au décollage' if fr else 'My role at takeoff' }}</legend>
       <div class="role-cards">
         {% set sel = request.args.get('role','client') %}
         <label>
           <input type="radio" name="role" value="client" {% if sel=='client' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ Client</span>
-            <span class="name">Je cherche un pilote</span>
-            <span class="desc">Je publie des missions et je sélectionne mon pilote.</span>
+            <span class="icon">▴ {{ 'Client' if fr else 'Client' }}</span>
+            <span class="name">{{ 'Je cherche un pilote' if fr else 'I am looking for a pilot' }}</span>
+            <span class="desc">{{ 'Je publie des missions et je sélectionne mon pilote.' if fr else 'I post jobs and choose my pilot.' }}</span>
           </span>
         </label>
         <label>
           <input type="radio" name="role" value="pilot" {% if sel=='pilot' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ Pilote</span>
-            <span class="name">Je suis pilote</span>
-            <span class="desc">Je présente mes brevets, ma flotte et je soumissionne.</span>
+            <span class="icon">▴ {{ 'Pilote' if fr else 'Pilot' }}</span>
+            <span class="name">{{ 'Je suis pilote' if fr else 'I am a pilot' }}</span>
+            <span class="desc">{{ 'Je présente mes brevets, ma flotte et je soumissionne.' if fr else 'I showcase my licences, my fleet, and bid on jobs.' }}</span>
           </span>
         </label>
         <label>
           <input type="radio" name="role" value="both" {% if sel=='both' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ Mixte</span>
-            <span class="name">Les deux</span>
-            <span class="desc">Je commande et j'opère selon les jours.</span>
+            <span class="icon">▴ {{ 'Mixte' if fr else 'Both' }}</span>
+            <span class="name">{{ 'Les deux' if fr else 'Both' }}</span>
+            <span class="desc">{{ 'Je commande et j\'opère selon les jours.' if fr else 'I hire and I fly, depending on the day.' }}</span>
           </span>
         </label>
       </div>
@@ -56,7 +56,7 @@
 
     {% set sel_kind = request.args.get('kind', 'pro') %}
     <fieldset class="fieldset-block" id="kind-block">
-      <legend>Type de profil</legend>
+      <legend>{{ 'Type de profil' if fr else 'Profile type' }}</legend>
       <div class="role-cards">
         {% for code, lbl in profile_kinds %}
         <label>
@@ -64,22 +64,22 @@
           <span class="role-card">
             <span class="icon">▴ {{ kind_label(code, true) }}</span>
             <span class="name">{{ kind_label(code) }}</span>
-            <span class="desc">{% if code == 'pro' %}Missions rémunérées, devis, paiements sécurisés.{% elif code == 'recreational' %}Vous volez pour le plaisir : visible sur la carte, échanges avec la communauté.{% else %}Vous formez des pilotes : votre école sur la carte avec ses formations.{% endif %}</span>
+            <span class="desc">{% if code == 'pro' %}{{ 'Missions rémunérées, devis, paiements sécurisés.' if fr else 'Paid jobs, quotes, secure payments.' }}{% elif code == 'recreational' %}{{ 'Vous volez pour le plaisir : visible sur la carte, échanges avec la communauté.' if fr else 'You fly for fun: visible on the map, connect with the community.' }}{% else %}{{ 'Vous formez des pilotes : votre école sur la carte avec ses formations.' if fr else 'You train pilots: your school on the map along with its courses.' }}{% endif %}</span>
           </span>
         </label>
         {% endfor %}
       </div>
-      <p class="muted small" style="margin: 0;">Modifiable plus tard dans votre profil.</p>
+      <p class="muted small" style="margin: 0;">{{ 'Modifiable plus tard dans votre profil.' if fr else 'Can be changed later in your profile.' }}</p>
       <div id="school-extra" style="display:none; margin-top: 12px;">
         <div class="grid-2">
-          <label>Site web de l'organisme <span class="muted small">(optionnel)</span>
+          <label>{{ "Site web de l'organisme" if fr else "School website" }} <span class="muted small">({{ 'optionnel' if fr else 'optional' }})</span>
             <input name="website" type="url" placeholder="https://votre-ecole.ca">
           </label>
-          <label>Formations proposées <span class="muted small">(une par ligne, optionnel)</span>
+          <label>{{ 'Formations proposées' if fr else 'Courses offered' }} <span class="muted small">({{ 'une par ligne, optionnel' if fr else 'one per line, optional' }})</span>
             <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)"></textarea>
           </label>
         </div>
-        <p class="muted small" style="margin: 0;">Le nom saisi plus bas devient le nom public de l'école ; formations et site apparaissent sur votre fiche et sur la carte dès l'inscription.</p>
+        <p class="muted small" style="margin: 0;">{{ "Le nom saisi plus bas devient le nom public de l'école ; formations et site apparaissent sur votre fiche et sur la carte dès l'inscription." if fr else 'The name entered below becomes the school\'s public name; courses and website appear on your listing and on the map as soon as you sign up.' }}</p>
       </div>
     </fieldset>
     <script nonce="{{ csp_nonce }}">
@@ -106,61 +106,61 @@
     </script>
 
     <fieldset class="fieldset-block">
-      <legend>Identité</legend>
+      <legend>{{ 'Identité' if fr else 'Identity' }}</legend>
       <div class="grid-2">
-        <label>Nom et prénom <span class="muted small">(ou nom de l'école)</span>
-          <input name="full_name" required placeholder="ex. Sophie Tremblay">
+        <label>{{ 'Nom et prénom' if fr else 'Full name' }} <span class="muted small">({{ "ou nom de l'école" if fr else 'or school name' }})</span>
+          <input name="full_name" required placeholder="{{ 'ex. Sophie Tremblay' if fr else 'e.g. Sophie Tremblay' }}">
         </label>
-        <label>Identifiant
+        <label>{{ 'Identifiant' if fr else 'Username' }}
           <input name="username" id="reg-username" required minlength="3" pattern="[a-z0-9_.\-]{3,32}" placeholder="sophie.tremblay">
-          <span class="field-hint">Votre adresse AubeMail : <b id="aubemail-preview">identifiant</b>@aubemail.com</span>
+          <span class="field-hint">{{ 'Votre adresse AubeMail' if fr else 'Your AubeMail address' }} : <b id="aubemail-preview">{{ 'identifiant' if fr else 'username' }}</b>@aubemail.com</span>
         </label>
-        <label>Mot de passe
+        <label>{{ 'Mot de passe' if fr else 'Password' }}
           <span class="password-field">
             <input type="password" name="password" required minlength="6" autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false">
+            <button type="button" class="password-toggle" aria-label="{{ 'Afficher le mot de passe' if fr else 'Show password' }}" aria-pressed="false">
               <svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
             </button>
           </span>
         </label>
-        <label>Confirmer le mot de passe
+        <label>{{ 'Confirmer le mot de passe' if fr else 'Confirm password' }}
           <span class="password-field">
             <input type="password" name="confirm" required minlength="6" autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false">
+            <button type="button" class="password-toggle" aria-label="{{ 'Afficher le mot de passe' if fr else 'Show password' }}" aria-pressed="false">
               <svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
             </button>
           </span>
         </label>
       </div>
-      <label style="margin-top: 4px;">Téléphone <span class="muted small">(optionnel)</span>
+      <label style="margin-top: 4px;">{{ 'Téléphone' if fr else 'Phone' }} <span class="muted small">({{ 'optionnel' if fr else 'optional' }})</span>
         {% with phone_value = form.get('phone','') if form else '' %}{% include "_phone_field.html" %}{% endwith %}
       </label>
     </fieldset>
 
     <fieldset class="fieldset-block">
-      <legend>Base d'opération</legend>
+      <legend>{{ "Base d'opération" if fr else 'Home base' }}</legend>
       <div class="grid-2">
-        <label>Pays
-          <input name="country" list="countries" placeholder="ex. Canada">
+        <label>{{ 'Pays' if fr else 'Country' }}
+          <input name="country" list="countries" placeholder="{{ 'ex. Canada' if fr else 'e.g. Canada' }}">
           <datalist id="countries">
             {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}
           </datalist>
         </label>
-        <label>Ville
-          <input name="city" placeholder="ex. Montréal">
+        <label>{{ 'Ville' if fr else 'City' }}
+          <input name="city" placeholder="{{ 'ex. Montréal' if fr else 'e.g. Montreal' }}">
         </label>
       </div>
       <input type="hidden" name="lat" value="">
       <input type="hidden" name="lng" value="">
-      <button type="button" class="ghost" data-action="use-location" style="margin-top:8px">📍 Utiliser ma position</button>
-      <p class="muted" style="margin-top:4px;font-size:.85em">Optionnel mais recommandé : permet aux clients de vous trouver « autour de moi », où que vous soyez dans le monde.</p>
+      <button type="button" class="ghost" data-action="use-location" style="margin-top:8px">📍 {{ 'Utiliser ma position' if fr else 'Use my location' }}</button>
+      <p class="muted" style="margin-top:4px;font-size:.85em">{{ 'Optionnel mais recommandé : permet aux clients de vous trouver « autour de moi », où que vous soyez dans le monde.' if fr else 'Optional but recommended: lets clients find you with "near me", wherever you are in the world.' }}</p>
     </fieldset>
 
     {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
     <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px; height:0; overflow:hidden;">
-      <label>Ne pas remplir ce champ
+      <label>{{ 'Ne pas remplir ce champ' if fr else 'Do not fill this field' }}
         <input type="text" name="website_confirm" tabindex="-1" autocomplete="off">
       </label>
     </div>
@@ -172,10 +172,10 @@
     </div>
     {% endif %}
 
-    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">Créer mon compte</button>
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ 'Créer mon compte' if fr else 'Create my account' }}</button>
     <div class="form-foot">
-      <span class="small">Déjà membre ? <a href="{{ url_for('login') }}">Connexion</a></span>
-      <span class="small muted">Vous pouvez compléter votre profil pilote après l'inscription.</span>
+      <span class="small">{{ 'Déjà membre ?' if fr else 'Already a member?' }} <a href="{{ url_for('login') }}">{{ 'Connexion' if fr else 'Log in' }}</a></span>
+      <span class="small muted">{{ "Vous pouvez compléter votre profil pilote après l'inscription." if fr else 'You can complete your pilot profile after signing up.' }}</span>
     </div>
   </form>
 </section>

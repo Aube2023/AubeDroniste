@@ -121,12 +121,13 @@
 {% endwith %}
 
 {% if g.user and g.user.role in ('pilot', 'both') and not pilot_payouts_ok %}
+  {% set fr = (lang == 'fr') %}
   <div class="flashes">
     <div class="flash flash-info">
       {% if not pilot_country_payable %}
-        Les paiements en ligne ne sont pas encore disponibles dans votre pays — vous pouvez proposer des missions, le versement se fera manuellement.
+        {{ "Les paiements en ligne ne sont pas encore disponibles dans votre pays, vous pouvez proposer des missions, le versement se fera manuellement." if fr else 'Online payments are not yet available in your country. You can still offer jobs; payout will be made manually.' }}
       {% else %}
-        <strong>Activez vos paiements</strong> pour être payé dès qu'un client valide une mission. <a href="{{ url_for('stripe_onboard') }}">Configurer Stripe →</a>
+        <strong>{{ 'Activez vos paiements' if fr else 'Activate your payments' }}</strong> {{ "pour être payé dès qu'un client valide une mission." if fr else 'to get paid as soon as a client confirms a job.' }} <a href="{{ url_for('stripe_onboard') }}">{{ 'Configurer Stripe →' if fr else 'Set up Stripe →' }}</a>
       {% endif %}
     </div>
   </div>

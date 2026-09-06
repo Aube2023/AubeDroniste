@@ -1,56 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Mon portfolio · AubePilot{% endblock %}
+{% set fr = (lang == 'fr') %}
+{% block title %}{{ 'Mon portfolio' if fr else 'My portfolio' }} · AubePilot{% endblock %}
 {% block content %}
 
 <div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
   <div>
-    <span class="eyebrow">Mon showreel</span>
-    <h1>Mon portfolio</h1>
+    <span class="eyebrow">{{ 'Mon showreel' if fr else 'My showreel' }}</span>
+    <h1>{{ 'Mon portfolio' if fr else 'My portfolio' }}</h1>
     <p class="muted">
-      Mettez en avant vos meilleures réalisations : photos aériennes,
-      vidéos de chantier, mariage filmé, inspection ouvrage d'art… Les
-      clients verront cette galerie sur votre page publique pour
-      apprécier votre travail avant de réserver.
+      {{ "Mettez en avant vos meilleures réalisations : photos aériennes, vidéos de chantier, mariage filmé, inspection ouvrage d'art… Les clients verront cette galerie sur votre page publique pour apprécier votre travail avant de réserver." if fr else 'Showcase your best work: aerial photos, construction site videos, filmed weddings, structural inspections… Clients will see this gallery on your public page to gauge your work before booking.' }}
     </p>
   </div>
-  <a href="{{ url_for('pilot_edit') }}" class="ghost">← Profil pilote</a>
+  <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ 'Profil pilote' if fr else 'Pilot profile' }}</a>
 </div>
 
 <section class="card">
-  <span class="eyebrow">Ajouter une réalisation</span>
+  <span class="eyebrow">{{ 'Ajouter une réalisation' if fr else 'Add a piece' }}</span>
   <form method="post" enctype="multipart/form-data">
         {{ csrf_input() }}
     <div class="grid-2">
-      <label>Titre
-        <input name="title" maxlength="200" placeholder="Mariage à Charlevoix · juillet 2025">
+      <label>{{ 'Titre' if fr else 'Title' }}
+        <input name="title" maxlength="200" placeholder="{{ 'Mariage à Charlevoix · juillet 2025' if fr else 'Wedding in Charlevoix · July 2025' }}">
       </label>
-      <label>Fichier (JPG/PNG/HEIC ou MP4/MOV/WebM, max {{ max_mb }} Mo)
+      <label>{{ 'Fichier (JPG/PNG/HEIC ou MP4/MOV/WebM, max ' ~ max_mb ~ ' Mo)' if fr else 'File (JPG/PNG/HEIC or MP4/MOV/WebM, max ' ~ max_mb ~ ' MB)' }}
         <input name="file" type="file" required
                accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm">
         <small class="muted">
-          Photos illimitées ·
-          {% if max_videos %}vidéos&nbsp;: {{ video_count }}/{{ max_videos }}
-            {% if video_count >= max_videos %}(limite atteinte — supprime-en une pour en ajouter){% endif %}
-          {% else %}vidéos illimitées{% endif %}
+          {{ 'Photos illimitées ·' if fr else 'Unlimited photos ·' }}
+          {% if max_videos %}{{ 'vidéos' if fr else 'videos' }}&nbsp;: {{ video_count }}/{{ max_videos }}
+            {% if video_count >= max_videos %}({{ 'limite atteinte, supprime-en une pour en ajouter' if fr else 'limit reached, remove one to add another' }}){% endif %}
+          {% else %}{{ 'vidéos illimitées' if fr else 'unlimited videos' }}{% endif %}
         </small>
       </label>
     </div>
-    <label>Description (contexte, matériel utilisé, durée, défi technique…)
-      <textarea name="description" rows="3" maxlength="2000" placeholder="Captation 4K + drone FPV, 2 jours de tournage, 14 invités dans la médina…"></textarea>
+    <label>{{ 'Description (contexte, matériel utilisé, durée, défi technique…)' if fr else 'Description (context, equipment used, duration, technical challenge…)' }}
+      <textarea name="description" rows="3" maxlength="2000" placeholder="{{ 'Captation 4K + drone FPV, 2 jours de tournage, 14 invités dans la médina…' if fr else '4K footage + FPV drone, 2 days of filming, 14 guests in the medina…' }}"></textarea>
     </label>
-    <button class="cta" type="submit">⬆ Ajouter au portfolio</button>
+    <button class="cta" type="submit">⬆ {{ 'Ajouter au portfolio' if fr else 'Add to portfolio' }}</button>
   </form>
 </section>
 
 <section class="section">
   <h2 style="font-size: 1.4rem; margin-bottom: 14px;">
-    {% if items %}{{ items|length }} réalisation(s) en portfolio{% else %}Portfolio vide{% endif %}
+    {% if items %}{{ items|length }} {{ 'réalisation(s) en portfolio' if fr else 'piece(s) in portfolio' }}{% else %}{{ 'Portfolio vide' if fr else 'Empty portfolio' }}{% endif %}
   </h2>
 
   {% if not items %}
   <div class="empty-state">
-    <strong>Portfolio vide</strong>
-    <p>Ajoutez vos premières réalisations avec le formulaire ci-dessus. Photos illimitées{% if max_videos %} + jusqu'à {{ max_videos }} vidéos courtes{% endif %} : une dizaine d'images soignées suffisent déjà à convaincre.</p>
+    <strong>{{ 'Portfolio vide' if fr else 'Empty portfolio' }}</strong>
+    <p>{{ "Ajoutez vos premières réalisations avec le formulaire ci-dessus. Photos illimitées" if fr else 'Add your first pieces with the form above. Unlimited photos' }}{% if max_videos %}{{ " + jusqu'à " ~ max_videos ~ ' vidéos courtes' if fr else ' + up to ' ~ max_videos ~ ' short videos' }}{% endif %}{{ " : une dizaine d'images soignées suffisent déjà à convaincre." if fr else ': about ten polished images are already enough to convince.' }}</p>
   </div>
   {% endif %}
 
@@ -70,7 +68,7 @@
       <div class="media-body">
         <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .12em;">
           {{ it.kind }}
-          · {% set kb = it.size_bytes / 1024.0 %}{% if kb >= 1024 %}{{ '%.1f'|format(kb/1024.0) }} Mo{% else %}{{ '%.0f'|format(kb) }} Ko{% endif %}
+          · {% set kb = it.size_bytes / 1024.0 %}{% if kb >= 1024 %}{{ '%.1f'|format(kb/1024.0) }} {{ 'Mo' if fr else 'MB' }}{% else %}{{ '%.0f'|format(kb) }} {{ 'Ko' if fr else 'KB' }}{% endif %}
           · {{ it.created_at[:10] }}
         </div>
         {% if it.title %}
@@ -80,22 +78,22 @@
         <p class="muted small prewrap" style="margin: 0;">{{ it.description }}</p>
         {% endif %}
         {% if it.kind == 'video' %}
-        <a class="small muted" href="{{ url_for('media_file', filename=it.stored_filename) }}" target="_blank" rel="noopener" style="display: inline-block; margin-top: 8px;">▶ Ouvrir la vidéo en grand ↗</a>
+        <a class="small muted" href="{{ url_for('media_file', filename=it.stored_filename) }}" target="_blank" rel="noopener" style="display: inline-block; margin-top: 8px;">▶ {{ 'Ouvrir la vidéo en grand ↗' if fr else 'Open video full size ↗' }}</a>
         {% endif %}
 
         <div class="actions-row" style="margin-top: 12px;">
-          <button class="ghost" type="button" data-action="show" data-target="edit-pf-{{ it.id }}">Modifier</button>
-          <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" data-confirm="Supprimer cette réalisation ?">
+          <button class="ghost" type="button" data-action="show" data-target="edit-pf-{{ it.id }}">{{ 'Modifier' if fr else 'Edit' }}</button>
+          <form method="post" action="{{ url_for('pilot_portfolio_delete', item_id=it.id) }}" style="display: inline-block;" data-confirm="{{ 'Supprimer cette réalisation ?' if fr else 'Delete this piece?' }}">
                 {{ csrf_input() }}
-            <button class="ghost danger" type="submit">Supprimer</button>
+            <button class="ghost danger" type="submit">{{ 'Supprimer' if fr else 'Delete' }}</button>
           </form>
         </div>
 
         <form id="edit-pf-{{ it.id }}" method="post" action="{{ url_for('pilot_portfolio_update', item_id=it.id) }}" style="display: none; margin-top: 12px; border-top: 1px dashed var(--ink-dim); padding-top: 12px;">
               {{ csrf_input() }}
-          <label>Titre<input name="title" value="{{ it.title or '' }}" maxlength="200"></label>
-          <label>Description<textarea name="description" rows="3" maxlength="2000">{{ it.description or '' }}</textarea></label>
-          <button class="cta" type="submit">Enregistrer</button>
+          <label>{{ 'Titre' if fr else 'Title' }}<input name="title" value="{{ it.title or '' }}" maxlength="200"></label>
+          <label>{{ 'Description' if fr else 'Description' }}<textarea name="description" rows="3" maxlength="2000">{{ it.description or '' }}</textarea></label>
+          <button class="cta" type="submit">{{ 'Enregistrer' if fr else 'Save' }}</button>
         </form>
       </div>
     </article>

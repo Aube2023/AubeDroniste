@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Publier une mission · AubePilot{% endblock %}
+{% set fr = (lang == 'fr') %}
+{% block title %}{{ 'Publier une mission' if fr else 'Post a job' }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="auth-split">
@@ -7,103 +8,103 @@
         {{ csrf_input() }}
     {% if target_pilot %}
     <div class="card" style="border-left: 3px solid var(--amber, #c4633f); margin-bottom: 18px;">
-      <span class="eyebrow">Demande adressée à un pilote</span>
-      <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ target_pilot.full_name }} sera notifié de votre mission</h3>
+      <span class="eyebrow">{{ 'Demande adressée à un pilote' if fr else 'Request addressed to a pilot' }}</span>
+      <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ target_pilot.full_name }} {{ 'sera notifié de votre mission' if fr else 'will be notified of your job' }}</h3>
       <p class="muted small" style="margin: 0;">
-        Vous publiez une mission ouverte à laquelle <strong>{{ target_pilot.full_name }}</strong> sera invité en priorité.
-        Elle reste visible des autres pilotes, ils peuvent aussi soumissionner.
+        {{ 'Vous publiez une mission ouverte à laquelle' if fr else 'You are posting an open job to which' }} <strong>{{ target_pilot.full_name }}</strong> {{ 'sera invité en priorité.' if fr else 'will be invited first.' }}
+        {{ 'Elle reste visible des autres pilotes, ils peuvent aussi soumissionner.' if fr else 'It stays visible to other pilots, who can also bid on it.' }}
       </p>
       <input type="hidden" name="targeted_pilot_id" value="{{ target_pilot.id }}">
     </div>
     {% endif %}
     {% if prefill_package %}
     <div class="card" style="border-left: 3px solid var(--teal, #1a7f6b); margin-bottom: 18px;">
-      <span class="eyebrow">Réservation d'un forfait</span>
+      <span class="eyebrow">{{ "Réservation d'un forfait" if fr else 'Booking a package' }}</span>
       <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ prefill_package.title }} · {{ prefill_package.price|int }} {{ prefill_package.currency }}</h3>
       <p class="muted small" style="margin: 0; white-space: pre-line;">{{ prefill_package.description }}</p>
       {% if prefill_package.deliverables %}
-      <p class="muted small" style="margin: 8px 0 0;"><strong>Inclus :</strong> {{ prefill_package.deliverables }}</p>
+      <p class="muted small" style="margin: 8px 0 0;"><strong>{{ 'Inclus :' if fr else 'Included:' }}</strong> {{ prefill_package.deliverables }}</p>
       {% endif %}
       <input type="hidden" name="from_package_id" value="{{ prefill_package.id }}">
     </div>
     {% endif %}
-    <h2>Publier une mission</h2>
+    <h2>{{ 'Publier une mission' if fr else 'Post a job' }}</h2>
 
     <section class="numbered-section">
-      <h3>L'essentiel</h3>
-      <p class="muted">Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d'un chalet dans les Laurentides ».</p>
-      <label>Titre de la mission
-        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="Captation aérienne d'un mariage à Charlevoix">
+      <h3>{{ "L'essentiel" if fr else 'The essentials' }}</h3>
+      <p class="muted">{{ 'Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d\'un chalet dans les Laurentides ».' if fr else 'The title appears everywhere, be specific. Not "Drone video" but "Aerial footage of a cottage in the Laurentians".' }}</p>
+      <label>{{ 'Titre de la mission' if fr else 'Job title' }}
+        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="{{ 'Captation aérienne d\'un mariage à Charlevoix' if fr else 'Aerial footage of a wedding in Charlevoix' }}">
       </label>
-      <label>Type
+      <label>{{ 'Type' if fr else 'Type' }}
         <select name="mission_type" required>
           {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if form.get('mission_type')==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
         </select>
       </label>
-      <label>Brief détaillé
-        <textarea name="description" rows="6" required placeholder="Contexte, livrables attendus, plages horaires, contraintes d'accès, références visuelles…">{{ form.get('description','') }}</textarea>
+      <label>{{ 'Brief détaillé' if fr else 'Detailed brief' }}
+        <textarea name="description" rows="6" required placeholder="{{ 'Contexte, livrables attendus, plages horaires, contraintes d\'accès, références visuelles…' if fr else 'Context, expected deliverables, time slots, access constraints, visual references…' }}">{{ form.get('description','') }}</textarea>
       </label>
     </section>
 
     <section class="numbered-section">
-      <h3>Localisation</h3>
-      <p class="muted">Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.</p>
+      <h3>{{ 'Localisation' if fr else 'Location' }}</h3>
+      <p class="muted">{{ 'Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.' if fr else 'Country and city are used for filtering and help pilots estimate their travel.' }}</p>
       <div class="grid-2">
-        <label>Pays
+        <label>{{ 'Pays' if fr else 'Country' }}
           <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Canada">
           <datalist id="countries">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
         </label>
-        <label>Ville
+        <label>{{ 'Ville' if fr else 'City' }}
           <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal">
-          <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 Ma position</button>
+          <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 {{ 'Ma position' if fr else 'My location' }}</button>
         </label>
         <input type="hidden" name="lat" value="{{ form.get('lat','') }}">
         <input type="hidden" name="lng" value="{{ form.get('lng','') }}">
-        <label>Région ou département
+        <label>{{ 'Région ou département' if fr else 'Region or state' }}
           <input name="region" value="{{ form.get('region','') }}" placeholder="Québec">
         </label>
-        <label>Adresse / point de RDV
+        <label>{{ 'Adresse / point de RDV' if fr else 'Address / meeting point' }}
           <input name="address" value="{{ form.get('address','') }}" placeholder="Vieux-Port de Montréal">
         </label>
       </div>
     </section>
 
     <section class="numbered-section">
-      <h3>Budget &amp; planning</h3>
-      <p class="muted">Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer.</p>
+      <h3>{{ 'Budget & planning' if fr else 'Budget & schedule' }}</h3>
+      <p class="muted">{{ "Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer." if fr else 'A range works better than a single amount: let pilots make an offer.' }}</p>
       <div class="grid-3">
-        <label>Budget min
+        <label>{{ 'Budget min' if fr else 'Min budget' }}
           <input name="budget_min" type="number" step="0.01" value="{{ form.get('budget_min','') }}" placeholder="600">
         </label>
-        <label>Budget max
+        <label>{{ 'Budget max' if fr else 'Max budget' }}
           <input name="budget_max" type="number" step="0.01" value="{{ form.get('budget_max','') }}" placeholder="1100">
         </label>
-        <label>Devise
+        <label>{{ 'Devise' if fr else 'Currency' }}
           <select name="currency">
             {% for c in currencies %}<option value="{{ c }}" {% if form.get('currency')==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
           </select>
         </label>
-        <label>Durée estimée (h)
+        <label>{{ 'Durée estimée (h)' if fr else 'Estimated duration (h)' }}
           <input name="duration_hours" type="number" step="0.5" value="{{ form.get('duration_hours','') }}" placeholder="3">
         </label>
-        <label>Date / heure de début
+        <label>{{ 'Date / heure de début' if fr else 'Start date / time' }}
           <input name="start_date" type="datetime-local" value="{{ form.get('start_date','') }}">
         </label>
-        <label>Date / heure de fin
+        <label>{{ 'Date / heure de fin' if fr else 'End date / time' }}
           <input name="end_date" type="datetime-local" value="{{ form.get('end_date','') }}">
         </label>
       </div>
     </section>
 
     <section class="numbered-section">
-      <h3>Exigences techniques</h3>
-      <p class="muted">Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.</p>
+      <h3>{{ 'Exigences techniques' if fr else 'Technical requirements' }}</h3>
+      <p class="muted">{{ 'Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.' if fr else 'Check only what is non-negotiable. The rest becomes a sorting criterion for you.' }}</p>
       <div class="grid-3">
-        <label class="check"><input type="checkbox" name="is_urgent" value="1"> Mission urgente</label>
-        <label class="check"><input type="checkbox" name="requires_insurance" value="1"> RC pro requise</label>
+        <label class="check"><input type="checkbox" name="is_urgent" value="1"> {{ 'Mission urgente' if fr else 'Urgent job' }}</label>
+        <label class="check"><input type="checkbox" name="requires_insurance" value="1"> {{ 'RC pro requise' if fr else 'Liability insurance required' }}</label>
       </div>
 
-      <h4 class="req-subtitle">Capacités drone</h4>
+      <h4 class="req-subtitle">{{ 'Capacités drone' if fr else 'Drone capabilities' }}</h4>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in drone_capability_groups %}
         <div class="spec-group">
@@ -117,7 +118,7 @@
         {% endfor %}
       </div>
 
-      <h4 class="req-subtitle">Brevets exigés</h4>
+      <h4 class="req-subtitle">{{ 'Brevets exigés' if fr else 'Required licences' }}</h4>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in licence_authority_groups %}
         <div class="spec-group">
@@ -132,9 +133,9 @@
       </div>
     </section>
 
-    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">Publier la mission</button>
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">{{ 'Publier la mission' if fr else 'Post the job' }}</button>
     <div class="form-foot">
-      <span class="small muted">Vous pourrez modifier ou annuler tant qu'aucune offre n'est acceptée.</span>
+      <span class="small muted">{{ "Vous pourrez modifier ou annuler tant qu'aucune offre n'est acceptée." if fr else 'You can edit or cancel as long as no bid has been accepted.' }}</span>
     </div>
   </form>
 </section>

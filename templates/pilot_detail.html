@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set fr = (lang == 'fr') %}
 {% set is_school = (pilot.kind == 'school') %}
 {% set display_name = (pilot.business_name or pilot.full_name) if is_school else (pilot.full_name if reveal_identity else masked_name) %}
 {% block content %}
@@ -7,27 +8,32 @@
   <div class="flightbook-band">
     {% if pilot.avatar_path %}
     <img class="avatar big" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
-         alt="Photo de {{ display_name }}">
+         alt="{{ 'Photo de' if fr else 'Photo of' }} {{ display_name }}">
     {% else %}
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
       <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (display_name|first)|upper }} · CDB</span>
-      <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">vérifié</span>{% endif %}</h1>
+      <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
       {% if not reveal_identity and not is_school %}
       <p class="muted small mono" style="margin-top: 6px;">
-        Identité complète révélée après acceptation et paiement d'une mission.
+        {{ 'Identité complète révélée après acceptation et paiement d\'une mission.' if fr else 'Full identity revealed once a mission is accepted and paid.' }}
       </p>
       {% endif %}
       {% if is_school and pilot.school_programs %}
       <div style="margin-top: 14px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">Formations proposées</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Formations proposées' if fr else 'Courses offered' }}</span>
         <ul class="badges" style="margin: 0;">
           {% for line in pilot.school_programs.replace('\r', '').split('\n') if line.strip() %}<li>{{ line.strip() }}</li>{% endfor %}
         </ul>
+      </div>
+      {% endif %}
+      {% if is_school and pilot.portfolio_url %}
+      <div style="margin-top: 12px;">
+        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {{ 'Site web de l\'école' if fr else 'School website' }} ↗</a>
       </div>
       {% endif %}
       {% if pilot.headline %}
@@ -37,8 +43,8 @@
       {% endif %}
       {% if not current_user or current_user.id != pilot.id %}
       <div class="actions-row" style="margin-top: 18px;">
-        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}Contacter cette école{% else %}Contacter ce pilote{% endif %}</a>
-        <a href="{{ url_for('missions_search') }}" class="ghost">Voir les missions ouvertes</a>
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ 'Contacter cette école' if fr else 'Contact this school' }}{% else %}{{ 'Contacter ce pilote' if fr else 'Contact this pilot' }}{% endif %}</a>
+        <a href="{{ url_for('missions_search') }}" class="ghost">{{ 'Voir les missions ouvertes' if fr else 'See open missions' }}</a>
       </div>
       {% endif %}
     </div>
@@ -46,48 +52,48 @@
   <div class="stat-rail">
     <div>
       <span class="v">{% if pilot.rating.count %}{{ '%.1f' % pilot.rating.avg }}<span style="color: var(--amber);"> ★</span>{% else %}—{% endif %}</span>
-      <span class="k">Note · {{ pilot.rating.count }} avis</span>
+      <span class="k">{{ 'Note' if fr else 'Rating' }} · {{ pilot.rating.count }} {{ 'avis' if fr else 'reviews' }}</span>
     </div>
     <div>
-      <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> ans</span></span>
-      <span class="k">Expérience</span>
+      <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ 'ans' if fr else 'yrs' }}</span></span>
+      <span class="k">{{ 'Expérience' if fr else 'Experience' }}</span>
     </div>
     <div>
       <span class="v">{% if pilot.hourly_rate %}{{ pilot.hourly_rate|int }}{% else %}—{% endif %}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ pilot.p_currency or '' }}/h</span></span>
-      <span class="k">Tarif horaire</span>
+      <span class="k">{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span>
     </div>
     <div>
       <span class="v">{{ pilot.travel_radius_km or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> km</span></span>
-      <span class="k">Rayon</span>
+      <span class="k">{{ 'Rayon' if fr else 'Radius' }}</span>
     </div>
     <div>
       <span class="v" style="color: {% if pilot.is_available %}var(--teal){% else %}var(--ink-dim){% endif %};">
-        {% if pilot.is_available %}EN VOL{% else %}AU SOL{% endif %}
+        {% if pilot.is_available %}{{ 'EN VOL' if fr else 'IN FLIGHT' }}{% else %}{{ 'AU SOL' if fr else 'GROUNDED' }}{% endif %}
       </span>
-      <span class="k">Statut</span>
+      <span class="k">{{ 'Statut' if fr else 'Status' }}</span>
     </div>
   </div>
 </section>
 
 {% if pilot.bio %}
 <div class="card">
-  <span class="eyebrow">Note du pilote</span>
+  <span class="eyebrow">{{ 'Note du pilote' if fr else 'Pilot\'s note' }}</span>
   <p style="font-family: var(--serif); font-size: 1.15rem; line-height: 1.65; color: var(--ink-soft); margin: 0;">{{ pilot.bio }}</p>
 </div>
 {% endif %}
 
 <div class="grid-2">
   <div class="card">
-    <span class="eyebrow">Spécialités opérationnelles</span>
+    <span class="eyebrow">{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}</span>
     <ul class="chips" style="margin: 16px 0;">
       {% for s in pilot.specialties %}
         <li class="tag">{{ mission_label(s) }}</li>
       {% else %}
-        <li class="muted">Spécialités non renseignées.</li>
+        <li class="muted">{{ 'Spécialités non renseignées.' if fr else 'No specialties listed.' }}</li>
       {% endfor %}
     </ul>
 
-    <h3 style="margin-top: 24px;">Territoires opérés</h3>
+    <h3 style="margin-top: 24px;">{{ 'Territoires opérés' if fr else 'Territories covered' }}</h3>
     <ul class="chips" style="margin: 6px 0;">
       {% for t in pilot.territories %}
         <li class="tag">{{ t.country }}{% if t.region %} · {{ t.region }}{% endif %}</li>
@@ -97,33 +103,33 @@
     </ul>
 
     {% if pilot.languages %}
-    <h3 style="margin-top: 24px;">Langues parlées</h3>
+    <h3 style="margin-top: 24px;">{{ 'Langues parlées' if fr else 'Languages spoken' }}</h3>
     <div class="muted mono" style="text-transform: uppercase; letter-spacing: .12em; font-size: 13px;">
       {{ pilot.languages.replace(',', ' · ') }}
     </div>
     {% endif %}
 
     {% if pilot.insurance %}
-    <h3 style="margin-top: 24px;">Couverture RC pro</h3>
+    <h3 style="margin-top: 24px;">{{ 'Couverture RC pro' if fr else 'Liability insurance' }}</h3>
     <div class="muted small">
-      <span class="tag tag-ok">Assuré</span>
+      <span class="tag tag-ok">{{ 'Assuré' if fr else 'Insured' }}</span>
       {% if pilot.insurance_company %}<br><span class="mono" style="text-transform: uppercase; letter-spacing: .1em; font-size: 11px;">{{ pilot.insurance_company }}</span>{% endif %}
-      {% if pilot.insurance_policy %}<span class="mono" style="font-size: 11px;"> · n° {{ pilot.insurance_policy }}</span>{% endif %}
+      {% if pilot.insurance_policy %}<span class="mono" style="font-size: 11px;"> · {{ 'n°' if fr else 'no.' }} {{ pilot.insurance_policy }}</span>{% endif %}
     </div>
     {% endif %}
 
-    {% if pilot.portfolio_url %}
-    <h3 style="margin-top: 24px;">Portfolio externe</h3>
+    {% if pilot.portfolio_url and not is_school %}
+    <h3 style="margin-top: 24px;">{{ 'Portfolio externe' if fr else 'External portfolio' }}</h3>
     {% if reveal_identity %}
       <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
     {% else %}
-      <p class="muted small">Lien révélé après paiement d'une première mission avec ce pilote.</p>
+      <p class="muted small">{{ 'Lien révélé après paiement d\'une première mission avec ce pilote.' if fr else 'Link revealed after paying for a first mission with this pilot.' }}</p>
     {% endif %}
     {% endif %}
   </div>
 
   <div class="card">
-    <span class="eyebrow">Brevets &amp; qualifications</span>
+    <span class="eyebrow">{{ 'Brevets & qualifications' if fr else 'Licences & qualifications' }}</span>
     <div class="patches" style="margin-top: 12px;">
       {% for c in pilot.certifications %}
       <div class="patch">
@@ -132,28 +138,28 @@
           <span class="title">{{ c.title }}</span>
           <span class="meta">
             {{ auth_label(c.authority) }}
-            {% if c.reference %} · n° {{ c.reference }}{% endif %}
-            {% if c.issued_at %} · délivré {{ c.issued_at }}{% endif %}
-            {% if c.expires_at %} → expire {{ c.expires_at }}{% endif %}
+            {% if c.reference %} · {{ 'n°' if fr else 'no.' }} {{ c.reference }}{% endif %}
+            {% if c.issued_at %} · {{ 'délivré' if fr else 'issued' }} {{ c.issued_at }}{% endif %}
+            {% if c.expires_at %} → {{ 'expire' if fr else 'expires' }} {{ c.expires_at }}{% endif %}
           </span>
           {% if c.document_path %}
             {% if can_view_credentials %}
               <a class="small" href="{{ url_for('pilot_certification_document', user_id=pilot.id, cert_id=c.id) }}"
                  target="_blank" rel="noopener noreferrer"
                  style="display:inline-block; margin-top:6px;">
-                Voir le justificatif (PDF) →
+                {{ 'Voir le justificatif (PDF) →' if fr else 'View the document (PDF) →' }}
               </a>
             {% else %}
               <span class="muted small" style="display:block; margin-top:6px;">
-                Justificatif PDF disponible apres ouverture d'une demande de mission avec ce pilote.
+                {{ 'Justificatif PDF disponible après ouverture d\'une demande de mission avec ce pilote.' if fr else 'PDF document available after opening a mission request with this pilot.' }}
               </span>
             {% endif %}
           {% endif %}
         </div>
-        {% if c.is_expired %}<span class="tag tag-cancelled">expiré</span>{% elif c.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
+        {% if c.is_expired %}<span class="tag tag-cancelled">{{ 'expiré' if fr else 'expired' }}</span>{% elif c.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}
       </div>
       {% else %}
-        <p class="muted">Aucun brevet déclaré pour le moment.</p>
+        <p class="muted">{{ 'Aucun brevet déclaré pour le moment.' if fr else 'No licence declared yet.' }}</p>
       {% endfor %}
     </div>
   </div>
@@ -162,11 +168,11 @@
 <section class="card">
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
-      <span class="eyebrow">Flotte personnelle</span>
-      <h2 class="card-title" style="margin: 0;">Aéronefs déclarés</h2>
+      <span class="eyebrow">{{ 'Flotte personnelle' if fr else 'Personal fleet' }}</span>
+      <h2 class="card-title" style="margin: 0;">{{ 'Aéronefs déclarés' if fr else 'Declared aircraft' }}</h2>
     </div>
     <span class="muted mono" style="font-size: 12px; text-transform: uppercase; letter-spacing: .12em;">
-      {{ pilot.drones|length }} appareil{{ 's' if pilot.drones|length > 1 else '' }}
+      {{ pilot.drones|length }} {{ 'appareil' if fr else 'aircraft' }}{{ 's' if fr and pilot.drones|length > 1 else '' }}
     </span>
   </div>
   <div class="fleet-grid">
@@ -176,19 +182,19 @@
       <span class="model">{{ (d.brand or '—') }} {{ d.model or '' }}</span>
       <div class="specs">
         {% if d.weight_g %}<span><strong>{{ d.weight_g }}</strong>g</span>{% endif %}
-        {% if d.flight_time_min %}<span><strong>{{ d.flight_time_min }}</strong>min vol</span>{% endif %}
-        {% if d.max_payload_g %}<span><strong>{{ d.max_payload_g }}</strong>g charge</span>{% endif %}
+        {% if d.flight_time_min %}<span><strong>{{ d.flight_time_min }}</strong>{{ 'min vol' if fr else 'min flight' }}</span>{% endif %}
+        {% if d.max_payload_g %}<span><strong>{{ d.max_payload_g }}</strong>{{ 'g charge' if fr else 'g payload' }}</span>{% endif %}
         {% if d.serial_number %}<span>S/N <strong>{{ d.serial_number[:8] }}</strong></span>{% endif %}
       </div>
       {% if d.capabilities %}
       <div class="caps">
-        {% for cap in d.capabilities %}<span class="tag">{{ cap }}</span>{% endfor %}
+        {% for cap in d.capabilities %}<span class="tag">{{ cap_label(cap) }}</span>{% endfor %}
       </div>
       {% endif %}
       {% if d.notes %}<p class="muted small" style="margin: 4px 0 0;">{{ d.notes }}</p>{% endif %}
     </div>
     {% else %}
-    <p class="muted">Flotte non déclarée.</p>
+    <p class="muted">{{ 'Flotte non déclarée.' if fr else 'No fleet declared.' }}</p>
     {% endfor %}
   </div>
 </section>
@@ -196,7 +202,7 @@
 {% if portfolio %}
 <section class="card">
   <span class="eyebrow">Showreel</span>
-  <h2 class="card-title">Portfolio · {{ portfolio|length }} réalisation(s)</h2>
+  <h2 class="card-title">{{ 'Portfolio' if fr else 'Portfolio' }} · {{ portfolio|length }} {{ 'réalisation(s)' if fr else 'item(s)' }}</h2>
   <div class="media-grid">
     {% for it in portfolio %}
     <figure class="media-figure">
@@ -207,7 +213,7 @@
           </video>
         {% else %}
           <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or 'Réalisation' }}" loading="lazy">
+               alt="{{ it.title or ('Réalisation' if fr else 'Work') }}" loading="lazy">
         {% endif %}
       </div>
       {% if it.title or it.description %}
@@ -224,10 +230,10 @@
 
 {% if packages %}
 <section class="card">
-  <span class="eyebrow">Catalogue</span>
-  <h2 class="card-title" style="margin-bottom: 6px;">Forfaits proposés</h2>
+  <span class="eyebrow">{{ 'Catalogue' if fr else 'Catalogue' }}</span>
+  <h2 class="card-title" style="margin-bottom: 6px;">{{ 'Forfaits proposés' if fr else 'Packages offered' }}</h2>
   <p class="muted small" style="margin: 0 0 18px;">
-    Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.
+    {{ 'Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.' if fr else 'Book a package: the mission is created with the pilot\'s scope, and they are invited first to confirm the quote.' }}
   </p>
 
   <div class="pkg-grid">
@@ -236,20 +242,20 @@
       <header>
         <h3>{{ p.title }}</h3>
         <div class="pkg-meta">
-          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}Forfait général{% endif %}
+          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}
           {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
         </div>
       </header>
       <p class="prewrap" style="margin: 0; font-size: .95rem;">{{ p.description }}</p>
       {% if p.deliverables %}
-      <p class="muted small" style="margin: 0;"><strong>Inclus :</strong> {{ p.deliverables }}</p>
+      <p class="muted small" style="margin: 0;"><strong>{{ 'Inclus :' if fr else 'Includes:' }}</strong> {{ p.deliverables }}</p>
       {% endif %}
       <footer class="pkg-foot">
         <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
         {% if current_user and current_user.id != pilot.id %}
-          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">Réserver</a>
+          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{{ 'Réserver' if fr else 'Book' }}</a>
         {% elif not current_user %}
-          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">Se connecter pour réserver</a>
+          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{{ 'Se connecter pour réserver' if fr else 'Sign in to book' }}</a>
         {% endif %}
       </footer>
     </article>
@@ -259,18 +265,18 @@
 {% endif %}
 
 <section class="card" id="avis">
-  <span class="eyebrow">Retours d'expérience</span>
-  <h2 class="card-title">Avis des clients</h2>
+  <span class="eyebrow">{{ 'Retours d\'expérience' if fr else 'Feedback' }}</span>
+  <h2 class="card-title">{{ 'Avis des clients' if fr else 'Client reviews' }}</h2>
 
   {% if my_review_booking %}
   <form method="post" action="{{ url_for('pilot_review', user_id=pilot.id) }}"
         class="card" style="background: var(--paper-3); margin: 0 0 22px;">
     {{ csrf_input() }}
-    <strong>{% if my_review_booking.my_rating %}Modifier votre avis{% else %}Laisser un avis{% endif %}</strong>
+    <strong>{% if my_review_booking.my_rating %}{{ 'Modifier votre avis' if fr else 'Edit your review' }}{% else %}{{ 'Laisser un avis' if fr else 'Leave a review' }}{% endif %}</strong>
     <p class="muted small" style="margin: 4px 0 14px;">
-      Vous avez réalisé une mission avec ce pilote — partagez votre retour.
+      {{ 'Vous avez réalisé une mission avec ce pilote — partagez votre retour.' if fr else 'You completed a mission with this pilot — share your feedback.' }}
     </p>
-    <label>Note
+    <label>{{ 'Note' if fr else 'Rating' }}
       <select name="rating">
         {% for n in [5, 4, 3, 2, 1] %}
         <option value="{{ n }}" {% if (my_review_booking.my_rating or 5) == n %}selected{% endif %}>
@@ -279,12 +285,12 @@
         {% endfor %}
       </select>
     </label>
-    <label>Commentaire
+    <label>{{ 'Commentaire' if fr else 'Comment' }}
       <textarea name="comment" rows="3" maxlength="1000"
-                placeholder="Ponctualité, qualité des images, professionnalisme…">{{ my_review_booking.my_comment or '' }}</textarea>
+                placeholder="{{ 'Ponctualité, qualité des images, professionnalisme…' if fr else 'Punctuality, image quality, professionalism…' }}">{{ my_review_booking.my_comment or '' }}</textarea>
     </label>
     <div style="margin-top: 14px;">
-      <button class="cta" type="submit">{% if my_review_booking.my_rating %}Mettre à jour{% else %}Publier mon avis{% endif %}</button>
+      <button class="cta" type="submit">{% if my_review_booking.my_rating %}{{ 'Mettre à jour' if fr else 'Update' }}{% else %}{{ 'Publier mon avis' if fr else 'Publish my review' }}{% endif %}</button>
     </div>
   </form>
   {% endif %}
@@ -292,11 +298,11 @@
   {% for r in reviews %}
   <div class="review-quote">
     <div class="stars">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
-    <q>{{ r.comment or "«, pas de commentaire écrit, »" }}</q>
+    <q>{{ r.comment or ('(pas de commentaire écrit)' if fr else '(no written comment)') }}</q>
     <cite>{{ r.author_name }} · {{ r.created_at[:10] }}</cite>
   </div>
   {% else %}
-  <p class="muted">Pas encore d'avis. Soyez le premier à recommander ce pilote.</p>
+  <p class="muted">{{ 'Pas encore d\'avis. Soyez le premier à recommander ce pilote.' if fr else 'No reviews yet. Be the first to recommend this pilot.' }}</p>
   {% endfor %}
 </section>
 

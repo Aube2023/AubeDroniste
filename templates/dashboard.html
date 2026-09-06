@@ -1,90 +1,91 @@
 {% extends "base.html" %}
+{% set fr = (lang == 'fr') %}
 {% block title %}Cockpit · AubePilot{% endblock %}
 {% block content %}
 
 <section class="cockpit-banner">
   <div>
-    <span class="eyebrow">Espace pilote</span>
-    <h1>Bonjour, {{ current_user.full_name.split(' ')[0] }}.</h1>
+    <span class="eyebrow">{{ 'Espace pilote' if fr else 'Pilot space' }}</span>
+    <h1>{{ 'Bonjour' if fr else 'Hello' }}, {{ current_user.full_name.split(' ')[0] }}.</h1>
     <div class="meta">
       <strong>F-{{ '%04d' % current_user.id }}{{ (current_user.full_name|first)|upper }}</strong>
       · {{ current_user.email }}
-      · rôle <strong>{{ current_user.role }}</strong>
+      · {{ 'rôle' if fr else 'role' }} <strong>{{ current_user.role }}</strong>
       {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
-      {% if unread %} · <strong>{{ unread }}</strong> message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% endif %}
+      {% if unread %} · <strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %}{% endif %}
     </div>
   </div>
   <div class="cockpit-actions">
-    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
-    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Mon profil pilote</a>{% endif %}
-    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">Devenir pilote</a>{% endif %}
-    <a class="ghost" href="{{ url_for('settings') }}">⚙ Paramètres</a>
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
+    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>{% endif %}
+    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Devenir pilote' if fr else 'Become a pilot' }}</a>{% endif %}
+    <a class="ghost" href="{{ url_for('settings') }}">⚙ {{ 'Paramètres' if fr else 'Settings' }}</a>
   </div>
 </section>
 
 <div class="cockpit-grid">
   {% if is_pilot and my_pilot_profile %}
   <div class="cockpit-tile">
-    <span class="label">Profil pilote</span>
-    <h2>{{ my_pilot_profile.headline or "Compléter mon accroche →" }}</h2>
+    <span class="label">{{ 'Profil pilote' if fr else 'Pilot profile' }}</span>
+    <h2>{{ my_pilot_profile.headline or ("Compléter mon accroche →" if fr else "Complete my tagline →") }}</h2>
     <span class="num-big">
       {% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★{% else %}—{% endif %}
     </span>
     <div class="mini-profile" style="margin-top: 8px;">
-      <div class="row"><span>Disponibilité</span><strong>{% if my_pilot_profile.is_available %}En vol{% else %}Au sol{% endif %}</strong></div>
-      <div class="row"><span>Tarif horaire</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}sur devis{% endif %}</strong></div>
-      <div class="row"><span>Rayon</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
-      <div class="row"><span>Brevets</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
-      <div class="row"><span>Aéronefs</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
+      <div class="row"><span>{{ 'Disponibilité' if fr else 'Availability' }}</span><strong>{% if my_pilot_profile.is_available %}{{ 'En vol' if fr else 'Flying' }}{% else %}{{ 'Au sol' if fr else 'Grounded' }}{% endif %}</strong></div>
+      <div class="row"><span>{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong></div>
+      <div class="row"><span>{{ 'Rayon' if fr else 'Radius' }}</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
+      <div class="row"><span>{{ 'Brevets' if fr else 'Licences' }}</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
+      <div class="row"><span>{{ 'Aéronefs' if fr else 'Aircraft' }}</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
     </div>
     <div class="footnote">
-      <a href="{{ url_for('pilot_edit') }}">Compléter →</a>
+      <a href="{{ url_for('pilot_edit') }}">{{ 'Compléter →' if fr else 'Complete →' }}</a>
       &nbsp;·&nbsp;
-      <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">Gestion de flotte AubeCrew ↗</a>
+      <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">{{ 'Gestion de flotte AubeCrew ↗' if fr else 'AubeCrew fleet management ↗' }}</a>
     </div>
   </div>
   {% endif %}
 
   {% if is_client %}
   <div class="cockpit-tile">
-    <span class="label">Mes missions publiées</span>
-    <h2>Missions {{ my_missions|length }}</h2>
+    <span class="label">{{ 'Mes missions publiées' if fr else 'My posted jobs' }}</span>
+    <h2>{{ 'Missions' if fr else 'Jobs' }} {{ my_missions|length }}</h2>
     <span class="num-big">{{ my_missions|selectattr('status','equalto','open')|list|length }}</span>
     <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      en attente de pilote
+      {{ 'en attente de pilote' if fr else 'awaiting a pilot' }}
     </div>
     <div class="footnote">
       {% set assigned = my_missions|selectattr('status','equalto','assigned')|list|length %}
       {% set done = my_missions|selectattr('status','equalto','done')|list|length %}
-      {{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}
+      {% if fr %}{{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}{% else %}{{ assigned }} assigned · {{ done }} delivered{% endif %}
     </div>
   </div>
   {% endif %}
 
   {% if is_pilot %}
   <div class="cockpit-tile">
-    <span class="label">Mes offres</span>
-    <h2>Soumissions {{ my_bids|length }}</h2>
+    <span class="label">{{ 'Mes offres' if fr else 'My bids' }}</span>
+    <h2>{{ 'Soumissions' if fr else 'Bids' }} {{ my_bids|length }}</h2>
     <span class="num-big">{{ my_bids|selectattr('my_bid_status','equalto','pending')|list|length }}</span>
     <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      en attente de réponse
+      {{ 'en attente de réponse' if fr else 'awaiting a reply' }}
     </div>
     <div class="footnote">
       {% set acc = my_bids|selectattr('my_bid_status','equalto','accepted')|list|length %}
-      {{ acc }} acceptée{{ 's' if acc > 1 else '' }}
+      {% if fr %}{{ acc }} acceptée{{ 's' if acc > 1 else '' }}{% else %}{{ acc }} accepted{% endif %}
     </div>
   </div>
   {% endif %}
 
   <div class="cockpit-tile">
-    <span class="label">Mes réservations</span>
+    <span class="label">{{ 'Mes réservations' if fr else 'My bookings' }}</span>
     <h2>Bookings {{ my_bookings|length }}</h2>
     <span class="num-big">{{ my_bookings|selectattr('status','equalto','scheduled')|list|length + my_bookings|selectattr('status','equalto','in_progress')|list|length }}</span>
     <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      en cours
+      {{ 'en cours' if fr else 'in progress' }}
     </div>
     <div class="footnote">
-      {{ my_bookings|selectattr('status','equalto','completed')|list|length }} terminée{{ 's' if my_bookings|selectattr('status','equalto','completed')|list|length > 1 else '' }}
+      {% if fr %}{{ my_bookings|selectattr('status','equalto','completed')|list|length }} terminée{{ 's' if my_bookings|selectattr('status','equalto','completed')|list|length > 1 else '' }}{% else %}{{ my_bookings|selectattr('status','equalto','completed')|list|length }} completed{% endif %}
     </div>
   </div>
 </div>
@@ -92,8 +93,8 @@
 {% if is_client and my_missions %}
 <section class="section" style="margin: 48px 0 32px;">
   <div class="row-between" style="align-items: end;">
-    <div><span class="eyebrow">Mes missions</span><h2>Tableau personnel</h2></div>
-    <a href="{{ url_for('mission_create') }}" class="ghost">+ Publier une nouvelle mission</a>
+    <div><span class="eyebrow">{{ 'Mes missions' if fr else 'My jobs' }}</span><h2>{{ 'Tableau personnel' if fr else 'Personal board' }}</h2></div>
+    <a href="{{ url_for('mission_create') }}" class="ghost">+ {{ 'Publier une nouvelle mission' if fr else 'Post a new job' }}</a>
   </div>
   <div class="grid-cards">
     {% for m in my_missions %}
@@ -105,7 +106,7 @@
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
       <div class="footer">
-        <span><strong>{{ m.bid_count }}</strong> offre{{ 's' if m.bid_count > 1 else '' }}</span>
+        <span><strong>{{ m.bid_count }}</strong> {{ 'offre' if fr else 'bid' }}{{ 's' if m.bid_count > 1 else '' }}</span>
         <span>{{ m.created_at[:10] }}</span>
       </div>
     </a>
@@ -116,14 +117,14 @@
 
 {% if is_pilot and my_bids %}
 <section class="section" style="margin: 48px 0 32px;">
-  <span class="eyebrow">Mes offres</span>
-  <h2>Soumissions actives</h2>
+  <span class="eyebrow">{{ 'Mes offres' if fr else 'My bids' }}</span>
+  <h2>{{ 'Soumissions actives' if fr else 'Active bids' }}</h2>
   <div class="grid-cards">
     {% for m in my_bids %}
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        <span class="tag tag-{{ m.my_bid_status }}">offre {{ status_label(m.my_bid_status) }}</span>
+        <span class="tag tag-{{ m.my_bid_status }}">{{ 'offre' if fr else 'bid' }} {{ status_label(m.my_bid_status) }}</span>
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
@@ -139,8 +140,8 @@
 
 {% if my_bookings %}
 <section class="section" style="margin: 48px 0 32px;">
-  <span class="eyebrow">Mes réservations</span>
-  <h2>Carnet de bord</h2>
+  <span class="eyebrow">{{ 'Mes réservations' if fr else 'My bookings' }}</span>
+  <h2>{{ 'Carnet de bord' if fr else 'Flight log' }}</h2>
   <div class="grid-cards">
     {% for b in my_bookings %}
     <a class="mission-card" href="{{ url_for('booking_detail', booking_id=b.id) }}">
@@ -150,11 +151,11 @@
       </div>
       <h3>{{ b.mission_title }}</h3>
       <div class="coords">
-        {% if current_user.id == b.client_user_id %}avec {{ b.pilot_name }}{% else %}pour {{ b.client_name }}{% endif %}
+        {% if current_user.id == b.client_user_id %}{{ 'avec' if fr else 'with' }} {{ b.pilot_name }}{% else %}{{ 'pour' if fr else 'for' }} {{ b.client_name }}{% endif %}
       </div>
       <div class="footer">
         <span class="price">{{ b.agreed_price|int }} {{ b.currency }}</span>
-        <span>réservation #{{ b.id }}</span>
+        <span>{{ 'réservation' if fr else 'booking' }} #{{ b.id }}</span>
       </div>
     </a>
     {% endfor %}
@@ -164,25 +165,25 @@
 
 {% if current_user.is_admin %}
 <section class="card" style="margin-top: 32px; border-left: 3px solid var(--signal);">
-  <span class="eyebrow">Admin · Back-office</span>
-  <h2 style="margin: 6px 0 14px;">Console de moderation.</h2>
+  <span class="eyebrow">{{ 'Admin · Back-office' if fr else 'Admin · Back office' }}</span>
+  <h2 style="margin: 6px 0 14px;">{{ 'Console de moderation.' if fr else 'Moderation console.' }}</h2>
   <div class="cta-row" style="flex-wrap: wrap; gap: 12px;">
-    <a class="ghost" href="{{ url_for('admin_certifications') }}">Brevets à vérifier{% if admin_pending_certs %} · <strong>{{ admin_pending_certs }} en attente</strong>{% endif %} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_name_changes') }}">Demandes de changement de nom &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_disputes') }}">Litiges en cours &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_messages') }}">Messages reçus{% if admin_new_messages %} · <strong>{{ admin_new_messages }} à traiter</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_certifications') }}">{{ 'Brevets à vérifier' if fr else 'Licences to verify' }}{% if admin_pending_certs %} · <strong>{{ admin_pending_certs }} {{ 'en attente' if fr else 'pending' }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_name_changes') }}">{{ 'Demandes de changement de nom' if fr else 'Name change requests' }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_disputes') }}">{{ 'Litiges en cours' if fr else 'Open disputes' }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_messages') }}">{{ 'Messages reçus' if fr else 'Received messages' }}{% if admin_new_messages %} · <strong>{{ admin_new_messages }} {{ 'à traiter' if fr else 'to process' }}</strong>{% endif %} &rarr;</a>
   </div>
 </section>
 {% endif %}
 
 {% if not (is_client and my_missions) and not (is_pilot and my_bids) and not my_bookings %}
 <section class="card" style="text-align: center; padding: 64px 32px;">
-  <span class="eyebrow" style="justify-content: center;">Bienvenue à bord</span>
-  <h2 style="margin: 12px 0;">Votre cockpit est vide pour l'instant.</h2>
-  <p class="muted lead" style="margin: 0 auto 24px;">Publiez une mission ou complétez votre profil pilote pour entrer dans la rotation.</p>
+  <span class="eyebrow" style="justify-content: center;">{{ 'Bienvenue à bord' if fr else 'Welcome aboard' }}</span>
+  <h2 style="margin: 12px 0;">{{ "Votre cockpit est vide pour l'instant." if fr else 'Your cockpit is empty for now.' }}</h2>
+  <p class="muted lead" style="margin: 0 auto 24px;">{{ 'Publiez une mission ou complétez votre profil pilote pour entrer dans la rotation.' if fr else 'Post a job or complete your pilot profile to enter the rotation.' }}</p>
   <div class="cta-row" style="justify-content: center;">
-    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">Publier une mission</a>{% endif %}
-    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}Compléter mon profil{% else %}Devenir pilote{% endif %}</a>
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
+    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}{{ 'Compléter mon profil' if fr else 'Complete my profile' }}{% else %}{{ 'Devenir pilote' if fr else 'Become a pilot' }}{% endif %}</a>
   </div>
 </section>
 {% endif %}
