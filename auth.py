@@ -18,6 +18,7 @@ from flask import g, redirect, request, url_for
 from itsdangerous import BadSignature, URLSafeSerializer
 
 from config import (
+    DATA_DIR,
     EMAIL_DOMAIN,
     REQUIRE_AUBEMAIL,
     SECRET_KEY,
@@ -82,7 +83,11 @@ def system_user_exists(username: str) -> bool:
 # Format des lignes : `<username>:<scheme>:<salt_hex>:<hash_hex>`
 #   - scheme = "scrypt"  (nouveau, defaut)
 #   - scheme = "sha256"  (legacy, lecture seule, re-hash automatique au prochain login)
-_DEV_HASH_FILE = os.path.join(os.path.dirname(__file__), ".dev_passwords")
+# IMPORTANT : dans DATA_DIR (inscriptible), pas dans le dossier du code — en
+# prod le service tourne avec ProtectSystem=strict, /srv/aubepilot est en
+# lecture seule ; seul DATA_DIR (/var/lib/aubepilot) est inscriptible. Écrire
+# ici dans le code faisait planter l'inscription (OSError read-only fs).
+_DEV_HASH_FILE = os.path.join(DATA_DIR, ".dev_passwords")
 
 # Parametres scrypt : ~50ms de hash, 16 MiB de RAM par tentative -> bruteforce
 # 10 000x plus cher que SHA-256 si .dev_passwords leak.
