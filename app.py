@@ -1398,9 +1398,11 @@ def pilot_packages():
         )
         flash("Forfait ajoute au catalogue.", "success")
         return redirect(url_for("pilot_packages"))
+    _prof = services.get_pilot_profile(user["id"])
     return render_template(
         "pilot_packages.html",
         packages=services.list_pilot_packages(user["id"]),
+        is_school=bool(_prof and _prof.get("kind") == "school"),
     )
 
 

@@ -1,27 +1,28 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Mes forfaits' if fr else 'My packages' }} · AubePilot{% endblock %}
+{% block title %}{% if is_school %}{{ 'Mes formations' if fr else 'My courses' }}{% else %}{{ 'Mes forfaits' if fr else 'My packages' }}{% endif %} · AubePilot{% endblock %}
 {% block content %}
 
 <div class="row-between" style="align-items: end; margin-bottom: 24px;">
   <div>
-    <span class="eyebrow">{{ 'Mon catalogue' if fr else 'My catalogue' }}</span>
-    <h1>{{ 'Mes forfaits' if fr else 'My packages' }}</h1>
+    <span class="eyebrow">{% if is_school %}{{ 'Mes formations' if fr else 'My courses' }}{% else %}{{ 'Mon catalogue' if fr else 'My catalogue' }}{% endif %}</span>
+    <h1>{% if is_school %}{{ 'Mes formations & tarifs' if fr else 'My courses & pricing' }}{% else %}{{ 'Mes forfaits' if fr else 'My packages' }}{% endif %}</h1>
     <p class="muted">
-      {{ 'Vos forfaits apparaissent sur votre page publique. Un client peut' if fr else 'Your packages appear on your public page. A client can' }}
-      <strong>{{ 'réserver directement' if fr else 'book directly' }}</strong> {{ "un forfait : la mission est créée automatiquement avec votre titre, votre description, vos livrables et votre prix, et vous êtes invité en priorité à soumettre le devis." if fr else 'a package: the job is created automatically with your title, description, deliverables and price, and you are invited first to submit the quote.' }}
+      {% if is_school %}{{ 'Vos formations apparaissent sur votre page publique. Un futur élève peut' if fr else 'Your courses appear on your public page. A prospective student can' }}
+      <strong>{{ 's\'inscrire directement' if fr else 'enrol directly' }}</strong> {{ "à une formation : une demande est créée avec le titre, la description, le contenu et le prix, et l'école est invitée en priorité à confirmer." if fr else 'in a course: a request is created with the title, description, contents and price, and the school is invited first to confirm.' }}{% else %}{{ 'Vos forfaits apparaissent sur votre page publique. Un client peut' if fr else 'Your packages appear on your public page. A client can' }}
+      <strong>{{ 'réserver directement' if fr else 'book directly' }}</strong> {{ "un forfait : la mission est créée automatiquement avec votre titre, votre description, vos livrables et votre prix, et vous êtes invité en priorité à soumettre le devis." if fr else 'a package: the job is created automatically with your title, description, deliverables and price, and you are invited first to submit the quote.' }}{% endif %}
     </p>
   </div>
   <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ 'Profil pilote' if fr else 'Pilot profile' }}</a>
 </div>
 
 <section class="card">
-  <span class="eyebrow">{{ 'Nouveau forfait' if fr else 'New package' }}</span>
+  <span class="eyebrow">{% if is_school %}{{ 'Nouvelle formation' if fr else 'New course' }}{% else %}{{ 'Nouveau forfait' if fr else 'New package' }}{% endif %}</span>
   <form method="post">
         {{ csrf_input() }}
     <div class="grid-2">
-      <label>{{ 'Titre du forfait' if fr else 'Package title' }}
-        <input name="title" required maxlength="160" placeholder="{{ 'Captation aérienne mariage demi-journée' if fr else 'Half-day wedding aerial footage' }}">
+      <label>{% if is_school %}{{ 'Titre de la formation' if fr else 'Course title' }}{% else %}{{ 'Titre du forfait' if fr else 'Package title' }}{% endif %}
+        <input name="title" required maxlength="160" placeholder="{% if is_school %}{{ 'Formation pilote de drone — RPAS de base' if fr else 'Drone pilot course — Basic RPAS' }}{% else %}{{ 'Captation aérienne mariage demi-journée' if fr else 'Half-day wedding aerial footage' }}{% endif %}">
       </label>
       <label>{{ 'Type de mission' if fr else 'Job type' }}
         <select name="mission_type">
@@ -60,19 +61,19 @@
       {% endfor %}
     </div>
 
-    <button class="cta" type="submit">{{ 'Ajouter au catalogue' if fr else 'Add to catalogue' }}</button>
+    <button class="cta" type="submit">{% if is_school %}{{ 'Ajouter la formation' if fr else 'Add the course' }}{% else %}{{ 'Ajouter au catalogue' if fr else 'Add to catalogue' }}{% endif %}</button>
   </form>
 </section>
 
 <section class="section">
   <h2 style="font-size: 1.4rem; margin-bottom: 14px;">
-    {% if packages %}{{ packages|length }} {{ 'forfait(s) en catalogue' if fr else 'package(s) in catalogue' }}{% else %}{{ 'Catalogue vide' if fr else 'Empty catalogue' }}{% endif %}
+    {% if packages %}{{ packages|length }} {% if is_school %}{{ 'formation(s)' if fr else 'course(s)' }}{% else %}{{ 'forfait(s) en catalogue' if fr else 'package(s) in catalogue' }}{% endif %}{% else %}{% if is_school %}{{ 'Aucune formation' if fr else 'No course yet' }}{% else %}{{ 'Catalogue vide' if fr else 'Empty catalogue' }}{% endif %}{% endif %}
   </h2>
 
   {% if not packages %}
   <div class="empty-state">
-    <strong>{{ 'Catalogue vide' if fr else 'Empty catalogue' }}</strong>
-    <p>{{ 'Ajoutez votre premier forfait avec le formulaire ci-dessus. Les clients pourront le réserver en un clic depuis votre page publique.' if fr else 'Add your first package with the form above. Clients will be able to book it in one click from your public page.' }}</p>
+    <strong>{% if is_school %}{{ 'Aucune formation' if fr else 'No course yet' }}{% else %}{{ 'Catalogue vide' if fr else 'Empty catalogue' }}{% endif %}</strong>
+    <p>{% if is_school %}{{ 'Ajoutez votre première formation avec le formulaire ci-dessus. Les futurs élèves pourront s\'inscrire en un clic depuis votre page publique.' if fr else 'Add your first course with the form above. Prospective students will be able to enrol in one click from your public page.' }}{% else %}{{ 'Ajoutez votre premier forfait avec le formulaire ci-dessus. Les clients pourront le réserver en un clic depuis votre page publique.' if fr else 'Add your first package with the form above. Clients will be able to book it in one click from your public page.' }}{% endif %}</p>
   </div>
   {% endif %}
 
@@ -82,7 +83,7 @@
       <div>
         <h3 style="margin: 0 0 4px; font-family: var(--serif); font-size: 1.3rem;">{{ p.title }}</h3>
         <div class="mono small muted" style="text-transform: uppercase; letter-spacing: .1em;">
-          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}
+          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{% if is_school %}{{ 'Formation' if fr else 'Course' }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}{% endif %}
           {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
           {% if not p.is_active %} · {{ 'MASQUÉ' if fr else 'HIDDEN' }}{% endif %}
         </div>
@@ -103,7 +104,7 @@
             {{ csrf_input() }}
         <button class="ghost" type="submit">{% if p.is_active %}{{ 'Masquer' if fr else 'Hide' }}{% else %}{{ 'Afficher' if fr else 'Show' }}{% endif %}</button>
       </form>
-      <form method="post" action="{{ url_for('pilot_package_delete', package_id=p.id) }}" style="display: inline-block;" data-confirm="{{ 'Supprimer ce forfait ?' if fr else 'Delete this package?' }}">
+      <form method="post" action="{{ url_for('pilot_package_delete', package_id=p.id) }}" style="display: inline-block;" data-confirm="{% if is_school %}{{ 'Supprimer cette formation ?' if fr else 'Delete this course?' }}{% else %}{{ 'Supprimer ce forfait ?' if fr else 'Delete this package?' }}{% endif %}">
             {{ csrf_input() }}
         <button class="ghost danger" type="submit">{{ 'Supprimer' if fr else 'Delete' }}</button>
       </form>
