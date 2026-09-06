@@ -58,6 +58,12 @@
       <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ 'ans' if fr else 'yrs' }}</span></span>
       <span class="k">{{ 'Expérience' if fr else 'Experience' }}</span>
     </div>
+    {% if is_school %}
+    <div>
+      <span class="v">{{ pilot.school_programs.replace('\r','').split('\n')|map('trim')|select|list|length if pilot.school_programs else 0 }}</span>
+      <span class="k">{{ 'Formations' if fr else 'Courses' }}</span>
+    </div>
+    {% else %}
     <div>
       <span class="v">{% if pilot.hourly_rate %}{{ pilot.hourly_rate|int }}{% else %}—{% endif %}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ pilot.p_currency or '' }}/h</span></span>
       <span class="k">{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span>
@@ -72,6 +78,7 @@
       </span>
       <span class="k">{{ 'Statut' if fr else 'Status' }}</span>
     </div>
+    {% endif %}
   </div>
 </section>
 
@@ -82,9 +89,10 @@
 </div>
 {% endif %}
 
-<div class="grid-2">
+<div class="{% if not is_school %}grid-2{% endif %}">
   <div class="card">
-    <span class="eyebrow">{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}</span>
+    <span class="eyebrow">{% if is_school %}{{ 'À propos de l\'école' if fr else 'About the school' }}{% else %}{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}{% endif %}</span>
+    {% if not is_school %}
     <ul class="chips" style="margin: 16px 0;">
       {% for s in pilot.specialties %}
         <li class="tag">{{ mission_label(s) }}</li>
@@ -92,6 +100,7 @@
         <li class="muted">{{ 'Spécialités non renseignées.' if fr else 'No specialties listed.' }}</li>
       {% endfor %}
     </ul>
+    {% endif %}
 
     <h3 style="margin-top: 24px;">{{ 'Territoires opérés' if fr else 'Territories covered' }}</h3>
     <ul class="chips" style="margin: 6px 0;">
@@ -128,6 +137,7 @@
     {% endif %}
   </div>
 
+  {% if not is_school %}
   <div class="card">
     <span class="eyebrow">{{ 'Brevets & qualifications' if fr else 'Licences & qualifications' }}</span>
     <div class="patches" style="margin-top: 12px;">
@@ -163,8 +173,10 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
 </div>
 
+{% if not is_school %}
 <section class="card">
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
@@ -198,6 +210,7 @@
     {% endfor %}
   </div>
 </section>
+{% endif %}
 
 {% if portfolio %}
 <section class="card">
@@ -230,10 +243,10 @@
 
 {% if packages %}
 <section class="card">
-  <span class="eyebrow">{{ 'Catalogue' if fr else 'Catalogue' }}</span>
-  <h2 class="card-title" style="margin-bottom: 6px;">{{ 'Forfaits proposés' if fr else 'Packages offered' }}</h2>
+  <span class="eyebrow">{% if is_school %}{{ 'Nos formations' if fr else 'Our courses' }}{% else %}{{ 'Catalogue' if fr else 'Catalogue' }}{% endif %}</span>
+  <h2 class="card-title" style="margin-bottom: 6px;">{% if is_school %}{{ 'Formations & tarifs' if fr else 'Courses & pricing' }}{% else %}{{ 'Forfaits proposés' if fr else 'Packages offered' }}{% endif %}</h2>
   <p class="muted small" style="margin: 0 0 18px;">
-    {{ 'Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.' if fr else 'Book a package: the mission is created with the pilot\'s scope, and they are invited first to confirm the quote.' }}
+    {% if is_school %}{{ 'Inscrivez-vous à une formation : une demande est créée et l\'école est invitée en priorité à confirmer les modalités.' if fr else 'Enrol in a course: a request is created and the school is invited first to confirm the details.' }}{% else %}{{ 'Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.' if fr else 'Book a package: the mission is created with the pilot\'s scope, and they are invited first to confirm the quote.' }}{% endif %}
   </p>
 
   <div class="pkg-grid">
@@ -242,7 +255,7 @@
       <header>
         <h3>{{ p.title }}</h3>
         <div class="pkg-meta">
-          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}
+          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{% if is_school %}{{ 'Formation' if fr else 'Course' }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}{% endif %}
           {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
         </div>
       </header>
@@ -253,9 +266,9 @@
       <footer class="pkg-foot">
         <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
         {% if current_user and current_user.id != pilot.id %}
-          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{{ 'Réserver' if fr else 'Book' }}</a>
+          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{% if is_school %}{{ 'S\'inscrire' if fr else 'Enrol' }}{% else %}{{ 'Réserver' if fr else 'Book' }}{% endif %}</a>
         {% elif not current_user %}
-          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{{ 'Se connecter pour réserver' if fr else 'Sign in to book' }}</a>
+          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{% if is_school %}{{ 'Se connecter pour s\'inscrire' if fr else 'Sign in to enrol' }}{% else %}{{ 'Se connecter pour réserver' if fr else 'Sign in to book' }}{% endif %}</a>
         {% endif %}
       </footer>
     </article>
@@ -302,7 +315,7 @@
     <cite>{{ r.author_name }} · {{ r.created_at[:10] }}</cite>
   </div>
   {% else %}
-  <p class="muted">{{ 'Pas encore d\'avis. Soyez le premier à recommander ce pilote.' if fr else 'No reviews yet. Be the first to recommend this pilot.' }}</p>
+  <p class="muted">{% if is_school %}{{ 'Pas encore d\'avis. Soyez le premier à recommander cette école.' if fr else 'No reviews yet. Be the first to recommend this school.' }}{% else %}{{ 'Pas encore d\'avis. Soyez le premier à recommander ce pilote.' if fr else 'No reviews yet. Be the first to recommend this pilot.' }}{% endif %}</p>
   {% endfor %}
 </section>
 
