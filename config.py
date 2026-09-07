@@ -687,7 +687,7 @@ MESSAGE_BANNED_PATTERNS = [
 
 # Contact public : destinataire du formulaire /contact (et de la FAQ).
 # Par defaut la boite RPRP deja publiee dans le pied de page ; surchargable.
-CONTACT_EMAIL = os.environ.get("AUBEPILOT_CONTACT_EMAIL", "contact@aubemail.com").strip()
+CONTACT_EMAIL = os.environ.get("AUBEPILOT_CONTACT_EMAIL", "support@aubemail.com").strip()
 # Delai de reponse annonce sur la page contact (heures ouvrables)
 CONTACT_REPLY_HOURS = int(os.environ.get("AUBEPILOT_CONTACT_REPLY_HOURS", "24"))
 
