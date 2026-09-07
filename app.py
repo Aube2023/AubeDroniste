@@ -1005,6 +1005,24 @@ def register():
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
             return render_template("register.html")
+
+        # L'identifiant devient un compte systeme + une adresse @aubemail.com :
+        # AubeMail n'accepte que [A-Za-z0-9_]. On refuse donc ici, avec un message
+        # clair, plutot que de laisser echouer le provisionnement plus loin (un
+        # « sophie.tremblay » aurait ete accepte par le formulaire puis rejete).
+        if not re.fullmatch(r"[a-z0-9_]{3,32}", username):
+            _fr_u = getattr(g, "lang", i18n.DEFAULT) == "fr"
+            flash(
+                "L'identifiant doit faire 3 à 32 caractères et ne contenir que des "
+                "lettres minuscules, des chiffres et le tiret bas « _ » — ni point, "
+                "ni tiret, ni espace (c'est aussi votre adresse AubeMail)."
+                if _fr_u else
+                "The username must be 3 to 32 characters and use only lowercase "
+                "letters, digits and the underscore « _ » — no dot, hyphen or space "
+                "(it is also your AubeMail address).",
+                "error",
+            )
+            return render_template("register.html")
         if password != confirm:
             flash("Les mots de passe ne correspondent pas.", "error")
             return render_template("register.html")
