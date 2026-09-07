@@ -97,7 +97,7 @@
       <span class="zone-label">{{ t('nav.zone') }}</span>
     </a>
     <details class="lang-menu">
-      <summary aria-label="{{ 'Choisir la langue' if lang == 'fr' else 'Choose language' }}">
+      <summary aria-label="{{ t('nav.lang_label') }}">
         <span class="lang-flag">{{ lang_flag(lang) }}</span><span class="lang-cur">{{ lang|upper }}</span><span class="lang-caret" aria-hidden="true">▾</span>
       </summary>
       <div class="lang-menu-list" role="menu">
@@ -129,13 +129,12 @@
 {% endwith %}
 
 {% if stripe_connect_enabled and g.user and g.user.role in ('pilot', 'both') and not pilot_payouts_ok %}
-  {% set fr = (lang == 'fr') %}
   <div class="flashes">
     <div class="flash flash-info">
       {% if not pilot_country_payable %}
-        {{ "Les paiements en ligne ne sont pas encore disponibles dans votre pays, vous pouvez proposer des missions, le versement se fera manuellement." if fr else 'Online payments are not yet available in your country. You can still offer jobs; payout will be made manually.' }}
+        {{ t('nav.payouts_country') }}
       {% else %}
-        <strong>{{ 'Activez vos paiements' if fr else 'Activate your payments' }}</strong> {{ "pour être payé dès qu'un client valide une mission." if fr else 'to get paid as soon as a client confirms a job.' }} <a href="{{ url_for('stripe_onboard') }}">{{ 'Configurer Stripe →' if fr else 'Set up Stripe →' }}</a>
+        <strong>{{ t('nav.payouts_activate') }}</strong> {{ t('nav.payouts_activate_p') }} <a href="{{ url_for('stripe_onboard') }}">{{ t('nav.payouts_cta') }}</a>
       {% endif %}
     </div>
   </div>
@@ -172,7 +171,7 @@
       <strong>Aube Pilot</strong> · {{ t('footer.tagline') }}
     </div>
     <div class="dim">{{ now().year }}, {{ t('footer.cities') }}</div>
-    <div class="dim">🚁 {{ '{:,}'.format(site_visits).replace(',', ' ') }} {{ 'visites' if lang == 'fr' else 'visits' }}</div>
+    <div class="dim">🚁 {{ '{:,}'.format(site_visits).replace(',', ' ') }} {{ t('footer.visits') }}</div>
   </div>
 </footer>
 

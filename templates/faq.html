@@ -1,17 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-{% set fr = (lang == 'fr') %}
 
 <div class="search-head">
-  <span class="eyebrow">{{ 'Questions fréquentes' if fr else 'Frequently asked questions' }}</span>
-  <h1>{{ 'On répond à vos questions.' if fr else 'We answer your questions.' }}</h1>
+  <span class="eyebrow">{{ t('home.faq.eyebrow') }}</span>
+  <h1>{{ t('home.faq.h') }}</h1>
   <p class="lead muted">
-    {{ 'Clients, pilotes, paiement, plateforme : tout ce qu’il faut savoir avant de décoller. Vous ne trouvez pas votre réponse ?' if fr else 'Clients, pilots, payment, platform: everything you need to know before takeoff. Can’t find your answer?' }}
-    <a href="{{ url_for('contact_form') }}">{{ 'Écrivez-nous →' if fr else 'Write to us →' }}</a>
+    {{ t('faq.lead') }}
+    <a href="{{ url_for('contact_form') }}">{{ t('faq.lead_link') }}</a>
   </p>
 </div>
 
-<nav class="faq-nav" aria-label="{{ 'Catégories' if fr else 'Categories' }}">
+<nav class="faq-nav" aria-label="{{ t('faq.categories') }}">
   {% for code, label in faq_categories %}
     <a href="#faq-{{ code }}">{{ label }}</a>
   {% endfor %}
@@ -33,12 +32,12 @@
 
 <section class="contact-block">
   <div>
-    <span class="eyebrow">{{ 'Nous joindre' if fr else 'Contact us' }}</span>
-    <h2>{{ 'Une question ? On répond vite.' if fr else 'A question? We answer fast.' }}</h2>
-    <p class="muted">{{ 'Réponse sous %d h ouvrables, en français ou en anglais.' % contact_reply_hours if fr else 'Reply within %d business hours, in French or English.' % contact_reply_hours }}</p>
+    <span class="eyebrow">{{ t('home.contact.eyebrow') }}</span>
+    <h2>{{ t('home.contact.h') }}</h2>
+    <p class="muted">{{ t('faq.contact_p', hours=contact_reply_hours) }}</p>
   </div>
   <div class="actions-row">
-    <a class="cta" href="{{ url_for('contact_form') }}">{{ 'Écrire à l’équipe' if fr else 'Write to the team' }}</a>
+    <a class="cta" href="{{ url_for('contact_form') }}">{{ t('contact.h2') }}</a>
     <a class="ghost" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
   </div>
 </section>

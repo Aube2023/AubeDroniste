@@ -1,51 +1,50 @@
 {% extends "base.html" %}
-{% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Connexion' if fr else 'Log in' }} · AubePilot{% endblock %}
+{% block title %}{{ t('login.title') }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="auth-split">
   <aside class="auth-aside">
-    <span class="eyebrow">{{ 'Retour en cabine' if fr else 'Back in the cockpit' }}</span>
-    <h1>{% if fr %}Bonjour, <em>commandant</em>.{% else %}Welcome back, <em>captain</em>.{% endif %}</h1>
+    <span class="eyebrow">{{ t('login.eyebrow') }}</span>
+    <h1>{{ t('login.h1_pre') }}<em>{{ t('login.h1_em') }}</em>{{ t('login.h1_post') }}</h1>
     <p class="lead muted">
-      {{ "Vos identifiants AubePilot vous donnent aussi accès à tous les services" if fr else 'Your AubePilot credentials also give you access to every' }}
-      <a href="https://aubeetoilee.com">L'Aube Étoilée</a>{{ ', un seul compte pour tout l\'écosystème.' if fr else ' service, one account for the whole ecosystem.' }}
+      {{ t('login.lead_pre') }}
+      <a href="https://aubeetoilee.com">L'Aube Étoilée</a>{{ t('login.lead_post') }}
     </p>
     <ul class="checklist">
-      <li>{{ 'Authentification partagée @aubemail.com.' if fr else 'Shared login via @aubemail.com.' }}</li>
-      <li>{{ 'Aucun mot de passe stocké en clair, sessions signées côté serveur.' if fr else 'No password stored in plain text, sessions signed server-side.' }}</li>
-      <li>{{ 'Vous pouvez gérer plusieurs rôles depuis un seul espace.' if fr else 'Manage several roles from a single dashboard.' }}</li>
+      <li>{{ t('login.bullet1') }}</li>
+      <li>{{ t('login.bullet2') }}</li>
+      <li>{{ t('login.bullet3') }}</li>
     </ul>
   </aside>
 
   <form method="post" class="auth-form">
         {{ csrf_input() }}
-    <h2>{{ 'Connexion' if fr else 'Log in' }}</h2>
+    <h2>{{ t('login.h2') }}</h2>
     <input type="hidden" name="next" value="{{ next_url }}">
 
     <fieldset class="fieldset-block">
-      <legend>{{ 'Identifiants' if fr else 'Credentials' }}</legend>
-      <label>{{ 'Identifiant ou compte AubeMail' if fr else 'Username or AubeMail account' }}
+      <legend>{{ t('login.section') }}</legend>
+      <label>{{ t('login.id_lbl') }}
         <input name="username" autocomplete="username" required autofocus>
       </label>
-      <label>{{ 'Mot de passe' if fr else 'Password' }}
+      <label>{{ t('login.pwd_lbl') }}
         <span class="password-field">
           <input type="password" name="password" autocomplete="current-password" required>
-          <button type="button" class="password-toggle" aria-label="{{ 'Afficher le mot de passe' if fr else 'Show password' }}" aria-pressed="false">
+          <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">
             <svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
           </button>
         </span>
       </label>
       <div class="form-aside">
-        <a href="{{ aubemail_url }}" target="_blank" rel="noopener">{{ 'Mot de passe oublié' if fr else 'Forgot password' }}&nbsp;?</a>
+        <a href="{{ aubemail_url }}" target="_blank" rel="noopener">{{ t('login.forgot') }}&nbsp;?</a>
       </div>
     </fieldset>
 
-    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ 'Entrer en cabine' if fr else 'Enter the cockpit' }}</button>
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ t('login.btn') }}</button>
     <div class="form-foot">
-      <span class="small">{{ 'Pas encore inscrit ?' if fr else 'Not signed up yet?' }} <a href="{{ url_for('register') }}">{{ 'Rejoindre le réseau' if fr else 'Join the network' }}</a></span>
-      <span class="small muted">{{ 'Mot de passe géré par votre compte AubeMail.' if fr else 'Password managed by your AubeMail account.' }}</span>
+      <span class="small">{{ t('login.alt') }} <a href="{{ url_for('register') }}">{{ t('login.alt_link') }}</a></span>
+      <span class="small muted">{{ t('login.pwd_hint') }}</span>
     </div>
   </form>
 </section>
