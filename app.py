@@ -1132,6 +1132,19 @@ def register():
                 "error",
             )
             return render_template("register.html")
+        except auth.InvalidUsernameError:
+            # Filet : la route valide deja en amont, mais le garde-fou central
+            # de create_user protege tous les autres chemins d'appel.
+            _fr_i = getattr(g, "lang", i18n.DEFAULT) == "fr"
+            flash(
+                "L'identifiant doit faire 3 à 32 caractères et ne contenir que des "
+                "lettres minuscules, des chiffres et le tiret bas « _ »."
+                if _fr_i else
+                "The username must be 3 to 32 characters and use only lowercase "
+                "letters, digits and the underscore « _ ».",
+                "error",
+            )
+            return render_template("register.html")
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",

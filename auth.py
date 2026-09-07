@@ -9,6 +9,7 @@ Sessions cote serveur (table `sessions`), cookie httpOnly signe par Flask.
 import hashlib
 import hmac
 import os
+import re
 import secrets
 import sys
 from datetime import datetime, timedelta, timezone
@@ -30,6 +31,15 @@ import db
 
 
 _signer = URLSafeSerializer(SECRET_KEY, salt="aubepilot-sid")
+
+# Identifiant valide dans TOUT l'ecosysteme Aube : il sert a la fois de compte
+# systeme Linux et d'adresse @aubemail.com, et AubeMail n'accepte que
+# [A-Za-z0-9_]. Ni point, ni tiret, ni espace, ni accent. 3 a 32 caracteres.
+USERNAME_RE = re.compile(r"[a-z0-9_]{3,32}")
+
+
+class InvalidUsernameError(Exception):
+    """Identifiant incompatible avec AubeMail (cf. USERNAME_RE)."""
 
 
 # ---------------------------------------------------------------------------
@@ -425,6 +435,13 @@ def create_user(*, username: str, password: str, full_name: str,
     absent, leve `AubeMailRequiredError`.
     """
     username = username.lower().strip()
+    # GARDE-FOU CENTRAL : l'identifiant devient un compte systeme Linux ET une
+    # adresse @aubemail.com, or AubeMail n'accepte que [A-Za-z0-9_]. On refuse
+    # ici — quel que soit l'appelant (formulaire, script, admin, code futur) —
+    # pour ne jamais creer un compte qu'AubeMail ne pourra pas provisionner
+    # (cas vecu : « ali.drone », inscrit avec un point, sans AubeMail possible).
+    if not USERNAME_RE.fullmatch(username):
+        raise InvalidUsernameError(username)
     # Compte PAM reel = uniquement sur Linux avec une entree /etc/passwd
     # (system_user_exists renvoie True sur macOS par commodite, ce n'est PAS
     # un vrai compte PAM). Inscription mondiale : on n'exige un compte
