@@ -70,7 +70,8 @@ def test_directory_tabs_badges_and_school_name(client, make_user):
         rec = make_user("kind_dir_rec", role="pilot", country="Suisse")
         services.upsert_pilot_profile(rec["id"], kind="recreational")
     html = client.get("/pilotes?country=Suisse").data.decode()
-    assert 'class="dir-tabs"' in html and "Pilotes pro" in html and "Écoles" in html and "Boutique" not in html
+    assert ('class="dir-tabs"' in html and "Pilotes pro" in html and "Écoles" in html
+            and "Entreprises" in html and "Boutiques" in html)
     assert "Swiss Drone Academy" in html and "Jean Secret" not in html     # ecole en clair, personne jamais
     assert 'kind-badge kind-school' in html and 'kind-badge kind-recreational' in html
     assert "A1/A3 · STS-01" in html
@@ -126,11 +127,15 @@ def test_become_pilot_with_kind(client, auth_client, make_user):
         assert prof["role"] == "both" and prof["kind"] == "recreational"
 
 
-def test_home_has_school_card_and_no_shop(client):
+def test_home_has_school_card_and_shop_legend(client):
     html = client.get("/").data.decode()
     # la carte « École de formation » mene a la page dediee /ecoles
     assert 'href="/ecoles"' in html
-    assert "Boutique" not in html
+    # Les boutiques sont desormais une VRAIE categorie (vente / reparation) :
+    # elles figurent dans la legende de la carte. Ce test verifiait auparavant
+    # l'inverse, quand la categorie n'existait pas encore (pas de promesse non
+    # tenue) — elle existe maintenant, on verifie donc sa presence.
+    assert "Boutiques" in html
 
 
 def test_schools_page_and_full_school_signup(client):

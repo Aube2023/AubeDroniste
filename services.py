@@ -14,6 +14,7 @@ log = logging.getLogger("aubepilot.services")
 import db
 from config import (
     BID_STATUS,
+    ORG_KINDS,
     BOOKING_STATUS,
     DEFAULT_CURRENCY,
     DEFAULT_SEARCH_RADIUS_KM,
@@ -93,9 +94,10 @@ def mask_full_name(full_name: str) -> str:
 
 
 def public_name(p: dict) -> str:
-    """Nom affiche dans les listes/cartes : les ecoles (organisations) sous
-    leur nom d'ecole en clair ; les personnes sous leur nom masque."""
-    if (p.get("kind") == "school") and (p.get("business_name") or "").strip():
+    """Nom affiche dans les listes/cartes : les ORGANISATIONS (entreprise,
+    ecole, boutique) sous leur raison sociale en clair — elles veulent etre
+    identifiees ; les personnes physiques sous leur nom masque."""
+    if (p.get("kind") in ORG_KINDS) and (p.get("business_name") or "").strip():
         return p["business_name"].strip()
     return mask_full_name(p.get("full_name") or "")
 

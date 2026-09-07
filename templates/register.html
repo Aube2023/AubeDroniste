@@ -63,7 +63,7 @@
           <span class="role-card">
             <span class="icon">▴ {{ kind_label(code, true) }}</span>
             <span class="name">{{ kind_label(code) }}</span>
-            <span class="desc">{% if code == 'pro' %}{{ t('register.kind_pro_desc') }}{% elif code == 'recreational' %}{{ t('register.kind_rec_desc') }}{% else %}{{ t('register.kind_school_desc') }}{% endif %}</span>
+            <span class="desc">{% if code == 'pro' %}{{ t('register.kind_pro_desc') }}{% elif code == 'recreational' %}{{ t('register.kind_rec_desc') }}{% elif code == 'company' %}{{ t('register.kind_company_desc') }}{% elif code == 'shop' %}{{ t('register.kind_shop_desc') }}{% else %}{{ t('register.kind_school_desc') }}{% endif %}</span>
           </span>
         </label>
         {% endfor %}
@@ -71,10 +71,10 @@
       <p class="muted small" style="margin: 0;">{{ t('register.kind_editable') }}</p>
       <div id="school-extra" style="display:none; margin-top: 12px;">
         <div class="grid-2">
-          <label>{{ t('register.school_website') }} <span class="muted small">({{ t('register.optional') }})</span>
+          <label><span data-kl="school">{{ t('register.school_website') }}</span><span data-kl="shop" hidden>{{ t('register.shop_website') }}</span> <span class="muted small">({{ t('register.optional') }})</span>
             <input name="website" type="url" placeholder="https://votre-ecole.ca">
           </label>
-          <label>{{ t('register.school_courses') }} <span class="muted small">({{ t('register.one_per_line_optional') }})</span>
+          <label><span data-kl="school">{{ t('register.school_courses') }}</span><span data-kl="shop" hidden>{{ t('register.shop_products') }}</span> <span class="muted small">({{ t('register.one_per_line_optional') }})</span>
             <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)"></textarea>
           </label>
         </div>
@@ -92,7 +92,12 @@
           var role = (document.querySelector('input[name="role"]:checked') || {}).value;
           block.style.display = (role === 'client') ? 'none' : '';
           var kind = (document.querySelector('input[name="kind"]:checked') || {}).value;
-          if (extra) extra.style.display = (role !== 'client' && kind === 'school') ? '' : 'none';
+          var org = (kind === 'school' || kind === 'shop');
+          if (extra) extra.style.display = (role !== 'client' && org) ? '' : 'none';
+          // Libellés adaptés : une boutique ne propose pas des « formations ».
+          document.querySelectorAll('[data-kl]').forEach(function (n) {
+            n.hidden = (n.getAttribute('data-kl') !== (kind === 'shop' ? 'shop' : 'school'));
+          });
         }
         radios.forEach(function (r) { r.addEventListener('change', sync); });
         kindRadios.forEach(function (r) { r.addEventListener('change', sync); });

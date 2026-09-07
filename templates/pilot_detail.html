@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
 {% set is_school = (pilot.kind == 'school') %}
-{% set display_name = (pilot.business_name or pilot.full_name) if is_school else (pilot.full_name if reveal_identity else masked_name) %}
+{% set is_shop = (pilot.kind == 'shop') %}
+{# Organisation (entreprise, école, boutique) : nom en clair et coordonnées
+   publiques — elle VEUT être identifiée. Une boutique ne fait pas de missions :
+   pas de flotte, pas de brevets, pas de devis. #}
+{% set is_org = pilot.kind in ('company', 'school', 'shop') %}
+{% set display_name = (pilot.business_name or pilot.full_name) if is_org else (pilot.full_name if reveal_identity else masked_name) %}
 {% block content %}
 
 <section class="flightbook-hero">
@@ -18,36 +23,35 @@
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
-      {% if not reveal_identity and not is_school %}
+      {% if not reveal_identity and not is_org %}
       <p class="muted small mono" style="margin-top: 6px;">
         {{ 'Identité complète révélée après acceptation et paiement d\'une mission.' if fr else 'Full identity revealed once a mission is accepted and paid.' }}
       </p>
       {% endif %}
-      {% if is_school and pilot.school_programs %}
+      {% if (is_school or is_shop) and pilot.school_programs %}
       <div style="margin-top: 14px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Formations proposées' if fr else 'Courses offered' }}</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_shop %}{{ 'Produits & services' if fr else 'Products & services' }}{% else %}{{ 'Formations proposées' if fr else 'Courses offered' }}{% endif %}</span>
         <ul class="badges" style="margin: 0;">
           {% for line in pilot.school_programs.replace('\r', '').split('\n') if line.strip() %}<li>{{ line.strip() }}</li>{% endfor %}
         </ul>
       </div>
       {% endif %}
-      {% if is_school and pilot.portfolio_url %}
+      {% if is_org and pilot.portfolio_url %}
       <div style="margin-top: 12px;">
-        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {{ 'Site web de l\'école' if fr else 'School website' }} ↗</a>
+        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {% if is_school %}{{ 'Site web de l\'école' if fr else 'School website' }}{% elif is_shop %}{{ 'Site web de la boutique' if fr else 'Shop website' }}{% else %}{{ 'Site web de l\'entreprise' if fr else 'Company website' }}{% endif %} ↗</a>
       </div>
       {% endif %}
-      {% if is_school and (pilot.business_email or pilot.phone) %}
+      {% if is_org and (pilot.business_email or pilot.phone) %}
       <div style="margin-top: 12px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Coordonnées de l\'école' if fr else 'School contact' }}</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_school %}{{ 'Coordonnées de l\'école' if fr else 'School contact' }}{% elif is_shop %}{{ 'Coordonnées de la boutique' if fr else 'Shop contact' }}{% else %}{{ 'Coordonnées de l\'entreprise' if fr else 'Company contact' }}{% endif %}</span>
         {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="ghost" style="display:block; margin-bottom:4px;">✉️ {{ pilot.business_email }}</a>{% endif %}
         {% if pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="ghost">📞 {{ pilot.phone }}</a>{% endif %}
       </div>
       {% endif %}
-      {% if not is_school and (pilot.business_email or pilot.business_name) %}
+      {% if not is_org and pilot.business_email %}
       <div style="margin-top: 12px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Coordonnées de la compagnie' if fr else 'Company contact' }}</span>
-        {% if pilot.business_name %}<div class="mono" style="text-transform: uppercase; letter-spacing: .08em; font-size: 13px; color: var(--ink-soft);">{{ pilot.business_name }}</div>{% endif %}
-        {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="ghost" style="margin-top: 6px;">✉️ {{ pilot.business_email }}</a>{% endif %}
+        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Contact professionnel' if fr else 'Business contact' }}</span>
+        <a href="mailto:{{ pilot.business_email }}" class="ghost">✉️ {{ pilot.business_email }}</a>
       </div>
       {% endif %}
       {% if pilot.headline %}
@@ -57,7 +61,13 @@
       {% endif %}
       {% if not current_user or current_user.id != pilot.id %}
       <div class="actions-row" style="margin-top: 18px;">
-        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ 'Contacter cette école' if fr else 'Contact this school' }}{% else %}{{ 'Contacter ce pilote' if fr else 'Contact this pilot' }}{% endif %}</a>
+        {% if is_shop %}
+          {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="cta">{{ 'Contacter la boutique' if fr else 'Contact this shop' }}</a>
+          {% elif pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="cta">{{ 'Appeler la boutique' if fr else 'Call this shop' }}</a>
+          {% elif pilot.portfolio_url %}<a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="cta">{{ 'Visiter le site' if fr else 'Visit the website' }}</a>{% endif %}
+        {% else %}
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ 'Contacter cette école' if fr else 'Contact this school' }}{% elif pilot.kind == 'company' %}{{ 'Contacter cette entreprise' if fr else 'Contact this company' }}{% else %}{{ 'Contacter ce pilote' if fr else 'Contact this pilot' }}{% endif %}</a>
+        {% endif %}
         <a href="{{ url_for('missions_search') }}" class="ghost">{{ 'Voir les missions ouvertes' if fr else 'See open missions' }}</a>
       </div>
       {% endif %}
@@ -72,10 +82,10 @@
       <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ 'ans' if fr else 'yrs' }}</span></span>
       <span class="k">{{ 'Expérience' if fr else 'Experience' }}</span>
     </div>
-    {% if is_school %}
+    {% if is_school or is_shop %}
     <div>
       <span class="v">{{ pilot.school_programs.replace('\r','').split('\n')|map('trim')|select|list|length if pilot.school_programs else 0 }}</span>
-      <span class="k">{{ 'Formations' if fr else 'Courses' }}</span>
+      <span class="k">{% if is_shop %}{{ 'Produits' if fr else 'Products' }}{% else %}{{ 'Formations' if fr else 'Courses' }}{% endif %}</span>
     </div>
     {% else %}
     <div>
@@ -103,10 +113,10 @@
 </div>
 {% endif %}
 
-<div class="{% if not is_school %}grid-2{% endif %}">
+<div class="{% if not is_school and not is_shop %}grid-2{% endif %}">
   <div class="card">
-    <span class="eyebrow">{% if is_school %}{{ 'À propos de l\'école' if fr else 'About the school' }}{% else %}{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}{% endif %}</span>
-    {% if not is_school %}
+    <span class="eyebrow">{% if is_school %}{{ 'À propos de l\'école' if fr else 'About the school' }}{% elif is_shop %}{{ 'À propos de la boutique' if fr else 'About the shop' }}{% else %}{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}{% endif %}</span>
+    {% if not is_school and not is_shop %}
     <ul class="chips" style="margin: 16px 0;">
       {% for s in pilot.specialties %}
         <li class="tag">{{ mission_label(s) }}</li>
@@ -141,7 +151,7 @@
     </div>
     {% endif %}
 
-    {% if pilot.portfolio_url and not is_school %}
+    {% if pilot.portfolio_url and not is_org %}
     <h3 style="margin-top: 24px;">{{ 'Portfolio externe' if fr else 'External portfolio' }}</h3>
     {% if reveal_identity %}
       <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
@@ -151,7 +161,7 @@
     {% endif %}
   </div>
 
-  {% if not is_school %}
+  {% if not is_school and not is_shop %}
   <div class="card">
     <span class="eyebrow">{{ 'Brevets & qualifications' if fr else 'Licences & qualifications' }}</span>
     <div class="patches" style="margin-top: 12px;">
@@ -190,7 +200,7 @@
   {% endif %}
 </div>
 
-{% if not is_school %}
+{% if not is_school and not is_shop %}
 <section class="card">
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
@@ -255,7 +265,7 @@
 </section>
 {% endif %}
 
-{% if packages %}
+{% if packages and not is_shop %}
 <section class="card">
   <span class="eyebrow">{% if is_school %}{{ 'Nos formations' if fr else 'Our courses' }}{% else %}{{ 'Catalogue' if fr else 'Catalogue' }}{% endif %}</span>
   <h2 class="card-title" style="margin-bottom: 6px;">{% if is_school %}{{ 'Formations & tarifs' if fr else 'Courses & pricing' }}{% else %}{{ 'Forfaits proposés' if fr else 'Packages offered' }}{% endif %}</h2>

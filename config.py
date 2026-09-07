@@ -264,8 +264,15 @@ MISSION_TYPE_GROUPS = [
 PROFILE_KINDS = [
     ("pro",          "Pilote professionnel"),
     ("recreational", "Pilote récréatif"),
+    ("company",      "Entreprise de services"),
     ("school",       "École de formation"),
+    ("shop",         "Boutique / réparation"),
 ]
+# Organisations (par opposition aux personnes) : nom affiche en clair et
+# coordonnees publiques, car une entreprise VEUT etre identifiee. Une boutique
+# ne fait pas de missions : sa fiche est un annuaire, sans devis ni flotte.
+ORG_KINDS = ("company", "school", "shop")
+NO_MISSION_KINDS = ("shop",)
 PROFILE_KIND_CODES = tuple(k for k, _ in PROFILE_KINDS)
 
 # Types de drones (catalogue)

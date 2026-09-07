@@ -99,7 +99,7 @@
       </select>
       <small class="muted" style="display:block; margin-top:4px;">{{ "Onglet de l'annuaire où vous apparaissez : pro, récréatif ou école." if fr else 'Directory tab where you appear: pro, recreational or school.' }}</small>
     </label>
-    <label id="school-programs" {% if (profile.kind or 'pro') != 'school' %}style="display:none;"{% endif %}>{{ 'Formations proposées (une par ligne)' if fr else 'Courses offered (one per line)' }}
+    <label id="school-programs" {% if (profile.kind or 'pro') not in ('school', 'shop') %}style="display:none;"{% endif %}><span data-kl="school"{% if profile.kind == 'shop' %} hidden{% endif %}>{{ 'Formations proposées (une par ligne)' if fr else 'Courses offered (one per line)' }}</span><span data-kl="shop"{% if profile.kind != 'shop' %} hidden{% endif %}>{{ 'Produits & services (une par ligne)' if fr else 'Products & services (one per line)' }}</span>
       <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A1/A3 · A2 (EASA)">{{ profile.school_programs or '' }}</textarea>
       <small class="muted" style="display:block; margin-top:4px;">{{ "Affichées sur votre fiche publique. Le nom de l'école = « Marque / raison sociale » ci-dessous." if fr else 'Shown on your public listing. The school name is the "Business name" field below.' }}</small>
     </label>
@@ -413,7 +413,12 @@ function removeTerritory(btn) {
   var kind = document.getElementById('kind-select');
   if (kind) kind.addEventListener('change', function () {
     var sp = document.getElementById('school-programs');
-    if (sp) sp.style.display = (this.value === 'school') ? '' : 'none';
+    var v = this.value;
+    if (sp) sp.style.display = (v === 'school' || v === 'shop') ? '' : 'none';
+    // Une boutique liste des produits, pas des formations.
+    document.querySelectorAll('[data-kl]').forEach(function (n) {
+      n.hidden = (n.getAttribute('data-kl') !== (v === 'shop' ? 'shop' : 'school'));
+    });
   });
   var certAuth = document.getElementById('cert-authority');
   if (certAuth) certAuth.addEventListener('change', function () { updateTitleSuggestions(this.value); });

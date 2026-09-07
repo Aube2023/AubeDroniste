@@ -52,6 +52,8 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
     <span><span class="map-legend-icon" data-kind="pro" style="background:#3b82f6;"></span>{{ 'Pilotes pro' if lang == 'fr' else 'Pro pilots' }}</span>
     <span><span class="map-legend-icon" data-kind="recreational" style="background:#14b8a6;"></span>{{ 'Pilotes récréatifs' if lang == 'fr' else 'Recreational pilots' }}</span>
     <span><span class="map-legend-icon" data-kind="school" style="background:#22c55e;"></span>{{ 'Écoles' if lang == 'fr' else 'Schools' }}</span>
+    <span><span class="map-legend-icon" data-kind="company" style="background:#6366f1;"></span>{{ 'Entreprises' if lang == 'fr' else 'Companies' }}</span>
+    <span><span class="map-legend-icon" data-kind="shop" style="background:#ec4899;"></span>{{ 'Boutiques' if lang == 'fr' else 'Shops' }}</span>
     <span><span class="map-legend-icon" data-kind="mission" style="background:#f59e0b;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
     {% if _center %}<span><span class="map-legend-icon" data-kind="area" style="background:#7a5fc4;"></span>{{ 'Zone recherchée' if lang == 'fr' else 'Search area' }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
     <span class="muted" id="map-count"></span>
@@ -71,10 +73,10 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
   if (params.get('country')) qs.set('country', params.get('country'));
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
   if (params.get('kind')) qs.set('kind', params.get('kind'));
-  var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', school: '#22c55e', mission: '#f59e0b', area: '#7a5fc4' };
+  var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', company: '#6366f1', school: '#22c55e', shop: '#ec4899', mission: '#f59e0b', area: '#7a5fc4' };
   var KIND_LABEL = LANG === 'fr'
-    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', school: 'École de formation', mission: 'Mission' }
-    : { pro: 'Pro pilot', recreational: 'Recreational pilot', school: 'Training school', mission: 'Mission' };
+    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', company: 'Entreprise', school: 'École de formation', shop: 'Boutique', mission: 'Mission' }
+    : { pro: 'Pro pilot', recreational: 'Recreational pilot', company: 'Company', school: 'Training school', shop: 'Shop', mission: 'Mission' };
 
   // Icones blanches dessinees en SVG (nettes a toute taille, pas d'emoji dont
   // le rendu varie selon la plateforme) : drone = pilote, chapeau de diplome =
@@ -84,6 +86,8 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
     school: '<path d="M12 4L2 9.2l10 5.2 10-5.2L12 4z"/><path d="M6.5 12v4.2c0 1.6 2.5 2.8 5.5 2.8s5.5-1.2 5.5-2.8V12"/>',
     mission: '<path d="M6 21V4"/><path d="M6 5h11.5L15 9l2.5 4H6"/>',
     area: '<circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/>',
+    company: '<path d="M3 21h18"/><rect x="5.5" y="6" width="13" height="15" rx="1.2"/><path d="M9 10.5h2M13 10.5h2M9 14.5h2M13 14.5h2"/>',
+    shop: '<path d="M3 21h18"/><path d="M4.5 10.5V21M19.5 10.5V21"/><path d="M3.5 10.5L5 4.5h14l1.5 6z"/><path d="M9.5 21v-6h5v6"/>',
     check: '<path d="M5 13l4.5 4.5L19 7"/>'
   };
   PATHS.recreational = PATHS.pro;

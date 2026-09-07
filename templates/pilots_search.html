@@ -16,7 +16,9 @@
   <a href="{{ url_for('pilots_search', **base_args) }}" class="{{ 'on' if not params.kind else '' }}">{{ 'Tous' if fr else 'All' }} <span class="n">{{ kind_counts.all }}</span></a>
   <a href="{{ url_for('pilots_search', kind='pro', **base_args) }}" class="{{ 'on' if params.kind == 'pro' else '' }}">{{ 'Pilotes pro' if fr else 'Pro pilots' }} <span class="n">{{ kind_counts.pro }}</span></a>
   <a href="{{ url_for('pilots_search', kind='recreational', **base_args) }}" class="{{ 'on' if params.kind == 'recreational' else '' }}">{{ 'Pilotes récréatifs' if fr else 'Recreational pilots' }} <span class="n">{{ kind_counts.recreational }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='company', **base_args) }}" class="{{ 'on' if params.kind == 'company' else '' }}">{{ 'Entreprises' if fr else 'Companies' }} <span class="n">{{ kind_counts.company }}</span></a>
   <a href="{{ url_for('pilots_search', kind='school', **base_args) }}" class="{{ 'on' if params.kind == 'school' else '' }}">{{ 'Écoles' if fr else 'Schools' }} <span class="n">{{ kind_counts.school }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='shop', **base_args) }}" class="{{ 'on' if params.kind == 'shop' else '' }}">{{ 'Boutiques' if fr else 'Shops' }} <span class="n">{{ kind_counts.shop }}</span></a>
   <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" data-action="open-details" data-target="specialites">{{ 'Spécialités' if fr else 'Specialties' }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
 </nav>
 <details class="disclosure spec-chips" id="specialites" {% if params.mission_type %}open{% endif %}>

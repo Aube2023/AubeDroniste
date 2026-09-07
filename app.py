@@ -1117,10 +1117,11 @@ def register():
                 role=role, country=country, city=city, phone=phone, lat=lat, lng=lng,
                 kind=kind,
             )
-            if role in ("pilot", "both") and kind == "school":
-                # Une ecole / un organisme s'affiche sous son nom : initialise
-                # avec le nom saisi + les champs propres aux organismes
-                # (site web, formations proposees), modifiables dans le profil.
+            if role in ("pilot", "both") and kind in config.ORG_KINDS:
+                # Une ORGANISATION (entreprise, ecole, boutique) s'affiche sous
+                # sa raison sociale, pas sous un nom masque : on initialise avec
+                # le nom saisi + les champs propres aux organismes (site web,
+                # offres proposees), modifiables ensuite dans le profil.
                 services.upsert_pilot_profile(
                     user_id, business_name=full_name,
                     portfolio_url=(request.form.get("website") or "").strip()[:300] or None,
