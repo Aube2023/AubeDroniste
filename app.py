@@ -206,19 +206,13 @@ def _refresh_session_cookie(resp):
 
 @app.after_request
 def _count_visit(resp):
-    # Compteur de visites public : une visite par navigateur toutes les 2 h
-    # (cookie aube_v), sur les vraies pages HTML uniquement. Jamais bloquant.
+    # Compteur de visites public, SANS AUCUN COOKIE : on incremente a l'arrivee
+    # sur l'accueil. Rien n'est depose chez le visiteur, rien ne l'identifie.
     try:
         if (request.method == "GET" and resp.status_code == 200
-                and "text/html" in resp.headers.get("Content-Type", "")
-                and not request.cookies.get("aube_v")
-                and not request.path.startswith(
-                    ("/static", "/media", "/stripe", "/aubemail", "/lang", "/admin"))):
+                and request.path == "/"
+                and "text/html" in resp.headers.get("Content-Type", "")):
             services.bump_visits()
-            resp.set_cookie(
-                "aube_v", "1", max_age=7200, httponly=True, samesite="Lax",
-                secure=app.config.get("SESSION_COOKIE_SECURE", False),
-            )
     except Exception:
         pass
     return resp
