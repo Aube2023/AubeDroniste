@@ -96,12 +96,20 @@
       <span class="ping"></span>
       <span class="zone-label">{{ t('nav.zone') }}</span>
     </a>
-    <div class="lang-switch">
-      {% for code in supported_langs %}
+    <details class="lang-menu">
+      <summary aria-label="{{ 'Choisir la langue' if lang == 'fr' else 'Choose language' }}">
+        <span class="lang-flag">{{ lang_flag(lang) }}</span><span class="lang-cur">{{ lang|upper }}</span><span class="lang-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lang-menu-list" role="menu">
+        {% for code in supported_langs %}
         <a href="{{ url_for('set_lang', code=code) }}?next={{ request.path }}"
-           class="{{ 'on' if code == lang else '' }}">{{ code|upper }}</a>
-      {% endfor %}
-    </div>
+           role="menuitem" class="{{ 'on' if code == lang else '' }}">
+          <span class="lang-flag">{{ lang_flag(code) }}</span><span class="lang-lbl">{{ lang_name(code) }}</span>
+          {% if code == lang %}<span class="lang-check" aria-hidden="true">✓</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </details>
     <button type="button" class="theme-toggle" data-action="toggle-theme" aria-label="Theme">
       <span class="dot"></span>
       <span class="label-dark">{{ t('nav.theme_dark') }}</span>

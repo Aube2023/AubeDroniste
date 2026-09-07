@@ -24,6 +24,30 @@ DEFAULT = "fr"
 COOKIE = "aube_lang"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 an
 
+# Metadonnees d'affichage du selecteur : nom natif + drapeau. Seules les langues
+# de SUPPORTED apparaissent dans le menu ; les autres sont pretes pour le jour ou
+# on les activera (il suffira de les ajouter a SUPPORTED une fois traduites).
+LANGUAGE_META = {
+    "fr": ("Francais",   "🇫🇷"),
+    "en": ("English",    "🇬🇧"),
+    "es": ("Espanol",    "🇪🇸"),
+    "pt": ("Portugues",  "🇵🇹"),
+    "de": ("Deutsch",    "🇩🇪"),
+    "it": ("Italiano",   "🇮🇹"),
+    "ru": ("Русский",    "🇷🇺"),
+    "ar": ("العربية",     "🇸🇦"),
+    "zh": ("中文",        "🇨🇳"),
+    "hi": ("हिन्दी",       "🇮🇳"),
+}
+
+
+def lang_name(code: str) -> str:
+    return LANGUAGE_META.get(code, (code.upper(), "🌐"))[0]
+
+
+def lang_flag(code: str) -> str:
+    return LANGUAGE_META.get(code, (code.upper(), "🌐"))[1]
+
 
 def resolve_lang() -> str:
     """Cookie -> Accept-Language -> defaut."""

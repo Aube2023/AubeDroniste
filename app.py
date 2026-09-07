@@ -254,6 +254,8 @@ def _inject_globals():
         "t": lambda key, **kwargs: i18n.t(key, lang=getattr(g, "lang", i18n.DEFAULT), **kwargs),
         "lang": getattr(g, "lang", i18n.DEFAULT),
         "supported_langs": i18n.SUPPORTED,
+        "lang_name": i18n.lang_name,
+        "lang_flag": i18n.lang_flag,
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,

@@ -968,28 +968,56 @@ img.avatar { object-fit: cover; }
 
 /* ============ Sélecteur de langue ============ */
 
-.lang-switch {
-  display: inline-flex; gap: 0;
+.lang-menu { position: relative; display: inline-block; }
+.lang-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.lang-switch a {
-  padding: 7px 10px;
-  font: 600 11px/1 var(--mono);
-  letter-spacing: .1em;
-  color: var(--ink-dim);
-  text-decoration: none;
-  border-right: 1px solid var(--rule);
+  border-radius: 6px;
   background: transparent;
+  font: 600 12px/1 var(--mono);
+  letter-spacing: .08em;
+  color: var(--ink-soft, var(--ink-dim));
+  transition: border-color .12s, color .12s, background .12s;
+  -webkit-user-select: none; user-select: none;
+}
+.lang-menu > summary::-webkit-details-marker { display: none; }
+.lang-menu > summary::marker { content: ""; }
+.lang-menu > summary:hover { border-color: var(--amber); color: var(--ink); }
+.lang-menu[open] > summary { border-color: var(--amber); }
+.lang-menu .lang-flag { font-size: 15px; line-height: 1; }
+.lang-menu .lang-caret { font-size: 9px; color: var(--ink-dim); transition: transform .15s; }
+.lang-menu[open] .lang-caret { transform: rotate(180deg); }
+.lang-menu-list {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  min-width: 172px;
+  padding: 6px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
+  z-index: 60;
+  display: flex; flex-direction: column; gap: 2px;
+  animation: langpop .14s ease;
+}
+@keyframes langpop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.lang-menu-list a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--ink-soft, var(--ink-dim));
+  font: 500 14px/1.15 inherit;
   transition: background .12s, color .12s;
 }
-.lang-switch a:last-child { border-right: 0; }
-.lang-switch a:hover { color: var(--amber); }
-.lang-switch a.on {
-  background: var(--amber);
-  color: var(--cta-fg);
-}
+.lang-menu-list a:hover { background: var(--paper-3, rgba(128,128,128,.12)); color: var(--ink); }
+.lang-menu-list a.on { color: var(--ink); font-weight: 700; }
+.lang-menu-list .lang-lbl { flex: 1; }
+.lang-menu-list .lang-check { color: var(--amber); font-weight: 700; }
 
 /* ============ Theme toggle ============ */
 
