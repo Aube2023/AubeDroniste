@@ -107,6 +107,11 @@ AUBEMAIL_URL = os.environ.get("AUBEMAIL_URL", "https://aubemail.com")
 # autoriser via verification du username en clair).
 AUBE_INTERNAL_API_KEY = os.environ.get("AUBE_INTERNAL_API_KEY", "")
 
+# Identite partagee : acces LECTURE a la base AubeMail pour verifier un mot de
+# passe (bcrypt) quand le compte systeme PAM est desynchronise (compte recree,
+# mot de passe verrouille...). Sans cette URL, le comportement reste inchange.
+AUBEMAIL_DB_URL = os.environ.get("AUBEMAIL_DB_URL", "").strip()
+
 # AubeCaptcha (anti-robot ecosysteme). Tant que la SITEKEY/le SECRET ne sont
 # pas fournis (variables d'env), le widget ne s'affiche pas et la verification
 # est ignoree -> inscription inchangee. Creez le site sur

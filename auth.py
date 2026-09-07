@@ -18,6 +18,7 @@ from flask import g, redirect, request, url_for
 from itsdangerous import BadSignature, URLSafeSerializer
 
 from config import (
+    AUBEMAIL_DB_URL,
     DATA_DIR,
     EMAIL_DOMAIN,
     REQUIRE_AUBEMAIL,
@@ -179,12 +180,59 @@ def _dev_check(username: str, password: str) -> bool:
     return False
 
 
+def _aubemail_db_verify(username: str, password: str) -> bool:
+    """Verifie le mot de passe contre la base AubeMail (bcrypt), comme le webmail.
+
+    Filet de securite de l'identite partagee : le mot de passe « officiel » vit
+    dans AubeMail. Le compte systeme PAM peut se desynchroniser (compte recree,
+    mot de passe verrouille...) et faire echouer la connexion AubePilot alors
+    que aubemail.com fonctionne parfaitement. On retombe donc sur la source de
+    verite au lieu de refuser l'utilisateur.
+
+    N'accorde AUCUN acces a lui seul : la route de connexion exige ensuite un
+    compte AubePilot existant. Inerte si AUBEMAIL_DB_URL n'est pas configuree.
+    """
+    if not AUBEMAIL_DB_URL or not username or not password:
+        return False
+    try:
+        import bcrypt as _bcrypt
+        import psycopg2
+        conn = psycopg2.connect(AUBEMAIL_DB_URL, connect_timeout=5)
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT password_hash, suspended_until FROM aubemail_users "
+                "WHERE LOWER(username) = %s OR LOWER(email) = %s LIMIT 1",
+                (username.lower(), username.lower()),
+            )
+            row = cur.fetchone()
+        finally:
+            conn.close()
+        if not row or not row[0]:
+            return False
+        try:
+            suspended = row[1]
+            if suspended is not None and suspended.replace(tzinfo=None) > datetime.utcnow():
+                return False
+        except Exception:
+            pass  # champ inattendu : on ne bloque pas pour autant
+        return bool(_bcrypt.checkpw(password.encode("utf-8"),
+                                    row[0].encode("utf-8")))
+    except Exception:
+        # Base injoignable / lib absente : comportement inchange (on refuse ici,
+        # PAM et le fallback local ont deja eu leur chance).
+        return False
+
+
 def authenticate(username: str, password: str) -> bool:
     if sys.platform.startswith("linux"):
         if _pam_authenticate(username, password):
             return True
     # En dev / macOS on accepte le fallback local
-    return _dev_check(username, password)
+    if _dev_check(username, password):
+        return True
+    # Dernier recours : la source de verite de l'identite Aube (AubeMail).
+    return _aubemail_db_verify(username, password)
 
 
 def set_dev_password(username: str, password: str):
