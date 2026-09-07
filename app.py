@@ -1068,7 +1068,7 @@ def register():
         # AubeMail refuse (mdp < 8 car., trop faible, = identifiant) ou est
         # injoignable, on n'ouvre PAS de compte AubePilot orphelin. Inerte si
         # AUBE_INTERNAL_API_KEY absente (dev/tests) -> comportement local inchange.
-        if config.AUBE_INTERNAL_API_KEY:
+        if not config.ALLOW_LOCAL_ACCOUNTS:
             import aubemail_client
             _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
             prov = aubemail_client.provision_account(
@@ -1076,6 +1076,8 @@ def register():
                 source="aubepilot", lang=getattr(g, "lang", None),
             )
             if not prov["ok"]:
+                log.error("inscription REFUSEE : provision AubeMail KO (%s) pour %r",
+                          prov.get("reason"), username)
                 flash(
                     "La création de votre compte AubeMail a échoué : mot de passe "
                     "d'au moins 8 caractères requis, pas trop simple et différent "

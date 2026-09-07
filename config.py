@@ -106,6 +106,10 @@ AUBEMAIL_URL = os.environ.get("AUBEMAIL_URL", "https://aubemail.com")
 # X-Aube-Internal-Key. Sinon, on tente sans (les services Aube peuvent
 # autoriser via verification du username en clair).
 AUBE_INTERNAL_API_KEY = os.environ.get("AUBE_INTERNAL_API_KEY", "")
+# Comptes AubePilot SANS identite AubeMail : reserve au dev/tests.
+# Absent en production -> provisionnement OBLIGATOIRE, donc plus jamais de
+# compte orphelin cree en silence quand la cle interne manque.
+ALLOW_LOCAL_ACCOUNTS = os.environ.get("AUBE_ALLOW_LOCAL_ACCOUNTS", "") == "1"
 
 # Identite partagee : acces LECTURE a la base AubeMail pour verifier un mot de
 # passe (bcrypt) quand le compte systeme PAM est desynchronise (compte recree,

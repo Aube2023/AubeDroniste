@@ -31,6 +31,11 @@ sys.path.insert(0, ROOT)
 # AUBEPILOT_DATA fourni de l'exterieur (CI / orchestrateur).
 os.environ.setdefault("AUBEPILOT_DATA", tempfile.mkdtemp(prefix="aubepilot-test-"))
 
+# En production, toute inscription DOIT creer l'identite AubeMail associee
+# (cf. config.ALLOW_LOCAL_ACCOUNTS). En test il n'y a pas de service AubeMail :
+# on autorise donc les comptes purement locaux, sinon toute inscription echoue.
+os.environ.setdefault("AUBE_ALLOW_LOCAL_ACCOUNTS", "1")
+
 # DB de test partagee dans un meme process : compteur global garantissant
 # l'unicite des usernames/emails crees (sinon UNIQUE users.email).
 _uid_seq = itertools.count(1)
