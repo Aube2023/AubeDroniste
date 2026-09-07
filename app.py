@@ -555,11 +555,6 @@ def page_terms():
     return render_template("legal_terms.html")
 
 
-@app.route("/cookies")
-def page_cookies():
-    return render_template("legal_cookies.html")
-
-
 # ---------------------------------------------------------------------------
 # FAQ + contact (pages de confiance : ce qu'un annuaire local affiche, en
 # version marketplace mondiale)

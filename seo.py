@@ -31,7 +31,6 @@ PUBLIC_ROUTES = [
     ("/mentions-legales", "0.3", "yearly"),
     ("/confidentialite", "0.3", "yearly"),
     ("/cgu", "0.3", "yearly"),
-    ("/cookies", "0.3", "yearly"),
 ]
 
 # Répertoires interdits aux robots (espace privé, paiement, admin, API)

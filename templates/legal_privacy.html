@@ -95,7 +95,19 @@ concernées, conformément à l'article 3.5 de la Loi 25.
 </p>
 
 <h2>9. Cookies</h2>
-<p>Voir notre <a href="{{ url_for('page_cookies') }}">politique de cookies</a>.</p>
+<p>
+Aube Pilot utilise un strict minimum de cookies : <code>aubepilot_sid</code>
+(identifiant de session signé, HttpOnly, 30 jours) et <code>csrf_token</code>
+(protection contre la falsification de requêtes), tous deux strictement
+nécessaires au fonctionnement, ainsi que <code>aube_lang</code> (langue choisie,
+365 jours). La préférence d'affichage jour / nuit est conservée dans le stockage
+local du navigateur, pas dans un cookie. Aucune publicité, aucun traceur tiers,
+aucun outil d'analyse externe n'est déposé. Les paiements par Stripe Checkout
+déposent leurs propres cookies, uniquement sur <code>checkout.stripe.com</code>,
+hors de notre contrôle. Vous pouvez supprimer ces cookies via les paramètres de
+votre navigateur ; refuser ceux strictement nécessaires empêche d'utiliser le
+service.
+</p>
 
 <h2>10. Recours</h2>
 <p>
