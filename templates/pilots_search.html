@@ -67,7 +67,7 @@
     <label>{{ 'Pays' if fr else 'Country' }}
       <select name="country">
         <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        {% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
       </select>
     </label>
     <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}"></label>

@@ -519,6 +519,8 @@ _T = {
                              "tr": "Okulunuz haritada: sunduğunuz eğitimler (temel operasyonlar, ileri düzey, A2, STS…), iletişim bilgileri, pilot olan öğrencilerin değerlendirmeleri."},
 
     # ---- Common
+    "country.common":      {"fr": "Fréquents", "en": "Common", "es": "Frecuentes", "ru": "Частые", "hi": "सामान्य", "uk": "Часті", "tr": "Sık kullanılanlar"},
+    "country.all":         {"fr": "Tous les pays", "en": "All countries", "es": "Todos los países", "ru": "Все страны", "hi": "सभी देश", "uk": "Усі країни", "tr": "Tüm ülkeler"},
     "common.verified":     {"fr": "vérifié", "en": "verified", "es": "verificado", "ru": "проверено", "hi": "सत्यापित", "uk": "перевірено", "tr": "doğrulanmış"},
     "common.urgent":       {"fr": "urgent",  "en": "urgent", "es": "urgente", "ru": "срочно", "hi": "अत्यावश्यक", "uk": "терміново", "tr": "acil"},
     "common.new_pilot":    {"fr": "nouveau", "en": "new", "es": "nuevo", "ru": "новый", "hi": "नया", "uk": "новий", "tr": "yeni"},

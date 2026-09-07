@@ -145,7 +145,7 @@
         <label>{{ t('register.country') }}
           <input name="country" list="countries" placeholder="{{ t('register.country_ph') }}">
           <datalist id="countries">
-            {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}
+            {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{% endfor %}
           </datalist>
         </label>
         <label>{{ t('register.city') }}

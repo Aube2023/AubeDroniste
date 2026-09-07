@@ -52,7 +52,7 @@
       <div class="grid-2">
         <label>{{ 'Pays' if fr else 'Country' }}
           <input name="country" list="countries" required value="{{ form.get('country','') }}" placeholder="Canada">
-          <datalist id="countries">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
+          <datalist id="countries">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
         </label>
         <label>{{ 'Ville' if fr else 'City' }}
           <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal">
