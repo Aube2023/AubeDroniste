@@ -38,8 +38,13 @@
     </label>
     <div class="grid-2">
       <label>{{ 'Pays' if fr else 'Country' }}
-        <input name="country" value="{{ user.country or '' }}" list="country-suggest" maxlength="80">
-        <datalist id="country-suggest">{% for c in featured_countries %}<option value="{{ c }}">{% endfor %}{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{% endfor %}</datalist>
+        {% set _cur = user.country or '' %}
+        <select name="country">
+          <option value="">—</option>
+          {% if _cur and _cur not in countries %}<option value="{{ _cur }}" selected>{{ _cur }}</option>{% endif %}
+          <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
+          <optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
+        </select>
       </label>
       <label>{{ 'Ville' if fr else 'City' }}
         <input name="city" value="{{ user.city or '' }}" maxlength="120">

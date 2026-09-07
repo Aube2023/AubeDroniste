@@ -143,10 +143,11 @@
       <legend>{{ t('register.home_base_legend') }}</legend>
       <div class="grid-2">
         <label>{{ t('register.country') }}
-          <input name="country" list="countries" placeholder="{{ t('register.country_ph') }}">
-          <datalist id="countries">
-            {% for c in featured_countries %}<option value="{{ c }}">{% endfor %}{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{% endfor %}
-          </datalist>
+          <select name="country">
+            <option value="">—</option>
+            <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</optgroup>
+          </select>
         </label>
         <label>{{ t('register.city') }}
           <input name="city" placeholder="{{ t('register.city_ph') }}">
