@@ -395,14 +395,21 @@ LICENCE_AUTHORITIES = [
     ("Transport Canada", "Transport Canada (avance / de base)"),
     ("FAA",      "FAA Part 107 (USA)"),
     # Amerique latine
-    ("ANAC_BR",  "ANAC (Bresil)"),
-    ("DGAC_CL",  "DGAC (Chili)"),
+    ("ANAC_BR",     "ANAC (Bresil)"),
+    ("DGAC_CL",     "DGAC (Chili)"),
+    ("AFAC_MX",     "AFAC (Mexique)"),
+    ("ANAC_AR",     "ANAC (Argentine)"),
+    ("Aerocivil_CO","Aerocivil (Colombie)"),
+    ("DGAC_PE",     "DGAC (Perou)"),
     # Maghreb / Afrique
     ("DGAC_MA",  "DGAC Maroc"),
     ("ANAC_TN",  "ANAC Tunisie"),
     ("DACM_DZ",  "DACM Algerie"),
     ("ASECNA",   "ASECNA (Afrique de l'Ouest)"),
     ("SACAA_ZA", "SACAA (Afrique du Sud)"),
+    ("NCAA_NG",  "NCAA (Nigeria)"),
+    ("KCAA_KE",  "KCAA (Kenya)"),
+    ("ECAA_EG",  "ECAA (Egypte)"),
     # Russie / CEI
     ("Rosaviatsia", "Rosaviatsia (Russie)"),
     # Asie-Pacifique
@@ -413,10 +420,19 @@ LICENCE_AUTHORITIES = [
     ("CAANZ",    "CAA (Nouvelle-Zelande)"),
     ("DGCA_IN",  "DGCA (Inde)"),
     ("CAAS_SG",  "CAAS (Singapour)"),
+    ("CAAP_PH",  "CAAP (Philippines)"),
+    ("DGCA_ID",  "DGCA (Indonesie)"),
+    ("CAAT_TH",  "CAAT (Thailande)"),
+    ("CAAM_MY",  "CAAM (Malaisie)"),
+    ("CAAV_VN",  "CAAV (Vietnam)"),
+    ("PCAA_PK",  "PCAA (Pakistan)"),
+    ("CAA_TW",   "CAA (Taiwan)"),
     # Moyen-Orient
     ("GCAA_AE",  "GCAA (Emirats arabes unis)"),
     ("GACA_SA",  "GACA (Arabie saoudite)"),
     ("CAAI_IL",  "CAAI (Israel)"),
+    ("SHGM_TR",  "SHGM (Turquie)"),
+    ("QCAA_QA",  "QCAA (Qatar)"),
     # Generique
     ("autre",    "Autre / declarative"),
 ]
@@ -425,11 +441,11 @@ LICENCE_AUTHORITIES = [
 LICENCE_AUTHORITY_GROUPS = [
     ("Europe",             ["EASA", "DGAC", "CAA_UK", "OFAC", "LBA_DE", "ENAC_IT", "AESA_ES"]),
     ("Amérique du Nord",   ["Transport Canada", "FAA"]),
-    ("Amérique latine",    ["ANAC_BR", "DGAC_CL"]),
-    ("Maghreb & Afrique",  ["DGAC_MA", "ANAC_TN", "DACM_DZ", "ASECNA", "SACAA_ZA"]),
+    ("Amérique latine",    ["ANAC_BR", "DGAC_CL", "AFAC_MX", "ANAC_AR", "Aerocivil_CO", "DGAC_PE"]),
+    ("Maghreb & Afrique",  ["DGAC_MA", "ANAC_TN", "DACM_DZ", "ASECNA", "SACAA_ZA", "NCAA_NG", "KCAA_KE", "ECAA_EG"]),
     ("Russie & CEI",       ["Rosaviatsia"]),
-    ("Asie-Pacifique",     ["CAAC", "JCAB", "KOCA", "CASA", "CAANZ", "DGCA_IN", "CAAS_SG"]),
-    ("Moyen-Orient",       ["GCAA_AE", "GACA_SA", "CAAI_IL"]),
+    ("Asie-Pacifique",     ["CAAC", "JCAB", "KOCA", "CASA", "CAANZ", "DGCA_IN", "CAAS_SG", "CAAP_PH", "DGCA_ID", "CAAT_TH", "CAAM_MY", "CAAV_VN", "PCAA_PK", "CAA_TW"]),
+    ("Moyen-Orient",       ["GCAA_AE", "GACA_SA", "CAAI_IL", "SHGM_TR", "QCAA_QA"]),
     ("Autre",              ["autre"]),
 ]
 
