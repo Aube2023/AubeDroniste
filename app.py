@@ -629,7 +629,7 @@ def contact_form():
 
 
 @app.route("/contact", methods=["POST"])
-@security.rate_limit(per_minute=3, per_hour=12)
+@security.rate_limit(per_minute=5, per_hour=20)
 def contact_submit():
     lang = getattr(g, "lang", i18n.DEFAULT)
     fr = lang != "en"
@@ -972,7 +972,7 @@ def mission_detail(mission_id):
 # ---------------------------------------------------------------------------
 
 @app.route("/inscription", methods=["GET", "POST"])
-@security.rate_limit(per_minute=4, per_hour=15)
+@security.rate_limit(per_minute=6, per_hour=40)
 def register():
     if request.method == "POST":
         username = auth.normalize_username(request.form.get("username") or "")
@@ -1125,7 +1125,7 @@ def register():
 
 
 @app.route("/connexion", methods=["GET", "POST"])
-@security.rate_limit(per_minute=8, per_hour=40)
+@security.rate_limit(per_minute=12, per_hour=120)
 def login():
     next_url = security.safe_next(
         request.args.get("next") or request.form.get("next"),
@@ -1809,7 +1809,7 @@ def pilot_delete_drone(drone_id):
 
 @app.route("/espace/pilote/avatar", methods=["POST"])
 @auth.login_required
-@security.rate_limit(per_minute=10, per_hour=30)
+@security.rate_limit(per_minute=15, per_hour=60)
 def pilot_upload_avatar():
     user = g.user
     f = request.files.get("avatar")
