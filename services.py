@@ -138,6 +138,26 @@ def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
     return bool(row)
 
 
+# ---------------------------------------------------------------------------
+# Compteur de visites du site (vanity metric publique). La valeur stockee est
+# le cumul reel ; l'affichage ajoute config.SITE_VISIT_BASE.
+# ---------------------------------------------------------------------------
+def bump_visits() -> int:
+    """Incremente le compteur de visites et retourne la nouvelle valeur brute."""
+    db.execute(
+        "INSERT INTO site_counters(name, value) VALUES('visits', 1) "
+        "ON CONFLICT(name) DO UPDATE SET value = value + 1"
+    )
+    row = db.fetchone("SELECT value FROM site_counters WHERE name='visits'")
+    return int(row["value"]) if row else 0
+
+
+def get_visits() -> int:
+    """Valeur brute du compteur de visites (0 si jamais incremente)."""
+    row = db.fetchone("SELECT value FROM site_counters WHERE name='visits'")
+    return int(row["value"]) if row else 0
+
+
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT u.*, p.headline, p.business_name, p.business_email, p.kind, p.school_programs, "

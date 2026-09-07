@@ -186,6 +186,11 @@ _ADD_INDEXES = [
 # Tables additives idempotentes (memes regles que les index : schema.sql ne
 # tourne que sur une base neuve, la prod passe par run_migrations()).
 _ADD_TABLES = [
+    # Compteur de visites du site (valeur cumulee ; affichee + config.SITE_VISIT_BASE).
+    """CREATE TABLE IF NOT EXISTS site_counters (
+        name  TEXT PRIMARY KEY,
+        value INTEGER NOT NULL DEFAULT 0
+    )""",
     # Boite de reception du formulaire /contact (cf. services.create_contact_message).
     """CREATE TABLE IF NOT EXISTS contact_messages (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,

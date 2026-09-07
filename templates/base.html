@@ -164,6 +164,7 @@
       <strong>Aube Pilot</strong> · {{ t('footer.tagline') }}
     </div>
     <div class="dim">{{ now().year }}, {{ t('footer.cities') }}</div>
+    <div class="dim">🚁 {{ '{:,}'.format(site_visits).replace(',', ' ') }} {{ 'visites' if lang == 'fr' else 'visits' }}</div>
   </div>
 </footer>
 

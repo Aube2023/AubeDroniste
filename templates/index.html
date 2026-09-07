@@ -34,6 +34,7 @@
 </section>
 
 <div class="notam-strip">
+  <div><div class="num">{{ '{:,}'.format(site_visits).replace(',', ' ') }}</div><div class="lbl">{{ 'visites' if lang == 'fr' else 'visits' }}</div></div>
   <div><div class="num">{{ stats.pilots }}</div><div class="lbl">{{ t('home.notam.pilots') }}</div></div>
   <div><div class="num">{{ stats.open_missions }}</div><div class="lbl">{{ t('home.notam.missions') }}</div></div>
   <div><div class="num">{{ stats.countries }}</div><div class="lbl">{{ t('home.notam.countries') }}</div></div>

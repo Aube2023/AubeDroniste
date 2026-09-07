@@ -675,6 +675,10 @@ CONTACT_EMAIL = os.environ.get("AUBEPILOT_CONTACT_EMAIL", "contact@aubemail.com"
 # Delai de reponse annonce sur la page contact (heures ouvrables)
 CONTACT_REPLY_HOURS = int(os.environ.get("AUBEPILOT_CONTACT_REPLY_HOURS", "24"))
 
+# Compteur de visites public : nombre de base ajoute au cumul reel, pour montrer
+# l'ampleur des le lancement (ex. 21 000). Configurable via l'env.
+SITE_VISIT_BASE = int(os.environ.get("AUBEPILOT_VISIT_BASE", "21000") or "21000")
+
 # Reseaux sociaux : affiches dans le pied de page + `sameAs` schema.org
 # uniquement s'ils sont renseignes (aucun lien mort par defaut).
 SOCIAL_LINKS = [

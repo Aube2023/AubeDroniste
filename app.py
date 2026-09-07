@@ -203,10 +203,39 @@ def _refresh_session_cookie(resp):
     return resp
 
 
+@app.after_request
+def _count_visit(resp):
+    # Compteur de visites public : une visite par navigateur toutes les 2 h
+    # (cookie aube_v), sur les vraies pages HTML uniquement. Jamais bloquant.
+    try:
+        if (request.method == "GET" and resp.status_code == 200
+                and "text/html" in resp.headers.get("Content-Type", "")
+                and not request.cookies.get("aube_v")
+                and not request.path.startswith(
+                    ("/static", "/media", "/stripe", "/aubemail", "/lang", "/admin"))):
+            services.bump_visits()
+            resp.set_cookie(
+                "aube_v", "1", max_age=7200, httponly=True, samesite="Lax",
+                secure=app.config.get("SESSION_COOKIE_SECURE", False),
+            )
+    except Exception:
+        pass
+    return resp
+
+
+def _visits_display() -> int:
+    """Total affiche = base (config) + cumul reel. Jamais bloquant."""
+    try:
+        return config.SITE_VISIT_BASE + services.get_visits()
+    except Exception:
+        return config.SITE_VISIT_BASE
+
+
 @app.context_processor
 def _inject_globals():
     return {
         "current_user": getattr(g, "user", None),
+        "site_visits": _visits_display(),
         "mission_types": MISSION_TYPES,
         "drone_categories": DRONE_CATEGORIES,
         "drone_capabilities": DRONE_CAPABILITIES,
