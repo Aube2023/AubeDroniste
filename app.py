@@ -986,6 +986,19 @@ def register():
         lat = _to_float(request.form.get("lat"))
         lng = _to_float(request.form.get("lng"))
 
+        # Pas de position GPS fournie mais une ville / un pays -> on geocode pour
+        # que le pilote apparaisse sur la carte (mise en relation mondiale, pas
+        # seulement Montreal). Non bloquant : si le geocodage echoue, on ouvre
+        # quand meme le compte (juste pas de marqueur tant que la position manque).
+        if (lat is None or lng is None) and (city or country):
+            try:
+                _g = geocode.lookup(city or country, country,
+                                    getattr(g, "lang", i18n.DEFAULT))
+                if _g and _g.get("lat") is not None and _g.get("lng") is not None:
+                    lat, lng = _g["lat"], _g["lng"]
+            except Exception:
+                pass
+
         if role not in ("client", "pilot", "both"):
             role = "client"
         kind = _profile_kind(request.form.get("kind")) or "pro"
@@ -1353,15 +1366,28 @@ def pilot_edit():
             user["id"],
             [{"country": c, "region": r} for c, r in zip(countries, regions) if c],
         )
-        # bio + ville
+        # bio + ville. Sans GPS explicite mais avec une ville/pays -> on geocode
+        # pour apparaitre sur la carte (idem inscription). Non bloquant.
+        _city = (request.form.get("city") or "").strip()
+        _country = (request.form.get("country") or "").strip()
+        _lat = _to_float(request.form.get("lat"))
+        _lng = _to_float(request.form.get("lng"))
+        if (_lat is None or _lng is None) and (_city or _country):
+            try:
+                _g = geocode.lookup(_city or _country, _country,
+                                    getattr(g, "lang", i18n.DEFAULT))
+                if _g and _g.get("lat") is not None and _g.get("lng") is not None:
+                    _lat, _lng = _g["lat"], _g["lng"]
+            except Exception:
+                pass
         db.execute(
             "UPDATE users SET bio=?, city=?, country=?, lat=?, lng=?, phone=? WHERE id=?",
             (
                 (request.form.get("bio") or "").strip() or None,
-                (request.form.get("city") or "").strip() or None,
-                (request.form.get("country") or "").strip() or None,
-                _to_float(request.form.get("lat")),
-                _to_float(request.form.get("lng")),
+                _city or None,
+                _country or None,
+                _lat,
+                _lng,
                 (request.form.get("phone") or "").strip() or None,
                 user["id"],
             ),
