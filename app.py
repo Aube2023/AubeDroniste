@@ -1048,15 +1048,14 @@ def register():
             )
             return render_template("register.html")
 
-        # ECOLE : on cree d'abord un VRAI compte AubeMail (le nom de l'ecole
-        # devient son display_name / nom public). Le compte AubeMail devient
-        # l'identite et le mot de passe partages ; create_user detecte ensuite
-        # le compte systeme et ne garde pas de mot de passe local. Si AubeMail
-        # refuse (mdp < 8 car., trop faible) ou est injoignable, on n'ouvre PAS
-        # de compte AubePilot orphelin. Inerte si AUBE_INTERNAL_API_KEY absente
-        # (dev/tests) -> comportement local inchange.
-        is_school = role in ("pilot", "both") and kind == "school"
-        if is_school and config.AUBE_INTERNAL_API_KEY:
+        # CHAQUE inscription cree d'abord un VRAI compte AubeMail : c'est
+        # l'identite et le mot de passe partages de tout l'ecosysteme Aube (le
+        # nom saisi devient le display_name / nom public). create_user detecte
+        # ensuite le compte systeme et ne garde pas de mot de passe local. Si
+        # AubeMail refuse (mdp < 8 car., trop faible, = identifiant) ou est
+        # injoignable, on n'ouvre PAS de compte AubePilot orphelin. Inerte si
+        # AUBE_INTERNAL_API_KEY absente (dev/tests) -> comportement local inchange.
+        if config.AUBE_INTERNAL_API_KEY:
             import aubemail_client
             _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
             prov = aubemail_client.provision_account(
@@ -1065,12 +1064,14 @@ def register():
             )
             if not prov["ok"]:
                 flash(
-                    "La création du compte AubeMail de l'école a échoué "
-                    "(mot de passe d'au moins 8 caractères requis, ou service "
-                    "momentanément indisponible). Réessayez." if _fr else
-                    "Creating the school's AubeMail account failed (a password "
-                    "of at least 8 characters is required, or the service is "
-                    "temporarily unavailable). Please try again.",
+                    "La création de votre compte AubeMail a échoué : mot de passe "
+                    "d'au moins 8 caractères requis, pas trop simple et différent "
+                    "de votre identifiant (ou service momentanément indisponible). "
+                    "Réessayez." if _fr else
+                    "Creating your AubeMail account failed: a password of at least "
+                    "8 characters is required, not too simple and different from "
+                    "your username (or the service is temporarily unavailable). "
+                    "Please try again.",
                     "error",
                 )
                 return render_template("register.html")
