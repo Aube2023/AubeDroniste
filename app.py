@@ -1285,6 +1285,7 @@ def pilot_edit():
             user["id"],
             headline=(request.form.get("headline") or "").strip() or None,
             business_name=(request.form.get("business_name") or "").strip() or None,
+            business_email=(request.form.get("business_email") or "").strip()[:160] or None,
             years_experience=_to_int(request.form.get("years_experience"), 0),
             hourly_rate=_to_float(request.form.get("hourly_rate")),
             daily_rate=_to_float(request.form.get("daily_rate")),

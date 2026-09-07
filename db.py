@@ -134,6 +134,8 @@ _ADD_COLUMNS = [
     # Type de profil (onglets annuaire) + formations des ecoles.
     ("pilot_profiles", "kind", "TEXT NOT NULL DEFAULT 'pro'"),
     ("pilot_profiles", "school_programs", "TEXT"),
+    # Courriel public de contact de la compagnie (pilotes pro / compagnies de drone).
+    ("pilot_profiles", "business_email", "TEXT"),
     # Commission degressive : taux applique a CE booking (NULL sur les anciens
     # bookings -> deduit de platform_fee / agreed_price, cf. services.booking_fee_pct).
     ("bookings", "platform_fee_pct", "REAL"),

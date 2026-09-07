@@ -36,6 +36,13 @@
         <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {{ 'Site web de l\'école' if fr else 'School website' }} ↗</a>
       </div>
       {% endif %}
+      {% if not is_school and (pilot.business_email or pilot.business_name) %}
+      <div style="margin-top: 12px;">
+        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Coordonnées de la compagnie' if fr else 'Company contact' }}</span>
+        {% if pilot.business_name %}<div class="mono" style="text-transform: uppercase; letter-spacing: .08em; font-size: 13px; color: var(--ink-soft);">{{ pilot.business_name }}</div>{% endif %}
+        {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="ghost" style="margin-top: 6px;">✉️ {{ pilot.business_email }}</a>{% endif %}
+      </div>
+      {% endif %}
       {% if pilot.headline %}
       <p class="serif-italic" style="margin-top: 16px; font-size: 1.2rem; color: var(--ink-soft); max-width: 56ch;">
         « {{ pilot.headline }} »

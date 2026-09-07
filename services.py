@@ -55,7 +55,7 @@ def upsert_pilot_profile(user_id: int, **fields) -> Optional[dict]:
         "currency", "travel_radius_km", "accepts_remote", "insurance",
         "insurance_company", "insurance_policy", "is_available",
         "languages", "portfolio_url", "accepts_urgent",
-        "kind", "school_programs",
+        "kind", "school_programs", "business_email",
     }
     data = {k: fields[k] for k in fields if k in allowed and fields[k] is not None}
     if not existing:
@@ -140,7 +140,7 @@ def has_funded_relation(viewer_user_id: int, pilot_user_id: int) -> bool:
 
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
-        "SELECT u.*, p.headline, p.business_name, p.kind, p.school_programs, "
+        "SELECT u.*, p.headline, p.business_name, p.business_email, p.kind, p.school_programs, "
         "p.years_experience, p.hourly_rate, p.daily_rate, "
         "p.currency AS p_currency, p.travel_radius_km, p.accepts_remote, p.insurance, "
         "p.insurance_company, p.insurance_policy, p.is_available, p.languages, "

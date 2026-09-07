@@ -141,6 +141,8 @@
   <h2>{{ 'Présentation' if fr else 'Presentation' }}</h2>
   <label>{{ 'Marque / société (raison sociale)' if fr else 'Business name' }}<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="{{ 'ex. SkyVision Drone, ou votre nom' if fr else 'e.g. SkyVision Drone, or your name' }}"></label>
   <p class="form-hint">{{ 'Affichée en en-tête de vos devis PDF (avec votre logo/photo). Laissez vide pour utiliser votre nom complet.' if fr else 'Shown at the top of your PDF quotes (with your logo/photo). Leave empty to use your full name.' }}</p>
+  <label>{{ 'Courriel de compagnie (public)' if fr else 'Company email (public)' }}<input name="business_email" type="email" value="{{ profile.business_email or '' }}" maxlength="160" placeholder="{{ 'ex. contact@skyvisiondrone.ca' if fr else 'e.g. contact@skyvisiondrone.ca' }}"></label>
+  <p class="form-hint">{{ 'Affiché sur votre fiche publique pour que les clients vous contactent directement. Laissez vide pour ne rien afficher.' if fr else 'Shown on your public listing so clients can contact you directly. Leave empty to hide it.' }}</p>
   <label>{{ 'Accroche courte' if fr else 'Short tagline' }}<input name="headline" value="{{ profile.headline or '' }}" maxlength="120" placeholder="{{ 'ex. Prises de vue aériennes & inspections' if fr else 'e.g. Aerial footage & inspections' }}"></label>
   <label>{{ 'Bio' if fr else 'Bio' }}<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
 
