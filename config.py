@@ -679,6 +679,16 @@ CONTACT_REPLY_HOURS = int(os.environ.get("AUBEPILOT_CONTACT_REPLY_HOURS", "24"))
 # l'ampleur des le lancement (ex. 21 000). Configurable via l'env.
 SITE_VISIT_BASE = int(os.environ.get("AUBEPILOT_VISIT_BASE", "21000") or "21000")
 
+# Pays dont les inscriptions sont refusees (comparaison au champ « pays » du
+# formulaire, insensible a la casse). Variantes courantes de la Russie couvertes ;
+# modifiable via l'env AUBEPILOT_BLOCKED_COUNTRIES (separees par des virgules).
+BLOCKED_REGISTRATION_COUNTRIES = {
+    c.strip().lower() for c in os.environ.get(
+        "AUBEPILOT_BLOCKED_COUNTRIES",
+        "russie,russia,россия,rußland,russland,russian federation,fédération de russie,federation de russie",
+    ).split(",") if c.strip()
+}
+
 # Reseaux sociaux : affiches dans le pied de page + `sameAs` schema.org
 # uniquement s'ils sont renseignes (aucun lien mort par defaut).
 SOCIAL_LINKS = [

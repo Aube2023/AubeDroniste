@@ -999,6 +999,18 @@ def register():
             flash("Cet identifiant est deja pris.", "error")
             return render_template("register.html")
 
+        # Inscriptions refusees depuis certains pays (cf. config).
+        if country and country.strip().lower() in config.BLOCKED_REGISTRATION_COUNTRIES:
+            _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
+            log.warning("inscription refusee (pays bloque=%r) ip=%s", country, request.remote_addr)
+            flash(
+                "Les inscriptions depuis ce pays ne sont pas acceptées pour le moment."
+                if _fr else
+                "Registrations from this country are not accepted at this time.",
+                "error",
+            )
+            return render_template("register.html")
+
         # Anti-robot 1 : piege « honeypot ». Champ cache aux humains (hors
         # ecran, aria-hidden). Un robot qui remplit tous les champs le remplit
         # aussi -> on refuse en silence (le bot croit avoir reussi).
