@@ -228,6 +228,8 @@ def _inject_globals():
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
+        # Versements auto Connect actifs ? Sinon : « paiement en direct » (UI masquee)
+        "stripe_connect_enabled": config.STRIPE_CONNECT_ENABLED,
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
@@ -2490,6 +2492,19 @@ def stripe_onboard():
     user = g.user
     if user["role"] not in ("pilot", "both"):
         abort(403)
+    if not config.STRIPE_CONNECT_ENABLED:
+        # Connect pas encore actif cote plateforme : on n'envoie personne vers un
+        # onboarding qui echouerait. Message clair, paiement en direct pour l'instant.
+        _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
+        flash(
+            "Pour l'instant, le paiement se règle directement avec le client. Les "
+            "versements automatiques (avec la commission AubePilot) arrivent bientôt — "
+            "rien à configurer de votre côté." if _fr else
+            "For now, payment is arranged directly with the client. Automatic payouts "
+            "(with the AubePilot commission) are coming soon — nothing to set up on your side.",
+            "info",
+        )
+        return redirect(url_for("pilot_edit"))
     profile = services.get_pilot_profile(user["id"])
     account_id = profile.get("stripe_account_id") if profile else None
     try:

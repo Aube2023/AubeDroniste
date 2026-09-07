@@ -48,7 +48,8 @@
   </div>
 </section>
 
-{# ===== Stripe Connect, encaissement ===== #}
+{# ===== Encaissement ===== #}
+{% if stripe_connect_enabled %}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}
 <section class="card" style="border-left: 3px solid {% if stripe_ready %}var(--teal){% else %}var(--amber){% endif %};">
   <span class="eyebrow">{{ 'Encaissement' if fr else 'Payments' }}</span>
@@ -78,6 +79,15 @@
     </a>
   {% endif %}
 </section>
+{% else %}
+<section class="card" style="border-left: 3px solid var(--teal);">
+  <span class="eyebrow">{{ 'Encaissement' if fr else 'Payments' }}</span>
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">💸 {{ 'Paiement en direct avec le client' if fr else 'Direct payment with the client' }}</h2>
+  <p class="muted">
+    {{ "Pour l'instant, vous convenez du paiement directement avec le client (virement, Interac, chèque, etc.). Les versements automatiques via AubePilot — avec la commission prélevée pour vous — arrivent bientôt : vous n'aurez rien à configurer." if fr else 'For now, you arrange payment directly with the client (bank transfer, Interac, cheque, etc.). Automatic payouts through AubePilot — with the commission handled for you — are coming soon: nothing to set up.' }}
+  </p>
+</section>
+{% endif %}
 
 <form method="post" class="card">
         {{ csrf_input() }}

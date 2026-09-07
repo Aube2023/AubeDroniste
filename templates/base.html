@@ -120,7 +120,7 @@
   {% endif %}
 {% endwith %}
 
-{% if g.user and g.user.role in ('pilot', 'both') and not pilot_payouts_ok %}
+{% if stripe_connect_enabled and g.user and g.user.role in ('pilot', 'both') and not pilot_payouts_ok %}
   {% set fr = (lang == 'fr') %}
   <div class="flashes">
     <div class="flash flash-info">

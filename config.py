@@ -636,6 +636,12 @@ STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 STRIPE_LIVE_MODE       = STRIPE_SECRET_KEY.startswith("sk_live_")
 STRIPE_FAKE_MODE       = not STRIPE_SECRET_KEY  # mode demo sans cle
 
+# Versements automatiques via Stripe Connect. Tant que Connect n'est pas active
+# en mode reel sur le compte plateforme, on masque l'onboarding pilote et on
+# affiche « paiement en direct avec le client ». Passer a "1" quand Connect est
+# pret cote Stripe : l'UI d'encaissement Stripe reapparait, aucun autre change.
+STRIPE_CONNECT_ENABLED = os.environ.get("STRIPE_CONNECT_ENABLED", "").strip().lower() in ("1", "true", "yes", "on")
+
 # Auto-libération si le client n'a pas validé après ce delai (jours)
 AUTO_RELEASE_DAYS = int(os.environ.get("AUBEPILOT_AUTO_RELEASE_DAYS", "7"))
 
