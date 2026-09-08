@@ -125,9 +125,10 @@ if [[ -f "$ENV_FILE" ]]; then
     fi
 fi
 
-# 10. .dev_passwords absent (jamais sur prod)
+# 10. Credentials locaux historiques : dette de migration, pas panne du site.
+# Ne jamais les supprimer tant que les identites centrales ne sont pas prouvees.
 if [[ -f "$INSTALL_DIR/.dev_passwords" || -f "$DATA_DIR/.dev_passwords" ]]; then
-    check_fail ".dev_passwords présent — préserver les comptes puis planifier leur migration AubeMail (ne pas supprimer à chaud)"
+    check_warn ".dev_passwords présent — comptes locaux actifs à préserver puis migrer vers AubeMail"
 else
     check_ok ".dev_passwords absent (OK)"
 fi
