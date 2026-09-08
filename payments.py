@@ -7,9 +7,9 @@ Modele : escrow plateforme.
    du pilote (prix - commission) ; la plateforme garde la commission (degressive)
 4. Si dispute, on peut Refund total ou partiel via Stripe.
 
-Mode FAKE (sans cle Stripe) : on simule chaque appel et on retourne des
-identifiants `acct_fake_*` / `pi_fake_*`. Cela permet de demolir le flow
-en demo sans avoir besoin de configurer un vrai compte Stripe.
+Mode FAKE (explicitement autorise, ou localhost) : on simule chaque appel et
+on retourne des identifiants `acct_fake_*` / `pi_fake_*`. Une installation
+publique sans cle est en mode DISABLED et ne simule jamais d'argent.
 
 Le SDK officiel `stripe` est importe paresseusement : si la cle n'est
 pas configuree, on n'essaie meme pas de l'importer (utile pour les tests
@@ -24,6 +24,7 @@ from config import (
     SITE_URL,
     STRIPE_FAKE_MODE,
     STRIPE_LIVE_MODE,
+    STRIPE_PAYMENTS_ENABLED,
     STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET,
 )
@@ -39,18 +40,22 @@ class StripeCountryUnsupportedError(Exception):
     """
 
 
+class PaymentUnavailableError(RuntimeError):
+    """Le prestataire de paiement n'est pas configure ou indisponible."""
+
+
 # ---------------------------------------------------------------------------
 # Helpers internes
 # ---------------------------------------------------------------------------
 
 def _stripe():
-    """Retourne le module `stripe` configure, ou None en mode fake."""
-    if STRIPE_FAKE_MODE:
+    """Retourne le module `stripe` configure, ou None hors mode reel/test."""
+    if not STRIPE_SECRET_KEY:
         return None
     try:
         import stripe as s
     except ImportError:
-        log.warning("stripe SDK non installe; passage en mode fake")
+        log.error("stripe SDK non installe; paiements indisponibles")
         return None
     s.api_key = STRIPE_SECRET_KEY
     return s
@@ -61,7 +66,12 @@ def is_live() -> bool:
 
 
 def is_fake() -> bool:
-    return STRIPE_FAKE_MODE or _stripe() is None
+    return STRIPE_FAKE_MODE
+
+
+def is_available() -> bool:
+    """Vrai si un paiement reel/test ou le simulateur local est utilisable."""
+    return STRIPE_FAKE_MODE or (STRIPE_PAYMENTS_ENABLED and _stripe() is not None)
 
 
 def banner_mode() -> str:
@@ -69,7 +79,19 @@ def banner_mode() -> str:
         return "LIVE"
     if STRIPE_SECRET_KEY:
         return "TEST"
-    return "FAKE"
+    if STRIPE_FAKE_MODE:
+        return "FAKE"
+    return "DISABLED"
+
+
+def _require_stripe_or_fake():
+    """Retourne le SDK, None en fake, et refuse toute simulation implicite."""
+    if STRIPE_FAKE_MODE:
+        return None
+    s = _stripe()
+    if s is None:
+        raise PaymentUnavailableError("Le paiement en ligne est indisponible.")
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +104,7 @@ def create_pilot_account(user: dict) -> Tuple[str, str]:
     En mode fake : retourne un id `acct_fake_<uid>` et une URL locale
     `/stripe/fake-onboarding/<uid>`.
     """
-    s = _stripe()
+    s = _require_stripe_or_fake()
     return_url = f"{SITE_URL}/stripe/return"
     if s is None:
         return (f"acct_fake_{user['id']}", f"{SITE_URL}/stripe/fake-onboarding/{user['id']}")
@@ -141,9 +163,10 @@ def account_create_kwargs(user: dict, country: str) -> dict:
 
 def fresh_onboarding_link(account_id: str) -> str:
     """Recree un lien d'onboarding (les liens Stripe expirent vite)."""
-    s = _stripe()
-    if s is None or account_id.startswith("acct_fake_"):
+    if STRIPE_FAKE_MODE and account_id.startswith("acct_fake_"):
         return f"{SITE_URL}/stripe/fake-onboarding/{account_id}"
+    s = _require_stripe_or_fake()
+    assert s is not None
     link = s.AccountLink.create(
         account=account_id,
         refresh_url=f"{SITE_URL}/espace/pilote/stripe",
@@ -158,7 +181,7 @@ def get_pilot_status(account_id: Optional[str]) -> dict:
     if not account_id:
         return {"charges_enabled": False, "payouts_enabled": False,
                 "details_submitted": False}
-    if account_id.startswith("acct_fake_"):
+    if STRIPE_FAKE_MODE and account_id.startswith("acct_fake_"):
         # En fake mode, on dit que le pilote est OK des qu'il a un compte.
         return {"charges_enabled": True, "payouts_enabled": True,
                 "details_submitted": True}
@@ -194,7 +217,7 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
     fait double-clic ou si le navigateur retry la requete, Stripe retourne
     LA MEME session au lieu d'en creer une 2eme. Anti double-debit.
     """
-    s = _stripe()
+    s = _require_stripe_or_fake()
     success_url = f"{SITE_URL}/reservations/{booking_id}?payment=success"
     cancel_url  = f"{SITE_URL}/reservations/{booking_id}?payment=cancel"
     if s is None:
@@ -229,15 +252,46 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
 
 def get_payment_intent_from_session(session_id: str) -> Optional[str]:
     """Recupere l'ID PaymentIntent associé a une Checkout Session."""
-    s = _stripe()
-    if s is None or session_id.startswith("cs_fake_"):
+    if STRIPE_FAKE_MODE and session_id.startswith("cs_fake_"):
         return f"pi_fake_{session_id.split('_')[2]}" if "_" in session_id else None
+    s = _stripe()
+    if s is None:
+        return None
     try:
         sess = s.checkout.Session.retrieve(session_id)
         return sess.payment_intent
     except Exception as exc:
         log.error("get_payment_intent_from_session(%s) -> %s", session_id, exc)
         return None
+
+
+def expire_checkout_session(session_id: str) -> bool:
+    """Ferme une session Checkout encore ouverte avant d'annuler un booking.
+
+    Cela evite qu'un client paie via un ancien onglet apres que la reservation
+    a ete annulee. Un echec est fail-closed : l'annulation reste en attente.
+    """
+    if not session_id:
+        return True
+    if STRIPE_FAKE_MODE and session_id.startswith("cs_fake_"):
+        return True
+    s = _stripe()
+    if s is None:
+        log.error("expire_checkout_session refuse: Stripe indisponible")
+        return False
+    try:
+        session = s.checkout.Session.retrieve(session_id)
+        status = getattr(session, "status", None)
+        if status == "expired":
+            return True
+        if status == "complete":
+            log.warning("session Checkout deja complete: %s", session_id)
+            return False
+        s.checkout.Session.expire(session_id)
+        return True
+    except Exception as exc:
+        log.error("expire_checkout_session(%s) -> %s", session_id, exc)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -257,9 +311,12 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
     la liberation normale ("release") du dedommagement d'annulation tardive
     ("cancel-compensation") : montants differents, cles differentes.
     """
+    if STRIPE_FAKE_MODE:
+        return f"tr_fake_{booking_id}_{kind}_{int(time.time())}"
     s = _stripe()
     if s is None:
-        return f"tr_fake_{booking_id}_{kind}_{int(time.time())}"
+        log.error("release_to_pilot refuse: Stripe indisponible")
+        return None
     amount_cents = int(round(float(pilot_amount) * 100))
     try:
         tr = s.Transfer.create(
@@ -291,9 +348,12 @@ def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
     Stripe les confonde. Un meme refund (meme PI, meme montant) reste
     idempotent.
     """
+    if STRIPE_FAKE_MODE:
+        return True
     s = _stripe()
     if s is None:
-        return True
+        log.error("refund_payment refuse: Stripe indisponible")
+        return False
     try:
         amt_cents = int(round(float(amount) * 100)) if amount is not None else None
         kwargs = {
@@ -325,14 +385,17 @@ def parse_webhook(payload: bytes, signature: str):
     eviter qu'un attaquant POST des events falsifies marquant des
     bookings comme `funded`.
     """
-    s = _stripe()
-    if s is None:
+    if STRIPE_FAKE_MODE:
         # Mode fake : on accepte le JSON brut (utile pour scripts/tests)
         import json
         try:
             return json.loads(payload)
         except Exception:
             return None
+    s = _stripe()
+    if s is None:
+        log.error("REFUSE webhook : Stripe n'est pas configure ou le SDK manque")
+        return None
     if not STRIPE_WEBHOOK_SECRET:
         log.error(
             "REFUSE webhook : STRIPE_WEBHOOK_SECRET vide en mode Stripe live/test. "

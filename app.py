@@ -256,7 +256,7 @@ def _inject_globals():
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
         # Versements auto Connect actifs ? Sinon : « paiement en direct » (UI masquee)
-        "stripe_connect_enabled": config.STRIPE_CONNECT_ENABLED,
+        "stripe_connect_enabled": config.STRIPE_CONNECT_ENABLED and payments.is_available(),
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
@@ -444,7 +444,10 @@ def _map_center(geo: dict) -> dict:
 def set_lang(code):
     if code not in i18n.SUPPORTED:
         abort(404)
-    next_url = request.args.get("next") or request.referrer or url_for("index")
+    next_url = security.safe_next(
+        request.args.get("next") or request.referrer,
+        fallback=url_for("index"),
+    )
     resp = make_response(redirect(next_url))
     resp.set_cookie(
         i18n.COOKIE, code,
@@ -1061,8 +1064,8 @@ def register():
         # AubeMail de quelqu'un d'autre (qui n'a pas encore de profil AubePilot)
         # et se retrouve connecte sous son nom. On EXIGE donc que le mot de
         # passe AubeMail fourni soit valide. (No-op en dev/macOS : pas de PAM.)
-        if auth.password_managed_by_aubemail(username) \
-                and not auth.authenticate(username, password):
+        existing_aubemail = auth.password_managed_by_aubemail(username)
+        if existing_aubemail and not auth.authenticate(username, password):
             flash(
                 "Ce compte AubeMail existe déjà. Connectez-vous avec son mot "
                 "de passe AubeMail pour compléter votre profil AubePilot.",
@@ -1070,14 +1073,17 @@ def register():
             )
             return render_template("register.html")
 
-        # CHAQUE inscription cree d'abord un VRAI compte AubeMail : c'est
+        # Une nouvelle identite cree d'abord un VRAI compte AubeMail : c'est
         # l'identite et le mot de passe partages de tout l'ecosysteme Aube (le
         # nom saisi devient le display_name / nom public). create_user detecte
         # ensuite le compte systeme et ne garde pas de mot de passe local. Si
         # AubeMail refuse (mdp < 8 car., trop faible, = identifiant) ou est
         # injoignable, on n'ouvre PAS de compte AubePilot orphelin. Inerte si
         # AUBE_INTERNAL_API_KEY absente (dev/tests) -> comportement local inchange.
-        if not config.ALLOW_LOCAL_ACCOUNTS:
+        # Un compte PAM/AubeMail deja existant et authentifie ci-dessus ne doit
+        # surtout pas etre reprovisionne : cela pourrait echouer ou modifier un
+        # vrai compte alors que seule la creation du profil AubePilot est voulue.
+        if not config.ALLOW_LOCAL_ACCOUNTS and not existing_aubemail:
             import aubemail_client
             _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
             prov = aubemail_client.provision_account(
@@ -1105,6 +1111,10 @@ def register():
                 username=username, password=password, full_name=full_name,
                 role=role, country=country, city=city, phone=phone, lat=lat, lng=lng,
                 kind=kind,
+                # En prod le mot de passe vient du compte AubeMail existant ou
+                # provisionne juste au-dessus. Ne jamais en conserver une copie
+                # locale, meme si la propagation PAM prend quelques secondes.
+                external_password=not config.ALLOW_LOCAL_ACCOUNTS,
             )
             if role in ("pilot", "both") and kind in config.ORG_KINDS:
                 # Une ORGANISATION (entreprise, ecole, boutique) s'affiche sous
@@ -2183,6 +2193,9 @@ def mission_close(mission_id):
     m = db.fetchone("SELECT client_user_id, status FROM missions WHERE id=?", (mission_id,))
     if not m or m["client_user_id"] != g.user["id"]:
         abort(403)
+    if m["status"] != "open":
+        flash("Seule une mission encore ouverte peut être annulée.", "error")
+        return redirect(url_for("mission_detail", mission_id=mission_id))
     services.update_mission_status(mission_id, "cancelled")
     flash("Mission annulee.", "info")
     return redirect(url_for("mission_detail", mission_id=mission_id))
@@ -2383,14 +2396,21 @@ def booking_review(booking_id):
         abort(404)
     if g.user["id"] not in (booking["client_user_id"], booking["pilot_user_id"]):
         abort(403)
+    if booking["status"] != "completed":
+        flash("Un avis ne peut être publié qu'après la mission terminée.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
     target = booking["pilot_user_id"] if g.user["id"] == booking["client_user_id"] else booking["client_user_id"]
-    services.add_review(
-        booking_id=booking_id,
-        author_user_id=g.user["id"],
-        target_user_id=target,
-        rating=_to_int(request.form.get("rating"), 5) or 5,
-        comment=(request.form.get("comment") or "").strip(),
-    )
+    try:
+        services.add_review(
+            booking_id=booking_id,
+            author_user_id=g.user["id"],
+            target_user_id=target,
+            rating=_to_int(request.form.get("rating"), 5) or 5,
+            comment=(request.form.get("comment") or "").strip(),
+        )
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
     flash("Merci pour votre avis.", "success")
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
@@ -2673,6 +2693,13 @@ def booking_pay(booking_id):
     if booking["status"] != "pending_payment":
         flash(f"Cette réservation n'est plus à payer (statut : {booking['status']}).", "info")
         return redirect(url_for("booking_detail", booking_id=booking_id))
+    if not payments.is_available():
+        flash(
+            "Le paiement en ligne est temporairement indisponible. "
+            "Aucun débit n'a été effectué.",
+            "error",
+        )
+        return redirect(url_for("booking_detail", booking_id=booking_id))
 
     pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])
     if not pilot_acc:
@@ -2697,13 +2724,17 @@ def booking_pay(booking_id):
                         booking_id, exc)
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
-    session_id, url = payments.create_checkout_session(
-        booking_id=booking["id"],
-        amount=booking["agreed_price"],
-        currency=booking["currency"],
-        mission_title=booking.get("mission_title", "Mission AubePilot"),
-        client_email=g.user["email"],
-    )
+    try:
+        session_id, url = payments.create_checkout_session(
+            booking_id=booking["id"],
+            amount=booking["agreed_price"],
+            currency=booking["currency"],
+            mission_title=booking.get("mission_title", "Mission AubePilot"),
+            client_email=g.user["email"],
+        )
+    except payments.PaymentUnavailableError:
+        flash("Le paiement en ligne est indisponible. Aucun débit n'a été effectué.", "error")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
     services.attach_payment_session(booking_id, session_id)
     return redirect(url)
 
@@ -2719,11 +2750,14 @@ def stripe_fake_checkout(booking_id):
         abort(403)
     if request.method == "POST":
         # Simule un paiement réussi
-        services.mark_booking_funded(
+        changed = services.mark_booking_funded(
             booking_id,
             payment_intent_id=f"pi_fake_{booking_id}",
         )
-        flash("Paiement simulé reçu. Mission financée.", "success")
+        if changed:
+            flash("Paiement simulé reçu. Mission financée.", "success")
+        else:
+            flash("Cette réservation n'est plus payable.", "error")
         return redirect(url_for("booking_detail", booking_id=booking_id))
     return render_template("stripe_fake_checkout.html", booking=booking)
 
@@ -2735,6 +2769,8 @@ def stripe_webhook():
     # pour qu'un tiers ne puisse pas forger un evenement non signe marquant
     # une reservation comme 'funded' sans paiement reel.
     if payments.is_fake():
+        abort(404)
+    if not payments.is_available():
         abort(404)
     payload = request.data
     signature = request.headers.get("Stripe-Signature", "")
@@ -2749,7 +2785,38 @@ def stripe_webhook():
         bid = obj.get("metadata", {}).get("booking_id") if isinstance(obj, dict) else obj.metadata.get("booking_id")
         pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
         if bid:
-            services.mark_booking_funded(int(bid), payment_intent_id=str(pi_id) if pi_id else None)
+            try:
+                booking = services.get_booking(int(bid))
+            except (TypeError, ValueError):
+                booking = None
+            session_id = obj.get("id") if isinstance(obj, dict) else obj.id
+            payment_status = obj.get("payment_status") if isinstance(obj, dict) else obj.payment_status
+            amount_total = obj.get("amount_total") if isinstance(obj, dict) else obj.amount_total
+            currency = obj.get("currency") if isinstance(obj, dict) else obj.currency
+            expected_cents = int(round(float(booking["agreed_price"]) * 100)) if booking else None
+            valid = bool(
+                booking
+                and booking.get("stripe_session_id") == str(session_id)
+                and payment_status == "paid"
+                and amount_total == expected_cents
+                and str(currency or "").upper() == str(booking["currency"]).upper()
+                and pi_id
+            )
+            if valid:
+                changed = services.mark_booking_funded(int(bid), payment_intent_id=str(pi_id))
+                if not changed:
+                    latest = services.get_booking(int(bid))
+                    # Une annulation a pu prendre son verrou juste avant le
+                    # webhook. Demander un retry Stripe plutot que d'acquitter
+                    # definitivement un paiement reel encore non enregistre.
+                    if (latest and latest["status"] == "pending_payment"
+                            and latest.get("payment_action")):
+                        return ("booking busy", 409)
+            else:
+                log.error(
+                    "webhook checkout ignore: donnees incoherentes booking=%r session=%r",
+                    bid, session_id,
+                )
 
     elif etype == "account.updated":
         obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
@@ -2767,12 +2834,9 @@ def stripe_webhook():
     elif etype == "charge.refunded":
         obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
         pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
-        if pi_id:
-            db.execute(
-                "UPDATE bookings SET status='refunded', refunded_at=datetime('now') "
-                "WHERE stripe_payment_intent_id=?",
-                (str(pi_id),),
-            )
+        fully_refunded = bool(obj.get("refunded")) if isinstance(obj, dict) else bool(obj.refunded)
+        if pi_id and fully_refunded:
+            services.mark_booking_fully_refunded(str(pi_id))
     return ("ok", 200)
 
 
@@ -2804,9 +2868,10 @@ def booking_dispute_open(booking_id):
 @app.route("/admin/reservations/<int:booking_id>/refund", methods=["POST"])
 @auth.admin_required
 def admin_refund(booking_id):
-    amount = _to_float(request.form.get("amount"))
-    if services.refund_booking(booking_id, amount=amount, admin_user=g.user["id"]):
-        flash("Remboursement effectué.", "success")
+    if (request.form.get("amount") or "").strip():
+        flash("Les remboursements partiels sont désactivés : utilisez le remboursement intégral.", "error")
+    elif services.refund_booking(booking_id, amount=None, admin_user=g.user["id"]):
+        flash("Remboursement intégral effectué.", "success")
     else:
         flash("Refund échoué.", "error")
     return redirect(url_for("booking_detail", booking_id=booking_id))

@@ -50,9 +50,9 @@ SESSION_LIFETIME_DAYS = 30
 EMAIL_DOMAIN = "aubemail.com"
 
 # Inscription mondiale : par defaut, AubePilot est OUVERT a tout pilote, ou
-# qu'il soit — l'inscription cree directement le compte local (mot de passe
-# gere par AubePilot). Mettre AUBEPILOT_REQUIRE_AUBEMAIL=1 pour exiger un
-# compte AubeMail/PAM prealable (mode ecosysteme strict, ancien comportement).
+# qu'il soit — la route provisionne son identite centrale AubeMail avant le
+# profil local. Mettre AUBEPILOT_REQUIRE_AUBEMAIL=1 pour exiger un compte
+# AubeMail/PAM prealable (mode ecosysteme strict).
 REQUIRE_AUBEMAIL = os.environ.get(
     "AUBEPILOT_REQUIRE_AUBEMAIL", "0",
 ).strip().lower() in ("1", "true", "yes", "on")
@@ -651,10 +651,11 @@ LICENCE_TITLES_BY_AUTHORITY = {
 }
 
 # --- Stripe Connect ---------------------------------------------------------
-# Si STRIPE_SECRET_KEY est vide, l'app fonctionne en "fake mode" :
-# l'onboarding genere un account_id "acct_fake_<uid>", le paiement passe
-# par une page interne qui simule la reussite. Permet de demoler le flow
-# de bout en bout sans clé Stripe. En prod, poser ces 3 variables d'env :
+# Le mode de paiement simule n'est autorise que sur localhost, ou lorsqu'il est
+# explicitement active avec AUBEPILOT_ALLOW_FAKE_PAYMENTS=1. Une installation
+# publique sans cle Stripe reste disponible, mais les actions financieres sont
+# desactivees (fail closed) : aucun paiement ne peut etre marque comme effectue.
+# En prod, poser ces 3 variables d'env :
 #   STRIPE_SECRET_KEY=sk_live_...
 #   STRIPE_PUBLISHABLE_KEY=pk_live_...
 #   STRIPE_WEBHOOK_SECRET=whsec_...
@@ -666,7 +667,20 @@ STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 STRIPE_LIVE_MODE       = STRIPE_SECRET_KEY.startswith("sk_live_")
-STRIPE_FAKE_MODE       = not STRIPE_SECRET_KEY  # mode demo sans cle
+_ALLOW_FAKE_PAYMENTS_RAW = os.environ.get("AUBEPILOT_ALLOW_FAKE_PAYMENTS")
+if _ALLOW_FAKE_PAYMENTS_RAW is None:
+    _site_url_lower = SITE_URL.strip().lower()
+    ALLOW_FAKE_PAYMENTS = (
+        _site_url_lower.startswith("http://localhost")
+        or _site_url_lower.startswith("http://127.0.0.1")
+        or _site_url_lower.startswith("http://[::1]")
+    )
+else:
+    ALLOW_FAKE_PAYMENTS = _ALLOW_FAKE_PAYMENTS_RAW.strip().lower() in (
+        "1", "true", "yes", "on",
+    )
+STRIPE_FAKE_MODE = not STRIPE_SECRET_KEY and ALLOW_FAKE_PAYMENTS
+STRIPE_PAYMENTS_ENABLED = bool(STRIPE_SECRET_KEY) or STRIPE_FAKE_MODE
 
 # Versements automatiques via Stripe Connect. Tant que Connect n'est pas active
 # en mode reel sur le compte plateforme, on masque l'onboarding pilote et on

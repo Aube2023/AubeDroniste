@@ -109,6 +109,40 @@ def test_refund_booking(funded_booking):
     assert services.get_booking(funded_booking)["status"] == "refunded"
 
 
+def test_partial_admin_refund_is_rejected_without_changing_state(funded_booking):
+    import services
+    assert services.refund_booking(funded_booking, amount=10) is False
+    assert services.get_booking(funded_booking)["status"] == "funded"
+
+
+def test_financial_claim_blocks_second_action(funded_booking, client_user):
+    import db
+    import services
+    db.execute(
+        "UPDATE bookings SET payment_action='refund', "
+        "payment_action_started_at=datetime('now') WHERE id=?",
+        (funded_booking,),
+    )
+    assert services.confirm_completion(funded_booking, client_user["id"]) is False
+    assert services.refund_booking(funded_booking) is False
+    assert services.get_booking(funded_booking)["status"] == "funded"
+
+
+def test_review_requires_completed_booking(funded_booking, client_user, pilot_user):
+    import services
+    with pytest.raises(ValueError):
+        services.add_review(
+            booking_id=funded_booking, author_user_id=client_user["id"],
+            target_user_id=pilot_user["id"], rating=5,
+        )
+    assert services.confirm_completion(funded_booking, client_user["id"])
+    services.add_review(
+        booking_id=funded_booking, author_user_id=client_user["id"],
+        target_user_id=pilot_user["id"], rating=5,
+    )
+    assert services.reviewable_booking_for(client_user["id"], pilot_user["id"])["id"] == funded_booking
+
+
 def test_confirm_completion_without_stripe_account_returns_false(
         app_ctx, open_mission, pending_bid, client_user, pilot_user):
     """Si le pilote n'a pas de compte Stripe, on ne libere rien (pas de perte)."""

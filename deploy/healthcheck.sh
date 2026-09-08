@@ -111,17 +111,23 @@ if [[ -f "$ENV_FILE" ]]; then
         check_ok "Env file : AUBEPILOT_SECRET défini"
     fi
     if grep -q "^STRIPE_SECRET_KEY=$" "$ENV_FILE" 2>/dev/null; then
-        check_warn "Stripe : pas de clé (mode FAKE actif)"
+        check_warn "Stripe : pas de clé (paiements désactivés, fail closed)"
     elif grep -q "^STRIPE_SECRET_KEY=sk_live_" "$ENV_FILE" 2>/dev/null; then
         check_ok "Stripe : LIVE configuré"
     elif grep -q "^STRIPE_SECRET_KEY=sk_test_" "$ENV_FILE" 2>/dev/null; then
         check_warn "Stripe : TEST configuré (pas LIVE)"
     fi
+    if grep -Eq "^AUBEPILOT_ALLOW_FAKE_PAYMENTS=(1|true|yes|on)$" "$ENV_FILE" 2>/dev/null; then
+        check_fail "Paiements simulés explicitement activés sur la production"
+    fi
+    if grep -q "^AUBE_INTERNAL_API_KEY=$" "$ENV_FILE" 2>/dev/null; then
+        check_warn "AubeMail : clé interne absente (nouveaux comptes indisponibles)"
+    fi
 fi
 
 # 10. .dev_passwords absent (jamais sur prod)
-if [[ -f "$INSTALL_DIR/.dev_passwords" ]]; then
-    check_fail ".dev_passwords présent sur le serveur — supprimer immédiatement"
+if [[ -f "$INSTALL_DIR/.dev_passwords" || -f "$DATA_DIR/.dev_passwords" ]]; then
+    check_fail ".dev_passwords présent — préserver les comptes puis planifier leur migration AubeMail (ne pas supprimer à chaud)"
 else
     check_ok ".dev_passwords absent (OK)"
 fi
@@ -137,6 +143,16 @@ fi
 if [[ -f "$DATA_DIR/aubepilot.db" ]]; then
     NB=$(sqlite3 "$DATA_DIR/aubepilot.db" "SELECT COUNT(*) FROM users" 2>/dev/null || echo "?")
     check_ok "DB : $DATA_DIR/aubepilot.db ($NB users)"
+    STUCK=$(sqlite3 "$DATA_DIR/aubepilot.db" \
+        "SELECT COUNT(*) FROM bookings WHERE payment_action IS NOT NULL AND datetime(payment_action_started_at) < datetime('now','-15 minutes')" \
+        2>/dev/null || echo "?")
+    if [[ "$STUCK" =~ ^[0-9]+$ ]] && (( STUCK > 0 )); then
+        check_fail "Finance : $STUCK réservation(s) nécessitent une réconciliation manuelle"
+    elif [[ "$STUCK" == "0" ]]; then
+        check_ok "Finance : aucune action Stripe bloquée"
+    else
+        check_warn "Finance : impossible de vérifier les actions Stripe en attente"
+    fi
 else
     check_fail "DB : $DATA_DIR/aubepilot.db manquant"
 fi

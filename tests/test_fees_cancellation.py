@@ -208,6 +208,19 @@ def test_client_cancel_unpaid_booking_no_amounts(app_ctx, open_mission, pending_
     assert services.get_booking(booking_id)["status"] == "cancelled"
 
 
+def test_client_cancel_refund_failure_preserves_booking(
+    funded_booking, client_user, monkeypatch
+):
+    import payments
+    import services
+    monkeypatch.setattr(payments, "refund_payment", lambda *args, **kwargs: False)
+    res = services.cancel_booking_by_client(funded_booking, client_user["id"])
+    assert res["ok"] is False
+    booking = services.get_booking(funded_booking)
+    assert booking["status"] == "funded"
+    assert booking["payment_action"] is None
+
+
 # ---------------------------------------------------------------------------
 # Desistement pilote
 # ---------------------------------------------------------------------------
@@ -227,6 +240,19 @@ def test_pilot_cancel_refunds_client_and_reopens_mission(funded_booking, pilot_u
     assert bids[b["bid_id"]]["status"] == "withdrawn"
     # plus de relation financee -> identite du pilote de nouveau masquee
     assert services.has_funded_relation(client_user["id"], pilot_user["id"]) is False
+
+
+def test_pilot_cancel_refund_failure_preserves_booking(
+    funded_booking, pilot_user, monkeypatch
+):
+    import payments
+    import services
+    monkeypatch.setattr(payments, "refund_payment", lambda *args, **kwargs: False)
+    res = services.cancel_booking_by_pilot(funded_booking, pilot_user["id"])
+    assert res["ok"] is False
+    booking = services.get_booking(funded_booking)
+    assert booking["status"] == "funded"
+    assert booking["payment_action"] is None
 
 
 def test_pilot_cancel_refused_for_client_or_closed(funded_booking, client_user, pilot_user):

@@ -11,7 +11,7 @@
   <div class="meta">
     {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
     <br>
-    Dépôt par {{ mission.client_name }} · {{ mission.created_at[:16] }}
+    Dépôt par {% if current_user and current_user.id == mission.client_user_id %}{{ mission.client_name }}{% else %}{{ mask_name(mission.client_name) }}{% endif %} · {{ mission.created_at[:16] }}
   </div>
   <p class="desc">{{ mission.description }}</p>
 

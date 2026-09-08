@@ -209,6 +209,12 @@ CREATE TABLE IF NOT EXISTS bookings (
     stripe_payment_intent_id TEXT,
     stripe_session_id        TEXT,
     stripe_transfer_id       TEXT,
+    -- Verrou logique inter-workers autour d'un appel Stripe irreversible.
+    -- NULL au repos ; 'cancel_client', 'cancel_pilot', 'complete' ou 'refund'
+    -- pendant l'operation. Un crash laisse volontairement le booking bloque
+    -- pour reconciliation manuelle plutot que de risquer un double mouvement.
+    payment_action           TEXT,
+    payment_action_started_at TEXT,
     paid_at                  TEXT,    -- date de capture du paiement
     released_at              TEXT,    -- date de transfer au pilote
     refunded_at              TEXT,

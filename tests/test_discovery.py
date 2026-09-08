@@ -173,6 +173,29 @@ def test_missions_search_near_sorts_by_distance(client, make_user, fake_geocoder
     assert ids.index(m_close) < ids.index(m_far)
 
 
+def test_geo_sort_happens_before_limit(app_ctx, make_user):
+    import db
+    import services
+    owner = make_user("geo_limit_owner", role="client")
+    far = make_user("geo_limit_far", role="pilot", lat=48.8566, lng=2.3522)
+    close = make_user("geo_limit_close", role="pilot", lat=45.501, lng=-73.568)
+    # Avant le correctif, ce pilote verifie gagnait le LIMIT SQL avant le tri distance.
+    db.execute("UPDATE users SET is_verified=1 WHERE id=?", (far["id"],))
+    pilots = services.search_pilots(lat=45.50, lng=-73.57, limit=1)
+    assert pilots[0]["id"] == close["id"]
+
+    services.create_mission(
+        owner["id"], title="Urgente loin", description="x", mission_type="photo",
+        country="France", lat=48.8566, lng=2.3522, is_urgent=True,
+    )
+    m_close = services.create_mission(
+        owner["id"], title="Proche", description="x", mission_type="photo",
+        country="Canada", lat=45.501, lng=-73.568,
+    )
+    missions = services.search_missions(lat=45.50, lng=-73.57, limit=1)
+    assert missions[0]["id"] == m_close
+
+
 def test_search_radius_is_bounded(client, fake_geocoder):
     r = client.get("/api/pilotes?near=75011&radius_km=99999")
     assert r.status_code == 200

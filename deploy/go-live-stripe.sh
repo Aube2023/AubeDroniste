@@ -77,6 +77,8 @@ set_var() {
 set_var "STRIPE_SECRET_KEY"      "$SK"
 set_var "STRIPE_PUBLISHABLE_KEY" "$PK"
 set_var "STRIPE_WEBHOOK_SECRET"  "$WH"
+set_var "AUBEPILOT_ALLOW_FAKE_PAYMENTS" "0"
+set_var "STRIPE_CONNECT_ENABLED" "1"
 chmod 600 "$ENV_FILE"
 ok "Clés Stripe LIVE écrites dans $ENV_FILE (permissions 600)."
 

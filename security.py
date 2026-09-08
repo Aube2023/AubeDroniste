@@ -74,10 +74,15 @@ _lock = threading.Lock()
 
 
 def _client_ip() -> str:
-    fwd = request.headers.get("X-Forwarded-For", "")
-    if fwd:
-        return fwd.split(",")[0].strip()
-    return request.remote_addr or "0.0.0.0"
+    remote = request.remote_addr or "0.0.0.0"
+    # Nginx parle a Gunicorn depuis loopback et remplace X-Real-IP par
+    # $remote_addr. Ne jamais croire X-Forwarded-For directement : un client
+    # peut en choisir la premiere valeur et contourner le rate limiting.
+    if remote in ("127.0.0.1", "::1"):
+        real = request.headers.get("X-Real-IP", "").strip()
+        if real:
+            return real
+    return remote
 
 
 def rate_limit(per_minute: int = 10, per_hour: int = 100, key: Optional[str] = None):
@@ -230,4 +235,14 @@ def assert_production_ready(app):
             "SITE_URL=%s n'est pas https — HSTS desactive et cookies non secure. "
             "Mets SITE_URL=https://pilot.aubeetoilee.com en prod.",
             site_url,
+        )
+
+    # Une URL publique ne doit jamais accepter le checkout interne qui marque
+    # un booking paye sans transaction Stripe. Le mode fake reste disponible
+    # en local/tests uniquement.
+    import config
+    if config.STRIPE_FAKE_MODE:
+        raise RuntimeError(
+            "Paiements simules interdits en production. Configure Stripe ou "
+            "AUBEPILOT_ALLOW_FAKE_PAYMENTS=0 (les paiements seront desactives)."
         )

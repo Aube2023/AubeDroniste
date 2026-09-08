@@ -96,6 +96,14 @@
 
 {% if booking.status == 'pending_payment' and is_client %}
 <div class="card" style="border-left: 3px solid var(--amber);">
+  {% if stripe_mode == 'DISABLED' %}
+  <span class="eyebrow">Paiement indisponible</span>
+  <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Votre réservation est conservée</h2>
+  <p class="muted" style="max-width: 60ch;">
+    Le paiement en ligne est temporairement indisponible. Aucun débit ne peut
+    être simulé ou enregistré tant que le service sécurisé n'est pas configuré.
+  </p>
+  {% else %}
   <span class="eyebrow">Dernière étape</span>
   <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Réglez la mission pour la confirmer</h2>
   <p class="muted" style="max-width: 60ch;">
@@ -124,6 +132,7 @@
       {% if stripe_mode == 'TEST' %} · mode test{% elif stripe_mode == 'FAKE' %} · mode démo{% endif %}
     </span>
   </div>
+  {% endif %}
 </div>
 {% endif %}
 

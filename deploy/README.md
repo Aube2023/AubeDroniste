@@ -39,14 +39,17 @@ sudo DOMAIN=staging.aubeetoilee.com BRANCH=develop bash deploy/deploy.sh
 
 ### Après la première installation
 
-L'env file `/etc/aubepilot.env` est créé avec les SMTP et Stripe **vides**.
-L'app démarre déjà (mode FAKE Stripe + emails dumpés sur disque), mais
+L'env file `/etc/aubepilot.env` est créé avec AubeMail, SMTP et Stripe **vides**.
+L'app démarre, mais les paiements sont désactivés (aucun paiement simulé sur
+une URL publique). Il faut remplir :
 tu dois remplir :
 
 ```bash
 sudo nano /etc/aubepilot.env
 # remplir SMTP_HOST, SMTP_USER, SMTP_PASSWORD
+# remplir AUBE_INTERNAL_API_KEY pour provisionner les nouveaux comptes AubeMail
 # remplir STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+# passer STRIPE_CONNECT_ENABLED=1 quand Connect est réellement activé
 sudo systemctl restart aubepilot
 ```
 
@@ -56,7 +59,8 @@ sudo systemctl restart aubepilot
 sudo bash /srv/aubepilot/deploy/update.sh
 ```
 
-Pull, réinstalle deps si requirements.txt a bougé, restart, healthcheck.
+Sauvegarde SQLite cohérente avant migration, pull, réinstalle les dépendances
+si `requirements.txt` a bougé, restart, healthcheck.
 
 ### Vérification
 
@@ -100,6 +104,10 @@ AUBEPILOT_HOST=127.0.0.1
 AUBEPILOT_DATA=/var/lib/aubepilot
 AUBEPILOT_SECRET=<secret long aleatoire>
 SITE_URL=https://pilot.aubeetoilee.com
+AUBE_INTERNAL_API_KEY=<cle server-to-server AubeMail>
+AUBEMAIL_DB_URL=<URL lecture identite, si utilisee>
+AUBEPILOT_REQUIRE_AUBEMAIL=0
+AUBE_ALLOW_LOCAL_ACCOUNTS=0
 
 # SMTP transactionnel
 SMTP_HOST=smtp.aubemail.com
@@ -110,7 +118,9 @@ SMTP_FROM=no-reply@aubeetoilee.com
 SMTP_FROM_NAME=AubePilot
 SMTP_TLS=1
 
-# Stripe Connect (sans cle = mode FAKE pour demo)
+# Stripe Connect (sans cle = paiements desactives en production)
+AUBEPILOT_ALLOW_FAKE_PAYMENTS=0
+STRIPE_CONNECT_ENABLED=1
 STRIPE_SECRET_KEY=sk_live_xxxxxxxx
 STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxx
 STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxx
@@ -185,8 +195,10 @@ Inscrire l'URL dans **AubeStatus** (port 5021) :
 - [ ] Cert Let's Encrypt valide (`curl -I https://pilot.aubeetoilee.com/`)
 - [ ] `FLASK_DEBUG` **non posé** (debug = exécution de code à distance)
 - [ ] User systemd `aube` non-root, `chmod 600 /etc/aubepilot.env`
-- [ ] `.dev_passwords` **n'est pas** sur le serveur (vérifier avec `find /srv/aubepilot -name .dev_passwords`)
+- [ ] `.dev_passwords` **n'est pas** utilisé en production. S'il existe déjà, migrer d'abord les comptes vers AubeMail : ne jamais supprimer ce fichier à chaud au risque de verrouiller de vrais utilisateurs.
 - [ ] PAM activé : `getent passwd <user>` retourne le user AubeMail
+- [ ] `AUBE_INTERNAL_API_KEY` configurée et testée pour les nouvelles inscriptions
+- [ ] `AUBEPILOT_ALLOW_FAKE_PAYMENTS=0`
 - [ ] Stripe LIVE configuré, webhook posé avec son `whsec_...`
 - [ ] `curl -I https://pilot.aubeetoilee.com/` retourne `Strict-Transport-Security`, `X-Frame-Options: DENY`, CSP
 - [ ] `curl -X POST https://pilot.aubeetoilee.com/inscription` retourne **403** (CSRF refusé)

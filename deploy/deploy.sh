@@ -210,7 +210,16 @@ SMTP_FROM=no-reply@aubeetoilee.com
 SMTP_FROM_NAME=AubePilot
 SMTP_TLS=1
 
-# --- Stripe Connect (mode FAKE actif tant que ces 3 sont vides) ---
+# --- Identite AubeMail (obligatoire pour creer de nouveaux comptes) ---
+AUBE_INTERNAL_API_KEY=
+AUBEMAIL_DB_URL=
+AUBEPILOT_REQUIRE_AUBEMAIL=0
+AUBE_ALLOW_LOCAL_ACCOUNTS=0
+
+# --- Stripe Connect ---
+# Sans cle, les paiements sont DESACTIVES (jamais simules sur ce SITE_URL HTTPS).
+AUBEPILOT_ALLOW_FAKE_PAYMENTS=0
+STRIPE_CONNECT_ENABLED=0
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
@@ -220,7 +229,7 @@ AUBEPILOT_AUTO_RELEASE_DAYS=7
 EOF"
     run "chmod 600 \"$ENV_FILE\""
     run "chown root:$APP_USER \"$ENV_FILE\""
-    warn "Édite $ENV_FILE pour remplir SMTP et Stripe, puis relance ce script."
+    warn "Édite $ENV_FILE pour remplir AubeMail, SMTP et Stripe, puis relance ce script."
 else
     ok "$ENV_FILE existe — non modifié."
 fi

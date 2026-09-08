@@ -142,6 +142,10 @@ _ADD_COLUMNS = [
     # Annulation : frais de service retenus par la plateforme + qui a annule.
     ("bookings", "cancellation_service_fee", "REAL NOT NULL DEFAULT 0"),
     ("bookings", "cancelled_by", "TEXT"),
+    # Verrou metier additif pour serialiser les actions financieres Stripe
+    # entre plusieurs workers sans modifier les comptes ou etats existants.
+    ("bookings", "payment_action", "TEXT"),
+    ("bookings", "payment_action_started_at", "TEXT"),
     # Revue des brevets document par document (cf. services.review_certification).
     ("pilot_certifications", "review_status", "TEXT NOT NULL DEFAULT 'pending'"),
     ("pilot_certifications", "review_note", "TEXT"),

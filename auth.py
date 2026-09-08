@@ -250,10 +250,32 @@ def set_dev_password(username: str, password: str):
     _dev_save(username, password)
 
 
+def aubemail_identity_exists(username: str) -> bool:
+    """Detecte une identite centrale sans jamais lire ni modifier son secret."""
+    if sys.platform.startswith("linux") and system_user_exists(username):
+        return True
+    if not AUBEMAIL_DB_URL or not username:
+        return False
+    try:
+        import psycopg2
+        conn = psycopg2.connect(AUBEMAIL_DB_URL, connect_timeout=5)
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT 1 FROM aubemail_users "
+                "WHERE LOWER(username) = %s OR LOWER(email) = %s LIMIT 1",
+                (username.lower(), normalize_email(username, None).lower()),
+            )
+            return cur.fetchone() is not None
+        finally:
+            conn.close()
+    except Exception:
+        return False
+
+
 def password_managed_by_aubemail(username: str) -> bool:
-    """True si le mot de passe est celui du compte systeme PAM (AubeMail) :
-    il ne se change pas ici, mais sur AubeMail."""
-    return sys.platform.startswith("linux") and system_user_exists(username)
+    """True si le mot de passe appartient a l'identite centrale AubeMail."""
+    return aubemail_identity_exists(username)
 
 
 def change_password(username: str, current: str, new: str):
@@ -428,11 +450,13 @@ def create_user(*, username: str, password: str, full_name: str,
                 role: str = "client", country: Optional[str] = None,
                 city: Optional[str] = None, phone: Optional[str] = None,
                 lat: Optional[float] = None, lng: Optional[float] = None,
-                send_welcome_email: bool = True, kind: str = "pro") -> int:
-    """Cree le profil AubePilot local. En prod Linux, exige que le compte
-    AubeMail (= compte systeme PAM) existe au prealable — l'inscription au
-    sens credentiel se fait sur AubeMail, pas ici. Si le compte systeme est
-    absent, leve `AubeMailRequiredError`.
+                send_welcome_email: bool = True, kind: str = "pro",
+                external_password: bool = False) -> int:
+    """Cree le profil AubePilot local.
+
+    `external_password=True` signifie que la route a authentifie ou
+    provisionne l'identite AubeMail : aucune copie locale du mot de passe
+    n'est alors creee, meme pendant un delai de propagation PAM.
     """
     username = username.lower().strip()
     # GARDE-FOU CENTRAL : l'identifiant devient un compte systeme Linux ET une
@@ -448,7 +472,7 @@ def create_user(*, username: str, password: str, full_name: str,
     # AubeMail prealable que si REQUIRE_AUBEMAIL est explicitement active.
     on_linux = sys.platform.startswith("linux")
     has_pam_account = on_linux and system_user_exists(username)
-    if on_linux and not has_pam_account and REQUIRE_AUBEMAIL:
+    if on_linux and not has_pam_account and REQUIRE_AUBEMAIL and not external_password:
         raise AubeMailRequiredError(username)
     email = normalize_email(username, None)
     cur = db.execute(
@@ -461,7 +485,7 @@ def create_user(*, username: str, password: str, full_name: str,
     # mdp (prod Linux avec compte AubeMail — on ne touche jamais /etc/shadow).
     # Un pilote etranger inscrit en direct (pas de compte PAM) obtient donc un
     # mdp local et peut se connecter via le fallback dev de authenticate().
-    if not has_pam_account:
+    if not has_pam_account and not external_password:
         set_dev_password(username, password)
     if role in ("pilot", "both"):
         from config import PROFILE_KIND_CODES

@@ -12,6 +12,8 @@
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-/srv/aubepilot}"
+DATA_DIR="${DATA_DIR:-/var/lib/aubepilot}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/aubepilot}"
 APP_USER="${APP_USER:-aube}"
 SERVICE_NAME="aubepilot"
 DOMAIN="${DOMAIN:-pilot.aubeetoilee.com}"
@@ -35,6 +37,17 @@ if [[ "$BEFORE" == "$AFTER" ]]; then
 fi
 
 ok "Pull OK : $BEFORE → $AFTER"
+
+# Snapshot coherent AVANT que le nouveau code demarre ses migrations additives.
+# `sqlite3 .backup` reste sûr meme si l'ancienne version sert encore du trafic.
+if [[ -f "$DATA_DIR/aubepilot.db" ]]; then
+    mkdir -p "$BACKUP_DIR"
+    SNAPSHOT="$BACKUP_DIR/pre-update-$(date +%Y%m%d%H%M%S)-${BEFORE:0:7}.db"
+    sqlite3 "$DATA_DIR/aubepilot.db" ".backup '$SNAPSHOT'"
+    chmod 600 "$SNAPSHOT"
+    chown "$APP_USER:$APP_USER" "$SNAPSHOT"
+    ok "Sauvegarde pré-migration : $SNAPSHOT"
+fi
 
 # Si requirements.txt a bougé, on réinstalle
 if sudo -u "$APP_USER" git -C "$INSTALL_DIR" diff --name-only "$BEFORE" "$AFTER" | grep -q "^requirements.txt$"; then

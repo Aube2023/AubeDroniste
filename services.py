@@ -7,19 +7,23 @@ converti) pour rester serialisables JSON.
 import json
 import os
 import logging
+import math
+import re
+from datetime import datetime
 from typing import Iterable, Optional
-
-log = logging.getLogger("aubepilot.services")
 
 import db
 from config import (
     BID_STATUS,
+    CURRENCIES,
     ORG_KINDS,
     BOOKING_STATUS,
     DEFAULT_CURRENCY,
     DEFAULT_SEARCH_RADIUS_KM,
     MAX_SEARCH_RADIUS_KM,
     MISSION_STATUS,
+    MISSION_TYPES,
+    MESSAGE_BANNED_PATTERNS,
     CANCELLATION_GRACE_HOURS,
     CANCELLATION_SERVICE_FEE_CAP,
     CANCELLATION_SERVICE_FEE_PCT,
@@ -27,6 +31,8 @@ from config import (
     PLATFORM_FEE_TIERS,
     PROFILE_KIND_CODES,
 )
+
+log = logging.getLogger("aubepilot.services")
 
 
 def _csv(values: Optional[Iterable[str]]) -> Optional[str]:
@@ -659,8 +665,12 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         # filtre note minimum directement en SQL (LEFT JOIN garantit 0 si pas de reviews)
         q.append("AND COALESCE(r.avg_rating, 0.0) >= ?")
         args.append(float(min_rating))
-    q.append("ORDER BY u.is_verified DESC, p.is_available DESC LIMIT ?")
-    args.append(limit)
+    q.append("ORDER BY u.is_verified DESC, p.is_available DESC")
+    # La distance est calculee en Python. Avec des coordonnees, limiter en SQL
+    # avant ce tri pouvait eliminer les pilotes les plus proches.
+    if lat is None or lng is None:
+        q.append("LIMIT ?")
+        args.append(limit)
     rows = [dict(r) for r in db.fetchall(" ".join(q), args)]
     radius = max(1, min(radius_km, MAX_SEARCH_RADIUS_KM))
     enriched = []
@@ -675,6 +685,8 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                 continue
         else:
             r["distance_km"] = None
+            if strict_radius and lat is not None and lng is not None:
+                continue
         # rating est deja dans r["rating_avg"] / r["rating_count"] — on
         # construit l'objet attendu par les callers.
         r["rating"] = {
@@ -686,7 +698,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         enriched.append(r)
     if lat is not None and lng is not None:
         enriched.sort(key=lambda x: (x.get("distance_km") or 1e9))
-    return enriched
+    return enriched[:limit]
 
 
 # ---------------------------------------------------------------------------
@@ -694,6 +706,43 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
 # ---------------------------------------------------------------------------
 
 def create_mission(client_user_id: int, **f) -> int:
+    title = str(f.get("title") or "").strip()
+    description = str(f.get("description") or "").strip()
+    mission_type = str(f.get("mission_type") or "")
+    # Alias historique accepte par les anciens clients/API.
+    mission_type = {"evenementiel": "evenement"}.get(mission_type, mission_type)
+    currency = str(f.get("currency") or DEFAULT_CURRENCY).upper()
+    if not title or not description:
+        raise ValueError("titre et description requis")
+    if mission_type not in {code for code, _label in MISSION_TYPES}:
+        raise ValueError("type de mission invalide")
+    if currency not in CURRENCIES:
+        raise ValueError("devise invalide")
+
+    numeric: dict[str, Optional[float]] = {}
+    for name in ("budget_min", "budget_max", "duration_hours", "lat", "lng"):
+        raw = f.get(name)
+        if raw is None or raw == "":
+            numeric[name] = None
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{name} invalide") from exc
+        if not math.isfinite(value):
+            raise ValueError(f"{name} invalide")
+        numeric[name] = value
+    for name in ("budget_min", "budget_max", "duration_hours"):
+        if numeric[name] is not None and numeric[name] < 0:
+            raise ValueError(f"{name} ne peut pas être négatif")
+    if (numeric["budget_min"] is not None and numeric["budget_max"] is not None
+            and numeric["budget_min"] > numeric["budget_max"]):
+        raise ValueError("le budget minimum dépasse le budget maximum")
+    if numeric["lat"] is not None and not -90 <= numeric["lat"] <= 90:
+        raise ValueError("latitude invalide")
+    if numeric["lng"] is not None and not -180 <= numeric["lng"] <= 180:
+        raise ValueError("longitude invalide")
+
     cur = db.execute(
         "INSERT INTO missions "
         "(client_user_id, title, description, mission_type, country, region, city, "
@@ -703,19 +752,19 @@ def create_mission(client_user_id: int, **f) -> int:
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             client_user_id,
-            f["title"].strip(),
-            f["description"].strip(),
-            f["mission_type"],
+            title,
+            description,
+            mission_type,
             f.get("country") or "",
             f.get("region"),
             f.get("city"),
-            f.get("lat"),
-            f.get("lng"),
+            numeric["lat"],
+            numeric["lng"],
             f.get("address"),
-            f.get("budget_min"),
-            f.get("budget_max"),
-            f.get("currency") or DEFAULT_CURRENCY,
-            f.get("duration_hours"),
+            numeric["budget_min"],
+            numeric["budget_max"],
+            currency,
+            numeric["duration_hours"],
             f.get("start_date"),
             f.get("end_date"),
             1 if f.get("is_urgent") else 0,
@@ -841,8 +890,10 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
         args.append(mission_type)
     if only_urgent:
         q.append("AND m.is_urgent=1")
-    q.append("ORDER BY m.is_urgent DESC, m.created_at DESC LIMIT ?")
-    args.append(limit)
+    q.append("ORDER BY m.is_urgent DESC, m.created_at DESC")
+    if lat is None or lng is None:
+        q.append("LIMIT ?")
+        args.append(limit)
     rows = [dict(r) for r in db.fetchall(" ".join(q), args)]
     radius = max(1, min(radius_km, MAX_SEARCH_RADIUS_KM))
     out = []
@@ -854,13 +905,15 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
                 continue
         else:
             r["distance_km"] = None
+            if strict_radius and lat is not None and lng is not None:
+                continue
         out.append(r)
     if lat is not None and lng is not None:
         # Recherche « autour de » : du plus proche au plus lointain (les
         # missions sans coordonnees passent en fin de liste).
         out.sort(key=lambda x: (x.get("distance_km") is None,
                                 x.get("distance_km") or 0, -x["is_urgent"]))
-    return out
+    return out[:limit]
 
 
 def list_missions_by_client(client_user_id: int) -> list:
@@ -1338,6 +1391,32 @@ def compute_cancellation_fee(booking: dict) -> dict:
     }
 
 
+_PAYMENT_ACTIONS = frozenset({"cancel_client", "cancel_pilot", "complete", "refund"})
+
+
+def _claim_payment_action(booking_id: int, action: str,
+                          allowed_statuses: tuple[str, ...]) -> bool:
+    """Reserve atomiquement une action Stripe pour un seul worker."""
+    if action not in _PAYMENT_ACTIONS or not allowed_statuses:
+        raise ValueError("action de paiement invalide")
+    placeholders = ",".join("?" for _ in allowed_statuses)
+    cur = db.execute(
+        "UPDATE bookings SET payment_action=?, "
+        "payment_action_started_at=datetime('now') "
+        f"WHERE id=? AND status IN ({placeholders}) AND payment_action IS NULL",
+        (action, booking_id, *allowed_statuses),
+    )
+    return cur.rowcount == 1
+
+
+def _clear_payment_action(booking_id: int, action: str) -> None:
+    db.execute(
+        "UPDATE bookings SET payment_action=NULL, payment_action_started_at=NULL "
+        "WHERE id=? AND payment_action=?",
+        (booking_id, action),
+    )
+
+
 def cancel_booking_by_client(booking_id: int, by_user: int,
                              reason: str = "") -> dict:
     """Annule une reservation a la demande du client. Applique la regle
@@ -1354,6 +1433,24 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
     if booking["status"] not in ("pending_payment", "funded", "in_progress"):
         return {"ok": False,
                 "reason": f"statut {booking['status']} non annulable"}
+    action = "cancel_client"
+    if not _claim_payment_action(
+        booking_id, action, ("pending_payment", "funded", "in_progress"),
+    ):
+        return {"ok": False, "reason": "une opération financière est déjà en cours"}
+
+    # Une ancienne page Checkout ne doit pas rester payable une fois la
+    # reservation annulee. En cas de doute, on conserve la reservation.
+    if booking["status"] == "pending_payment" and booking.get("stripe_session_id"):
+        try:
+            import payments
+            expired = payments.expire_checkout_session(booking["stripe_session_id"])
+        except Exception as exc:
+            log.warning("expiration Checkout a echoue : %s", exc)
+            expired = False
+        if not expired:
+            _clear_payment_action(booking_id, action)
+            return {"ok": False, "reason": "paiement en cours de vérification; annulation non effectuée"}
 
     calc = compute_cancellation_fee(booking)
     paid = bool(booking.get("stripe_payment_intent_id")) and \
@@ -1378,6 +1475,9 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
         except Exception as exc:
             log.warning("refund Stripe a echoue : %s", exc)
             refund_done = False
+        if not refund_done:
+            _clear_payment_action(booking_id, action)
+            return {"ok": False, "reason": "le remboursement a échoué; réservation inchangée"}
 
     # 2) Dedommagement pilote (annulation tardive) : Transfer immediat vers
     #    son compte Connect, cle d'idempotence distincte de la liberation.
@@ -1397,17 +1497,34 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
         if not transfer_id:
             log.error("dedommagement pilote NON vire pour booking=%s (%.2f) : "
                       "a traiter manuellement", booking_id, calc["fee_amount"])
+            # Le refund a pu etre accepte. Garder le verrou evite qu'un autre
+            # worker execute une action contradictoire avant reconciliation.
+            db.execute(
+                "INSERT INTO audit_log (user_id, action, target, payload) "
+                "VALUES (?, 'booking_reconciliation_required', ?, ?)",
+                (by_user, f"booking:{booking_id}", json.dumps({
+                    "payment_action": action,
+                    "refund_amount": calc["refund_amount"],
+                    "missing_transfer_amount": calc["fee_amount"],
+                })),
+            )
+            return {"ok": False, "reason": "remboursement à vérifier; annulation bloquée pour contrôle"}
 
     with db.transaction():
-        db.execute(
+        cur = db.execute(
             "UPDATE bookings SET status='cancelled', cancelled_by='client', "
             "cancelled_at=datetime('now'), cancellation_fee=?, "
             "cancellation_service_fee=?, "
-            "stripe_transfer_id=COALESCE(?, stripe_transfer_id) "
-            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress')",
-            (calc["fee_amount"], calc["service_fee_amount"], transfer_id, booking_id),
+            "stripe_transfer_id=COALESCE(?, stripe_transfer_id), "
+            "payment_action=NULL, payment_action_started_at=NULL "
+            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress') "
+            "AND payment_action=?",
+            (calc["fee_amount"], calc["service_fee_amount"], transfer_id,
+             booking_id, action),
             commit=False,
         )
+        if cur.rowcount == 0:
+            raise ValueError("reservation modifiee pendant l'annulation")
         update_mission_status(booking["mission_id"], "cancelled", commit=False)
 
     db.execute(
@@ -1448,6 +1565,22 @@ def cancel_booking_by_pilot(booking_id: int, by_user: int,
     if booking["status"] not in ("pending_payment", "funded", "in_progress"):
         return {"ok": False,
                 "reason": f"statut {booking['status']} non annulable"}
+    action = "cancel_pilot"
+    if not _claim_payment_action(
+        booking_id, action, ("pending_payment", "funded", "in_progress"),
+    ):
+        return {"ok": False, "reason": "une opération financière est déjà en cours"}
+
+    if booking["status"] == "pending_payment" and booking.get("stripe_session_id"):
+        try:
+            import payments
+            expired = payments.expire_checkout_session(booking["stripe_session_id"])
+        except Exception as exc:
+            log.warning("expiration Checkout a echoue : %s", exc)
+            expired = False
+        if not expired:
+            _clear_payment_action(booking_id, action)
+            return {"ok": False, "reason": "paiement en cours de vérification; désistement non effectué"}
 
     price = float(booking.get("agreed_price") or 0)
     paid = bool(booking.get("stripe_payment_intent_id")) and \
@@ -1464,14 +1597,19 @@ def cancel_booking_by_pilot(booking_id: int, by_user: int,
         except Exception as exc:
             log.warning("refund Stripe (desistement pilote) a echoue : %s", exc)
             refund_done = False
+        if not refund_done:
+            _clear_payment_action(booking_id, action)
+            return {"ok": False, "reason": "le remboursement a échoué; réservation inchangée"}
 
     with db.transaction():
         cur = db.execute(
             "UPDATE bookings SET status='cancelled', cancelled_by='pilot', "
             "cancelled_at=datetime('now'), cancellation_fee=0, "
-            "cancellation_service_fee=0 "
-            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress')",
-            (booking_id,), commit=False,
+            "cancellation_service_fee=0, payment_action=NULL, "
+            "payment_action_started_at=NULL "
+            "WHERE id=? AND status IN ('pending_payment', 'funded', 'in_progress') "
+            "AND payment_action=?",
+            (booking_id, action), commit=False,
         )
         if cur.rowcount == 0:
             raise ValueError("reservation deja cloturee")
@@ -1550,7 +1688,7 @@ def update_booking_status(booking_id: int, status: str, by_user: int):
     with db.transaction():
         cur = db.execute(
             "UPDATE bookings SET status='in_progress' "
-            "WHERE id=? AND status='funded'",
+            "WHERE id=? AND status='funded' AND payment_action IS NULL",
             (booking_id,), commit=False,
         )
         if cur.rowcount == 0:
@@ -1564,6 +1702,12 @@ def update_booking_status(booking_id: int, status: str, by_user: int):
 
 def add_review(*, booking_id: int, author_user_id: int, target_user_id: int,
                rating: int, comment: str = ""):
+    booking = get_booking(booking_id)
+    if not booking or booking["status"] != "completed":
+        raise ValueError("Un avis ne peut être publié qu'après la mission terminée.")
+    parties = {booking["client_user_id"], booking["pilot_user_id"]}
+    if {author_user_id, target_user_id} != parties or author_user_id == target_user_id:
+        raise ValueError("Participants de l'avis invalides.")
     rating = max(1, min(5, int(rating)))
     db.execute(
         "INSERT INTO reviews (booking_id, author_user_id, target_user_id, rating, comment) "
@@ -1611,7 +1755,7 @@ def reviewable_booking_for(client_user_id: int, pilot_user_id: int) -> Optional[
         "FROM bookings b "
         "LEFT JOIN reviews r ON r.booking_id=b.id AND r.author_user_id=? "
         "WHERE b.pilot_user_id=? AND b.client_user_id=? "
-        "  AND b.status IN ('funded','in_progress','completed','disputed') "
+        "  AND b.status='completed' "
         "ORDER BY (r.id IS NOT NULL), b.created_at DESC LIMIT 1",
         (client_user_id, pilot_user_id, client_user_id),
     )
@@ -2160,10 +2304,12 @@ def country_breakdown(limit: int = 12) -> list:
 def near_geo(lat: float, lng: float, radius_km: int = 100, limit: int = 10) -> dict:
     """Recherche combinée pilotes + missions dans un rayon."""
     pilots = search_pilots(
-        lat=lat, lng=lng, radius_km=radius_km, only_available=True, limit=limit,
+        lat=lat, lng=lng, radius_km=radius_km, only_available=True,
+        strict_radius=True, limit=limit,
     )
     missions = search_missions(
-        lat=lat, lng=lng, radius_km=radius_km, status="open", limit=limit,
+        lat=lat, lng=lng, radius_km=radius_km, status="open",
+        strict_radius=True, limit=limit,
     )
     return {"pilots": pilots[:limit], "missions": missions[:limit]}
 
@@ -2241,11 +2387,6 @@ ALL_BOOKING_STATUS = BOOKING_STATUS
 # Stripe / Paiement / Escrow
 # ===========================================================================
 
-import re
-
-from config import MESSAGE_BANNED_PATTERNS
-
-
 _BANNED_RX = [re.compile(p, re.IGNORECASE) for p in MESSAGE_BANNED_PATTERNS]
 
 
@@ -2307,7 +2448,7 @@ def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None
     cur = db.execute(
         "UPDATE bookings SET status='funded', paid_at=datetime('now'), "
         "stripe_payment_intent_id=COALESCE(?, stripe_payment_intent_id) "
-        "WHERE id=? AND status='pending_payment'",
+        "WHERE id=? AND status='pending_payment' AND payment_action IS NULL",
         (payment_intent_id, booking_id),
     )
     if cur.rowcount == 0:
@@ -2341,10 +2482,14 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
         return False
     if booking["status"] not in ("funded", "in_progress"):
         return False
+    action = "complete"
+    if not _claim_payment_action(booking_id, action, ("funded", "in_progress")):
+        return False
 
     # Recupere l'account Stripe du pilote
     pilot_acc = get_pilot_stripe_account(booking["pilot_user_id"])
     if not pilot_acc:
+        _clear_payment_action(booking_id, action)
         return False
 
     pilot_amount = booking["agreed_price"] - booking["platform_fee"]
@@ -2365,15 +2510,19 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
             "release_to_pilot a echoue pour booking=%s : laisse '%s' pour rejeu",
             booking_id, booking["status"],
         )
+        _clear_payment_action(booking_id, action)
         return False
 
     with db.transaction():
-        db.execute(
+        cur = db.execute(
             "UPDATE bookings SET status='completed', completed_at=datetime('now'), "
-            "released_at=datetime('now'), stripe_transfer_id=? "
-            "WHERE id=? AND status IN ('funded', 'in_progress')",
-            (transfer_id, booking_id), commit=False,
+            "released_at=datetime('now'), stripe_transfer_id=?, "
+            "payment_action=NULL, payment_action_started_at=NULL "
+            "WHERE id=? AND status IN ('funded', 'in_progress') AND payment_action=?",
+            (transfer_id, booking_id, action), commit=False,
         )
+        if cur.rowcount == 0:
+            raise ValueError("reservation modifiee pendant le versement")
         update_mission_status(booking["mission_id"], "done", commit=False)
 
     # Email "vous avez ete paye" au pilote
@@ -2403,12 +2552,15 @@ def open_dispute(booking_id: int, by_user: int, reason: str = "") -> bool:
     booking = get_booking(booking_id)
     if not booking or by_user not in (booking["client_user_id"], booking["pilot_user_id"]):
         return False
-    if booking["status"] in ("completed", "refunded", "cancelled"):
+    if booking["status"] not in ("funded", "in_progress"):
         return False
-    db.execute(
-        "UPDATE bookings SET status='disputed', dispute_reason=? WHERE id=?",
+    cur = db.execute(
+        "UPDATE bookings SET status='disputed', dispute_reason=? "
+        "WHERE id=? AND status IN ('funded','in_progress') AND payment_action IS NULL",
         ((reason or "")[:1000], booking_id),
     )
+    if cur.rowcount == 0:
+        return False
     db.execute(
         "INSERT INTO audit_log (user_id, action, target, payload) "
         "VALUES (?, 'dispute_open', ?, ?)",
@@ -2420,11 +2572,21 @@ def open_dispute(booking_id: int, by_user: int, reason: str = "") -> bool:
 
 def refund_booking(booking_id: int, amount: Optional[float] = None,
                    admin_user: Optional[int] = None) -> bool:
-    """Refund total ou partiel. Si amount=None, refund full."""
+    """Remboursement integral admin, serialise et fail-closed.
+
+    Les remboursements partiels sont refuses tant qu'un ledger de montants
+    rembourses n'est pas disponible : marquer alors tout le booking `refunded`
+    produirait un etat financier faux.
+    """
+    if amount is not None:
+        return False
     booking = get_booking(booking_id)
     if not booking or booking["status"] not in ("funded", "disputed", "in_progress"):
         return False
     if not booking.get("stripe_payment_intent_id"):
+        return False
+    action = "refund"
+    if not _claim_payment_action(booking_id, action, ("funded", "disputed", "in_progress")):
         return False
     import payments
     ok = payments.refund_payment(
@@ -2435,13 +2597,47 @@ def refund_booking(booking_id: int, amount: Optional[float] = None,
     )
     if ok:
         with db.transaction():
-            db.execute(
-                "UPDATE bookings SET status='refunded', refunded_at=datetime('now') "
-                "WHERE id=? AND status IN ('funded', 'disputed', 'in_progress')",
-                (booking_id,), commit=False,
+            cur = db.execute(
+                "UPDATE bookings SET status='refunded', refunded_at=datetime('now'), "
+                "payment_action=NULL, payment_action_started_at=NULL "
+                "WHERE id=? AND status IN ('funded', 'disputed', 'in_progress') "
+                "AND payment_action=?",
+                (booking_id, action), commit=False,
             )
+            if cur.rowcount == 0:
+                raise ValueError("reservation modifiee pendant le remboursement")
             update_mission_status(booking["mission_id"], "cancelled", commit=False)
+    else:
+        _clear_payment_action(booking_id, action)
     return ok
+
+
+def mark_booking_fully_refunded(payment_intent_id: str) -> bool:
+    """Reconcile un remboursement integral recu par webhook Stripe.
+
+    Ignore les remboursements declenches par une action locale encore en cours
+    (elle finalisera son propre etat) et garde booking + mission atomiques.
+    """
+    booking = db.fetchone(
+        "SELECT id, mission_id FROM bookings "
+        "WHERE stripe_payment_intent_id=? "
+        "AND status IN ('funded','in_progress','disputed') "
+        "AND payment_action IS NULL LIMIT 1",
+        (payment_intent_id,),
+    )
+    if not booking:
+        return False
+    with db.transaction():
+        cur = db.execute(
+            "UPDATE bookings SET status='refunded', refunded_at=datetime('now') "
+            "WHERE id=? AND status IN ('funded','in_progress','disputed') "
+            "AND payment_action IS NULL",
+            (booking["id"],), commit=False,
+        )
+        if cur.rowcount == 0:
+            return False
+        update_mission_status(booking["mission_id"], "cancelled", commit=False)
+    return True
 
 
 def stale_funded_bookings(days: int) -> list:

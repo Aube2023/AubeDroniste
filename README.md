@@ -145,12 +145,14 @@ GET /api/missions?near=&radius_km=&near_only=&country=&mission_type=&status=&lat
 
 - Mémoire `feedback_auth` : **on ne touche JAMAIS aux mots de passe PAM**.
   En production Linux, l'auth délègue à `pam.authenticate(...)`. En dev /
-  macOS, fallback SHA-256 + sel dans `.dev_passwords` (chmod 600).
+  macOS, fallback scrypt dans `data/.dev_passwords` (chmod 600 ; les anciens
+  hashes SHA-256 sont relus puis migrés au prochain login).
 - Mémoire `feedback_email_domain` : tous les comptes obtiennent un email
   `<username>@aubemail.com`. Le domaine `aubeetoilee.com` ne sert qu'aux
   sous-domaines services.
 - Sessions serveur signées (itsdangerous), cookie `httpOnly`, `SameSite=Lax`.
-- `MAX_CONTENT_LENGTH` = 10 Mo (uploads certifs / photos drones).
+- `MAX_CONTENT_LENGTH` utilise le plus grand plafond d'upload configuré ;
+  chaque route applique aussi sa limite métier propre.
 
 ## Architecture des fichiers
 
