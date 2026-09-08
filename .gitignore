@@ -44,3 +44,6 @@ mobile/.dart_tool/
 # iCloud cree des copies suffixees " N.ext" qu'il ne faut pas versionner.
 *[ ][0-9].py
 *[ ][0-9].dart
+
+# APK publies au telechargement (binaires lourds, deposes sur le serveur)
+static/dl/
