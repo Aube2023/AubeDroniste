@@ -18,7 +18,7 @@ Auth partagée `@aubemail.com` (PAM en prod, fallback dev local sur macOS).
 | Stockage | SQLite (WAL) — facile à passer à PostgreSQL |
 | Auth | PAM partagée (Linux) + fallback dev (`.dev_passwords`) |
 | Frontend | Templates Jinja + CSS « Aube » + JS vanilla |
-| Langues | **FR + EN** (sélecteur topbar, cookie `aube_lang`) |
+| Langues | **FR, EN, ES, RU, HI, UK, TR, UR, BN** (sélecteur topbar, cookie `aube_lang`) |
 | Thèmes | **Aube (clair) + Nuit (sombre)** — toggle topbar |
 | Mailer | SMTP en prod, dump `.eml` local en dev |
 | API | JSON (`/api/pilotes`, `/api/missions`, `/api/near`, `/api/country-breakdown`, `/api/stats`) |

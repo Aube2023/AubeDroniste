@@ -252,6 +252,7 @@ def _inject_globals():
         "supported_langs": i18n.SUPPORTED,
         "lang_name": i18n.lang_name,
         "lang_flag": i18n.lang_flag,
+        "lang_dir": i18n.lang_dir,
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,

@@ -13,7 +13,7 @@ AubePilot/
 ├── config.py              Constantes + chemins (DATA_DIR, etc.) — env vars
 ├── db.py                  Connexion SQLite par requete + haversine_km
 ├── auth.py                PAM (Linux) + fallback dev + sessions itsdangerous
-├── i18n.py                Traductions FR + EN, resolve_lang via cookie
+├── i18n.py                Traductions 9 langues, resolve_lang via cookie
 ├── mailer.py              SMTP + fallback dump local (data/mail/*.eml)
 ├── services.py            Logique metier (pilotes, missions, encheres, bookings…)
 ├── schema.sql             14 tables SQLite, foreign keys, index, WAL
@@ -92,13 +92,15 @@ AubePilot/
 
 ## i18n
 
-- Module `i18n.py` — table de traductions FR/EN à plat (`_T = {key: {fr, en}}`)
+- Module `i18n.py` — table de traductions à plat (`_T = {key: {fr, en, es, ru, hi, uk, tr, ur, bn}}`)
 - `g.lang` est résolu au `before_request` (cookie `aube_lang` → `Accept-Language` → `fr`)
 - Templates utilisent `{{ t('key') }}` (injecté via `context_processor`)
 - Sélecteur dans `base.html` → `GET /lang/<code>` pose le cookie
+- `i18n.RTL` liste les écritures droite-à-gauche (ourdou) ; `lang_dir()` alimente `<html dir>`, le CSS suit avec les propriétés logiques (`border-inline-start`, `inset-inline-end`…)
 - Emails : **bilingues empilés** (FR puis EN dans le même message) — pas de logique de préférence par destinataire à gérer
 
-Pour ajouter une nouvelle clé : éditer `i18n.py` `_T = {...}`, ajouter `'fr':` et `'en':`.
+Pour ajouter une nouvelle clé : éditer `i18n.py` `_T = {...}`, avec une entrée par langue de `SUPPORTED`
+(une langue manquante retombe sur le français).
 Pas de fallback de fichier YAML — tout est en Python pour la simplicité.
 
 ---
@@ -376,7 +378,7 @@ n'est jamais touchée.
 - **AubePay intégration** alternative à Stripe
 - **PostgreSQL migration** (script à écrire)
 - **Vérification admin des brevets** (back-office, table déjà en place : `pilot_certifications.is_verified`)
-- **Multilingue arabe** (RTL CSS + `i18n._T['ar']`)
+- **Multilingue arabe** (`i18n._T['ar']` + `'ar'` dans `SUPPORTED` ; le RTL CSS est déjà en place)
 - **PWA** (manifest + service worker offline)
 - **Rate limiting** sur `/api/*` et `/connexion`
 - **Webhooks sortants** (Zapier / Make pour les pros)

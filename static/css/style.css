@@ -153,14 +153,14 @@ p { margin: 0 0 1em; }
 
 /* Lien d'evitement (a11y) : hors ecran, visible uniquement au focus clavier. */
 .skip-link {
-  position: absolute; left: -9999px; top: 0;
+  position: absolute; inset-inline-start: -9999px; top: 0;
   z-index: 100;
   padding: 10px 16px;
   background: var(--amber); color: #0a0a0c;
   font: 600 13px/1 var(--sans);
   text-decoration: none;
 }
-.skip-link:focus { left: 0; }
+.skip-link:focus { inset-inline-start: 0; }
 
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -312,7 +312,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(20,22,31,.08);
 }
 input[type=checkbox], input[type=radio] {
-  width: auto; display: inline-block; margin: 0 8px 0 0;
+  width: auto; display: inline-block; margin: 0; margin-inline-end: 8px;
   accent-color: var(--amber);
 }
 label.check {
@@ -342,14 +342,14 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 .flash {
   padding: 12px 16px;
   border: 1px solid var(--rule);
-  border-left: 3px solid var(--amber);
+  border-inline-start: 3px solid var(--amber);
   background: var(--paper-2);
   margin-bottom: 8px;
   font-size: 14px;
 }
-.flash-success { border-left-color: var(--teal); }
-.flash-error   { border-left-color: var(--signal); }
-.flash-info    { border-left-color: var(--gold); }
+.flash-success { border-inline-start-color: var(--teal); }
+.flash-error   { border-inline-start-color: var(--signal); }
+.flash-info    { border-inline-start-color: var(--gold); }
 
 /* ============ Tags / chips ============ */
 
@@ -389,7 +389,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 .badges li strong {
   font-family: var(--serif); font-weight: 700;
   font-size: 18px; color: var(--ink);
-  margin-right: 6px;
+  margin-inline-end: 6px;
 }
 
 .price { font: 700 17px/1 var(--display); color: var(--ink); letter-spacing: -.02em; }
@@ -431,7 +431,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 .hero-search::before {
   content: "EN VOL"; position: absolute;
-  top: -10px; left: 24px;
+  top: -10px; inset-inline-start: 24px;
   background: var(--paper); color: var(--amber);
   font: 700 10px/1 var(--mono); letter-spacing: .22em;
   padding: 3px 8px; border: 1px solid var(--rule);
@@ -453,9 +453,9 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 .notam-strip > div {
   padding: 18px 22px;
-  border-right: 1px solid var(--rule);
+  border-inline-end: 1px solid var(--rule);
 }
-.notam-strip > div:last-child { border-right: 0; }
+.notam-strip > div:last-child { border-inline-end: 0; }
 .notam-strip .num {
   font: 700 2.4rem/1 var(--serif);
   letter-spacing: -.03em;
@@ -470,7 +470,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 @media (max-width: 720px) {
   .notam-strip { grid-template-columns: repeat(2, 1fr); }
-  .notam-strip > div:nth-child(2) { border-right: 0; }
+  .notam-strip > div:nth-child(2) { border-inline-end: 0; }
   .notam-strip > div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
 }
 
@@ -637,7 +637,7 @@ img.avatar { object-fit: cover; }
 }
 .pilot-header::before {
   content: "FICHE PILOTE — F-AUBE"; position: absolute;
-  top: -10px; left: 24px;
+  top: -10px; inset-inline-start: 24px;
   background: var(--paper); color: var(--amber);
   font: 700 10px/1 var(--mono); letter-spacing: .22em;
   padding: 3px 8px; border: 1px solid var(--rule);
@@ -676,7 +676,7 @@ img.avatar { object-fit: cover; }
 }
 .mission-brief::before {
   content: "ORDRE DE MISSION"; position: absolute;
-  top: -10px; left: 24px;
+  top: -10px; inset-inline-start: 24px;
   background: var(--paper); color: var(--amber);
   font: 700 10px/1 var(--mono); letter-spacing: .22em;
   padding: 3px 8px; border: 1px solid var(--rule);
@@ -776,8 +776,8 @@ img.avatar { object-fit: cover; }
   color: var(--ink-dim);
   overflow: hidden; white-space: nowrap;
 }
-.ticker .item { display: inline-block; padding: 0 28px; border-right: 1px solid var(--rule); }
-.ticker .item strong { color: var(--amber); margin-right: 6px; }
+.ticker .item { display: inline-block; padding: 0 28px; border-inline-end: 1px solid var(--rule); }
+.ticker .item strong { color: var(--amber); margin-inline-end: 6px; }
 .ticker-track {
   display: inline-block;
   animation: ticker-roll 60s linear infinite;
@@ -790,8 +790,9 @@ img.avatar { object-fit: cover; }
 /* ============ Pull quote ============ */
 
 .pullquote {
-  border-left: 3px solid var(--amber);
-  padding: 8px 0 8px 24px;
+  border-inline-start: 3px solid var(--amber);
+  padding: 8px 0;
+  padding-inline-start: 24px;
   margin: 24px 0;
   max-width: 60ch;
 }
@@ -859,7 +860,7 @@ img.avatar { object-fit: cover; }
 
 .country-tile {
   padding: 22px 22px 20px;
-  border-right: 1px solid var(--rule);
+  border-inline-end: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
   display: grid; gap: 6px;
   color: var(--ink);
@@ -886,24 +887,25 @@ img.avatar { object-fit: cover; }
 }
 .country-tile .country-stats strong {
   color: var(--ink); font-weight: 700; font-family: var(--serif);
-  font-size: 1rem; margin-right: 4px;
+  font-size: 1rem; margin-inline-end: 4px;
 }
 .country-tile .arrow {
-  position: absolute; top: 22px; right: 22px;
+  position: absolute; top: 22px; inset-inline-end: 22px;
   color: var(--ink-faint); font-family: var(--mono); font-size: 14px;
   transition: color .12s, transform .12s;
 }
 .country-tile:hover .arrow { color: var(--amber); transform: translateX(2px); }
+[dir="rtl"] .country-tile:hover .arrow { transform: translateX(-2px); }
 
 /* dernière colonne / dernière ligne sans bordure */
-.country-tile:nth-child(4n) { border-right: 0; }
+.country-tile:nth-child(4n) { border-inline-end: 0; }
 .country-grid > .country-tile:last-child { border-bottom: 0; }
 @media (max-width: 900px) {
-  .country-tile:nth-child(4n) { border-right: 1px solid var(--rule); }
-  .country-tile:nth-child(2n) { border-right: 0; }
+  .country-tile:nth-child(4n) { border-inline-end: 1px solid var(--rule); }
+  .country-tile:nth-child(2n) { border-inline-end: 0; }
 }
 @media (max-width: 520px) {
-  .country-tile { border-right: 0; }
+  .country-tile { border-inline-end: 0; }
 }
 
 /* ============ Bloc "près de moi" ============ */
@@ -922,7 +924,7 @@ img.avatar { object-fit: cover; }
 }
 .nearby-block::before {
   content: "GÉOLOCALISATION";
-  position: absolute; top: -10px; left: 24px;
+  position: absolute; top: -10px; inset-inline-start: 24px;
   background: var(--paper); color: var(--amber);
   font: 700 10px/1 var(--mono); letter-spacing: .22em;
   padding: 3px 8px; border: 1px solid var(--rule);
@@ -993,7 +995,7 @@ img.avatar { object-fit: cover; }
 .lang-menu .lang-caret { font-size: 9px; color: var(--ink-dim); transition: transform .15s; }
 .lang-menu[open] .lang-caret { transform: rotate(180deg); }
 .lang-menu-list {
-  position: absolute; right: 0; top: calc(100% + 6px);
+  position: absolute; inset-inline-end: 0; top: calc(100% + 6px);
   min-width: 172px;
   padding: 6px;
   background: var(--paper, #fff);
@@ -1093,7 +1095,7 @@ img.avatar { object-fit: cover; }
 }
 .auth-form::before {
   content: "FORMULAIRE — F-AUBE"; position: absolute;
-  top: -10px; left: 28px;
+  top: -10px; inset-inline-start: 28px;
   background: var(--paper); color: var(--amber);
   font: 700 10px/1 var(--mono); letter-spacing: .22em;
   padding: 3px 8px; border: 1px solid var(--rule);
@@ -1189,9 +1191,9 @@ img.avatar { object-fit: cover; }
 
 /* Champ mot de passe avec œil « afficher / masquer » */
 .password-field { position: relative; display: block; }
-.password-field input { width: 100%; padding-right: 44px; }
+.password-field input { width: 100%; padding-inline-end: 44px; }
 .password-toggle {
-  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
   display: inline-flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; padding: 0;
   background: none; border: 0; border-radius: 8px;
@@ -1219,7 +1221,7 @@ img.avatar { object-fit: cover; }
 .auth-form .form-foot .small { color: var(--ink-dim); font-size: 13px; }
 
 /* Lien discret sous un champ (ex. « Mot de passe oublié ? ») */
-.form-aside { text-align: right; margin-top: 8px; }
+.form-aside { text-align: end; margin-top: 8px; }
 .form-aside a { font-size: 12.5px; }
 
 /* ============ Carnet de vol (pilot_detail) ============ */
@@ -1240,7 +1242,7 @@ img.avatar { object-fit: cover; }
 }
 .flightbook-hero::after {
   content: "CARNET DE VOL"; position: absolute;
-  top: 14px; right: 24px;
+  top: 14px; inset-inline-end: 24px;
   font: 700 10px/1 var(--mono); letter-spacing: .28em;
   color: var(--ink-dim);
 }
@@ -1271,9 +1273,9 @@ img.avatar { object-fit: cover; }
 }
 .stat-rail > div {
   padding: 16px 22px;
-  border-right: 1px solid var(--rule);
+  border-inline-end: 1px solid var(--rule);
 }
-.stat-rail > div:last-child { border-right: 0; }
+.stat-rail > div:last-child { border-inline-end: 0; }
 .stat-rail .v {
   font: 600 1.4rem/1 var(--serif);
   color: var(--ink);
@@ -1290,8 +1292,8 @@ img.avatar { object-fit: cover; }
 }
 @media (max-width: 900px) {
   .stat-rail { grid-template-columns: repeat(2, 1fr); }
-  .stat-rail > div { border-right: 0; border-top: 1px solid var(--rule); }
-  .stat-rail > div:nth-child(odd) { border-right: 1px solid var(--rule); }
+  .stat-rail > div { border-inline-end: 0; border-top: 1px solid var(--rule); }
+  .stat-rail > div:nth-child(odd) { border-inline-end: 1px solid var(--rule); }
 }
 
 /* Brevets en patches */
@@ -1357,7 +1359,7 @@ img.avatar { object-fit: cover; }
   text-transform: uppercase;
   margin-top: 4px;
 }
-.fleet-card .specs span strong { color: var(--ink); margin-right: 4px; font-weight: 600; }
+.fleet-card .specs span strong { color: var(--ink); margin-inline-end: 4px; font-weight: 600; }
 .fleet-card .caps {
   display: flex; flex-wrap: wrap; gap: 4px;
   margin-top: 4px;
@@ -1366,8 +1368,9 @@ img.avatar { object-fit: cover; }
 
 /* Avis en pull quotes */
 .review-quote {
-  border-left: 2px solid var(--amber);
-  padding: 4px 0 4px 22px;
+  border-inline-start: 2px solid var(--amber);
+  padding: 4px 0;
+  padding-inline-start: 22px;
   margin: 18px 0;
 }
 .review-quote .stars { color: var(--amber); font-family: var(--mono); letter-spacing: .1em; font-size: 14px; }
@@ -1396,7 +1399,7 @@ img.avatar { object-fit: cover; }
   align-items: center;
 }
 .cockpit-banner::before {
-  content: ""; position: absolute; top: 0; left: 0; height: 100%; width: 4px;
+  content: ""; position: absolute; top: 0; inset-inline-start: 0; height: 100%; width: 4px;
   background: var(--amber);
 }
 .cockpit-banner h1 {
@@ -1547,7 +1550,7 @@ img.avatar { object-fit: cover; }
    ========================================================================= */
 
 /* ---- petites utilités ---- */
-.text-right     { text-align: right; }
+.text-right     { text-align: end; }
 .prewrap        { white-space: pre-line; }
 .col-span-full  { grid-column: 1 / -1; }
 .mt-0           { margin-top: 0 !important; }
@@ -1594,7 +1597,7 @@ img.avatar { object-fit: cover; }
   margin: 12px 0;
   padding: 12px 15px;
   border: 1px solid var(--rule);
-  border-left: 3px solid var(--ink-dim);
+  border-inline-start: 3px solid var(--ink-dim);
   background: var(--paper-2);
   border-radius: 8px;
   font-size: .95rem;
@@ -1603,12 +1606,12 @@ img.avatar { object-fit: cover; }
 .alert > :last-child  { margin-bottom: 0; }
 .alert .eyebrow { margin-bottom: 6px; }
 .alert .quote   { margin: 6px 0 0; font-style: italic; }
-.alert-ok      { border-left-color: var(--teal);    background: rgba(30,122,106,.08); }
+.alert-ok      { border-inline-start-color: var(--teal);    background: rgba(30,122,106,.08); }
 .alert-ok .eyebrow { color: var(--teal); }
-.alert-info    { border-left-color: var(--amber);   background: rgba(66,87,178,.06); }
-.alert-neutral { border-left-color: var(--ink-dim); background: var(--paper-3); }
+.alert-info    { border-inline-start-color: var(--amber);   background: rgba(66,87,178,.06); }
+.alert-neutral { border-inline-start-color: var(--ink-dim); background: var(--paper-3); }
 /* Avis juridique Québec / français obligatoire — ton ambré distinct (conservé). */
-.alert-warn      { border-left-color: #b87519; background: rgba(184,117,25,.08); }
+.alert-warn      { border-inline-start-color: #b87519; background: rgba(184,117,25,.08); }
 .alert-warn .eyebrow { color: #b87519; }
 
 /* ---- disclosure (details/summary) homogène ---- */
@@ -1680,7 +1683,7 @@ img.avatar { object-fit: cover; }
 
 /* ---- devis reçus : présentation comparable (mission_detail) ---- */
 .bid-card { margin: 12px 0; }
-.bid-card.mine { border-left: 3px solid var(--ink); }
+.bid-card.mine { border-inline-start: 3px solid var(--ink); }
 .bid-head {
   display: flex; justify-content: space-between; align-items: start; gap: 16px;
 }
@@ -1691,7 +1694,7 @@ img.avatar { object-fit: cover; }
 }
 a.bid-name:hover { color: var(--amber); }
 .bid-sub { margin-top: 4px; }
-.bid-price { text-align: right; flex: 0 0 auto; }
+.bid-price { text-align: end; flex: 0 0 auto; }
 .bid-price .cur { font-size: .6em; color: var(--ink-dim); }
 .bid-price .tag { margin-top: 6px; }
 .bid-message { color: var(--ink-soft); margin-top: 12px; }
@@ -1723,7 +1726,7 @@ a.bid-name:hover { color: var(--amber); }
 .dot-ok { color: var(--teal); }
 .dot-ok::before {
   content: "●"; font-size: .7em;
-  margin-right: 5px; vertical-align: middle;
+  margin-inline-end: 5px; vertical-align: middle;
 }
 .pilot-card .foot .rate { color: var(--ink-soft); }
 
@@ -1826,7 +1829,7 @@ a, button { touch-action: manipulation; }
 
 @media (max-width: 600px) {
   .page { padding: 24px 18px calc(96px + env(safe-area-inset-bottom)); }
-  .footer-legal, .footer-line { padding-left: 18px; padding-right: 18px; }
+  .footer-legal, .footer-line { padding-inline-start: 18px; padding-inline-end: 18px; }
   .mission-brief { padding: 24px 18px; }
 }
 
@@ -1914,14 +1917,15 @@ a, button { touch-action: manipulation; }
 .faq-item { border-bottom: 1px solid var(--rule); }
 .faq-item > summary {
   cursor: pointer; list-style: none;
-  padding: 16px 40px 16px 0;
+  padding: 16px 0;
+  padding-inline-end: 40px;
   position: relative;
   font-family: var(--display); font-weight: 600; font-size: 1.05rem;
   color: var(--ink);
 }
 .faq-item > summary::-webkit-details-marker { display: none; }
 .faq-item > summary::after {
-  content: "+"; position: absolute; right: 4px; top: 12px;
+  content: "+"; position: absolute; inset-inline-end: 4px; top: 12px;
   color: var(--amber); font-size: 1.5rem; font-weight: 300; line-height: 1;
 }
 .faq-item[open] > summary::after { content: "–"; }
@@ -1959,7 +1963,7 @@ a, button { touch-action: manipulation; }
 
 /* --- pied de page : liens réseau + sociaux --- */
 .footer-links { padding-top: 22px; }
-.footer-social { display: inline-flex; gap: 14px; margin-left: auto; }
+.footer-social { display: inline-flex; gap: 14px; margin-inline-start: auto; }
 
 /* --- back-office : aperçu intégré d'un justificatif (PDF / image) --- */
 .doc-preview {
@@ -1990,7 +1994,7 @@ a, button { touch-action: manipulation; }
 .kind-badge {
   display: inline-block; vertical-align: middle;
   font: 700 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
-  padding: 4px 7px; border-radius: 999px; margin-left: 4px;
+  padding: 4px 7px; border-radius: 999px; margin-inline-start: 4px;
   color: #3b82f6; border: 1px solid rgba(59,130,246,.4); background: rgba(59,130,246,.06);
 }
 .kind-badge.kind-recreational { color: #0f9c8c; border-color: rgba(20,184,166,.45); background: rgba(20,184,166,.08); }
@@ -2001,9 +2005,53 @@ a, button { touch-action: manipulation; }
 .pilot-card.kind-recreational { border-color: rgba(20,184,166,.35); }
 
 /* --- carte interactive : liaison liste <-> marqueurs --- */
-.pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-left: 4px; }
+.pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-inline-start: 4px; }
 .pilot-card .map-pin:hover { opacity: 1; }
 .pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(66,87,178,.25); }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
 @media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }
+
+/* ============ Écritures ourdou et bengalie ============
+   Les polices ne sont chargées que pour la langue concernée (base.html).
+   Le nastaliq ourdou monte et descend beaucoup : il lui faut de
+   l'interlignage et surtout aucune chasse négative, qui casse les
+   ligatures. Même remarque, en plus doux, pour le bengali. */
+html[lang="ur"] body,
+html[lang="ur"] h1, html[lang="ur"] h2, html[lang="ur"] h3,
+html[lang="ur"] .lead, html[lang="ur"] .eyebrow,
+html[lang="ur"] button, html[lang="ur"] input, html[lang="ur"] select,
+html[lang="ur"] textarea {
+  font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', var(--sans);
+  letter-spacing: normal;
+}
+html[lang="ur"] body { line-height: 2.05; }
+html[lang="ur"] h1 { line-height: 1.55; }
+html[lang="ur"] h2, html[lang="ur"] h3 { line-height: 1.7; }
+html[lang="ur"] .eyebrow { font-size: 13px; }
+
+html[lang="bn"] body,
+html[lang="bn"] h1, html[lang="bn"] h2, html[lang="bn"] h3,
+html[lang="bn"] .lead, html[lang="bn"] .eyebrow,
+html[lang="bn"] button, html[lang="bn"] input, html[lang="bn"] select,
+html[lang="bn"] textarea {
+  font-family: 'Noto Sans Bengali', var(--sans);
+  letter-spacing: normal;
+}
+html[lang="bn"] body { line-height: 1.72; }
+html[lang="bn"] h1 { line-height: 1.2; }
+html[lang="bn"] .eyebrow { font-size: 12.5px; }
+
+/* ---- droite à gauche ----
+   Le gros du retournement vient des propriétés logiques (border-inline,
+   inset-inline…). Restent les éléments dont l'ordre est écrit en dur. */
+[dir="rtl"] .lang-menu-list a,
+[dir="rtl"] .pilot-card,
+[dir="rtl"] .mission-card { text-align: right; }
+[dir="rtl"] .ticker-track { animation-direction: reverse; }
+/* Chiffres, prix et codes restent lus de gauche a droite. */
+[dir="rtl"] .lang-cur,
+[dir="rtl"] .mono,
+[dir="rtl"] .price,
+[dir="rtl"] .num,
+[dir="rtl"] .stat-rail .v { direction: ltr; unicode-bidi: isolate; }
