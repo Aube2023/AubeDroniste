@@ -202,7 +202,8 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
 
 def set_pilot_specialties(user_id: int, codes: Iterable[str]):
     db.execute("DELETE FROM pilot_specialties WHERE pilot_user_id=?", (user_id,))
-    for code in {c for c in codes if c}:
+    known = {k for k, _ in MISSION_TYPES}
+    for code in {c for c in codes if c in known}:
         db.execute(
             "INSERT OR IGNORE INTO pilot_specialties (pilot_user_id, mission_type) VALUES (?, ?)",
             (user_id, code),
@@ -839,6 +840,123 @@ def sitemap_pilots(limit: int = 5000) -> list:
         (limit,),
     )
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Pages d'atterrissage de l'annuaire (pays, ville, specialite)
+#
+# Ce sont les requetes que les gens tapent vraiment (« pilote de drone
+# Montréal », « inspection de toiture par drone »). On ne cree une page que
+# pour ce qui existe en base : une liste vide indexee nuit a tout le site.
+# Memes criteres que la recherche par defaut (pilote disponible, compte actif).
+# ---------------------------------------------------------------------------
+
+_LANDING_BASE = (
+    "FROM users u JOIN pilot_profiles p ON p.user_id = u.id "
+    "WHERE u.role IN ('pilot','both') AND u.deleted_at IS NULL AND p.is_available = 1 "
+)
+
+
+def _group_by_slug(rows, key: str) -> list:
+    """« Montréal », « Montreal » et « montréal » sont une seule page : on
+    regroupe par slug, l'orthographe la plus frequente sert d'affichage et
+    `names` garde toutes les variantes pour retrouver les pilotes."""
+    import seo
+    groups: dict = {}
+    for r in rows:
+        slug = seo.slugify(r[key])
+        g = groups.setdefault(slug, {"slug": slug, "n": 0, "names": [], "_best": 0,
+                                     **{k: v for k, v in r.items() if k not in (key, "n")}})
+        g["n"] += r["n"]
+        g["names"].append(r[key])
+        if r["n"] > g["_best"]:
+            g["_best"], g["name"] = r["n"], r[key]
+    out = sorted(groups.values(), key=lambda g: (-g["n"], g["name"]))
+    for g in out:
+        g.pop("_best")
+    return out
+
+
+def landing_countries() -> list:
+    """[{name, names, slug, n}] tries par nombre de pilotes puis nom."""
+    rows = db.fetchall(
+        "SELECT u.country AS name, COUNT(*) AS n " + _LANDING_BASE +
+        "AND u.country IS NOT NULL AND u.country <> '' GROUP BY u.country"
+    )
+    return _group_by_slug([dict(r) for r in rows], "name")
+
+
+def landing_cities(country: Optional[str] = None) -> list:
+    """[{name, names, country, slug, n}] ; `country` (nom en base) restreint."""
+    import seo
+    q = ("SELECT u.city AS name, u.country AS country, COUNT(*) AS n " + _LANDING_BASE +
+         "AND u.city IS NOT NULL AND u.city <> '' AND u.country IS NOT NULL AND u.country <> '' ")
+    args: list = []
+    if country:
+        q += "AND u.country = ? "
+        args.append(country)
+    q += "GROUP BY u.country, u.city"
+    rows = [dict(r) for r in db.fetchall(q, tuple(args))]
+    # la ville est identifiee par (pays, slug) : on porte le slug du pays
+    for r in rows:
+        r["country_slug"] = seo.slugify(r["country"])
+    out = []
+    by_country: dict = {}
+    for r in rows:
+        by_country.setdefault(r["country_slug"], []).append(r)
+    for cs, group in by_country.items():
+        out.extend(_group_by_slug(group, "name"))
+    out.sort(key=lambda g: (-g["n"], g["name"]))
+    return out
+
+
+def landing_specialties() -> list:
+    """[{code, n}] pour chaque specialite connue ayant au moins un pilote."""
+    known = {k for k, _ in MISSION_TYPES}
+    rows = db.fetchall(
+        "SELECT s.mission_type AS code, COUNT(DISTINCT u.id) AS n "
+        "FROM pilot_specialties s "
+        "JOIN users u ON u.id = s.pilot_user_id "
+        "JOIN pilot_profiles p ON p.user_id = u.id "
+        "WHERE u.role IN ('pilot','both') AND u.deleted_at IS NULL AND p.is_available = 1 "
+        "GROUP BY s.mission_type ORDER BY n DESC, s.mission_type"
+    )
+    return [{"code": r["code"], "n": r["n"]} for r in rows if r["code"] in known]
+
+
+def resolve_country_slug(slug: str) -> Optional[dict]:
+    """Slug d'URL -> groupe {name, names, slug, n} (None si aucun pilote)."""
+    for c in landing_countries():
+        if c["slug"] == slug:
+            return c
+    return None
+
+
+def resolve_city_slug(country_slug: str, slug: str) -> Optional[dict]:
+    for c in landing_cities():
+        if c["country_slug"] == country_slug and c["slug"] == slug:
+            return c
+    return None
+
+
+def pilots_in_place(*, country_names, city_slug: str = "", limit: int = 200) -> list:
+    """Pilotes d'un pays (toutes orthographes) et, si `city_slug`, de cette
+    ville : filtre exact par slug, pas de LIKE (« laval » ne prend pas
+    « Lavaltrie »)."""
+    import seo
+    out: list = []
+    for name in country_names:
+        out.extend(search_pilots(country=name, limit=limit))
+    seen = set()
+    uniq = []
+    for p in out:
+        if p["id"] in seen:
+            continue
+        seen.add(p["id"])
+        if city_slug and seo.slugify(p.get("city") or "") != city_slug:
+            continue
+        uniq.append(p)
+    return uniq
 
 
 def sitemap_missions(limit: int = 5000) -> list:

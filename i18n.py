@@ -10,6 +10,9 @@ Approche minimaliste, sans dependance externe :
 Les emails sont bilingues empiles (FR puis EN) pour qu'un destinataire
 recoive toujours sa langue, peu importe sa preference cote serveur.
 """
+import json
+import os
+import re
 from typing import Optional
 
 from flask import request
@@ -48,6 +51,13 @@ LANGUAGE_META = {
 # Langues ecrites de droite a gauche : <html dir="rtl"> + surcharges CSS.
 RTL = ("ur", "ar")
 
+# Locale Open Graph (og:locale) par langue.
+LOCALES = {
+    "fr": "fr_CA", "en": "en_US", "es": "es_ES", "pt": "pt_PT", "de": "de_DE",
+    "it": "it_IT", "ru": "ru_RU", "ar": "ar_AR", "zh": "zh_CN", "hi": "hi_IN",
+    "uk": "uk_UA", "tr": "tr_TR", "ur": "ur_PK", "bn": "bn_BD",
+}
+
 
 def lang_name(code: str) -> str:
     return LANGUAGE_META.get(code, (code.upper(), "🌐"))[0]
@@ -60,6 +70,117 @@ def lang_flag(code: str) -> str:
 def lang_dir(code: str) -> str:
     """Sens d'ecriture pour l'attribut <html dir>."""
     return "rtl" if code in RTL else "ltr"
+
+
+def og_locale(code: str) -> str:
+    return LOCALES.get(code, LOCALES[DEFAULT])
+
+
+# Noms de pays par langue : geodata/country_names.json = {lang: {nom_fr: nom}}.
+# Les pays sont stockes en francais (config.COUNTRIES) ; sans table pour une
+# langue, on affiche le nom tel qu'en base.
+_COUNTRY_NAMES: dict = {}
+try:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "geodata", "country_names.json"), encoding="utf-8") as _f:
+        _COUNTRY_NAMES = json.load(_f)
+except (OSError, ValueError):
+    _COUNTRY_NAMES = {}
+
+
+def country_name(name: str, lang: str) -> str:
+    return _COUNTRY_NAMES.get(lang, {}).get(name) or name
+
+
+# ---------------------------------------------------------------------------
+# « à Casablanca » mais « au Maroc », « en France », « aux Pays-Bas » : en
+# francais la preposition depend du pays. Les autres langues ont choisi des
+# tournures qui acceptent un nom propre tel quel ({place}) ; le francais
+# recoit {in_place}, deja compose ici.
+# ---------------------------------------------------------------------------
+_FR_AUX = {"États-Unis", "Pays-Bas", "Émirats arabes unis", "Philippines", "Maldives",
+           "Comores", "Seychelles", "Bahamas", "Fidji", "Tonga", "Samoa", "Palaos",
+           "Bermudes", "Antilles néerlandaises", "Tuvalu"}
+_FR_A = {"Cuba", "Madagascar", "Malte", "Monaco", "Singapour", "Maurice",
+         "Chypre", "Bahreïn", "Djibouti", "Taïwan", "Hong Kong", "Macao",
+         "Trinité-et-Tobago", "Kiribati", "Nauru", "Vanuatu", "Saint-Marin",
+         "Sainte-Lucie", "Saint-Kitts-et-Nevis", "Saint-Vincent-et-les-Grenadines",
+         "Antigua-et-Barbuda", "Porto Rico", "Guam", "Sao Tomé-et-Principe",
+         "São Tomé-et-Principe", "Gibraltar", "Saint-Christophe-et-Niévès"}
+_FR_EN = {"Haïti"}                     # h aspire mais « en Haïti » est l'usage
+_FR_A_LA = {"Barbade", "Dominique", "Grenade", "Réunion", "Martinique", "Guadeloupe"}
+_FR_AU = {"Mexique", "Cambodge", "Mozambique", "Zimbabwe", "Belize", "Suriname",
+          "Vatican", "Kosovo", "Monténégro", "Brunei", "Timor oriental", "Salvador",
+          "El Salvador", "Royaume-Uni", "Yémen", "Sri Lanka"}
+_FR_VOWELS = "AEIOUÉÈÊÀÂÎÏÔÛaeiouéèêàâîïôû"
+
+
+def fr_in_country(name: str) -> str:
+    """'Maroc' -> 'au Maroc', 'France' -> 'en France', 'Pays-Bas' -> 'aux Pays-Bas'."""
+    n = " ".join((name or "").split())
+    if not n:
+        return ""
+    if n in _FR_AUX or n.startswith(("Îles ", "Iles ")):
+        return "aux " + n
+    if n in _FR_A:
+        return "à " + n
+    if n in _FR_A_LA:
+        return "à la " + n
+    if n in _FR_AU:
+        return "au " + n[3:] if n.startswith("El ") else "au " + n
+    if n in _FR_EN:
+        return "en " + n
+    # Le genre est celui du premier mot : « Corée du Sud », « Guinée-Bissau »
+    head = re.split(r" (?:du|de|des|d')\s*|-", n)[0]
+    if head.endswith("e") or head[0] in _FR_VOWELS:
+        return "en " + n
+    return "au " + n
+
+
+def fr_place(city: str = "", country: str = "") -> str:
+    """Complement de lieu francais : ville -> « à Ville[, Pays] », sinon pays.
+    Les villes a article se contractent : « au Havre », « aux Sables-d'Olonne »."""
+    if city:
+        c = " ".join(city.split())
+        if c.startswith("Le "):
+            loc = "au " + c[3:]
+        elif c.startswith("Les "):
+            loc = "aux " + c[4:]
+        else:
+            loc = "à " + c
+        return loc + (", " + country if country else "")
+    return fr_in_country(country)
+
+
+# ---------------------------------------------------------------------------
+# Une URL par langue (referencement)
+#
+# La langue par defaut vit a la racine (/pilotes/5) ; les autres sont prefixees
+# (/en/pilotes/5). Un moteur ne lit pas les cookies : sans URL distincte, une
+# seule langue existe pour lui. app.py enregistre les regles prefixees pour
+# les pages publiques et injecte le prefixe dans url_for().
+# ---------------------------------------------------------------------------
+
+def url_prefix(code: str) -> str:
+    """'' pour la langue par defaut, '/en' pour les autres."""
+    return "" if code == DEFAULT or code not in SUPPORTED else "/" + code
+
+
+def split_prefix(path: str):
+    """'/en/pilotes/5' -> ('en', '/pilotes/5') ; '/pilotes/5' -> (None, '/pilotes/5')."""
+    parts = path.split("/", 2)
+    if len(parts) >= 2 and parts[1] in SUPPORTED and parts[1] != DEFAULT:
+        rest = "/" + parts[2] if len(parts) == 3 else "/"
+        return parts[1], rest
+    return None, path
+
+
+def localized_path(path: str, code: str) -> str:
+    """Remplace (ou pose) le prefixe de langue d'un chemin. Un chemin qui
+    commencerait par plusieurs barres est ramene a une seule : « //hote »
+    serait lu comme une URL externe par le navigateur."""
+    _cur, bare = split_prefix(re.sub(r"^/+", "/", path or "/"))
+    return url_prefix(code) + bare
 
 
 def resolve_lang() -> str:
@@ -1361,6 +1482,60 @@ _T = {
     "status.completed":       {"fr": "terminée",       "en": "completed", "es": "completada", "ru": "завершено", "hi": "संपन्न", "uk": "завершена", "tr": "tamamlandı", "ur": "مکمل", "bn": "সমাপ্ত"},
     "status.disputed":        {"fr": "en litige",      "en": "disputed", "es": "en disputa", "ru": "спорно", "hi": "विवादित", "uk": "у спорі", "tr": "anlaşmazlıkta", "ur": "متنازع", "bn": "বিরোধপূর্ণ"},
     "status.refunded":        {"fr": "remboursée",     "en": "refunded", "es": "reembolsada", "ru": "возвращено", "hi": "वापस किया गया", "uk": "повернена", "tr": "iade edildi", "ur": "رقم واپس", "bn": "ফেরত দেওয়া"},
+
+    # ---- Pages d'atterrissage de l'annuaire (pays, ville, specialite)
+    "landing.eyebrow_specialty": {"fr": "Spécialité drone", "en": "Drone specialty", "es": "Especialidad con drones", "ru": "Специализация пилотов дронов", "hi": "ड्रोन विशेषज्ञता", "uk": "Дрон-спеціалізація", "tr": "Drone uzmanlığı", "ur": "ڈرون اسپیشلٹی", "bn": "ড্রোন বিশেষত্ব"},
+    "landing.eyebrow_place":     {"fr": "Pilotes de drone", "en": "Drone pilots", "es": "Pilotos de drones", "ru": "Пилоты дронов", "hi": "ड्रोन पायलट", "uk": "Пілоти дронів", "tr": "Drone pilotları", "ur": "ڈرون پائلٹس", "bn": "ড্রোন পাইলট"},
+    "landing.h1_specialty":      {"fr": "Pilotes de drone : {specialty}", "en": "Drone pilots: {specialty}", "es": "Pilotos de drones: {specialty}", "ru": "Пилоты дронов: {specialty}", "hi": "ड्रोन पायलट: {specialty}", "uk": "Пілоти дронів: {specialty}", "tr": "Drone pilotları: {specialty}", "ur": "ڈرون پائلٹس: {specialty}", "bn": "ড্রোন পাইলট: {specialty}"},
+    "landing.h1_place":          {"fr": "Pilotes de drone {in_place}", "en": "Drone pilots in {place}", "es": "Pilotos de drones en {place}", "ru": "Пилоты дронов: {place}", "hi": "{place} में ड्रोन पायलट", "uk": "Пілоти дронів: {place}", "tr": "{place} drone pilotları", "ur": "{place} میں ڈرون پائلٹس", "bn": "{place}-এ ড্রোন পাইলট"},
+    "landing.count":             {"fr": "{n} pilote(s) disponible(s)", "en": "{n} pilot(s) available", "es": "{n} piloto(s) disponible(s)", "ru": "Доступно пилотов: {n}", "hi": "{n} पायलट उपलब्ध", "uk": "Доступно пілотів: {n}", "tr": "{n} pilot müsait", "ur": "{n} پائلٹ دستیاب", "bn": "{n} জন পাইলট উপলব্ধ"},
+    "landing.lead_specialty":    {"fr": "Pilotes de drone certifiés pour {specialty} : comparez brevets, matériel et avis, puis demandez un devis gratuit.",
+                                  "en": "Certified drone pilots for {specialty}: compare licences, gear and reviews, then request a free quote.",
+                                  "es": "Pilotos de drones certificados para {specialty}: compare licencias, equipo y reseñas, y luego solicite un presupuesto gratis.",
+                                  "ru": "Сертифицированные пилоты дронов по направлению «{specialty}»: сравните лицензии, оборудование и отзывы, затем запросите бесплатный расчёт.",
+                                  "hi": "{specialty} के लिए प्रमाणित ड्रोन पायलट: लाइसेंस, उपकरण और समीक्षाओं की तुलना करें, फिर मुफ़्त कोटेशन माँगें।",
+                                  "uk": "Сертифіковані пілоти дронів у категорії «{specialty}»: порівняйте ліцензії, обладнання й відгуки, а тоді запросіть безкоштовний кошторис.",
+                                  "tr": "{specialty} için sertifikalı drone pilotları: lisansları, ekipmanı ve yorumları karşılaştırın, ardından ücretsiz teklif isteyin.",
+                                  "ur": "{specialty} کے لیے سرٹیفائیڈ ڈرون پائلٹس: لائسنس، آلات اور ریویوز کا موازنہ کریں، پھر مفت کوٹیشن طلب کریں۔",
+                                  "bn": "{specialty} কাজের জন্য সার্টিফাইড ড্রোন পাইলট: লাইসেন্স, সরঞ্জাম ও রিভিউ তুলনা করুন, তারপর বিনামূল্যে কোটেশন চান।"},
+    "landing.lead_place":        {"fr": "Pilotes de drone certifiés {in_place} : comparez brevets, matériel et avis, puis demandez un devis gratuit.",
+                                  "en": "Certified drone pilots in {place}: compare licences, gear and reviews, then request a free quote.",
+                                  "es": "Pilotos de drones certificados en {place}: compare licencias, equipo y reseñas, y luego solicite un presupuesto gratis.",
+                                  "ru": "Сертифицированные пилоты дронов ({place}): сравните лицензии, оборудование и отзывы, затем запросите бесплатный расчёт.",
+                                  "hi": "{place} में प्रमाणित ड्रोन पायलट: लाइसेंस, उपकरण और समीक्षाओं की तुलना करें, फिर मुफ़्त कोटेशन माँगें।",
+                                  "uk": "Сертифіковані пілоти дронів, {place}: порівняйте ліцензії, обладнання й відгуки, а тоді запросіть безкоштовний кошторис.",
+                                  "tr": "{place} bölgesinde sertifikalı drone pilotları: lisansları, ekipmanı ve yorumları karşılaştırın, ardından ücretsiz teklif isteyin.",
+                                  "ur": "{place} میں سرٹیفائیڈ ڈرون پائلٹس: لائسنس، آلات اور ریویوز کا موازنہ کریں، پھر مفت کوٹیشن طلب کریں۔",
+                                  "bn": "{place}-এ সার্টিফাইড ড্রোন পাইলট: লাইসেন্স, সরঞ্জাম ও রিভিউ তুলনা করুন, তারপর বিনামূল্যে কোটেশন চান।"},
+    "landing.empty":             {"fr": "Aucun pilote pour cette recherche pour le moment. Parcourez tous les pilotes ou publiez une mission : les pilotes du réseau vous répondent.",
+                                  "en": "No pilot for this search yet. Browse all pilots or post a mission: the network's pilots will answer.",
+                                  "es": "Por el momento no hay pilotos para esta búsqueda. Explore todos los pilotos o publique una misión: los pilotos de la red le responderán.",
+                                  "ru": "По этому запросу пока нет пилотов. Посмотрите всех пилотов или разместите заказ: пилоты сети вам ответят.",
+                                  "hi": "इस खोज के लिए अभी कोई पायलट नहीं है। सभी पायलट देखें या कोई मिशन पोस्ट करें: नेटवर्क के पायलट आपको जवाब देंगे।",
+                                  "uk": "За цим запитом поки немає пілотів. Перегляньте всіх пілотів або опублікуйте завдання: пілоти мережі вам відповідять.",
+                                  "tr": "Bu arama için henüz pilot yok. Tüm pilotlara göz atın veya bir görev yayınlayın: ağdaki pilotlar size yanıt verir.",
+                                  "ur": "اس تلاش کے لیے فی الحال کوئی پائلٹ نہیں۔ تمام پائلٹس دیکھیں یا مشن پوسٹ کریں: نیٹ ورک کے پائلٹس آپ کو جواب دیں گے۔",
+                                  "bn": "এই অনুসন্ধানের জন্য এখনও কোনো পাইলট নেই। সব পাইলট দেখুন অথবা একটি মিশন পোস্ট করুন: নেটওয়ার্কের পাইলটরা আপনাকে সাড়া দেবেন।"},
+    "landing.hub_title":         {"fr": "Explorer l'annuaire", "en": "Explore the directory", "es": "Explorar el directorio", "ru": "Смотреть каталог", "hi": "डायरेक्टरी देखें", "uk": "Переглянути каталог", "tr": "Rehberi keşfedin", "ur": "ڈائریکٹری براؤز کریں", "bn": "ডিরেক্টরি ঘুরে দেখুন"},
+    "landing.by_country":        {"fr": "Par pays", "en": "By country", "es": "Por país", "ru": "По странам", "hi": "देश के अनुसार", "uk": "За країною", "tr": "Ülkeye göre", "ur": "ملک کے لحاظ سے", "bn": "দেশ অনুযায়ী"},
+    "landing.by_city":           {"fr": "Par ville", "en": "By city", "es": "Por ciudad", "ru": "По городам", "hi": "शहर के अनुसार", "uk": "За містом", "tr": "Şehre göre", "ur": "شہر کے لحاظ سے", "bn": "শহর অনুযায়ী"},
+    "nav.suggest_lang":          {"fr": "Ce site existe aussi en français.", "en": "This site is also available in English.", "es": "Este sitio también está disponible en español.", "ru": "Этот сайт доступен и на русском языке.", "hi": "यह साइट हिन्दी में भी उपलब्ध है।", "uk": "Цей сайт доступний і українською.", "tr": "Bu site Türkçe olarak da mevcut.", "ur": "یہ سائٹ اردو میں بھی دستیاب ہے۔", "bn": "এই সাইটটি বাংলাতেও পাওয়া যায়।"},
+    "nav.suggest_open":          {"fr": "Voir en français", "en": "View in English", "es": "Ver en español", "ru": "Открыть на русском", "hi": "हिन्दी में देखें", "uk": "Відкрити українською", "tr": "Türkçe görüntüle", "ur": "اردو میں دیکھیں", "bn": "বাংলায় দেখুন"},
+    "nav.suggest_close":         {"fr": "Non merci", "en": "No thanks", "es": "No, gracias", "ru": "Нет, спасибо", "hi": "नहीं, धन्यवाद", "uk": "Ні, дякую", "tr": "Hayır, teşekkürler", "ur": "نہیں، شکریہ", "bn": "না, ধন্যবাদ"},
+    "nav.breadcrumb":            {"fr": "Fil d'Ariane", "en": "Breadcrumb", "es": "Ruta de navegación", "ru": "Навигационная цепочка", "hi": "ब्रेडक्रम्ब", "uk": "Навігаційний ланцюжок", "tr": "Gezinti yolu", "ur": "راستہ", "bn": "ব্রেডক্রাম্ব"},
+
+    # ---- Carte interactive (fenetres, calques)
+    "map.view_profile":          {"fr": "Voir le profil →", "en": "View profile →", "es": "Ver el perfil →", "ru": "Открыть профиль →", "hi": "प्रोफ़ाइल देखें →", "uk": "Переглянути профіль →", "tr": "Profili gör →", "ur": "پروفائل دیکھیں →", "bn": "প্রোফাইল দেখুন →"},
+    "map.view_mission":          {"fr": "Voir la mission →", "en": "View mission →", "es": "Ver la misión →", "ru": "Открыть задание →", "hi": "मिशन देखें →", "uk": "Переглянути місію →", "tr": "Görevi gör →", "ur": "مشن دیکھیں →", "bn": "মিশন দেখুন →"},
+    "map.members":               {"fr": "membres", "en": "members", "es": "miembros", "ru": "участников", "hi": "सदस्य", "uk": "учасників", "tr": "üye", "ur": "اراکین", "bn": "সদস্য"},
+    "map.radius":                {"fr": "rayon", "en": "radius", "es": "radio", "ru": "радиус", "hi": "दायरा", "uk": "радіус", "tr": "yarıçap", "ur": "دائرہ", "bn": "ব্যাসার্ধ"},
+    "map.points":                {"fr": "{n} point(s) sur la carte", "en": "{n} point(s) on the map", "es": "{n} punto(s) en el mapa", "ru": "{n} точек на карте", "hi": "मानचित्र पर {n} बिंदु", "uk": "{n} точок на мапі", "tr": "Haritada {n} nokta", "ur": "نقشے پر {n} مقامات", "bn": "মানচিত্রে {n}টি পয়েন্ট"},
+    "map.satellite":             {"fr": "Satellite", "en": "Satellite", "es": "Satélite", "ru": "Спутник", "hi": "सैटेलाइट", "uk": "Супутник", "tr": "Uydu", "ur": "سیٹلائٹ", "bn": "স্যাটেলাইট"},
+    "map.plan":                  {"fr": "Plan", "en": "Map", "es": "Mapa", "ru": "Карта", "hi": "नक्शा", "uk": "Мапа", "tr": "Harita", "ur": "نقشہ", "bn": "মানচিত্র"},
+    "map.to_satellite":          {"fr": "Voir en satellite", "en": "Switch to satellite", "es": "Ver en satélite", "ru": "Спутниковый вид", "hi": "सैटेलाइट दृश्य", "uk": "Супутниковий вигляд", "tr": "Uydu görünümüne geç", "ur": "سیٹلائٹ منظر", "bn": "স্যাটেলাইট ভিউ"},
+    "map.to_plan":               {"fr": "Revenir au plan", "en": "Switch back to map", "es": "Volver al mapa", "ru": "Вернуться к карте", "hi": "नक्शे पर लौटें", "uk": "Повернутися до мапи", "tr": "Haritaya dön", "ur": "نقشے پر واپس", "bn": "মানচিত্রে ফিরুন"},
+    "map.mission":               {"fr": "Mission", "en": "Mission", "es": "Misión", "ru": "Задание", "hi": "मिशन", "uk": "Місія", "tr": "Görev", "ur": "مشن", "bn": "মিশন"},
+    "landing.by_specialty":      {"fr": "Par spécialité", "en": "By specialty", "es": "Por especialidad", "ru": "По специализациям", "hi": "विशेषज्ञता के अनुसार", "uk": "За спеціалізацією", "tr": "Uzmanlığa göre", "ur": "اسپیشلٹی کے لحاظ سے", "bn": "বিশেষত্ব অনুযায়ী"},
 }
 
 

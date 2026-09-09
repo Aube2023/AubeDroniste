@@ -97,6 +97,11 @@ AubePilot/
 - Templates utilisent `{{ t('key') }}` (injecté via `context_processor`)
 - Sélecteur dans `base.html` → `GET /lang/<code>` pose le cookie
 - `i18n.RTL` liste les écritures droite-à-gauche (ourdou) ; `lang_dir()` alimente `<html dir>`, le CSS suit avec les propriétés logiques (`border-inline-start`, `inset-inline-end`…)
+- **Une URL par langue** (référencement) : le français reste à la racine (`/pilotes/5`), les autres langues sont préfixées (`/en/pilotes/5`). `app.LANG_ENDPOINTS` liste les pages publiques concernées ; `_register_lang_routes()` double chaque règle avec `/<lang>`, `_push_lang` (url_defaults) fait produire le préfixe par `url_for`, `_pull_lang` (url_value_preprocessor) le retire des arguments de vue. Priorité : préfixe d'URL > cookie > préférence du compte > `Accept-Language`. Une URL nue visitée avec une langue **choisie** (cookie ou compte) redirige en 302 vers sa version préfixée ; jamais sur la seule foi d'`Accept-Language` (un robot doit trouver la page, pas une redirection). `base.html` émet canonical + `hreflang` pour toutes les langues + `x-default` (fr) + `og:locale`.
+- Titres et descriptions : `seo._S` (même forme que `_T`), accès par `seo._s(lang, clé, city=, country=)` qui fournit `{place}` et, pour le français, `{in_place}` avec la bonne préposition (`i18n.fr_in_country` : « au Maroc », « en France », « aux Pays-Bas »). Noms de pays traduits : `geodata/country_names.json` + `i18n.country_name()`.
+- Pages d'atterrissage de l'annuaire : `/pilotes/pays/<pays>[/<ville>]` et `/pilotes/specialite/<code>` (`services.landing_*`, `templates/pilots_landing.html`, bloc `_directory_hub.html`). Indexables seulement avec au moins un pilote (sinon `noindex`), listées au sitemap dans ce cas.
+- Sitemap : `seo.render_sitemap()` sort chaque chemin dans chaque langue avec ses alternates `xhtml:link` (format hreflang des sitemaps).
+- IndexNow : clé dérivée du secret (`seo.INDEXNOW_KEY`, servie sur `/<clé>.txt`), `seo.indexnow_ping()` en arrière-plan à l'inscription d'un pilote, à la sauvegarde du profil et à la publication d'une mission ; actif seulement si `SITE_URL` est en HTTPS.
 - Emails : **bilingues empilés** (FR puis EN dans le même message) — pas de logique de préférence par destinataire à gérer
 
 Pour ajouter une nouvelle clé : éditer `i18n.py` `_T = {...}`, avec une entrée par langue de `SUPPORTED`

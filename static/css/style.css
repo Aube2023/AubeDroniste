@@ -2055,3 +2055,24 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 [dir="rtl"] .price,
 [dir="rtl"] .num,
 [dir="rtl"] .stat-rail .v { direction: ltr; unicode-bidi: isolate; }
+
+/* ============ Annuaire : fil d'Ariane + bloc « explorer l'annuaire » ============ */
+.breadcrumb { font-size: 13px; color: var(--ink-dim); margin: 0 0 14px; }
+.breadcrumb a { color: var(--ink-soft); }
+.breadcrumb a:hover { color: var(--amber); }
+.directory-hub { margin: 56px 0 24px; padding-top: 28px; border-top: 1px solid var(--rule); }
+.directory-hub h2 { font-size: 1.25rem; margin: 0 0 16px; }
+.directory-hub h3 { margin: 0 0 8px; font-size: .9rem; }
+.hub-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.hub-list { list-style: none; margin: 0; padding: 0; columns: 1; }
+.hub-list li { padding: 3px 0; font-size: 14px; }
+.hub-list .n { color: var(--ink-dim); font-family: var(--mono); font-size: 12px; margin-inline-start: 4px; }
+
+/* ============ Bandeau « ce site existe aussi en … » ============ */
+.lang-suggest {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 8px 18px; font-size: 13.5px;
+  background: var(--paper-2); border-bottom: 1px solid var(--rule); color: var(--ink-soft);
+}
+.lang-suggest-open { font-weight: 600; }
+.lang-suggest-close { color: var(--ink-dim); margin-inline-start: auto; }

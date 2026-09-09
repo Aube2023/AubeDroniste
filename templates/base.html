@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}">
+<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}" data-lang-prefix="{{ lang_prefix }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
   {% set _seo = seo or {} %}
-  {% set _title = _seo.title or ('AubePilot — Louez un pilote de drone certifié | Devis gratuits' if lang == 'fr' else 'AubePilot — Hire a Certified Drone Pilot | Free Quotes') %}
-  {% set _desc = _seo.description or ('Trouvez et réservez un pilote de drone certifié : prises de vue aériennes, inspections, mariages, immobilier. Devis gratuits, paiement sécurisé.' if lang == 'fr' else 'Find and book a certified drone pilot for aerial photography, inspections and events. Free quotes, secure escrow payments.') %}
+  {% set _title = _seo.title or seo_default.title %}
+  {% set _desc = _seo.description or seo_default.description %}
   {% set _ogimg = _seo.og_image or (canonical_base ~ url_for('static', filename='brand/og-image.png')) %}
-  {% set _url = canonical_base ~ request.path %}
+  {# Une URL par langue : la canonique est la version courante, hreflang liste les autres #}
+  {% set _url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
   <title>{% block title %}{{ _title }}{% endblock %}</title>
   <meta name="description" content="{{ _desc }}">
   <link rel="canonical" href="{{ _url }}">
   <meta name="robots" content="{{ _seo.robots or 'index, follow, max-image-preview:large, max-snippet:-1' }}">
-  <link rel="alternate" hreflang="fr" href="{{ _url }}">
-  <link rel="alternate" hreflang="en" href="{{ _url }}">
-  <link rel="alternate" hreflang="x-default" href="{{ _url }}">
+  {% for code, href in seo_alternates.items() %}<link rel="alternate" hreflang="{{ code }}" href="{{ href }}">
+  {% endfor %}{% if seo_alternates %}<link rel="alternate" hreflang="x-default" href="{{ seo_alternates['fr'] }}">{% endif %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand/favicon.svg') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">
@@ -33,8 +33,9 @@
   <meta property="og:image" content="{{ _ogimg }}">
   <meta property="og:url" content="{{ _url }}">
   <meta property="og:type" content="{{ _seo.og_type or 'website' }}">
-  <meta property="og:locale" content="{{ 'fr_FR' if lang == 'fr' else 'en_US' }}">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:locale" content="{{ og_locale(lang) }}">
+  {% for code in seo_alternates if code != lang %}<meta property="og:locale:alternate" content="{{ og_locale(code) }}">
+  {% endfor %}  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ _title }}">
   <meta name="twitter:description" content="{{ _desc }}">
   <meta name="twitter:image" content="{{ _ogimg }}">
@@ -118,6 +119,14 @@
       <span class="label-light">{{ t('nav.theme_light') }}</span>
     </button>
   </nav>
+  {% if lang_suggestion %}
+  {# Langue du navigateur differente de la page : on propose, on n'impose pas #}
+  <div class="lang-suggest" lang="{{ lang_suggestion.code }}" dir="{{ lang_dir(lang_suggestion.code) }}" role="region">
+    <span>{{ lang_suggestion.text }}</span>
+    <a class="lang-suggest-open" href="{{ lang_suggestion.href }}">{{ lang_suggestion.open }} →</a>
+    <a class="lang-suggest-close" href="{{ lang_suggestion.dismiss }}" rel="nofollow">{{ lang_suggestion.close }}</a>
+  </div>
+  {% endif %}
 </header>
 
 {% with msgs = get_flashed_messages(with_categories=true) %}

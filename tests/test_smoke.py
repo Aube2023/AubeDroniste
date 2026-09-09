@@ -27,6 +27,9 @@ def test_lang_switch(client):
     assert r.status_code in (302, 303)
     cookie = r.headers.get("Set-Cookie", "")
     assert "aube_lang=en" in cookie
+    # Le client est partage par le module : sans retour au francais, le cookie
+    # ferait rediriger les URL nues des tests suivants vers /en/... (voulu).
+    client.get("/lang/fr")
 
 
 def test_lang_invalid_404(client):

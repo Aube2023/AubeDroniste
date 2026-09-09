@@ -263,7 +263,9 @@ def test_faq_page_bilingual_with_structured_data(client):
     assert '"@type": "FAQPage"' in html
     assert "Comment trouver un pilote" in html
     client.set_cookie("aube_lang", "en", domain="localhost.localdomain")
-    r = client.get("/faq")
+    # Le cookie renvoie vers l'URL de la langue (/en/faq), qui sert l'anglais.
+    r = client.get("/faq", follow_redirects=True)
+    assert r.request.path == "/en/faq"
     assert "How do I find a drone pilot" in r.data.decode()
 
 
@@ -342,7 +344,7 @@ def test_contact_post_validation_errors(client):
 
 
 def test_sitemap_and_robots_include_new_pages(client):
-    xml = client.get("/sitemap.xml").data.decode()
+    xml = client.get("/sitemap-fr.xml").data.decode()
     assert "/faq</loc>" in xml and "/contact</loc>" in xml
 
 

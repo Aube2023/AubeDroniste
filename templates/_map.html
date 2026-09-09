@@ -65,7 +65,8 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
 (function () {
   var el = document.getElementById('aube-map');
   if (!el || typeof maplibregl === 'undefined') return;
-  var LANG = {{ ('"fr"' if lang == 'fr' else '"en"') | safe }};
+  var LANG_PREFIX = {{ lang_prefix | tojson }};
+  var L10N = {{ map_l10n | tojson }};
   var FOCUS = {{ ('"' ~ _focus ~ '"') | safe }};
   var CENTER = {{ (_center or none) | tojson }};
   var params = new URLSearchParams(window.location.search);
@@ -74,9 +75,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
   if (params.get('mission_type')) qs.set('mission_type', params.get('mission_type'));
   if (params.get('kind')) qs.set('kind', params.get('kind'));
   var KIND_COLOR = { pro: '#3b82f6', recreational: '#14b8a6', company: '#6366f1', school: '#22c55e', shop: '#ec4899', mission: '#f59e0b', area: '#7a5fc4' };
-  var KIND_LABEL = LANG === 'fr'
-    ? { pro: 'Pilote pro', recreational: 'Pilote récréatif', company: 'Entreprise', school: 'École de formation', shop: 'Boutique', mission: 'Mission' }
-    : { pro: 'Pro pilot', recreational: 'Recreational pilot', company: 'Company', school: 'Training school', shop: 'Shop', mission: 'Mission' };
+  var KIND_LABEL = L10N.kinds;
 
   // Icones blanches dessinees en SVG (nettes a toute taille, pas d'emoji dont
   // le rendu varie selon la plateforme) : drone = pilote, chapeau de diplome =
@@ -118,10 +117,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
   // sans recharger le style (les marqueurs et la zone de recherche restent).
   function SatToggle() {}
   SatToggle.prototype.onAdd = function () {
-    var L = { sat: LANG === 'fr' ? 'Satellite' : 'Satellite',
-              plan: LANG === 'fr' ? 'Plan' : 'Map',
-              toSat: LANG === 'fr' ? 'Voir en satellite' : 'Switch to satellite',
-              toPlan: LANG === 'fr' ? 'Revenir au plan' : 'Switch back to map' };
+    var L = { sat: L10N.sat, plan: L10N.plan, toSat: L10N.toSat, toPlan: L10N.toPlan };
     var wrap = document.createElement('div');
     wrap.className = 'maplibregl-ctrl maplibregl-ctrl-group aube-sat-ctrl';
     var b = document.createElement('button');
@@ -154,24 +150,24 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
   }
   function popupPilot(p) {
     var color = KIND_COLOR[p.kind] || KIND_COLOR.pro;
-    var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count + (LANG==='fr'?' avis':' reviews')) : (LANG === 'fr' ? 'nouveau' : 'new');
-    var verif = p.verified ? '<span class="aube-pop-verif">✓ ' + (LANG==='fr'?'vérifié':'verified') + '</span>' : '';
+    var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count + ' ' + L10N.reviews.replace('{n}', '').trim()) : L10N.new;
+    var verif = p.verified ? '<span class="aube-pop-verif">✓ ' + L10N.verified + '</span>' : '';
     var title = p.name ? esc(p.name) : (KIND_LABEL[p.kind] || KIND_LABEL.pro);
     return '<div class="aube-pop">' + popHead(p.kind, verif) +
       '<div class="aube-pop-body"><b>' + title + '</b>' +
       (p.country ? '<div class="aube-pop-muted">' + esc(p.country) + '</div>' : '') +
       (p.headline ? '<div class="aube-pop-quote">« ' + esc(p.headline) + ' »</div>' : '') +
       '<div class="aube-pop-muted">' + stars + '</div>' +
-      '<a class="aube-pop-cta" style="background:' + color + '" href="/pilotes/' + p.id + '">' + (LANG==='fr'?'Voir le profil →':'View profile →') + '</a></div></div>';
+      '<a class="aube-pop-cta" style="background:' + color + '" href="' + LANG_PREFIX + '/pilotes/' + p.id + '">' + L10N.viewProfile + '</a></div></div>';
   }
   function popupMission(m) {
     var budget = (m.budget_min || m.budget_max) ? ((m.budget_min||'') + (m.budget_max?('–'+m.budget_max):'') + ' ' + (m.currency||'')) : '';
-    var urgent = m.is_urgent ? '<span class="aube-pop-verif">🔥 ' + (LANG==='fr'?'urgent':'urgent') + '</span>' : '';
+    var urgent = m.is_urgent ? '<span class="aube-pop-verif">🔥 ' + L10N.urgent + '</span>' : '';
     return '<div class="aube-pop">' + popHead('mission', urgent) +
-      '<div class="aube-pop-body"><b>' + esc(m.title || (LANG==='fr'?'Mission':'Mission')) + '</b>' +
+      '<div class="aube-pop-body"><b>' + esc(m.title || L10N.mission) + '</b>' +
       '<div class="aube-pop-muted">' + esc([m.city, m.country].filter(Boolean).join(', ')) + '</div>' +
       (budget ? '<div class="aube-pop-muted">' + esc(budget) + '</div>' : '') +
-      '<a class="aube-pop-cta" style="background:#f59e0b" href="/missions/' + m.id + '">' + (LANG==='fr'?'Voir la mission →':'View mission →') + '</a></div></div>';
+      '<a class="aube-pop-cta" style="background:#f59e0b" href="' + LANG_PREFIX + '/missions/' + m.id + '">' + L10N.viewMission + '</a></div></div>';
   }
 
   // Polygone GeoJSON approchant un cercle de `km` autour de [lng, lat].
@@ -241,7 +237,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
     var lift = document.createElement('div');
     lift.style.cssText = 'display:inline-flex;align-items:baseline;gap:6px;padding:7px 13px;border-radius:999px;background:#14151c;border:2px solid #7a5fc4;box-shadow:0 4px 12px rgba(0,0,0,.45);transition:transform .16s;transform-origin:center center;white-space:nowrap';
     lift.innerHTML = '<span style="color:#fff;font:800 13px/1 system-ui">' + count + '</span>' +
-      '<span style="color:#b9a8ec;font:700 9px/1 system-ui;letter-spacing:.14em;text-transform:uppercase">' + (LANG==='fr'?'membres':'members') + '</span>';
+      '<span style="color:#b9a8ec;font:700 9px/1 system-ui;letter-spacing:.14em;text-transform:uppercase">' + L10N.members + '</span>';
     wrap.appendChild(lift);
     wrap._lift = lift;
     return wrap;
@@ -303,13 +299,13 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
     function showList() {
       var items = arr.map(function (pt) {
         var nm = esc(pt.p.name || KIND_LABEL[pt.p.kind] || KIND_LABEL.pro);
-        return '<li><a href="/pilotes/' + pt.p.id + '" style="font-weight:600">' + nm + '</a>' +
+        return '<li><a href="' + LANG_PREFIX + '/pilotes/' + pt.p.id + '" style="font-weight:600">' + nm + '</a>' +
           ' <span class="aube-pop-muted">· ' + (KIND_LABEL[pt.p.kind] || KIND_LABEL.pro) + (pt.p.verified ? ' ✓' : '') + '</span></li>';
       }).join('');
       new maplibregl.Popup({offset: 20, maxWidth: '270px'})
         .setLngLat(center)
         .setHTML('<div class="aube-pop"><div class="aube-pop-head" style="background:#7a5fc4">' +
-          '<span>' + arr.length + ' ' + (LANG==='fr'?'membres':'members') + '</span></div>' +
+          '<span>' + arr.length + ' ' + L10N.members + '</span></div>' +
           '<div class="aube-pop-body"><ul class="aube-pop-list">' + items + '</ul></div></div>')
         .addTo(map);
     }
@@ -411,7 +407,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
       if (CENTER.label) mk.setPopup(new maplibregl.Popup({offset: 14}).setHTML(
         '<div class="aube-pop"><div class="aube-pop-head" style="background:#7a5fc4">' +
         iconSvg('area', 'width:14px;height:14px;flex:none') + '<span>' + esc(CENTER.label) + '</span></div>' +
-        '<div class="aube-pop-body"><div class="aube-pop-muted">' + (LANG === 'fr' ? 'rayon ' : 'radius ') + km + ' km</div></div></div>'));
+        '<div class="aube-pop-body"><div class="aube-pop-muted">' + (L10N.radius + ' ') + km + ' km</div></div></div>'));
       circle.geometry.coordinates[0].forEach(function (pt) { bounds.extend(pt); allBounds.extend(pt); });
     }
 
@@ -444,7 +440,7 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
           if (FOCUS !== 'missions') (data.missions||[]).forEach(function(m){ if(m.lng!=null) bounds.extend([m.lng,m.lat]); });
         }
         var lbl = document.getElementById('map-count');
-        if (lbl) lbl.textContent = (LANG==='fr' ? (n + ' point(s) sur la carte') : (n + ' point(s) on the map'));
+        if (lbl) lbl.textContent = L10N.points.replace('{n}', n);
         if (!bounds.isEmpty()) map.fitBounds(bounds, {padding: 56, maxZoom: hasArea ? 11 : 9, duration: 0});
         renderPilots();
         map.on('moveend', renderPilots);

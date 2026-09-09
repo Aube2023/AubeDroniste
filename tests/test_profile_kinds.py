@@ -164,5 +164,5 @@ def test_schools_page_and_full_school_signup(client):
     reg = client.get("/inscription?role=pilot&kind=school").data.decode()
     assert 'name="website"' in reg and 'name="school_programs"' in reg and 'id="school-extra"' in reg
     # sitemap + pied de page
-    assert "/ecoles</loc>" in client.get("/sitemap.xml").data.decode()
+    assert "/ecoles</loc>" in client.get("/sitemap-fr.xml").data.decode()
     assert 'href="/ecoles"' in client.get("/missions").data.decode()

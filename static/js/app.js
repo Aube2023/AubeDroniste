@@ -99,7 +99,7 @@ function refreshZonePill() {
   }
   pill.classList.add('active');
   pill.setAttribute('href',
-    '/pilotes?lat=' + zone.lat + '&lng=' + zone.lng + '&radius_km=100');
+    (document.documentElement.dataset.langPrefix || '') + '/pilotes?lat=' + zone.lat + '&lng=' + zone.lng + '&radius_km=100');
   pill.title = 'Filtrer autour de votre zone. Clic droit pour effacer.';
   pill.oncontextmenu = function (e) { e.preventDefault(); clearZone(); return false; };
 }

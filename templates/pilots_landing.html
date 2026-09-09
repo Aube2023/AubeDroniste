@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+{# Page d'atterrissage : `landing` = {specialty, place, count}, `pilots`, `hub`.
+   Un titre par requete reelle (« pilote de drone Montréal »), la meme carte
+   que l'annuaire, et les liens vers les pages voisines. #}
+<nav class="breadcrumb" aria-label="{{ t('nav.breadcrumb') }}">
+  <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a> ›
+  <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a>
+  {% if landing.country_slug and landing.city %} › <a href="{{ url_for('pilots_by_country', slug=landing.country_slug) }}">{{ country_name(landing.country) }}</a>{% endif %}
+</nav>
+
+<div class="search-head">
+  <span class="eyebrow">{{ t('landing.eyebrow_specialty') if landing.specialty else t('landing.eyebrow_place') }}</span>
+  <h1>{% if landing.specialty %}{{ t('landing.h1_specialty', specialty=landing.specialty) }}{% else %}{{ t('landing.h1_place', place=landing.place, in_place=landing.in_place) }}{% endif %}</h1>
+  <p class="lead muted">
+    {% if landing.specialty %}{{ t('landing.lead_specialty', specialty=landing.specialty) }}{% else %}{{ t('landing.lead_place', place=landing.place, in_place=landing.in_place) }}{% endif %}
+    <strong>{{ t('landing.count', n=landing.count) }}</strong>
+  </p>
+</div>
+
+<div class="grid-cards">
+  {% for p in pilots %}
+  {% include "_pilot_card.html" %}
+  {% else %}
+    <div class="empty-state">
+      <strong>{{ t('landing.empty') }}</strong>
+      <div class="actions-row">
+        <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.nearby.alt') }}</a>
+        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('home.cta_publish') }}</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% include "_directory_hub.html" %}
+{% endblock %}

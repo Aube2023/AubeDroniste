@@ -21,12 +21,17 @@ def test_toutes_les_langues_couvrent_toutes_les_cles():
     assert manquants == []
 
 
+def _placeholders(text):
+    # {in_place} (francais, preposition comprise) vaut {place} ailleurs.
+    return {"place" if p == "in_place" else p for p in PLACEHOLDER.findall(text)}
+
+
 def test_les_placeholders_suivent_le_francais():
     ecarts = [
         (key, lang)
         for key, entry in i18n._T.items()
         for lang in i18n.SUPPORTED
-        if set(PLACEHOLDER.findall(entry[lang])) != set(PLACEHOLDER.findall(entry["fr"]))
+        if _placeholders(entry[lang]) != _placeholders(entry["fr"])
     ]
     assert ecarts == []
 

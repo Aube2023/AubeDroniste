@@ -29,7 +29,7 @@ def test_settings_page_and_account_update(client, auth_client, make_user):
     assert abs(row["lat"] - 45.5) < 1e-6 and row["phone"].startswith("+1")
     # langue du compte appliquee sans cookie explicite
     c2 = auth_client(u["id"])
-    assert "Find a pilot." in c2.get("/pilotes").data.decode()
+    assert "Find a pilot." in c2.get("/pilotes", follow_redirects=True).data.decode()
 
 
 def test_name_locked_after_certificate_upload(client, auth_client, make_user):

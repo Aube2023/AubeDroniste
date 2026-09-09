@@ -69,7 +69,7 @@
     <label>{{ 'Pays' if fr else 'Country' }}
       <select name="country">
         <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
+        <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ country_name(c) }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ country_name(c) }}</option>{% endfor %}</optgroup>
       </select>
     </label>
     <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}"></label>
@@ -110,42 +110,7 @@
 
 <div class="grid-cards">
   {% for p in pilots %}
-  {% set masked = public_name(p) %}
-  <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}" data-pilot-id="{{ p.id }}">
-    <div class="strip">
-      <span class="callsign">F-{{ '%04d' % p.id }}{{ (masked|first)|upper }} <span class="map-pin" title="{{ 'Voir sur la carte' if fr else 'Show on map' }}">📍</span></span>
-      <span class="fh">
-        {% if p.distance_km is not none %}<span class="distance-chip">≈ {{ p.distance_km|round|int }} km</span> · {% endif %}{% if p.is_available %}<span class="dot-ok">{{ 'dispo' if fr else 'avail.' }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ 'avis' if fr else 'reviews' }}{% else %}{{ 'nouveau' if fr else 'new' }}{% endif %}
-      </span>
-    </div>
-    <div class="body">
-      {% if p.avatar_path %}
-      <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
-           alt="{{ 'Photo pilote' if fr else 'Pilot photo' }}" loading="lazy">
-      {% else %}
-      <div class="avatar">{{ masked[:1] }}</div>
-      {% endif %}
-      <div>
-        <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
-        <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
-        {% if p.kind == 'school' and p.school_programs %}
-        <div class="headline">{{ p.school_programs.replace('\r', '').split('\n')|reject('equalto', '')|join(' · ') }}</div>
-        {% else %}
-        <div class="headline">« {{ p.headline or ('Disponible pour vos prises de vue.' if fr else 'Available for your aerial shots.') }} »</div>
-        {% endif %}
-        {% if p.verified_authorities or p.insurance %}
-        <div class="auth-chips">
-          {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ a }}</span>{% endfor %}
-          {% if p.insurance %}<span class="auth-chip insured">{{ 'RC pro' if fr else 'Insured' }}</span>{% endif %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    <div class="foot">
-      <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }} · {{ p.rating.count }}{% else %}— · —{% endif %}</span>
-      <span class="rate">{% if p.kind == 'school' %}{{ 'formations' if fr else 'training' }}{% elif p.kind == 'recreational' %}{{ 'loisir' if fr else 'hobby' }}{% elif p.hourly_rate %}{{ p.hourly_rate|int }} {{ p.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
-    </div>
-  </a>
+  {% include "_pilot_card.html" %}
   {% else %}
     <div class="empty-state">
       <strong>{{ 'Aucun pilote ne correspond.' if fr else 'No pilot matches.' }}</strong>
@@ -157,5 +122,7 @@
     </div>
   {% endfor %}
 </div>
+
+{% include "_directory_hub.html" %}
 
 {% endblock %}

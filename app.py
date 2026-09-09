@@ -9,7 +9,9 @@ import re
 import secrets
 import time
 from datetime import datetime, timezone
+from urllib.parse import urlsplit, urlunsplit
 
+from flask import has_request_context
 from flask import (
     Flask, abort, flash, g, jsonify, make_response, redirect,
     render_template, request, send_from_directory, url_for,
@@ -146,12 +148,38 @@ def _attach():
     # nonce="{{ csp_nonce }}") sans 'unsafe-inline'. Voir security.py.
     g.csp_nonce = secrets.token_urlsafe(16)
     auth.attach_user()
-    g.lang = i18n.resolve_lang()
-    # Langue preferee du compte (parametres) si aucun choix explicite (cookie)
+    # Langue : prefixe d'URL (/en/...) > cookie > preference du compte. Sur une
+    # page publique sans prefixe, l'URL nue EST la version francaise : on ne
+    # negocie pas sur Accept-Language (le contenu ne concorderait plus avec la
+    # canonique, et un robot verrait une page differente selon son en-tete) ;
+    # on propose la langue du navigateur dans un bandeau, c'est tout. Les
+    # pages privees, hors moteurs, gardent la negociation.
+    url_lang = getattr(g, "url_lang", None)
     u = getattr(g, "user", None)
-    if u and u.get("lang") in i18n.SUPPORTED \
-            and request.cookies.get(i18n.COOKIE) not in i18n.SUPPORTED:
-        g.lang = u["lang"]
+    cookie = request.cookies.get(i18n.COOKIE)
+    chosen = cookie if cookie in i18n.SUPPORTED else (
+        u["lang"] if u and u.get("lang") in i18n.SUPPORTED else None)
+    public = request.endpoint in LANG_ENDPOINTS
+    g.lang_suggest = None
+    if url_lang:
+        g.lang = url_lang
+    elif chosen:
+        g.lang = chosen
+    elif public:
+        g.lang = i18n.DEFAULT
+        try:
+            best = request.accept_languages.best_match(endpoint_langs(request.endpoint))
+        except Exception:
+            best = None
+        if best and best != i18n.DEFAULT:
+            g.lang_suggest = best
+    else:
+        g.lang = i18n.resolve_lang()
+    # URL nue visitee avec une langue choisie : on renvoie vers l'URL de cette
+    # langue, pour qu'adresse et contenu concordent (302 : depend du visiteur).
+    if (not url_lang and chosen and g.lang != i18n.DEFAULT and public
+            and request.method == "GET" and g.lang in endpoint_langs(request.endpoint)):
+        return redirect(i18n.localized_path(request.full_path.rstrip("?"), g.lang), code=302)
 
 
 @app.before_request
@@ -166,6 +194,50 @@ def _csrf_check():
 # Le cache mtime est vide au demarrage du process (donc rafraichi a chaque
 # `systemctl restart aubepilot` apres deploiement).
 _static_ver_cache: dict = {}
+
+
+# Pages publiques qui existent dans chaque langue sous une URL distincte
+# (/en/pilotes/5). Les espaces prives restent sur le cookie : ils sont hors
+# robots de toute facon. Les regles prefixees sont ajoutees en fin de module
+# par _register_lang_routes().
+# Une page n'existe dans une langue que si son CONTENU y existe : la FAQ
+# n'est ecrite qu'en francais et en anglais, les pages legales qu'en francais
+# (donc absentes d'ici : une seule URL, pas d'alternates). Publier du francais
+# sous /ru/faq en le declarant russe tromperait les moteurs.
+LANG_ENDPOINTS = {
+    "index": None, "pilots_search": None, "pilot_detail": None,
+    "missions_search": None, "mission_detail": None, "schools": None,
+    "contact_form": None, "contact_submit": None, "login": None, "register": None,
+    "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
+    "faq": seo.FAQ_LANGS,
+}
+
+
+def endpoint_langs(endpoint) -> tuple:
+    """Langues ou la page existe ; vide pour une page hors LANG_ENDPOINTS."""
+    if endpoint not in LANG_ENDPOINTS:
+        return ()
+    return tuple(LANG_ENDPOINTS[endpoint] or i18n.SUPPORTED)
+
+
+@app.url_value_preprocessor
+def _pull_lang(endpoint, values):
+    # Retire <lang> des arguments de vue : les fonctions gardent leur signature.
+    if values and "lang" in values and endpoint in LANG_ENDPOINTS:
+        g.url_lang = values.pop("lang")
+
+
+@app.url_defaults
+def _push_lang(endpoint, values):
+    # url_for('pilot_detail', user_id=5) -> /en/pilotes/5 quand la page est en
+    # anglais : la regle prefixee a plus d'arguments, Werkzeug la prefere des
+    # que `lang` est fourni ; sans `lang`, il retombe sur la regle nue (fr).
+    if endpoint in LANG_ENDPOINTS and "lang" not in values:
+        lang = getattr(g, "lang", i18n.DEFAULT)
+        if lang != i18n.DEFAULT and lang in endpoint_langs(endpoint):
+            values["lang"] = lang
+    elif values.get("lang") == i18n.DEFAULT:
+        values.pop("lang")
 
 
 @app.url_defaults
@@ -205,12 +277,24 @@ def _refresh_session_cookie(resp):
 
 
 @app.after_request
+def _remember_url_lang(resp):
+    # Un visiteur arrive sur /ur/pilotes/5 : les pages privees (sans prefixe)
+    # doivent suivre. On aligne le cookie sur la langue de l'URL.
+    url_lang = getattr(g, "url_lang", None)
+    if url_lang and request.cookies.get(i18n.COOKIE) != url_lang:
+        resp.set_cookie(i18n.COOKIE, url_lang, max_age=i18n.COOKIE_MAX_AGE,
+                        httponly=False, samesite="Lax")
+    return resp
+
+
+@app.after_request
 def _count_visit(resp):
     # Compteur de visites public, SANS AUCUN COOKIE : on incremente a l'arrivee
-    # sur l'accueil. Rien n'est depose chez le visiteur, rien ne l'identifie.
+    # sur l'accueil (dans n'importe quelle langue). Rien n'est depose chez le
+    # visiteur, rien ne l'identifie.
     try:
         if (request.method == "GET" and resp.status_code == 200
-                and request.path == "/"
+                and i18n.split_prefix(request.path)[1] == "/"
                 and "text/html" in resp.headers.get("Content-Type", "")):
             services.bump_visits()
     except Exception:
@@ -253,6 +337,10 @@ def _inject_globals():
         "lang_name": i18n.lang_name,
         "lang_flag": i18n.lang_flag,
         "lang_dir": i18n.lang_dir,
+        "lang_prefix": i18n.url_prefix(getattr(g, "lang", i18n.DEFAULT)),
+        "slugify": seo.slugify,
+        "country_name": lambda name: i18n.country_name(name, getattr(g, "lang", i18n.DEFAULT)),
+        "og_locale": i18n.og_locale,
         # Stripe
         "stripe_mode": payments.banner_mode(),
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
@@ -291,6 +379,54 @@ def _inject_globals():
         "google_site_verification": GOOGLE_SITE_VERIFICATION,
         "seo_global": seo.global_ld(getattr(g, "lang", i18n.DEFAULT)),
         "seo": {},   # defaut ; surcharge par page via render_template(seo=...)
+        # Titre/description par defaut dans la langue de la page (pages sans seo=)
+        "seo_default": seo.home(getattr(g, "lang", i18n.DEFAULT)),
+        # hreflang : {code: URL absolue} pour les pages publiques, sinon {}
+        "seo_alternates": _seo_alternates(),
+        "lang_suggestion": _lang_suggestion(),
+        "map_l10n": _map_l10n(),
+    }
+
+
+def _seo_alternates() -> dict:
+    """Versions linguistiques de la page courante (balises hreflang).
+    Vide pour les pages privees (une seule URL) et hors requete HTTP : les
+    courriels sont rendus dans un fil de fond avec un simple app_context."""
+    if not has_request_context() or request.endpoint not in LANG_ENDPOINTS:
+        return {}
+    _cur, bare = i18n.split_prefix(request.path)
+    return {code: seo.lang_url(bare, code) for code in endpoint_langs(request.endpoint)}
+
+
+def _lang_suggestion():
+    """Bandeau « ce site existe aussi en … » : langue du navigateur, quand le
+    visiteur n'a rien choisi et qu'une page publique est servie en francais."""
+    code = getattr(g, "lang_suggest", None)
+    if not code or not has_request_context():
+        return None
+    path = request.full_path.rstrip("?")
+    return {
+        "code": code,
+        "text": i18n.t("nav.suggest_lang", code),
+        "open": i18n.t("nav.suggest_open", code),
+        "close": i18n.t("nav.suggest_close", code),
+        "href": i18n.localized_path(path, code),
+        "dismiss": url_for("set_lang", code=i18n.DEFAULT, next=path),
+    }
+
+
+def _map_l10n() -> dict:
+    """Libelles de la carte pour le JS (fenetres, calques, types de profil)."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    t = lambda k, **kw: i18n.t(k, lang, **kw)
+    return {
+        "viewProfile": t("map.view_profile"), "viewMission": t("map.view_mission"),
+        "members": t("map.members"), "radius": t("map.radius"),
+        "points": t("map.points", n="{n}"), "sat": t("map.satellite"), "plan": t("map.plan"),
+        "toSat": t("map.to_satellite"), "toPlan": t("map.to_plan"), "mission": t("map.mission"),
+        "reviews": t("common.reviews", n="{n}"), "new": t("common.new_pilot"),
+        "verified": t("common.verified"), "urgent": t("common.urgent"),
+        "kinds": {k: t(f"kind.{k}.short") for k in ("pro", "recreational", "school", "company", "shop")},
     }
 
 
@@ -447,15 +583,33 @@ def set_lang(code):
         abort(404)
     next_url = security.safe_next(
         request.args.get("next") or request.referrer,
-        fallback=url_for("index"),
+        fallback=url_for("index", lang=code),
     )
-    resp = make_response(redirect(next_url))
+    resp = make_response(redirect(_localized_next(next_url, code)))
     resp.set_cookie(
         i18n.COOKIE, code,
         max_age=i18n.COOKIE_MAX_AGE,
         httponly=False, samesite="Lax",
     )
     return resp
+
+
+def _localized_next(next_url: str, code: str) -> str:
+    """/pilotes/5 -> /ur/pilotes/5 si la page existe par langue ; les autres
+    chemins (espace prive, API) restent tels quels, le cookie fait le reste."""
+    parsed = urlsplit(next_url)
+    _cur, bare = i18n.split_prefix(parsed.path or "/")
+    try:
+        endpoint, _args = app.url_map.bind(request.host).match(bare, method="GET")
+    except Exception:
+        return next_url
+    if endpoint not in LANG_ENDPOINTS:
+        return next_url
+    # La page n'existe pas dans cette langue (ex. FAQ en ourdou) : on y va
+    # sous son URL francaise, le cookie porte la langue du reste du site.
+    target = code if code in endpoint_langs(endpoint) else i18n.DEFAULT
+    return urlunsplit((parsed.scheme, parsed.netloc,
+                       i18n.localized_path(bare, target), parsed.query, ""))
 
 
 # ---------------------------------------------------------------------------
@@ -516,28 +670,65 @@ def offline():
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
-    base = seo.CANONICAL_BASE
-    entries = [(base + path, "", prio, freq) for path, prio, freq in seo.PUBLIC_ROUTES]
-    for p in services.sitemap_pilots():
-        entries.append((f"{base}/pilotes/{p['id']}",
-                        str(p.get("lastmod") or "")[:10], "0.7", "weekly"))
-    for m in services.sitemap_missions():
-        entries.append((f"{base}/missions/{m['id']}",
-                        str(m.get("lastmod") or "")[:10], "0.6", "weekly"))
-    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
-           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for loc, lastmod, prio, freq in entries:
-        xml.append("  <url>")
-        xml.append(f"    <loc>{loc}</loc>")
-        if lastmod:
-            xml.append(f"    <lastmod>{lastmod}</lastmod>")
-        xml.append(f"    <changefreq>{freq}</changefreq>")
-        xml.append(f"    <priority>{prio}</priority>")
-        xml.append("  </url>")
-    xml.append("</urlset>")
-    resp = make_response("\n".join(xml))
+    """Chaque page publique, dans chaque langue, avec ses alternates ; plus
+    les fiches pilotes, les missions ouvertes et les pages d'atterrissage
+    qui ont au moins un pilote (voir seo.render_sitemap)."""
+    resp = make_response(seo.render_sitemap_index())
     resp.headers["Content-Type"] = "application/xml; charset=utf-8"
     return resp
+
+
+@app.route("/sitemap-<code>.xml")
+def sitemap_lang(code):
+    if code not in i18n.SUPPORTED:
+        abort(404)
+    resp = make_response(seo.render_sitemap(_sitemap_entries(), code))
+    resp.headers["Content-Type"] = "application/xml; charset=utf-8"
+    return resp
+
+
+def _sitemap_entries() -> list:
+    """(chemin, lastmod, priorite, frequence, langues) pour chaque page publique.
+    Une page n'est listee que dans les langues ou elle existe (voir
+    LANG_ENDPOINTS) ; les pages d'atterrissage seulement avec des pilotes."""
+    adapter = app.url_map.bind(seo.CANONICAL_BASE.split("://", 1)[1])
+
+    def langs_of(path):
+        try:
+            endpoint, _ = adapter.match(path, method="GET")
+        except Exception:
+            return (i18n.DEFAULT,)
+        return endpoint_langs(endpoint) or (i18n.DEFAULT,)
+
+    entries = [(path, "", prio, freq, langs_of(path)) for path, prio, freq in seo.PUBLIC_ROUTES]
+    all_langs = tuple(i18n.SUPPORTED)
+    for p in services.sitemap_pilots():
+        entries.append((f"/pilotes/{p['id']}", str(p.get("lastmod") or "")[:10], "0.7", "weekly", all_langs))
+    for m in services.sitemap_missions():
+        entries.append((f"/missions/{m['id']}", str(m.get("lastmod") or "")[:10], "0.6", "weekly", all_langs))
+    for c in services.landing_countries():
+        entries.append((f"/pilotes/pays/{c['slug']}", "", "0.6", "weekly", all_langs))
+    for c in services.landing_cities():
+        entries.append((f"/pilotes/pays/{c['country_slug']}/{c['slug']}", "", "0.6", "weekly", all_langs))
+    for sp in services.landing_specialties():
+        entries.append((f"/pilotes/specialite/{sp['code']}", "", "0.6", "weekly", all_langs))
+    return entries
+
+
+@app.route(f"/{seo.INDEXNOW_KEY}.txt")
+def indexnow_key():
+    # Preuve de propriete demandee par IndexNow : le fichier contient la cle.
+    resp = make_response(seo.INDEXNOW_KEY)
+    resp.headers["Content-Type"] = "text/plain; charset=utf-8"
+    return resp
+
+
+def _ping_index(paths):
+    """Signale un changement de page aux moteurs (IndexNow). Jamais bloquant."""
+    try:
+        seo.indexnow_ping(paths)
+    except Exception as exc:
+        log.warning("IndexNow : %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -546,17 +737,43 @@ def sitemap_xml():
 
 @app.route("/confidentialite")
 def page_privacy():
-    return render_template("legal_privacy.html")
+    return render_template("legal_privacy.html", seo=_legal_seo("footer.privacy"))
 
 
 @app.route("/mentions-legales")
 def page_legal():
-    return render_template("legal_notice.html")
+    return render_template("legal_notice.html", seo=_legal_seo("footer.legal"))
 
 
 @app.route("/cgu")
 def page_terms():
-    return render_template("legal_terms.html")
+    return render_template("legal_terms.html", seo=_legal_seo("footer.terms"))
+
+
+# Pages legales : francais uniquement (une seule URL), description propre a
+# chacune plutot que celle de l'accueil en double. Le titre vient du gabarit.
+_LEGAL_DESC = {
+    "footer.terms": "Conditions d'utilisation de la plateforme AubePilot : compte, missions, devis, paiement sous séquestre, annulation, responsabilités.",
+    "footer.privacy": "Politique de confidentialité d'AubePilot (Loi 25, RGPD) : données collectées, usages, conservation, droits d'accès et de suppression.",
+    "footer.legal": "Mentions légales d'AubePilot : éditeur, hébergement, contact, propriété intellectuelle.",
+}
+
+
+def _legal_seo(title_key):
+    page = seo.simple_page(i18n.DEFAULT, title_key=title_key)
+    page["description"] = _LEGAL_DESC[title_key]
+    return page
+
+
+def _register_seo():
+    return seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="register.page_title",
+                           description_key="register.lead")
+
+
+def _login_seo():
+    # Page de connexion : rien a referencer, et pas de description en double
+    return seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="login.title",
+                           robots="noindex, follow")
 
 
 # ---------------------------------------------------------------------------
@@ -783,7 +1000,70 @@ def pilots_search():
         kind_counts=services.count_pilots_by_kind(params["only_available"]),
         map_center=_map_center(geo),
         seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
+        hub=_directory_hub(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Pages d'atterrissage de l'annuaire : /pilotes/pays/<pays>[/<ville>] et
+# /pilotes/specialite/<code>. Ce sont les requetes que les gens tapent
+# (« pilote de drone Montréal », « inspection de toiture par drone ») ; chaque
+# page existe dans chaque langue (voir LANG_ENDPOINTS) et n'est indexable que
+# si elle liste au moins un pilote.
+# ---------------------------------------------------------------------------
+
+def _directory_hub() -> dict:
+    return {
+        "countries": services.landing_countries(),
+        "cities": services.landing_cities(),
+        "specialties": services.landing_specialties(),
+    }
+
+
+def _render_landing(*, path, pilots, specialty="", country="", country_slug="", city=""):
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    landing = {
+        "specialty": specialty, "country": country, "country_slug": country_slug,
+        "city": city, "count": len(pilots),
+        "place": city or i18n.country_name(country, lang),
+        "in_place": i18n.fr_place(city, "" if city else country),
+    }
+    page_seo = seo.landing_page(
+        lang, path=path, specialty=specialty, city=city, country="" if city else country,
+        count=len(pilots), pilot_ids=[p["id"] for p in pilots],
+    )
+    return render_template("pilots_landing.html", pilots=pilots, landing=landing,
+                           seo=page_seo, hub=_directory_hub())
+
+
+@app.route("/pilotes/specialite/<code>")
+def pilots_by_specialty(code):
+    if code not in dict(MISSION_TYPES):
+        abort(404)
+    pilots = services.search_pilots(mission_type=code, limit=100)
+    return _render_landing(path=f"/pilotes/specialite/{code}", pilots=pilots,
+                           specialty=_mission_label(code))
+
+
+@app.route("/pilotes/pays/<slug>")
+def pilots_by_country(slug):
+    country = services.resolve_country_slug(slug)
+    if not country:
+        abort(404)
+    pilots = services.pilots_in_place(country_names=country["names"])
+    return _render_landing(path=f"/pilotes/pays/{slug}", pilots=pilots,
+                           country=country["name"], country_slug=slug)
+
+
+@app.route("/pilotes/pays/<slug>/<city_slug>")
+def pilots_by_city(slug, city_slug):
+    country = services.resolve_country_slug(slug)
+    city = country and services.resolve_city_slug(slug, city_slug)
+    if not city:
+        abort(404)
+    pilots = services.pilots_in_place(country_names=country["names"], city_slug=city_slug)
+    return _render_landing(path=f"/pilotes/pays/{slug}/{city_slug}", pilots=pilots,
+                           country=country["name"], country_slug=slug, city=city["name"])
 
 
 @app.route("/missions")
@@ -945,7 +1225,7 @@ def mission_detail(mission_id):
     mission_seo = seo.mission_posting(
         getattr(g, "lang", i18n.DEFAULT), mission=mission,
         mission_type_label=_mission_label(mission.get("mission_type") or ""),
-        url=f"{seo.CANONICAL_BASE}/missions/{mission_id}",
+        url=seo.lang_url(f"/missions/{mission_id}", getattr(g, "lang", i18n.DEFAULT)),
     )
     return render_template(
         "mission_detail.html",
@@ -999,7 +1279,7 @@ def register():
         kind = _profile_kind(request.form.get("kind")) or "pro"
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
 
         # L'identifiant devient un compte systeme + une adresse @aubemail.com :
         # AubeMail n'accepte que [A-Za-z0-9_]. On refuse donc ici, avec un message
@@ -1017,13 +1297,13 @@ def register():
                 "(it is also your AubeMail address).",
                 "error",
             )
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
         if password != confirm:
             flash("Les mots de passe ne correspondent pas.", "error")
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
         if db.fetchone("SELECT 1 FROM users WHERE username=?", (username,)):
             flash("Cet identifiant est deja pris.", "error")
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
 
         # Inscriptions refusees depuis certains pays (cf. config).
         if country and country.strip().lower() in config.BLOCKED_REGISTRATION_COUNTRIES:
@@ -1035,14 +1315,14 @@ def register():
                 "Registrations from this country are not accepted at this time.",
                 "error",
             )
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
 
         # Anti-robot 1 : piege « honeypot ». Champ cache aux humains (hors
         # ecran, aria-hidden). Un robot qui remplit tous les champs le remplit
         # aussi -> on refuse en silence (le bot croit avoir reussi).
         if (request.form.get("website_confirm") or "").strip():
             log.warning("inscription honeypot declenchee ip=%s", request.remote_addr)
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
 
         # Anti-robot 2 : AubeCaptcha. Inerte tant qu'aucune sitekey/secret
         # n'est configuree (variables d'env) -> inscription inchangee. Une fois
@@ -1056,7 +1336,7 @@ def register():
             if not ok_cap:
                 log.warning("aubecaptcha refuse a l'inscription : %s", raison)
                 flash("Vérification anti-robot échouée. Réessayez.", "error")
-                return render_template("register.html")
+                return render_template("register.html", seo=_register_seo())
 
         # SECURITE : si l'identifiant correspond a un compte systeme AubeMail
         # (mot de passe gere par PAM, prod Linux), l'inscription ne doit PAS
@@ -1072,7 +1352,7 @@ def register():
                 "de passe AubeMail pour compléter votre profil AubePilot.",
                 "error",
             )
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
 
         # Une nouvelle identite cree d'abord un VRAI compte AubeMail : c'est
         # l'identite et le mot de passe partages de tout l'ecosysteme Aube (le
@@ -1105,7 +1385,7 @@ def register():
                     "Please try again.",
                     "error",
                 )
-                return render_template("register.html")
+                return render_template("register.html", seo=_register_seo())
 
         try:
             user_id = auth.create_user(
@@ -1127,6 +1407,8 @@ def register():
                     portfolio_url=(request.form.get("website") or "").strip()[:300] or None,
                     school_programs=(request.form.get("school_programs") or "").strip()[:2000] or None,
                 )
+            if role in ("pilot", "both"):
+                _ping_index([f"/pilotes/{user_id}", "/pilotes"])
         except auth.AubeMailRequiredError:
             flash(
                 "Ce compte n'existe pas dans AubeMail. Créez-le d'abord sur "
@@ -1134,7 +1416,7 @@ def register():
                 "puis revenez ici pour compléter votre profil pilote.",
                 "error",
             )
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
         except auth.InvalidUsernameError:
             # Filet : la route valide deja en amont, mais le garde-fou central
             # de create_user protege tous les autres chemins d'appel.
@@ -1147,7 +1429,7 @@ def register():
                 "letters, digits and the underscore « _ ».",
                 "error",
             )
-            return render_template("register.html")
+            return render_template("register.html", seo=_register_seo())
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
@@ -1155,7 +1437,7 @@ def register():
                         max_age=60 * 60 * 24 * 30)
         flash("Bienvenue sur AubePilot.", "success")
         return resp
-    return render_template("register.html")
+    return render_template("register.html", seo=_register_seo())
 
 
 @app.route("/connexion", methods=["GET", "POST"])
@@ -1170,14 +1452,14 @@ def login():
         password = request.form.get("password") or ""
         if not auth.authenticate(username, password):
             flash("Identifiants invalides.", "error")
-            return render_template("login.html", next_url=next_url)
+            return render_template("login.html", next_url=next_url, seo=_login_seo())
         # Si le compte AubeMail existe mais pas encore le profil AubePilot,
         # on le cree a la volee — cas d'un user qui se cree sur AubeMail
         # puis vient ici pour la 1ere fois.
         row = db.fetchone("SELECT id, deleted_at FROM users WHERE username=?", (username,))
         if row and row["deleted_at"]:
             flash("Ce compte a été supprimé.", "error")
-            return render_template("login.html", next_url=next_url)
+            return render_template("login.html", next_url=next_url, seo=_login_seo())
         if not row:
             email = auth.normalize_email(username, None)
             cur = db.execute(
@@ -1198,7 +1480,7 @@ def login():
                         secure=app.config.get("SESSION_COOKIE_SECURE", False),
                         max_age=60 * 60 * 24 * 30)
         return resp
-    return render_template("login.html", next_url=next_url)
+    return render_template("login.html", next_url=next_url, seo=_login_seo())
 
 
 @app.route("/deconnexion", methods=["POST", "GET"])
@@ -1429,6 +1711,7 @@ def pilot_edit():
             ),
         )
         flash("Profil pilote mis a jour.", "success")
+        _ping_index([f"/pilotes/{user['id']}", "/pilotes"])
         return redirect(url_for("pilot_edit"))
 
     return render_template(
@@ -2150,6 +2433,7 @@ def mission_create():
             except Exception as exc:
                 log.warning("alertes mission %s echouees: %s", mission_id, exc)
         flash("Mission publiee.", "success")
+        _ping_index([f"/missions/{mission_id}", "/missions"])
         return redirect(url_for("mission_detail", mission_id=mission_id))
     target_pilot = None
     pilot_arg = _to_int(request.args.get("pilot"))
@@ -2983,14 +3267,17 @@ def api_stats():
 # Erreurs
 # ---------------------------------------------------------------------------
 
+_NOINDEX = {"robots": "noindex, nofollow"}
+
+
 @app.errorhandler(404)
 def _404(_e):
-    return render_template("error.html", code=404, message="Page introuvable."), 404
+    return render_template("error.html", seo=_NOINDEX, code=404, message="Page introuvable."), 404
 
 
 @app.errorhandler(403)
 def _403(_e):
-    return render_template("error.html", code=403, message="Acces refuse."), 403
+    return render_template("error.html", seo=_NOINDEX, code=403, message="Acces refuse."), 403
 
 
 @app.errorhandler(413)
@@ -2998,7 +3285,7 @@ def _413(_e):
     # MAX_CONTENT_LENGTH = max(MAX_UPLOAD_MB, MAX_DELIVERABLE_MB) : on affiche
     # le vrai plafond global, pas l'ancien 10 Mo trompeur. Les routes (portfolio
     # 200 Mo, livrables 1 Go) renvoient deja leur propre message plus precis.
-    return render_template("error.html", code=413, message=f"Fichier trop volumineux (max {MAX_DELIVERABLE_MB} Mo)."), 413
+    return render_template("error.html", seo=_NOINDEX, code=413, message=f"Fichier trop volumineux (max {MAX_DELIVERABLE_MB} Mo)."), 413
 
 
 @app.context_processor
@@ -3007,6 +3294,29 @@ def _inject_payments():
     return {
         "auto_release_days": AUTO_RELEASE_DAYS,
     }
+
+
+# ---------------------------------------------------------------------------
+# Une URL par langue : /en/..., /es/..., pour chaque page publique
+# ---------------------------------------------------------------------------
+
+def _register_lang_routes():
+    """Double chaque regle publique avec un prefixe <lang> (hors langue par
+    defaut, qui garde la racine). Meme vue, memes methodes : les formulaires
+    (connexion, contact) postent sur l'URL de leur langue."""
+    for rule in list(app.url_map.iter_rules()):
+        if rule.endpoint not in LANG_ENDPOINTS or "lang" in rule.arguments:
+            continue
+        codes = ",".join(c for c in endpoint_langs(rule.endpoint) if c != i18n.DEFAULT)
+        prefix = f"/<any({codes}):lang>"
+        app.add_url_rule(
+            prefix + rule.rule, endpoint=rule.endpoint,
+            view_func=app.view_functions[rule.endpoint],
+            methods=sorted(rule.methods - {"HEAD", "OPTIONS"}),
+        )
+
+
+_register_lang_routes()
 
 
 # ---------------------------------------------------------------------------
