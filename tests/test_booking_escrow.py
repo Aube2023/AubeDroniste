@@ -195,8 +195,9 @@ def test_sans_connect_pas_de_bouton_payer_ni_de_blame(client, auth_client, make_
     c = auth_client(bk["client_user_id"])
     html = c.get(f"/reservations/{booking_id}").data.decode()
     assert "pas encore ouvert" in html
-    assert "Payer" not in html.split("Le paiement en ligne")[1][:600]
-    assert "séquestre" not in html.split("Le paiement en ligne")[1][:600]
+    assert "conservés en <strong>séquestre" not in html   # plus de promesse d'escrow
+    assert "pas de séquestre" in html                     # on dit ce qu'on ne fait pas
+    assert "Payer {0}".format(int(bk["agreed_price"])) not in html
 
     # la route elle-meme n'accuse plus personne
     r = c.get(f"/reservations/{booking_id}/payer", follow_redirects=True)
@@ -208,3 +209,74 @@ def test_sans_connect_pas_de_bouton_payer_ni_de_blame(client, auth_client, make_
     vue_pilote = p.get(f"/reservations/{booking_id}").data.decode()
     assert "Votre offre est acceptée" in vue_pilote
     assert "En attente du paiement client" not in vue_pilote
+
+
+def test_reglement_en_direct_fait_avancer_la_mission(auth_client, make_user,
+                                                     funded_booking, monkeypatch):
+    """Sans cette porte de sortie, une reservation acceptee restait bloquee
+    en pending_payment pour toujours : ni mission terminee, ni avis."""
+    import config, db, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
+    booking_id = funded_booking if isinstance(funded_booking, int) else funded_booking["id"]
+    db.execute("UPDATE bookings SET status='pending_payment', paid_at=NULL, "
+               "stripe_payment_intent_id=NULL WHERE id=?", (booking_id,))
+    bk = services.get_booking(booking_id)
+    client = auth_client(bk["client_user_id"])
+
+    r = client.post(f"/reservations/{booking_id}/regle-en-direct")
+    assert r.status_code in (302, 303)
+    bk = services.get_booking(booking_id)
+    assert bk["status"] == "funded" and bk["settled_offline"] == 1
+    assert bk["platform_fee"] == 0                     # aucune commission
+    assert not bk["stripe_payment_intent_id"]          # rien via Stripe
+
+    # l'identite du pilote est revelee : le client doit pouvoir le payer
+    assert services.has_funded_relation(bk["client_user_id"], bk["pilot_user_id"])
+
+    # la mission se termine sans transfert Stripe, et ouvre l'avis
+    assert services.confirm_completion(booking_id, bk["client_user_id"]) is True
+    bk = services.get_booking(booking_id)
+    assert bk["status"] == "completed" and not bk["stripe_transfer_id"]
+    assert services.reviewable_booking_for(bk["client_user_id"], bk["pilot_user_id"])
+
+
+def test_reglement_en_direct_ferme_quand_connect_est_ouvert(auth_client, make_user,
+                                                            funded_booking, monkeypatch):
+    """Sinon ce serait une porte de sortie permanente pour eviter la commission."""
+    import config, db, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", True)
+    booking_id = funded_booking if isinstance(funded_booking, int) else funded_booking["id"]
+    db.execute("UPDATE bookings SET status='pending_payment' WHERE id=?", (booking_id,))
+    bk = services.get_booking(booking_id)
+    r = auth_client(bk["client_user_id"]).post(f"/reservations/{booking_id}/regle-en-direct")
+    assert r.status_code == 404
+    assert services.get_booking(booking_id)["status"] == "pending_payment"
+
+
+def test_reglement_en_direct_reserve_au_client(auth_client, funded_booking, monkeypatch):
+    import config, db, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
+    booking_id = funded_booking if isinstance(funded_booking, int) else funded_booking["id"]
+    db.execute("UPDATE bookings SET status='pending_payment' WHERE id=?", (booking_id,))
+    bk = services.get_booking(booking_id)
+    # le pilote ne peut pas declarer a la place du client
+    assert auth_client(bk["pilot_user_id"]).post(
+        f"/reservations/{booking_id}/regle-en-direct").status_code == 403
+    # et l'operation ne s'applique qu'une fois
+    client = auth_client(bk["client_user_id"])
+    client.post(f"/reservations/{booking_id}/regle-en-direct")
+    assert services.mark_booking_settled_offline(booking_id, bk["client_user_id"]) is False
+
+
+def test_reglement_en_direct_est_dit_sur_la_reservation(auth_client, funded_booking, monkeypatch):
+    import config, db, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
+    booking_id = funded_booking if isinstance(funded_booking, int) else funded_booking["id"]
+    db.execute("UPDATE bookings SET status='pending_payment' WHERE id=?", (booking_id,))
+    bk = services.get_booking(booking_id)
+    c = auth_client(bk["client_user_id"])
+    c.post(f"/reservations/{booking_id}/regle-en-direct")
+    for uid in (bk["client_user_id"], bk["pilot_user_id"]):
+        html = auth_client(uid).get(f"/reservations/{booking_id}").data.decode()
+        assert "Réglé en direct" in html
+        assert "aucune commission" in html

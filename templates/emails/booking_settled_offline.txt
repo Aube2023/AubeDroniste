@@ -1,0 +1,23 @@
+AUBEPILOT, RÈGLEMENT EN DIRECT CONFIRMÉ / DIRECT PAYMENT CONFIRMED
+============================================
+
+[FR]
+Le client a confirmé vous avoir réglé directement pour « {{ booking.mission_title or 'votre mission' }} »
+({{ booking.agreed_price|int }} {{ booking.currency }}).
+
+La mission peut avancer. Les fonds ne sont pas passés par AubePilot :
+vérifiez que vous les avez bien reçus. Aucune commission n'est prélevée.
+{{ site_url }}/reservations/{{ booking.id }}
+
+------------------------------------------------------------
+
+[EN]
+The client confirmed paying you directly for "{{ booking.mission_title or 'your job' }}"
+({{ booking.agreed_price|int }} {{ booking.currency }}).
+
+The job can move forward. The money did not go through AubePilot:
+check that you actually received it. No commission is charged.
+{{ site_url }}/reservations/{{ booking.id }}
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

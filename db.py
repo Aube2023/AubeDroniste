@@ -151,6 +151,10 @@ _ADD_COLUMNS = [
     # Annulation : frais de service retenus par la plateforme + qui a annule.
     ("bookings", "cancellation_service_fee", "REAL NOT NULL DEFAULT 0"),
     ("bookings", "cancelled_by", "TEXT"),
+    # Reglement convenu hors plateforme (tant que Connect n'est pas ouvert) :
+    # ni sequestre, ni commission, aucun mouvement Stripe.
+    ("bookings", "settled_offline", "INTEGER NOT NULL DEFAULT 0"),
+    ("bookings", "settled_offline_at", "TEXT"),
     # Verrou metier additif pour serialiser les actions financieres Stripe
     # entre plusieurs workers sans modifier les comptes ou etats existants.
     ("bookings", "payment_action", "TEXT"),

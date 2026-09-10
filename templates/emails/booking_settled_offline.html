@@ -1,0 +1,36 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Règlement confirmé en direct / Direct payment confirmed{% endblock %}
+{% block preview %}Le client déclare vous avoir réglé en direct · The client says they paid you directly.{% endblock %}
+
+{% block content %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">FR, Règlement en direct</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Le client a confirmé vous avoir réglé en direct.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    « {{ booking.mission_title or 'Votre mission' }} », {{ booking.agreed_price|int }} {{ booking.currency }}.
+    La mission peut avancer. Les fonds <strong>ne sont pas passés par AubePilot</strong> :
+    vérifiez que vous les avez bien reçus. Aucune commission n'est prélevée sur ce règlement.
+  </p>
+  <p style="margin:20px 0 0;">
+    <a href="{{ site_url }}/reservations/{{ booking.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Voir la réservation</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#1e6f5e;text-transform:uppercase;margin-bottom:12px;">EN, Direct payment</div>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    "{{ booking.mission_title or 'Your job' }}", {{ booking.agreed_price|int }} {{ booking.currency }}.
+    The job can move forward. The money <strong>did not go through AubePilot</strong>:
+    check that you actually received it. No commission is charged on this payment.
+  </p>
+  <p style="margin:18px 0 0;">
+    <a href="{{ site_url }}/reservations/{{ booking.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">View the booking</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

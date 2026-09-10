@@ -2942,6 +2942,50 @@ def mark_booking_funded(booking_id: int, payment_intent_id: Optional[str] = None
     return True
 
 
+def mark_booking_settled_offline(booking_id: int, by_user: int) -> bool:
+    """Le CLIENT declare avoir regle le pilote en direct.
+
+    Tant que Stripe Connect n'est pas ouvert, une reservation acceptee reste
+    bloquee en 'pending_payment' pour toujours : pas de sequestre possible,
+    donc pas de mission terminee, pas d'avis. Cette porte de sortie la fait
+    avancer, en assumant ce qu'elle coute : **aucune commission** pour la
+    plateforme, **aucune protection** pour le client. Rien ne transite par
+    Stripe, donc `stripe_payment_intent_id` reste vide et les chemins
+    d'annulation et de remboursement n'y toucheront pas.
+
+    Idempotent : ne s'applique que depuis 'pending_payment'.
+    """
+    booking = get_booking(booking_id)
+    if not booking or booking["client_user_id"] != by_user:
+        return False
+    cur = db.execute(
+        "UPDATE bookings SET status='funded', settled_offline=1, "
+        "settled_offline_at=datetime('now'), paid_at=datetime('now'), "
+        "platform_fee=0, platform_fee_pct=0 "
+        "WHERE id=? AND status='pending_payment' AND payment_action IS NULL",
+        (booking_id,),
+    )
+    if cur.rowcount == 0:
+        return False
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'booking_settled_offline', ?, ?)",
+        (by_user, f"booking:{booking_id}",
+         json.dumps({"amount": booking.get("agreed_price"),
+                     "currency": booking.get("currency")})),
+    )
+    try:
+        import mailer
+        pilot = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?",
+                            (booking["pilot_user_id"],))
+        if pilot and pilot["email"]:
+            mailer.send_booking_settled_offline(pilot=dict(pilot),
+                                                booking=get_booking(booking_id))
+    except Exception as exc:
+        log.warning("email settled_offline booking=%s : %s", booking_id, exc)
+    return True
+
+
 def confirm_completion(booking_id: int, by_user: int) -> bool:
     """Le client confirme la livraison. Declenche le Transfer Stripe au pilote."""
     booking = get_booking(booking_id)
@@ -2952,6 +2996,23 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
     action = "complete"
     if not _claim_payment_action(booking_id, action, ("funded", "in_progress")):
         return False
+
+    # Regle en direct : il n'y a aucun fonds a transferer, la mission se
+    # termine simplement. Sans cette branche, l'absence de compte Connect
+    # bloquerait la reservation a jamais (et le cron d'auto-liberation
+    # tournerait dans le vide).
+    if booking.get("settled_offline"):
+        with db.transaction():
+            cur = db.execute(
+                "UPDATE bookings SET status='completed', completed_at=datetime('now'), "
+                "payment_action=NULL, payment_action_started_at=NULL "
+                "WHERE id=? AND status IN ('funded', 'in_progress') AND payment_action=?",
+                (booking_id, action), commit=False,
+            )
+            if cur.rowcount == 0:
+                raise ValueError("reservation modifiee pendant la cloture")
+            update_mission_status(booking["mission_id"], "done", commit=False)
+        return True
 
     # Recupere l'account Stripe du pilote
     pilot_acc = get_pilot_stripe_account(booking["pilot_user_id"])

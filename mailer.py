@@ -344,6 +344,16 @@ def send_booking_cancelled_by_pilot(*, client: dict, pilot: dict, booking: dict,
     )
 
 
+def send_booking_settled_offline(*, pilot: dict, booking: dict) -> bool:
+    """Le client declare avoir regle en direct : le pilote doit le savoir."""
+    return send(
+        to=pilot["email"],
+        subject="Règlement confirmé en direct / Direct payment confirmed — AubePilot",
+        template="booking_settled_offline",
+        context={"pilot": pilot, "booking": booking},
+    )
+
+
 def send_insurance_reviewed(*, pilot: dict, decision: str, note: str = "",
                             company: str = "", is_valid: bool = False) -> bool:
     """Resultat de la revue de l'attestation RC pro (verifiee / refusee)."""

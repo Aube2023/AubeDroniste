@@ -107,6 +107,20 @@
     messagerie. Nous vous préviendrons dès que le paiement sécurisé sera
     disponible sur la plateforme.
   </p>
+  <div class="alert alert-warn" style="margin-top: 14px;">
+    <span class="eyebrow">Ce que vous perdez en réglant en direct</span>
+    <p style="margin: 6px 0 0;">
+      Les fonds ne passent pas par AubePilot : <strong>pas de séquestre, pas de
+      remboursement possible par la plateforme</strong> en cas de litige. Ne
+      confirmez qu'une fois le paiement réellement envoyé au pilote.
+    </p>
+  </div>
+  <form method="post" action="{{ url_for('booking_settle_offline', booking_id=booking.id) }}"
+        style="margin-top: 16px;"
+        data-confirm="Confirmer que vous avez réglé {{ booking.agreed_price|int }} {{ booking.currency }} au pilote en direct ? La mission pourra alors avancer.">
+    {{ csrf_input() }}
+    <button type="submit" class="cta">J'ai réglé le pilote en direct →</button>
+  </form>
   {% elif stripe_mode == 'DISABLED' %}
   <span class="eyebrow">Paiement indisponible</span>
   <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Votre réservation est conservée</h2>
@@ -144,6 +158,17 @@
     </span>
   </div>
   {% endif %}
+</div>
+{% endif %}
+
+{% if booking.settled_offline %}
+<div class="alert alert-info">
+  <span class="eyebrow">Réglé en direct</span>
+  <p style="margin: 6px 0 0;">
+    Le règlement de cette mission a été convenu directement entre le client et le
+    pilote, hors AubePilot. Aucun séquestre, aucune commission prélevée, et aucun
+    remboursement possible par la plateforme.
+  </p>
 </div>
 {% endif %}
 

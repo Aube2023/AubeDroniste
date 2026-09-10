@@ -235,6 +235,10 @@ CREATE TABLE IF NOT EXISTS bookings (
     cancellation_fee         REAL NOT NULL DEFAULT 0,   -- dedommagement verse au pilote
     cancellation_service_fee REAL NOT NULL DEFAULT 0,   -- frais de service retenus par la plateforme
     cancelled_by             TEXT,                       -- 'client' | 'pilot' | 'admin'
+    -- Reglement convenu hors plateforme : le client confirme avoir paye le
+    -- pilote en direct. Ni sequestre, ni commission, aucun mouvement Stripe.
+    settled_offline          INTEGER NOT NULL DEFAULT 0,
+    settled_offline_at       TEXT,
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_booking_pilot  ON bookings(pilot_user_id);

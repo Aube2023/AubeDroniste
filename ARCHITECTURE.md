@@ -330,6 +330,31 @@ jamais une déclaration, seulement une pièce contrôlée.
   Les métadonnées Open Graph de `base.html` fournissent titre, description et
   image de l'aperçu.
 
+## Règlement en direct (Connect fermé)
+
+Tant que `STRIPE_CONNECT_ENABLED` vaut 0, une réservation acceptée resterait
+bloquée en `pending_payment` pour toujours : pas de séquestre possible, donc
+pas de mission terminée, pas d'avis, pas de relation révélée. La sortie de
+secours est `POST /reservations/<id>/regle-en-direct`, réservée au **client**
+et fermée (404) dès que Connect s'ouvre, sinon elle deviendrait une porte
+permanente pour éviter la commission.
+
+`services.mark_booking_settled_offline` passe la réservation en `funded` avec
+`settled_offline=1`, `platform_fee=0` et **aucun** `stripe_payment_intent_id`.
+Les conséquences se déduisent de là :
+
+- `confirm_completion` détecte `settled_offline` et termine la mission **sans
+  transfert Stripe** (sinon l'absence de compte Connect la bloquerait, et le
+  cron d'auto-libération tournerait dans le vide) ;
+- les chemins d'annulation testent `stripe_payment_intent_id` : vide, ils
+  n'engagent aucun mouvement d'argent, sans modification ;
+- `has_funded_relation` accepte `funded`, donc l'identité du pilote est
+  révélée, ce qu'il faut bien pour que le client puisse le payer ;
+- `reviewable_booking_for` exige `completed`, l'avis reste donc possible.
+
+Ce que ça coûte est écrit à l'écran, des deux côtés : pas de séquestre, pas de
+remboursement par la plateforme, aucune commission perçue.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement

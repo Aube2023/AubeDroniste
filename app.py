@@ -3236,6 +3236,26 @@ def booking_pay(booking_id):
     return redirect(url)
 
 
+@app.route("/reservations/<int:booking_id>/regle-en-direct", methods=["POST"])
+@auth.login_required
+def booking_settle_offline(booking_id):
+    """Le client declare avoir paye le pilote en direct. Ouvert seulement tant
+    que Connect est ferme : sinon ce serait une porte de sortie permanente
+    pour eviter la commission."""
+    if config.STRIPE_CONNECT_ENABLED:
+        abort(404)
+    booking = services.get_booking(booking_id)
+    if not booking or booking["client_user_id"] != g.user["id"]:
+        abort(403)
+    if services.mark_booking_settled_offline(booking_id, g.user["id"]):
+        flash("Règlement noté. La mission peut avancer ; vous pourrez la "
+              "valider et laisser un avis une fois les fichiers reçus. "
+              "AubePilot ne prélève aucune commission sur ce règlement.", "success")
+    else:
+        flash("Cette réservation n'est plus en attente de paiement.", "info")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
 @app.route("/stripe/fake-checkout/<int:booking_id>", methods=["GET", "POST"])
 @auth.login_required
 def stripe_fake_checkout(booking_id):
