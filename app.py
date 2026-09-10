@@ -3186,9 +3186,21 @@ def booking_pay(booking_id):
         )
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
+    if not config.STRIPE_CONNECT_ENABLED:
+        # Connect ferme cote plateforme : ce n'est pas au pilote qu'il faut le
+        # reprocher, et lui envoyer un courriel « finalisez Stripe » serait lui
+        # demander l'impossible.
+        flash(
+            "Le paiement en ligne n'est pas encore ouvert sur AubePilot. "
+            "Convenez du règlement directement avec le pilote : la réservation "
+            "reste enregistrée ici, avec le devis et la messagerie.",
+            "info",
+        )
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
     pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])
     if not pilot_acc:
-        flash("Le pilote n'a pas finalisé son inscription Stripe — il a été notifié.", "error")
+        flash("Le pilote n'a pas finalisé son inscription Stripe, il a été notifié.", "error")
         try:
             import mailer
             pilot = db.fetchone(

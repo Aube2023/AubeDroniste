@@ -174,3 +174,37 @@ def test_connect_account_kwargs_same_country_vs_cross_border(monkeypatch):
     assert abroad["tos_acceptance"] == {"service_agreement": "recipient"}
     assert abroad["capabilities"] == {"transfers": {"requested": True}}
     assert abroad["metadata"]["user_id"] == "7"
+
+
+# ---------------------------------------------------------------------------
+# Connect fermé : ne promettre ni séquestre ni paiement en ligne
+# ---------------------------------------------------------------------------
+
+def test_sans_connect_pas_de_bouton_payer_ni_de_blame(client, auth_client, make_user,
+                                                      funded_booking, monkeypatch):
+    """Le bouton « Payer » se heurtait a un mur qui accusait le pilote d'une
+    inscription Stripe que la plateforme lui interdit de faire."""
+    import config, db, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
+    bid = funded_booking
+    bk = services.get_booking(bid) if isinstance(bid, int) else bid
+    booking_id = bk["id"] if isinstance(bk, dict) else bid
+    db.execute("UPDATE bookings SET status='pending_payment' WHERE id=?", (booking_id,))
+    bk = services.get_booking(booking_id)
+
+    c = auth_client(bk["client_user_id"])
+    html = c.get(f"/reservations/{booking_id}").data.decode()
+    assert "pas encore ouvert" in html
+    assert "Payer" not in html.split("Le paiement en ligne")[1][:600]
+    assert "séquestre" not in html.split("Le paiement en ligne")[1][:600]
+
+    # la route elle-meme n'accuse plus personne
+    r = c.get(f"/reservations/{booking_id}/payer", follow_redirects=True)
+    page = r.data.decode()
+    assert "pas encore ouvert" in page
+    assert "n'a pas finalisé son inscription Stripe" not in page
+
+    p = auth_client(bk["pilot_user_id"])
+    vue_pilote = p.get(f"/reservations/{booking_id}").data.decode()
+    assert "Votre offre est acceptée" in vue_pilote
+    assert "En attente du paiement client" not in vue_pilote

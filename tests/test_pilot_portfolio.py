@@ -228,8 +228,10 @@ def test_bandeau_paiements_masque_si_connect_ferme(auth_client, make_user, monke
     edit = c.get("/espace/pilote").data.decode()
     # La section « Encaissement » reste, mais explique le paiement en direct
     # au lieu de reclamer une activation qui n'aboutit pas.
-    assert "Paiement en direct avec le client" in edit
+    assert "pas encore ouvert" in edit
+    assert "règlement se convient directement avec le client" in edit
     assert "Activer mon encaissement Stripe" not in edit
+    assert "bientôt" not in edit          # plus de promesse datee
     assert "Paiements activés" not in edit       # ni le point « à faire »
     # et l'onboarding explique la situation au lieu d'echouer
     r = c.get("/espace/pilote/stripe", follow_redirects=True)
@@ -245,7 +247,7 @@ def test_bandeau_paiements_revient_si_connect_ouvert(auth_client, make_user, mon
     assert "Activez vos paiements" in c.get("/espace").data.decode()
     edit = c.get("/espace/pilote").data.decode()
     assert "Activer mon encaissement Stripe" in edit
-    assert "Paiement en direct avec le client" not in edit
+    assert "pas encore ouvert" not in edit
 
 
 def test_acces_aux_photos_depuis_le_profil_et_le_tableau_de_bord(auth_client, make_user, app_ctx):

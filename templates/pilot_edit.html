@@ -120,9 +120,10 @@
 {% else %}
 <section class="card" style="border-left: 3px solid var(--teal);">
   <span class="eyebrow">{{ 'Encaissement' if fr else 'Payments' }}</span>
-  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">{{ 'Paiement en direct avec le client' if fr else 'Direct payment with the client' }}</h2>
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">{{ "Le paiement en ligne n'est pas encore ouvert" if fr else 'Online payment is not open yet' }}</h2>
   <p class="muted">
-    {{ "Pour l'instant, vous convenez du paiement directement avec le client (virement, Interac, chèque, etc.). Les versements automatiques via AubePilot — avec la commission prélevée pour vous — arrivent bientôt : vous n'aurez rien à configurer." if fr else 'For now, you arrange payment directly with the client (bank transfer, Interac, cheque, etc.). Automatic payouts through AubePilot — with the commission handled for you — are coming soon: nothing to set up.' }}
+    {{ "Les versements automatiques vers votre compte bancaire ne sont pas encore actifs sur AubePilot. En attendant, le règlement se convient directement avec le client (virement, Interac, chèque). Vous n'avez rien à configurer : nous vous préviendrons quand l'encaissement par la plateforme sera disponible."
+       if fr else 'Automatic payouts to your bank account are not active on AubePilot yet. In the meantime, payment is arranged directly with the client (bank transfer, Interac, cheque). There is nothing to set up: we will let you know when platform payments become available.' }}
   </p>
 </section>
 {% endif %}

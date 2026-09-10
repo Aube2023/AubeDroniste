@@ -96,7 +96,18 @@
 
 {% if booking.status == 'pending_payment' and is_client %}
 <div class="card" style="border-left: 3px solid var(--amber);">
-  {% if stripe_mode == 'DISABLED' %}
+  {% if not stripe_connect_enabled %}
+  {# Sans Connect, le bouton « Payer » se heurte a un mur : ne pas le montrer,
+     et ne pas promettre un sequestre que la plateforme ne peut pas denouer. #}
+  <span class="eyebrow">Paiement</span>
+  <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Le paiement en ligne n'est pas encore ouvert</h2>
+  <p class="muted" style="max-width: 60ch;">
+    Convenez du règlement directement avec le pilote (virement, Interac, chèque).
+    Votre réservation reste enregistrée ici avec le devis, les fichiers et la
+    messagerie. Nous vous préviendrons dès que le paiement sécurisé sera
+    disponible sur la plateforme.
+  </p>
+  {% elif stripe_mode == 'DISABLED' %}
   <span class="eyebrow">Paiement indisponible</span>
   <h2 style="font-size: 1.4rem; margin: 4px 0 8px;">Votre réservation est conservée</h2>
   <p class="muted" style="max-width: 60ch;">
@@ -138,10 +149,19 @@
 
 {% if booking.status == 'pending_payment' and is_pilot %}
 <div class="card" style="border-left: 3px solid var(--gold);">
+  {% if not stripe_connect_enabled %}
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">Votre offre est acceptée</h2>
+  <p class="muted">
+    Le paiement en ligne n'est pas encore ouvert : convenez du règlement
+    directement avec le client (virement, Interac, chèque). Le devis, les
+    fichiers et la messagerie restent ici.
+  </p>
+  {% else %}
   <h2 style="font-size: 1.3rem; margin: 0 0 6px;">En attente du paiement client</h2>
   <p class="muted">
     Votre offre a été acceptée. Le client doit régler la mission pour qu'elle soit confirmée. Vous serez notifié dès que c'est fait.
   </p>
+  {% endif %}
 </div>
 {% endif %}
 
