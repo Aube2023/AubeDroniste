@@ -58,6 +58,34 @@
   </div>
 </section>
 
+{# ===== Realisations : la galerie publique du pilote ===== #}
+<section class="card">
+  <div class="row-between" style="align-items: baseline; gap: 12px; flex-wrap: wrap;">
+    <span class="eyebrow">{{ 'Mes réalisations' if fr else 'My work' }}</span>
+    <span class="muted mono small">{{ portfolio|length }} {{ 'photo(s) et vidéo(s)' if fr else 'photo(s) and video(s)' }}</span>
+  </div>
+  <p class="muted" style="margin: 8px 0 12px;">
+    {{ "Vos photos et vidéos de missions passées, visibles sur votre page publique. C'est ce qu'un client regarde avant tout le reste."
+       if fr else 'Your photos and videos from past jobs, shown on your public page. It is what a client looks at before anything else.' }}
+  </p>
+  {% if portfolio %}
+  <div class="chips" style="gap: 8px; margin-bottom: 12px;">
+    {% for it in portfolio[:6] %}
+      {% if it.kind == 'image' %}
+      <img src="{{ url_for('media_file', filename=it.file_path[8:]) }}" alt=""
+           loading="lazy" style="width: 76px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--rule);">
+      {% else %}
+      <span class="tag">🎬 {{ it.title or ('Vidéo' if fr else 'Video') }}</span>
+      {% endif %}
+    {% endfor %}
+    {% if portfolio|length > 6 %}<span class="tag">+{{ portfolio|length - 6 }}</span>{% endif %}
+  </div>
+  {% endif %}
+  <a href="{{ url_for('pilot_portfolio') }}" class="cta">
+    {% if portfolio %}{{ 'Gérer mes réalisations →' if fr else 'Manage my work →' }}{% else %}{{ 'Ajouter mes premières photos →' if fr else 'Add my first photos →' }}{% endif %}
+  </a>
+</section>
+
 {# ===== Encaissement ===== #}
 {% if stripe_connect_enabled %}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}

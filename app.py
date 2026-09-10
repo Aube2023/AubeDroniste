@@ -1546,6 +1546,7 @@ def dashboard():
                              if user.get("is_admin") else 0),
         admin_pending_insurances=(services.count_insurances_pending()
                                   if user.get("is_admin") else 0),
+        portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
     )
 
 
@@ -1756,6 +1757,7 @@ def pilot_edit():
         profile=profile,
         insurance_state=services.insurance_state(profile),
         vis=services.pilot_visibility(user["id"]),
+        portfolio=services.list_portfolio_items(user["id"]),
         identity_locked=services.is_identity_locked(user["id"]),
         pending_name_change=services.has_pending_name_change(user["id"]),
     )

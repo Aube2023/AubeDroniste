@@ -41,6 +41,8 @@
     <div class="footnote">
       <a href="{{ url_for('pilot_edit') }}">{{ 'Compléter →' if fr else 'Complete →' }}</a>
       &nbsp;·&nbsp;
+      <a href="{{ url_for('pilot_portfolio') }}">{{ 'Mes réalisations' if fr else 'My work' }} ({{ portfolio_count }}) →</a>
+      &nbsp;·&nbsp;
       <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">{{ 'Gestion de flotte AubeCrew ↗' if fr else 'AubeCrew fleet management ↗' }}</a>
     </div>
   </div>

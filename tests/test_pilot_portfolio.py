@@ -246,3 +246,21 @@ def test_bandeau_paiements_revient_si_connect_ouvert(auth_client, make_user, mon
     edit = c.get("/espace/pilote").data.decode()
     assert "Activer mon encaissement Stripe" in edit
     assert "Paiement en direct avec le client" not in edit
+
+
+def test_acces_aux_photos_depuis_le_profil_et_le_tableau_de_bord(auth_client, make_user, app_ctx):
+    """Les deux endroits ou un pilote depose des photos doivent se voir :
+    la photo de profil sur /espace/pilote, les realisations a un clic."""
+    import services
+    u = make_user("photos_p", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    c = auth_client(u["id"])
+
+    edit = c.get("/espace/pilote").data.decode()
+    assert "Photo de profil" in edit                       # avatar, en haut
+    assert "Mes réalisations" in edit                      # galerie, section propre
+    assert "Ajouter mes premières photos" in edit          # appel a l'action quand vide
+    assert edit.count("/espace/pilote/portfolio") >= 2     # en-tete + section
+
+    assert "Mes réalisations" in c.get("/espace").data.decode()
+    assert c.get("/espace/pilote/portfolio").status_code == 200
