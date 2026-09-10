@@ -419,3 +419,25 @@ CREATE TABLE IF NOT EXISTS visit_countries (
     PRIMARY KEY (day, country, kind)
 );
 CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day);
+
+
+-- Livrables proposes par un pilote : ce que le CLIENT recoit (panorama 360,
+-- orthophoto, rapport d'inspection...), par opposition aux capacites du
+-- materiel qui vivent sur pilot_drones.
+CREATE TABLE IF NOT EXISTS pilot_deliverables (
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    deliverable   TEXT NOT NULL,          -- code de config.DELIVERABLES
+    PRIMARY KEY (pilot_user_id, deliverable)
+);
+
+-- Liens professionnels : site, avis Google, reseaux. Ce sont des preuves qui
+-- existent hors de la plateforme ; pour un pilote individuel elles revelent
+-- son identite, donc meme regle d'affichage que portfolio_url.
+CREATE TABLE IF NOT EXISTS pilot_links (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind          TEXT NOT NULL,          -- website | google | linkedin | ...
+    url           TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pilot_links_user ON pilot_links(pilot_user_id);

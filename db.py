@@ -194,12 +194,27 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_msg_recip_read ON messages(mission_id, recipient_user_id, read_at)",
     "CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at)",
     "CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day)",
+    "CREATE INDEX IF NOT EXISTS idx_pilot_links_user ON pilot_links(pilot_user_id)",
 ]
 
 
 # Tables additives idempotentes (memes regles que les index : schema.sql ne
 # tourne que sur une base neuve, la prod passe par run_migrations()).
 _ADD_TABLES = [
+    # Livrables proposes par un pilote (ce que le client recoit).
+    """CREATE TABLE IF NOT EXISTS pilot_deliverables (
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    deliverable   TEXT NOT NULL,          -- code de config.DELIVERABLES
+    PRIMARY KEY (pilot_user_id, deliverable)
+)""",
+    # Liens professionnels (site, avis Google, reseaux) : preuves hors plateforme.
+    """CREATE TABLE IF NOT EXISTS pilot_links (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind          TEXT NOT NULL,          -- website | google | linkedin | ...
+    url           TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+)""",
     # Provenance des visiteurs, par jour et par pays. AUCUNE IP n'est stockee :
     # le pays est resolu a la volee (geoip.py) puis jete, seul l'agregat reste.
     """CREATE TABLE IF NOT EXISTS visit_countries (

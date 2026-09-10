@@ -187,19 +187,37 @@
        if fr else "This box is a declaration. The « Insured » badge clients see only appears once your certificate has been checked, like your licences." }}
   </p>
 
-  <h2>{{ 'Spécialités' if fr else 'Specialties' }}</h2>
+<h2 id="livrables">{{ t('deliverables.title') }}</h2>
+  <p class="muted small" style="margin: 0 0 10px;">{{ t('deliverables.hint') }}</p>
   <div class="spec-groups">
-    {% for gname, codes in mission_groups %}
+    {% for gname, codes in deliverable_groups %}
     <div class="spec-group">
-      <div class="spec-group-title">{{ mission_group_label(gname) }}</div>
+      <div class="spec-group-title">{{ gname }}</div>
       <div class="chips check-grid">
         {% for code in codes %}
-        <label class="chip-check"><input type="checkbox" name="specialties" value="{{ code }}" {% if code in profile.specialties %}checked{% endif %}> {{ mission_label(code) }}</label>
+        <label class="chip-check"><input type="checkbox" name="deliverables" value="{{ code }}" {% if code in (profile.deliverables or []) %}checked{% endif %}> {{ deliverable_label(code) }}</label>
         {% endfor %}
       </div>
     </div>
     {% endfor %}
   </div>
+
+  <h2 id="liens">{{ t('links.title') }}</h2>
+  <p class="muted small" style="margin: 0 0 10px;">{{ t('links.hint') }}</p>
+  {# Une ligne par lien existant, plus deux vides pour en ajouter. Un champ
+     laisse vide disparait : pas de bouton « supprimer » a maintenir. #}
+  {% for l in (profile.links or []) + [none, none] %}
+  <div class="grid-2" style="gap: 10px; margin-bottom: 6px;">
+    <label>{{ 'Type' if fr else 'Kind' }}
+      <select name="link_kind">
+        {% for code, label in pilot_link_kinds %}<option value="{{ code }}" {% if l and l.kind == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ 'Adresse' if fr else 'Address' }}
+      <input name="link_url" value="{{ l.url if l else '' }}" maxlength="300" placeholder="https://…">
+    </label>
+  </div>
+  {% endfor %}
 
   <h2>{{ 'Territoires opérés (en plus du pays principal)' if fr else 'Territories covered (in addition to your main country)' }}</h2>
   <p class="muted small">{{ "Les lignes vides seront ignorées à l'enregistrement." if fr else 'Empty rows will be ignored when saving.' }}</p>

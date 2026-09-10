@@ -351,6 +351,9 @@ def _inject_globals():
         "licence_authorities": LICENCE_AUTHORITIES,
         "licence_authority_groups": LICENCE_AUTHORITY_GROUPS,
         "licence_titles_by_authority": LICENCE_TITLES_BY_AUTHORITY,
+        "deliverable_groups": config.DELIVERABLE_GROUPS,
+        "deliverable_label": lambda c: i18n.t(f"deliverable.{c}", getattr(g, "lang", i18n.DEFAULT)),
+        "pilot_link_kinds": config.PILOT_LINK_KINDS,
         "featured_countries": FEATURED_COUNTRIES,
         "countries": COUNTRIES,
         "currencies": CURRENCIES,
@@ -1740,6 +1743,9 @@ def pilot_edit():
                 user["id"],
             ),
         )
+        services.set_pilot_deliverables(user["id"], request.form.getlist("deliverables"))
+        services.set_pilot_links(user["id"], zip(request.form.getlist("link_kind"),
+                                                 request.form.getlist("link_url")))
         flash("Profil pilote mis a jour.", "success")
         _ping_index([f"/pilotes/{user['id']}", "/pilotes"])
         return redirect(url_for("pilot_edit"))

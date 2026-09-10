@@ -299,6 +299,20 @@ jamais une déclaration, seulement une pièce contrôlée.
 
 ## Aider le pilote à être trouvé
 
+- **Livrables** (`pilot_deliverables`, `config.DELIVERABLES`) : ce que le
+  CLIENT reçoit (panorama 360°, orthophoto, rapport d'inspection…), par
+  opposition aux capacités du matériel qui vivent sur `pilot_drones`
+  (« caméra 8K », « LiDAR »). Un client cherche un résultat, pas un capteur.
+  Libellés traduits sous `deliverable.<code>`, filtrables via
+  `search_pilots(deliverable=…)`. Attention : `list_pilot_deliverables` est le
+  pilote, `list_deliverables` les fichiers remis sur une réservation.
+- **Présence professionnelle** (`pilot_links`) : site, avis Google, LinkedIn,
+  Instagram… Les adresses suivent la même règle que `portfolio_url` : visibles
+  pour une organisation, sinon après une mission payée. Avant paiement on
+  affiche les **libellés** sans les adresses, pour que le signal de confiance
+  passe sans ouvrir la porte au contournement. `services._clean_url` refuse
+  tout schéma autre que http(s).
+
 - `services.pilot_visibility(user_id)` : ce qui manque concrètement, pondéré,
   avec `blocking` pour les points qui retirent le pilote d'un canal entier
   (coordonnées → recherche par code postal et pages ville ; spécialité → pages

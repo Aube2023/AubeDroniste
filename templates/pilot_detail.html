@@ -117,13 +117,28 @@
   <div class="card">
     <span class="eyebrow">{% if is_school %}{{ 'À propos de l\'école' if fr else 'About the school' }}{% elif is_shop %}{{ 'À propos de la boutique' if fr else 'About the shop' }}{% else %}{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}{% endif %}</span>
     {% if not is_school and not is_shop %}
-    <ul class="chips" style="margin: 16px 0;">
-      {% for s in pilot.specialties %}
-        <li class="tag">{{ mission_label(s) }}</li>
-      {% else %}
-        <li class="muted">{{ 'Spécialités non renseignées.' if fr else 'No specialties listed.' }}</li>
+    {% if pilot.specialties %}
+      {% for gname, codes in mission_groups %}
+        {% set dans_groupe = codes | select('in', pilot.specialties) | list %}
+        {% if dans_groupe %}
+        <div class="spec-group" style="margin: 12px 0;">
+          <div class="spec-group-title">{{ mission_group_label(gname) }}</div>
+          <ul class="chips" style="margin: 4px 0;">
+            {% for s in dans_groupe %}<li class="tag">{{ mission_label(s) }}</li>{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
       {% endfor %}
+    {% else %}
+      <p class="muted" style="margin: 16px 0;">{{ 'Spécialités non renseignées.' if fr else 'No specialties listed.' }}</p>
+    {% endif %}
+
+    {% if pilot.deliverables %}
+    <h3 style="margin-top: 24px;">{{ t('deliverables.title') }}</h3>
+    <ul class="chips" style="margin: 6px 0;">
+      {% for d in pilot.deliverables %}<li class="tag tag-ok">{{ deliverable_label(d) }}</li>{% endfor %}
     </ul>
+    {% endif %}
     {% endif %}
 
     <h3 style="margin-top: 24px;">{{ 'Territoires opérés' if fr else 'Territories covered' }}</h3>
@@ -159,6 +174,24 @@
       <br><a href="{{ url_for('pilot_insurance_document', user_id=pilot.id) }}" target="_blank" rel="noopener noreferrer">{{ "Voir l'attestation →" if fr else 'View certificate →' }}</a>
       {% endif %}
     </div>
+    {% endif %}
+
+    {% if pilot.links %}
+    <h3 style="margin-top: 24px;">{{ t('links.title') }}</h3>
+    {% if reveal_identity or is_org %}
+      <ul class="chips" style="margin: 6px 0;">
+        {% for l in pilot.links %}
+        <li><a class="share-btn" href="{{ l.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ l.label }} ↗</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {# On dit que les preuves existent sans donner l'adresse : le signal de
+         confiance passe, le contournement de la plateforme non. #}
+      <ul class="chips" style="margin: 6px 0;">
+        {% for l in pilot.links %}<li class="tag">{{ l.label }}</li>{% endfor %}
+      </ul>
+      <p class="muted small">{{ t('links.hidden', n=pilot.links|length) }}</p>
+    {% endif %}
     {% endif %}
 
     {% if pilot.portfolio_url and not is_org %}

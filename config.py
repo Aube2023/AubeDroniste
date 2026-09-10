@@ -313,6 +313,44 @@ DRONE_CAPABILITY_LABELS = {
 }
 
 # Regroupement des capacites pour l'affichage en sections de chips.
+# ---------------------------------------------------------------------------
+# Livrables : ce que le CLIENT recoit, pas ce que le drone embarque.
+#
+# Les capacites ci-dessous (DRONE_CAPABILITY_*) decrivent le materiel : un
+# client cherche rarement « LiDAR », il cherche « nuage de points ». Les
+# libelles sont traduits dans i18n._T sous la cle `deliverable.<code>`.
+# ---------------------------------------------------------------------------
+DELIVERABLES = [
+    "photos_hd", "photos_raw", "video_4k", "video_montee", "panorama_360",
+    "visite_virtuelle", "orthophoto", "modele_3d", "nuage_points", "mnt",
+    "rapport_inspection", "rapport_thermique", "ndvi", "timelapse", "cloud",
+]
+DELIVERABLE_GROUPS = [
+    ("Images & vidéo", ["photos_hd", "photos_raw", "video_4k", "video_montee",
+                        "panorama_360", "visite_virtuelle", "timelapse"]),
+    ("Mesure & 3D", ["orthophoto", "modele_3d", "nuage_points", "mnt", "ndvi"]),
+    ("Rapports & remise", ["rapport_inspection", "rapport_thermique", "cloud"]),
+]
+
+# ---------------------------------------------------------------------------
+# Liens professionnels d'un pilote : preuves qui existent HORS de la
+# plateforme (site, avis Google, reseaux). Pour un pilote individuel, ils
+# revelent son identite : ils suivent donc la meme regle que portfolio_url
+# (visibles pour une organisation, sinon apres une mission payee).
+# ---------------------------------------------------------------------------
+PILOT_LINK_KINDS = [
+    ("website", "Site web"),
+    ("google", "Avis Google"),
+    ("linkedin", "LinkedIn"),
+    ("instagram", "Instagram"),
+    ("youtube", "YouTube"),
+    ("facebook", "Facebook"),
+    ("vimeo", "Vimeo"),
+    ("other", "Autre"),
+]
+PILOT_LINK_KIND_CODES = [k for k, _ in PILOT_LINK_KINDS]
+MAX_PILOT_LINKS = 8
+
 DRONE_CAPABILITY_GROUPS = [
     ("Caméra & imagerie",          ["camera_4k", "camera_6k", "camera_8k",
                                     "thermique", "multispectrale", "zoom_optique"]),

@@ -31,6 +31,10 @@
                  'Rate or package', 'A displayed price brings more serious enquiries than “on quote”.'),
   'portfolio':  ('Portfolio', "Des images valent mieux qu'une description.",
                  'Portfolio', 'Images beat a description.'),
+  'deliverables':('Livrables', "Un client cherche « panorama 360 » ou « orthophoto », pas une référence de caméra.",
+                 'Deliverables', 'A client searches for “360 panorama” or “orthophoto”, not a camera model.'),
+  'links':      ('Présence professionnelle', "Site, avis Google, réseaux : votre crédibilité existe déjà ailleurs, montrez-la.",
+                 'Professional presence', 'Website, Google reviews, networks: your credibility already exists elsewhere, show it.'),
   'payouts':    ('Paiements activés', "Sans Stripe, un client peut vous choisir mais l'argent ne vous parvient pas.",
                  'Payouts enabled', 'Without Stripe a client can pick you but the money never reaches you.'),
 } %}
@@ -42,6 +46,7 @@
   'certification_verified': url_for('pilot_edit'), 'insurance': url_for('pilot_edit') ~ '#assurance',
   'drone': url_for('pilot_edit'), 'rate': url_for('pilot_packages'),
   'portfolio': url_for('pilot_portfolio'), 'payouts': url_for('stripe_onboard'),
+  'deliverables': url_for('pilot_edit') ~ '#livrables', 'links': url_for('pilot_edit') ~ '#liens',
 } %}
 {% set todo = vis['items'] | rejectattr('ok') | list %}
 

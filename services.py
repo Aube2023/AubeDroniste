@@ -5,6 +5,7 @@ voir les requetes a plat. Les fonctions retournent des dicts (sqlite3.Row
 converti) pour rester serialisables JSON.
 """
 import json
+from urllib.parse import urlparse
 import os
 import logging
 import math
@@ -14,6 +15,10 @@ from typing import Iterable, Optional
 
 import db
 from config import (
+    DELIVERABLES,
+    MAX_PILOT_LINKS,
+    PILOT_LINK_KINDS,
+    PILOT_LINK_KIND_CODES,
     BID_STATUS,
     CURRENCIES,
     ORG_KINDS,
@@ -251,6 +256,8 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
             (user_id,),
         )
     ]
+    out["deliverables"] = list_pilot_deliverables(user_id)
+    out["links"] = list_pilot_links(user_id)
     out["certifications"] = list_certifications(user_id)
     out["drones"] = list_drones(user_id)
     out["rating"] = pilot_rating(user_id)
@@ -299,6 +306,10 @@ def pilot_visibility(user_id: int) -> dict:
         ("drone", bool(p.get("drones")), 1, False),
         ("rate", bool(p.get("hourly_rate") or p.get("daily_rate") or packages), 2, False),
         ("portfolio", bool(list_portfolio_items(user_id)), 1, False),
+        # Un client cherche « panorama 360 », pas « camera 8K ».
+        ("deliverables", bool(p.get("deliverables")), 2, False),
+        # Preuves hors plateforme : decisives tant que le reseau est jeune.
+        ("links", bool(p.get("links")), 1, False),
         # Sans Stripe, un client peut reserver mais l'argent n'arrive pas.
         ("payouts", bool(p.get("stripe_charges_enabled")), 2, True),
     ]
@@ -310,6 +321,74 @@ def pilot_visibility(user_id: int) -> dict:
         "items": [{"key": k, "ok": ok, "weight": w, "blocking": b} for k, ok, w, b in items],
         "missing_blocking": [k for k, ok, _w, b in items if b and not ok],
     }
+
+
+def list_pilot_deliverables(pilot_user_id: int) -> list:
+    """Codes des livrables proposes par un pilote, dans l'ordre de
+    config.DELIVERABLES. A ne pas confondre avec `list_deliverables`, qui
+    liste les fichiers remis sur UNE reservation."""
+    rows = {r["deliverable"] for r in db.fetchall(
+        "SELECT deliverable FROM pilot_deliverables WHERE pilot_user_id=?",
+        (pilot_user_id,))}
+    return [c for c in DELIVERABLES if c in rows]
+
+
+def set_pilot_deliverables(user_id: int, codes: Iterable[str]):
+    db.execute("DELETE FROM pilot_deliverables WHERE pilot_user_id=?", (user_id,))
+    connus = set(DELIVERABLES)
+    for code in {c for c in codes if c in connus}:
+        db.execute(
+            "INSERT OR IGNORE INTO pilot_deliverables (pilot_user_id, deliverable) "
+            "VALUES (?, ?)", (user_id, code))
+
+
+def _clean_url(raw: str) -> Optional[str]:
+    """N'accepte qu'une adresse http(s) : un `javascript:` dans un lien
+    affiche sur une page publique serait une injection."""
+    url = (raw or "").strip()[:300]
+    if not url:
+        return None
+    schema = re.match(r"^([a-zA-Z][a-zA-Z0-9+.\-]*):", url)
+    if schema and schema.group(1).lower() not in ("http", "https"):
+        return None
+    if not schema:
+        url = "https://" + url
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return None
+    return url
+
+
+def list_pilot_links(pilot_user_id: int) -> list:
+    """[{id, kind, url, label}] dans l'ordre de config.PILOT_LINK_KINDS."""
+    labels = dict(PILOT_LINK_KINDS)
+    ordre = {k: i for i, (k, _) in enumerate(PILOT_LINK_KINDS)}
+    rows = [dict(r) for r in db.fetchall(
+        "SELECT id, kind, url FROM pilot_links WHERE pilot_user_id=? ORDER BY id",
+        (pilot_user_id,))]
+    for r in rows:
+        r["label"] = labels.get(r["kind"], r["kind"])
+    rows.sort(key=lambda r: ordre.get(r["kind"], 99))
+    return rows
+
+
+def set_pilot_links(user_id: int, pairs: Iterable) -> int:
+    """`pairs` = [(kind, url)]. Remplace la liste ; ignore les entrees vides
+    ou dont l'adresse n'est pas http(s). Retourne le nombre conserve."""
+    valides = []
+    for kind, url in pairs:
+        if kind not in PILOT_LINK_KIND_CODES:
+            continue
+        propre = _clean_url(url)
+        if propre:
+            valides.append((kind, propre))
+        if len(valides) >= MAX_PILOT_LINKS:
+            break
+    db.execute("DELETE FROM pilot_links WHERE pilot_user_id=?", (user_id,))
+    for kind, url in valides:
+        db.execute("INSERT INTO pilot_links (pilot_user_id, kind, url) VALUES (?, ?, ?)",
+                   (user_id, kind, url))
+    return len(valides)
 
 
 def set_pilot_specialties(user_id: int, codes: Iterable[str]):
@@ -815,7 +894,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
                   min_rating: float = 0, only_available: bool = True,
                   only_verified: bool = False, only_insured: bool = False,
-                  authority: str = "", kind: str = "",
+                  authority: str = "", kind: str = "", deliverable: str = "",
                   strict_radius: bool = False, limit: int = 50) -> list:
     """Annuaire pilotes.
 
@@ -894,6 +973,12 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
             "             WHERE s.pilot_user_id=u.id AND s.mission_type=?)"
         )
         args.append(mission_type)
+    if deliverable:
+        q.append(
+            "AND EXISTS (SELECT 1 FROM pilot_deliverables d0 "
+            "             WHERE d0.pilot_user_id=u.id AND d0.deliverable=?)"
+        )
+        args.append(deliverable)
     if capability:
         q.append(
             "AND EXISTS (SELECT 1 FROM pilot_drones d "
