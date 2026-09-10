@@ -22,6 +22,7 @@ import config
 import content
 import db
 import geocode
+import geoip
 import i18n
 import payments
 import security
@@ -287,16 +288,33 @@ def _remember_url_lang(resp):
     return resp
 
 
+# Robots connus : comptes a part pour ne pas gonfler la frequentation
+# « humaine » (GPTBot et Semrush pesent lourd dans les journaux).
+_BOT_UA = ("bot", "crawler", "spider", "slurp", "curl", "wget", "python-requests",
+           "headlesschrome", "monitor", "preview", "scan", "http-client",
+           "facebookexternalhit", "aubestatus")
+
+
+def _is_bot() -> bool:
+    return any(m in (request.user_agent.string or "").lower() for m in _BOT_UA)
+
+
 @app.after_request
 def _count_visit(resp):
     # Compteur de visites public, SANS AUCUN COOKIE : on incremente a l'arrivee
     # sur l'accueil (dans n'importe quelle langue). Rien n'est depose chez le
     # visiteur, rien ne l'identifie.
     try:
-        if (request.method == "GET" and resp.status_code == 200
-                and i18n.split_prefix(request.path)[1] == "/"
+        if not (request.method == "GET" and resp.status_code == 200
                 and "text/html" in resp.headers.get("Content-Type", "")):
+            return resp
+        bot = _is_bot()
+        if i18n.split_prefix(request.path)[1] == "/" and not bot:
             services.bump_visits()
+        # Provenance : pays resolu a la volee, jamais l'IP (voir geoip.py).
+        if request.endpoint in LANG_ENDPOINTS:
+            services.bump_country_visit(geoip.country_code(security.client_ip()),
+                                        is_bot=bot)
     except Exception:
         pass
     return resp
@@ -1937,6 +1955,31 @@ def admin_reject_name_change(req_id):
 # ---------------------------------------------------------------------------
 # Admin — verification des certifications pilote
 # ---------------------------------------------------------------------------
+
+@app.route("/admin/visites")
+@auth.admin_required
+def admin_visits():
+    """D'ou viennent les visiteurs. Pages vues par pays, pas de visiteurs
+    uniques : rien ne permet de les distinguer, et c'est voulu."""
+    days = _to_int(request.args.get("jours"), 30) or 30
+    days = min(max(days, 1), 365)
+    kind = "bot" if request.args.get("robots") == "1" else "human"
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    rows = services.visits_by_country(days, kind=kind)
+    for r in rows:
+        nom_fr = geoip.country_fr(r["country"])
+        r["name"] = i18n.country_name(nom_fr, lang)
+        r["flag"] = geoip.flag(r["country"]) if r["country"] != "??" else "🌐"
+        if r["country"] == "??":
+            r["name"] = "Non localisé"
+    return render_template(
+        "admin_visites.html", rows=rows, days=days, kind=kind,
+        daily=services.visits_daily(days, kind=kind),
+        totals=services.visits_totals(days),
+        geoip_ok=geoip.available(),
+        seo=_NOINDEX,
+    )
+
 
 @app.route("/admin/messages")
 @auth.admin_required

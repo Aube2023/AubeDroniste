@@ -85,6 +85,12 @@ def _client_ip() -> str:
     return remote
 
 
+def client_ip() -> str:
+    """IP reelle du visiteur derriere nginx. Utilisee pour le rate limiting et
+    pour resoudre le pays (qui, lui, n'est jamais stocke avec l'IP)."""
+    return _client_ip()
+
+
 def rate_limit(per_minute: int = 10, per_hour: int = 100, key: Optional[str] = None):
     """Decorateur : limite N hits / fenetre par IP (et par endpoint)."""
     def deco(view):

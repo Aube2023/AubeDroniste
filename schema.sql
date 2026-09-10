@@ -397,3 +397,17 @@ CREATE INDEX IF NOT EXISTS idx_review_target_rating  ON reviews(target_user_id, 
 CREATE INDEX IF NOT EXISTS idx_msg_sender            ON messages(sender_user_id);
 CREATE INDEX IF NOT EXISTS idx_msg_recip_read        ON messages(mission_id, recipient_user_id, read_at);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen       ON users(last_seen_at);
+
+
+-- Provenance des visiteurs : agregat par jour et par pays. Aucune IP n'est
+-- conservee (le pays est resolu a la volee par geoip.py puis jete), donc rien
+-- ici ne se rapporte a une personne identifiable.
+CREATE TABLE IF NOT EXISTS visit_countries (
+    day     TEXT NOT NULL,                  -- 'AAAA-MM-JJ' (UTC)
+    country TEXT NOT NULL,                  -- code ISO2, '??' si non localise
+    kind    TEXT NOT NULL DEFAULT 'human',  -- human | bot
+    views   INTEGER NOT NULL DEFAULT 0,     -- pages vues (pas de visiteurs uniques :
+                                            -- rien ne permet de les distinguer)
+    PRIMARY KEY (day, country, kind)
+);
+CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day);

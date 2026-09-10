@@ -312,3 +312,51 @@ def test_noms_de_pays_traduits():
     assert i18n.country_name("Allemagne", "en") == "Germany"
     assert i18n.country_name("Allemagne", "fr") == "Allemagne"
     assert i18n.country_name("Inconnu", "tr") == "Inconnu"
+
+
+# ---------------------------------------------------------------------------
+# Provenance des visiteurs (agregat pays, sans IP ni cookie)
+# ---------------------------------------------------------------------------
+
+def test_geoip_degrade_proprement():
+    import geoip
+    # IP privees, loopback, IPv6, saisies invalides : jamais d'exception.
+    for ip in ("127.0.0.1", "192.168.1.4", "10.0.0.1", "2001:4860::1", "", "coucou", None):
+        assert geoip.country_code(ip) is None
+    assert geoip.country_fr("CA") == "Canada" and geoip.country_fr("ZZ") == "ZZ"
+    assert geoip.flag("CA") == "🇨🇦" and geoip.flag("??") == "🌐"
+
+
+def test_comptage_par_pays_sans_ip(client, app_ctx):
+    import db, services
+    before = {r["country"]: r["views"] for r in services.visits_by_country(1)}
+    client.get("/")
+    after = {r["country"]: r["views"] for r in services.visits_by_country(1)}
+    # une page vue de plus, non localisee en test (pas de base GeoIP)
+    assert after.get("??", 0) == before.get("??", 0) + 1
+    # aucune colonne de la table ne peut contenir une adresse
+    cols = [r[1] for r in db.fetchall("PRAGMA table_info(visit_countries)")]
+    assert set(cols) == {"day", "country", "kind", "views"}
+
+
+def test_robots_comptes_a_part(client, app_ctx):
+    import services
+    avant = services.visits_totals(1)
+    client.get("/", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
+    apres = services.visits_totals(1)
+    assert apres["bot"] == avant["bot"] + 1
+    assert apres["human"] == avant["human"]
+
+
+def test_page_admin_visites(client, auth_client, make_user, app_ctx):
+    import db
+    u = make_user("admin_vis", role="both")
+    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (u["id"],))
+    c = auth_client(u["id"])
+    html = c.get("/admin/visites?jours=7").data.decode()
+    assert "D'où viennent les visiteurs" in html
+    assert 'name="robots" content="noindex' in html
+    assert c.get("/admin/visites?jours=99999").status_code == 200   # borne
+    # reserve aux admins
+    v = make_user("pas_admin", role="client")
+    assert auth_client(v["id"]).get("/admin/visites").status_code == 403

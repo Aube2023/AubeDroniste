@@ -172,6 +172,7 @@
     <a class="ghost" href="{{ url_for('admin_name_changes') }}">{{ 'Demandes de changement de nom' if fr else 'Name change requests' }} &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_disputes') }}">{{ 'Litiges en cours' if fr else 'Open disputes' }} &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_messages') }}">{{ 'Messages reçus' if fr else 'Received messages' }}{% if admin_new_messages %} · <strong>{{ admin_new_messages }} {{ 'à traiter' if fr else 'to process' }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_visits') }}">{{ 'Provenance des visiteurs' if fr else 'Where visitors come from' }} &rarr;</a>
   </div>
 </section>
 {% endif %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Provenance des visiteurs, AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 18px;">
+  <span class="eyebrow">Admin · Fréquentation</span>
+  <h1>D'où viennent les visiteurs.</h1>
+  <p class="lead muted">
+    Pages vues par pays sur les {{ days }} derniers jours. Ce sont des <strong>pages vues</strong>,
+    pas des visiteurs uniques : le site ne pose aucun cookie de mesure et ne garde aucune adresse IP,
+    donc deux visites ne peuvent pas être rattachées à la même personne. Le pays est résolu sur le
+    serveur puis oublié ; seul le compteur reste.
+  </p>
+</div>
+
+{% if not geoip_ok %}
+<div class="alert alert-warn">
+  <span class="eyebrow">Base pays indisponible</span>
+  <p>La bibliothèque GeoIP n'est pas chargée sur cette machine : les visites sont comptées
+  sous « non localisé ». En production, elle vient du paquet <code>geoip-database</code>.</p>
+</div>
+{% endif %}
+
+<nav class="faq-nav" aria-label="Période">
+  {% for d in [7, 30, 90, 365] %}
+  <a href="{{ url_for('admin_visits', jours=d, robots=('1' if kind == 'bot' else none)) }}"
+     {% if days == d %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>{{ d }} jours</a>
+  {% endfor %}
+  <a href="{{ url_for('admin_visits', jours=days) }}"
+     {% if kind == 'human' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Visiteurs · {{ totals.human }}</a>
+  <a href="{{ url_for('admin_visits', jours=days, robots=1) }}"
+     {% if kind == 'bot' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Robots · {{ totals.bot }}</a>
+</nav>
+
+{% if rows %}
+<div class="stat-rail" style="margin: 22px 0;">
+  <div>
+    <span class="v">{{ rows|sum(attribute='views') }}</span>
+    <span class="k">{{ 'Pages vues' if kind == 'human' else 'Pages vues (robots)' }}</span>
+  </div>
+  <div>
+    <span class="v">{{ rows|length }}</span>
+    <span class="k">Pays</span>
+  </div>
+  <div>
+    <span class="v">{{ rows[0].flag }} {{ rows[0].share }}%</span>
+    <span class="k">Premier pays · {{ rows[0].name }}</span>
+  </div>
+</div>
+
+<table class="table-simple" style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Pays</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Pages vues</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Part</th>
+      <th style="width: 40%; padding: 8px 10px; border-bottom: 1px solid var(--rule);"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">
+        <span aria-hidden="true">{{ r.flag }}</span> {{ r.name }}
+        <span class="muted mono small">{{ r.country }}</span>
+      </td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.views }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.share }}%</td>
+      <td style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">
+        <span class="share-bar" style="display: block; height: 8px; border-radius: 999px; background: var(--amber); width: {{ r.share }}%;"
+              role="img" aria-label="{{ r.share }} %"></span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if daily %}
+<h2 style="margin-top: 36px; font-size: 1.1rem;">Jour par jour</h2>
+{% set maxi = daily|map(attribute='views')|max %}
+<div style="display: flex; align-items: flex-end; gap: 3px; height: 120px; margin-top: 12px;">
+  {% for d in daily %}
+  <span title="{{ d.day }} · {{ d.views }}"
+        style="flex: 1; min-width: 3px; background: var(--amber); border-radius: 2px 2px 0 0;
+               height: {{ (100 * d.views / maxi)|round|int }}%;"></span>
+  {% endfor %}
+</div>
+<p class="muted small" style="display: flex; justify-content: space-between; margin-top: 6px;">
+  <span>{{ daily[0].day }}</span><span>{{ daily[-1].day }}</span>
+</p>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <strong>Aucune visite enregistrée sur cette période.</strong>
+  <p>Le comptage démarre au premier passage après la mise en ligne de cette page : l'historique
+  d'avant n'existe pas, rien n'était conservé.</p>
+</div>
+{% endif %}
+
+{% endblock %}

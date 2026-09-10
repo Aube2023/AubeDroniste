@@ -166,6 +166,59 @@ def get_visits() -> int:
     return int(row["value"]) if row else 0
 
 
+# ---------------------------------------------------------------------------
+# Provenance des visiteurs
+#
+# On compte des PAGES VUES par pays et par jour, pas des visiteurs uniques :
+# sans cookie ni empreinte, deux visites ne peuvent pas etre rattachees a la
+# meme personne, et c'est voulu. Aucune IP n'entre en base.
+# ---------------------------------------------------------------------------
+
+def bump_country_visit(country: Optional[str], *, is_bot: bool = False) -> None:
+    db.execute(
+        "INSERT INTO visit_countries(day, country, kind, views) "
+        "VALUES(date('now'), ?, ?, 1) "
+        "ON CONFLICT(day, country, kind) DO UPDATE SET views = views + 1",
+        ((country or "??").upper()[:2], "bot" if is_bot else "human"),
+    )
+
+
+def visits_by_country(days: int = 30, *, kind: str = "human") -> list:
+    """[{country, views, share}] sur les N derniers jours, du plus visite au
+    moins visite. `share` est le pourcentage du total."""
+    rows = db.fetchall(
+        "SELECT country, SUM(views) AS views FROM visit_countries "
+        "WHERE kind = ? AND day >= date('now', ?) "
+        "GROUP BY country ORDER BY views DESC, country",
+        (kind, f"-{max(1, int(days))} days"),
+    )
+    out = [{"country": r["country"], "views": int(r["views"])} for r in rows]
+    total = sum(r["views"] for r in out) or 1
+    for r in out:
+        r["share"] = round(100 * r["views"] / total, 1)
+    return out
+
+
+def visits_daily(days: int = 30, *, kind: str = "human") -> list:
+    """[{day, views}] pour la courbe, jours sans visite compris."""
+    rows = db.fetchall(
+        "SELECT day, SUM(views) AS views FROM visit_countries "
+        "WHERE kind = ? AND day >= date('now', ?) GROUP BY day ORDER BY day",
+        (kind, f"-{max(1, int(days))} days"),
+    )
+    return [{"day": r["day"], "views": int(r["views"])} for r in rows]
+
+
+def visits_totals(days: int = 30) -> dict:
+    rows = db.fetchall(
+        "SELECT kind, SUM(views) AS views FROM visit_countries "
+        "WHERE day >= date('now', ?) GROUP BY kind",
+        (f"-{max(1, int(days))} days",),
+    )
+    by = {r["kind"]: int(r["views"]) for r in rows}
+    return {"human": by.get("human", 0), "bot": by.get("bot", 0)}
+
+
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT u.*, p.headline, p.business_name, p.business_email, p.kind, p.school_programs, "

@@ -184,12 +184,23 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_msg_sender ON messages(sender_user_id)",
     "CREATE INDEX IF NOT EXISTS idx_msg_recip_read ON messages(mission_id, recipient_user_id, read_at)",
     "CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at)",
+    "CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day)",
 ]
 
 
 # Tables additives idempotentes (memes regles que les index : schema.sql ne
 # tourne que sur une base neuve, la prod passe par run_migrations()).
 _ADD_TABLES = [
+    # Provenance des visiteurs, par jour et par pays. AUCUNE IP n'est stockee :
+    # le pays est resolu a la volee (geoip.py) puis jete, seul l'agregat reste.
+    """CREATE TABLE IF NOT EXISTS visit_countries (
+    day     TEXT NOT NULL,                  -- 'AAAA-MM-JJ' (UTC)
+    country TEXT NOT NULL,                  -- code ISO2, '??' si non localise
+    kind    TEXT NOT NULL DEFAULT 'human',  -- human | bot
+    views   INTEGER NOT NULL DEFAULT 0,     -- pages vues (pas de visiteurs uniques :
+                                            -- rien ne permet de les distinguer)
+    PRIMARY KEY (day, country, kind)
+)""",
     # Compteur de visites du site (valeur cumulee ; affichee + config.SITE_VISIT_BASE).
     """CREATE TABLE IF NOT EXISTS site_counters (
         name  TEXT PRIMARY KEY,
