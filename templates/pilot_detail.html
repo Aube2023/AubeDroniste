@@ -354,4 +354,9 @@
   {% endfor %}
 </section>
 
+{% set share_url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
+{% set share_text = seo.title or pilot.full_name %}
+{% set share_hint = t('share.own_hint') if (current_user and current_user.id == pilot.id) else t('share.pilot_hint') %}
+{% include "_share.html" %}
+
 {% endblock %}

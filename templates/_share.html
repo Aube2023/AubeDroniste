@@ -1,0 +1,33 @@
+{# Boutons de partage. Attend `share_url` (absolue) et `share_text`.
+   `share_hint` est facultatif.
+
+   Des LIENS, pas des widgets : aucun script de LinkedIn, Facebook ou X n'est
+   chargé, donc aucun mouchard n'entre sur le site et rien n'est envoyé à ces
+   plateformes tant que le visiteur ne clique pas. C'est aussi pour ça que le
+   compteur de partages n'existe pas : il faudrait leur SDK. #}
+{% set u = share_url | urlquote %}
+{% set txt = share_text | urlquote %}
+<div class="share-block">
+  <span class="eyebrow">{{ t('share.title') }}</span>
+  {% if share_hint %}<p class="muted small" style="margin: 4px 0 10px;">{{ share_hint }}</p>{% endif %}
+  <div class="share-row">
+    <a class="share-btn" rel="noopener noreferrer nofollow" target="_blank"
+       href="https://www.linkedin.com/sharing/share-offsite/?url={{ u }}">LinkedIn</a>
+    <a class="share-btn" rel="noopener noreferrer nofollow" target="_blank"
+       href="https://www.facebook.com/sharer/sharer.php?u={{ u }}">Facebook</a>
+    <a class="share-btn" rel="noopener noreferrer nofollow" target="_blank"
+       href="https://twitter.com/intent/tweet?url={{ u }}&text={{ txt }}">X</a>
+    <a class="share-btn" rel="noopener noreferrer nofollow" target="_blank"
+       href="https://api.whatsapp.com/send?text={{ txt }}%20{{ u }}">WhatsApp</a>
+    <a class="share-btn" rel="noopener noreferrer nofollow" target="_blank"
+       href="https://t.me/share/url?url={{ u }}&text={{ txt }}">Telegram</a>
+    <a class="share-btn" href="mailto:?subject={{ txt }}&body={{ u }}">{{ t('share.email') }}</a>
+    <button type="button" class="share-btn" data-action="copy-link"
+            data-url="{{ share_url }}" data-done="{{ t('share.copied') }}">{{ t('share.copy') }}</button>
+    {# Menu natif du téléphone (Instagram, Signal, SMS…) : affiché par le JS
+       seulement là où navigator.share existe. #}
+    <button type="button" class="share-btn js-native-share" hidden
+            data-action="native-share" data-url="{{ share_url }}"
+            data-title="{{ share_text }}">{{ t('share.more') }}</button>
+  </div>
+</div>

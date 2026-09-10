@@ -297,6 +297,25 @@ jamais une déclaration, seulement une pièce contrôlée.
 - La fiche publique dit l'état plutôt que de se taire : « Assurance vérifiée »
   ou « Assurance déclarée, non vérifiée ».
 
+## Aider le pilote à être trouvé
+
+- `services.pilot_visibility(user_id)` : ce qui manque concrètement, pondéré,
+  avec `blocking` pour les points qui retirent le pilote d'un canal entier
+  (coordonnées → recherche par code postal et pages ville ; spécialité → pages
+  d'atterrissage ; disponibilité → annuaire et alertes ; Stripe → il ne peut
+  pas être payé). Affiché en haut de `/espace/pilote` via `_visibility.html`,
+  chaque ligne disant ce que le point débloque plutôt qu'un score décoratif.
+- Partage (`_share.html`, attend `share_url` + `share_text`) : LinkedIn,
+  Facebook, X, WhatsApp, Telegram, courriel, copie du lien, et le menu natif
+  du téléphone quand `navigator.share` existe. **Ce sont des liens, pas des
+  widgets** : aucun SDK tiers n'est chargé, donc aucun mouchard n'entre sur le
+  site et rien ne part vers ces plateformes avant un clic. Le corollaire
+  assumé : pas de compteur de partages, il faudrait leur SDK.
+- L'URL partagée est la canonique de la langue courante (`seo_alternates`),
+  encodée par le filtre `urlquote` (le `urlencode` de Jinja laisse les « / »).
+  Les métadonnées Open Graph de `base.html` fournissent titre, description et
+  image de l'aperçu.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement

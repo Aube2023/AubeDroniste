@@ -154,6 +154,20 @@ document.addEventListener('click', function (e) {
       if (d) d.open = true;
       break;
     }
+    case 'copy-link': {
+      e.preventDefault();
+      copyLink(t);
+      break;
+    }
+    case 'native-share': {
+      e.preventDefault();
+      if (navigator.share) {
+        navigator.share({ title: t.getAttribute('data-title') || document.title,
+                          url: t.getAttribute('data-url') || location.href })
+                 .catch(function () {});
+      }
+      break;
+    }
     case 'show': {
       var el = document.getElementById(t.getAttribute('data-target'));
       if (el) el.style.display = 'block';
@@ -178,3 +192,39 @@ window.useMyLocation = useMyLocation;
 window.findNearMe = findNearMe;
 window.toggleTheme = toggleTheme;
 window.clearZone = clearZone;
+
+/* ---- Partage ------------------------------------------------------------
+   Copie du lien : l'API presse-papier n'existe qu'en contexte securise, on
+   garde un repli sur l'ancienne methode pour le dev en http. Le libelle du
+   bouton confirme sur place, plutot qu'une alerte. */
+function copyLink(btn) {
+  var url = btn.getAttribute('data-url') || location.href;
+  var done = btn.getAttribute('data-done') || 'OK';
+  var back = btn.textContent;
+  function confirmCopy() {
+    btn.textContent = done;
+    setTimeout(function () { btn.textContent = back; }, 2000);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(confirmCopy, function () { fallbackCopy(url, confirmCopy); });
+  } else {
+    fallbackCopy(url, confirmCopy);
+  }
+}
+
+function fallbackCopy(text, done) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (err) { window.prompt('', text); }
+  document.body.removeChild(ta);
+}
+
+// Menu de partage du telephone : seulement la ou il existe.
+if (navigator.share) {
+  document.querySelectorAll('.js-native-share').forEach(function (b) { b.hidden = false; });
+}

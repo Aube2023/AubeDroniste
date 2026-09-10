@@ -370,4 +370,8 @@
   {% endif %}
 </section>
 
+{% set share_url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
+{% set share_text = seo.title or mission.title %}
+{% include "_share.html" %}
+
 {% endblock %}

@@ -1,0 +1,71 @@
+{# Ce qui manque au pilote pour être trouvé. Attend `vis` (services.pilot_visibility).
+   Chaque ligne renvoie à un mécanisme réel du site, pas à un score décoratif :
+   c'est pour ça que le libellé dit ce que le point DÉBLOQUE. #}
+{% set fr = (lang == 'fr') %}
+{% set L = {
+  'location':   ('Position sur la carte', "Sans coordonnées, vous n'apparaissez ni dans « près de chez moi » ni sur les pages par ville.",
+                 'Location on the map', 'Without coordinates you appear neither in “near me” nor on city pages.'),
+  'city':       ('Ville', "Elle nomme votre page d'annuaire et sert la recherche par code postal.",
+                 'City', 'It names your directory page and powers postal-code search.'),
+  'specialties':('Spécialités', "Chaque spécialité cochée vous place sur une page dédiée (« inspection de toiture par drone »).",
+                 'Specialties', 'Each specialty puts you on a dedicated page (“roof inspection by drone”).'),
+  'available':  ('Disponibilité', "Au sol, vous sortez de l'annuaire et des alertes de mission.",
+                 'Availability', 'Grounded, you drop out of the directory and of job alerts.'),
+  'headline':   ("Accroche", "La première ligne que lit un client, et celle qui part sur LinkedIn quand on partage votre fiche.",
+                 'Tagline', 'The first line a client reads, and the one that travels to LinkedIn when your page is shared.'),
+  'bio':        ('Présentation', "Quelques phrases sur votre façon de travailler : c'est ce qui départage deux profils au même prix.",
+                 'About you', 'A few lines on how you work: that is what separates two profiles at the same price.'),
+  'avatar':     ('Photo', "Une fiche sans visage se fait moins cliquer.",
+                 'Photo', 'A page without a face gets fewer clicks.'),
+  'certification': ('Brevet déclaré', "Listez vos brevets, même sans justificatif pour l'instant.",
+                 'Licence listed', 'List your licences, even without proof for now.'),
+  'certification_document': ('Justificatif de brevet', "Sans document téléversé, rien à contrôler : le brevet reste déclaratif.",
+                 'Licence proof', 'Without an uploaded document there is nothing to check: the licence stays declarative.'),
+  'certification_verified': ('Brevet vérifié', "Le badge « vérifié » et le filtre du même nom, celui que les clients utilisent le plus.",
+                 'Licence verified', 'The “verified” badge and its filter, the one clients use most.'),
+  'insurance':  ('Assurance vérifiée', "Attestation contrôlée : badge « RC pro » et filtre « assurance vérifiée ».",
+                 'Insurance verified', 'Checked certificate: “Insured” badge and “verified insurance” filter.'),
+  'drone':      ('Aéronef', "Le matériel rassure autant que le brevet.",
+                 'Aircraft', 'Gear reassures as much as the licence.'),
+  'rate':       ('Tarif ou forfait', "Un prix affiché fait venir des demandes plus sérieuses qu'un « sur devis ».",
+                 'Rate or package', 'A displayed price brings more serious enquiries than “on quote”.'),
+  'portfolio':  ('Portfolio', "Des images valent mieux qu'une description.",
+                 'Portfolio', 'Images beat a description.'),
+  'payouts':    ('Paiements activés', "Sans Stripe, un client peut vous choisir mais l'argent ne vous parvient pas.",
+                 'Payouts enabled', 'Without Stripe a client can pick you but the money never reaches you.'),
+} %}
+{% set LINKS = {
+  'location': url_for('pilot_edit'), 'city': url_for('pilot_edit'),
+  'specialties': url_for('pilot_edit') ~ '#specialites', 'available': url_for('pilot_edit'),
+  'headline': url_for('pilot_edit'), 'bio': url_for('pilot_edit'), 'avatar': url_for('pilot_edit'),
+  'certification': url_for('pilot_edit'), 'certification_document': url_for('pilot_edit'),
+  'certification_verified': url_for('pilot_edit'), 'insurance': url_for('pilot_edit') ~ '#assurance',
+  'drone': url_for('pilot_edit'), 'rate': url_for('pilot_packages'),
+  'portfolio': url_for('pilot_portfolio'), 'payouts': url_for('stripe_onboard'),
+} %}
+{% set todo = vis['items'] | rejectattr('ok') | list %}
+
+<section class="visibility-block" aria-labelledby="vis-title">
+  <div class="row-between" style="align-items: baseline; gap: 12px; flex-wrap: wrap;">
+    <h2 id="vis-title" style="margin: 0;">{{ t('vis.title') }}</h2>
+    <span class="mono muted small">{{ t('vis.score', n=vis['score']) }}</span>
+  </div>
+  <div class="vis-gauge" role="img" aria-label="{{ t('vis.score', n=vis['score']) }}">
+    <span style="width: {{ vis['score'] }}%;"></span>
+  </div>
+
+  {% if todo %}
+  <ul class="vis-list">
+    {% for it in todo %}
+    {% set lab = L.get(it.key) %}
+    <li class="{{ 'blocking' if it.blocking else '' }}">
+      <a href="{{ LINKS.get(it.key, url_for('pilot_edit')) }}">{{ (lab[0] if fr else lab[2]) if lab else it.key }} →</a>
+      <span class="muted small">{{ (lab[1] if fr else lab[3]) if lab else '' }}</span>
+      {% if it.blocking %}<span class="tag tag-urgent" title="{{ t('vis.blocking') }}">{{ 'bloquant' if fr else 'blocking' }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ t('vis.done') }}</p>
+  {% endif %}
+</section>

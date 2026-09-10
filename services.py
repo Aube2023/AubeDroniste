@@ -228,7 +228,8 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
         "p.insurance_expires_at, p.insurance_document_path, p.insurance_note, "
         "COALESCE(p.insurance_status, 'none') AS insurance_status, "
         "p.insurance_reviewed_at, "
-        "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at "
+        "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at, "
+        "COALESCE(p.stripe_charges_enabled, 0) AS stripe_charges_enabled "
         "FROM users u LEFT JOIN pilot_profiles p ON p.user_id = u.id "
         "WHERE u.id=?",
         (user_id,),
@@ -254,6 +255,61 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
     out["drones"] = list_drones(user_id)
     out["rating"] = pilot_rating(user_id)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Visibilite d'un pilote : ce qui lui manque concretement pour etre trouve
+#
+# Deux pilotes sur quatre en production n'ont ni accroche, ni specialite, ni
+# brevet : ils n'apparaitront jamais nulle part et ne sauront pas pourquoi.
+# Chaque point ci-dessous correspond a un mecanisme reel du site (recherche
+# par code postal, pages d'atterrissage par specialite, filtres de confiance),
+# pas a un « score de profil » decoratif.
+# ---------------------------------------------------------------------------
+
+def pilot_visibility(user_id: int) -> dict:
+    """{score, total, done, items:[{key, ok, weight, blocking}]}.
+
+    `blocking` = sans ca, le pilote est absent d'un canal entier (recherche
+    geographique, pages specialite) ou ne peut pas etre paye.
+    """
+    p = get_pilot_profile(user_id)
+    if not p:
+        return {"score": 0, "total": 0, "done": 0, "items": []}
+    certs = p.get("certifications") or []
+    ins = insurance_state(p)
+    packages = list_pilot_packages(user_id, only_active=True)
+    items = [
+        # Sans coordonnees, le pilote n'existe pas pour « pres de chez moi »
+        # ni pour les pages pays/ville : c'est le premier canal du site.
+        ("location", bool(p.get("lat") and p.get("lng")), 3, True),
+        ("city", bool((p.get("city") or "").strip()), 2, True),
+        # Une specialite = une page d'atterrissage ou le pilote apparait.
+        ("specialties", bool(p.get("specialties")), 3, True),
+        ("available", bool(p.get("is_available")), 3, True),
+        ("headline", bool((p.get("headline") or "").strip()), 2, False),
+        ("bio", len((p.get("bio") or "").strip()) >= 80, 2, False),
+        ("avatar", bool(p.get("avatar_path")), 1, False),
+        ("certification", bool(certs), 2, False),
+        # Un brevet sans justificatif reste declaratif : pas de badge.
+        ("certification_document", any(c.get("document_path") for c in certs), 3, False),
+        ("certification_verified", any(c.get("is_verified") and not c.get("is_expired")
+                                       for c in certs), 2, False),
+        ("insurance", ins["is_valid"], 2, False),
+        ("drone", bool(p.get("drones")), 1, False),
+        ("rate", bool(p.get("hourly_rate") or p.get("daily_rate") or packages), 2, False),
+        ("portfolio", bool(list_portfolio_items(user_id)), 1, False),
+        # Sans Stripe, un client peut reserver mais l'argent n'arrive pas.
+        ("payouts", bool(p.get("stripe_charges_enabled")), 2, True),
+    ]
+    total = sum(w for _k, _ok, w, _b in items)
+    done = sum(w for _k, ok, w, _b in items if ok)
+    return {
+        "score": round(100 * done / total) if total else 0,
+        "total": total, "done": done,
+        "items": [{"key": k, "ok": ok, "weight": w, "blocking": b} for k, ok, w, b in items],
+        "missing_blocking": [k for k, ok, _w, b in items if b and not ok],
+    }
 
 
 def set_pilot_specialties(user_id: int, codes: Iterable[str]):

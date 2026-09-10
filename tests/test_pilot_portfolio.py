@@ -64,3 +64,55 @@ def test_portfolio_videos_capped(make_user, auth_client, app_ctx):
     # ...mais une photo supplémentaire passe toujours (photos illimitées).
     assert _upload(c, "still.jpg").status_code == 200
     assert services.count_portfolio_items(u["id"], "image") == 1
+
+
+# ---------------------------------------------------------------------------
+# Partage d'une fiche + « être trouvé » (ce qui manque au pilote)
+# ---------------------------------------------------------------------------
+
+def test_partage_sur_la_fiche_publique(client, make_user, app_ctx):
+    import services
+    u = make_user("share_p", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1, headline="Inspections thermiques")
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert 'class="share-block"' in html
+    cible = "https%3A%2F%2Fpilot.aubeetoilee.com%2Fpilotes%2F" + str(u["id"])
+    for reseau in ("linkedin.com/sharing", "facebook.com/sharer", "twitter.com/intent",
+                   "api.whatsapp.com", "t.me/share", "mailto:"):
+        assert reseau in html
+    assert cible in html                       # on partage l'URL canonique, pas /?x=
+    # aucun script tiers : ce sont des liens, donc aucun mouchard
+    for sdk in ("connect.facebook.net", "platform.linkedin.com", "platform.twitter.com"):
+        assert sdk not in html
+
+
+def test_partage_pointe_la_bonne_langue(client, make_user, app_ctx):
+    import services
+    u = make_user("share_lang", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    html = client.get(f"/ur/pilotes/{u['id']}").data.decode()
+    assert "%2Fur%2Fpilotes%2F" + str(u["id"]) in html
+
+
+def test_visibilite_liste_ce_qui_manque(auth_client, make_user, app_ctx):
+    import services
+    u = make_user("vis_p", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    v = services.pilot_visibility(u["id"])
+    assert 0 < v["score"] < 100
+    assert "specialties" in v["missing_blocking"]      # aucune specialite cochee
+    assert "payouts" in v["missing_blocking"]          # Stripe pas active
+
+    html = auth_client(u["id"]).get("/espace/pilote").data.decode()
+    assert 'class="visibility-block"' in html
+    assert "Spécialités" in html and "bloquant" in html
+    assert 'class="share-block"' in html               # sa fiche, a partager
+
+    # cocher une specialite retire le point bloquant
+    services.set_pilot_specialties(u["id"], ["toiture"])
+    assert "specialties" not in services.pilot_visibility(u["id"])["missing_blocking"]
+
+
+def test_visibilite_profil_absent(app_ctx):
+    import services
+    assert services.pilot_visibility(10_000_000)["items"] == []

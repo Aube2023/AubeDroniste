@@ -9,7 +9,7 @@ import re
 import secrets
 import time
 from datetime import datetime, timezone
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import quote, urlsplit, urlunsplit
 
 from flask import has_request_context
 from flask import (
@@ -219,6 +219,14 @@ def endpoint_langs(endpoint) -> tuple:
     if endpoint not in LANG_ENDPOINTS:
         return ()
     return tuple(LANG_ENDPOINTS[endpoint] or i18n.SUPPORTED)
+
+
+@app.template_filter("urlquote")
+def _urlquote(value) -> str:
+    """Encodage complet pour une VALEUR de parametre (les « / » compris) : le
+    filtre `urlencode` de Jinja les laisse passer, ce qui suffit en general
+    mais casse avec les analyseurs stricts des reseaux sociaux."""
+    return quote(str(value or ""), safe="")
 
 
 @app.url_value_preprocessor
@@ -1741,6 +1749,7 @@ def pilot_edit():
         "pilot_edit.html",
         profile=profile,
         insurance_state=services.insurance_state(profile),
+        vis=services.pilot_visibility(user["id"]),
         identity_locked=services.is_identity_locked(user["id"]),
         pending_name_change=services.has_pending_name_change(user["id"]),
     )

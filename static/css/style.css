@@ -2076,3 +2076,24 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 }
 .lang-suggest-open { font-weight: 600; }
 .lang-suggest-close { color: var(--ink-dim); margin-inline-start: auto; }
+
+/* ============ Partage ============ */
+.share-block { margin: 28px 0; padding-top: 18px; border-top: 1px solid var(--rule); }
+.share-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-btn {
+  display: inline-block; padding: 7px 13px;
+  border: 1px solid var(--rule); border-radius: 999px;
+  background: var(--paper-2); color: var(--ink-soft);
+  font: 600 13px/1.2 var(--sans); cursor: pointer;
+}
+.share-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ============ « Être trouvé » : ce qui manque au pilote ============ */
+.visibility-block { margin: 28px 0; padding-top: 18px; border-top: 1px solid var(--rule); }
+.vis-gauge { height: 8px; border-radius: 999px; background: var(--paper-3); margin: 10px 0 16px; overflow: hidden; }
+.vis-gauge span { display: block; height: 100%; background: var(--amber); }
+.vis-list { list-style: none; margin: 0; padding: 0; }
+.vis-list li { padding: 8px 0; border-bottom: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.vis-list li a { font-weight: 600; }
+.vis-list li.blocking a { color: var(--signal); }
+.vis-list li .small { flex: 1; min-width: 220px; }

@@ -2,6 +2,16 @@
 {% set fr = (lang == 'fr') %}
 {% block title %}{{ 'Mon profil pilote' if fr else 'My pilot profile' }} · AubePilot{% endblock %}
 {% block content %}
+
+{# Ce qui manque pour etre trouve, avant les formulaires : un pilote qui
+   arrive ici veut savoir quoi faire, pas parcourir dix champs. #}
+{% if vis and vis['total'] %}{% include "_visibility.html" %}{% endif %}
+
+{% set share_url = canonical_base ~ url_for('pilot_detail', user_id=current_user.id, lang=none) %}
+{% set share_text = profile.headline or current_user.full_name %}
+{% set share_hint = t('share.own_hint') %}
+{% include "_share.html" %}
+
 <div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap;">
   <h1 style="margin: 0;">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</h1>
   <div class="actions-row">
