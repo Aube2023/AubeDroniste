@@ -205,3 +205,44 @@ def test_formulaire_enregistre_livrables_et_liens(auth_client, make_user, app_ct
     })
     assert services.list_pilot_deliverables(u["id"]) == ["panorama_360", "modele_3d"]
     assert [l["kind"] for l in services.list_pilot_links(u["id"])] == ["google"]
+
+
+# ---------------------------------------------------------------------------
+# Bandeau « Activez vos paiements » : rien tant que Connect n'est pas ouvert
+# ---------------------------------------------------------------------------
+
+def _pilote_sans_stripe(make_user, services):
+    u = make_user("payout_ban", role="pilot", country="Canada", city="Laval")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    return u
+
+
+def test_bandeau_paiements_masque_si_connect_ferme(auth_client, make_user, monkeypatch):
+    import config, payments, services
+    u = _pilote_sans_stripe(make_user, services)
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
+    c = auth_client(u["id"])
+    html = c.get("/espace").data.decode()
+    assert "Activez vos paiements" not in html
+    edit = c.get("/espace/pilote").data.decode()
+    # La section « Encaissement » reste, mais explique le paiement en direct
+    # au lieu de reclamer une activation qui n'aboutit pas.
+    assert "Paiement en direct avec le client" in edit
+    assert "Activer mon encaissement Stripe" not in edit
+    assert "Paiements activés" not in edit       # ni le point « à faire »
+    # et l'onboarding explique la situation au lieu d'echouer
+    r = c.get("/espace/pilote/stripe", follow_redirects=True)
+    assert "directement avec le client" in r.data.decode()
+
+
+def test_bandeau_paiements_revient_si_connect_ouvert(auth_client, make_user, monkeypatch):
+    import config, payments, services
+    u = _pilote_sans_stripe(make_user, services)
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", True)
+    c = auth_client(u["id"])
+    assert "Activez vos paiements" in c.get("/espace").data.decode()
+    edit = c.get("/espace/pilote").data.decode()
+    assert "Activer mon encaissement Stripe" in edit
+    assert "Paiement en direct avec le client" not in edit
