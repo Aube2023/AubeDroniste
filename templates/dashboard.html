@@ -10,7 +10,7 @@
     <div class="meta">
       <strong>F-{{ '%04d' % current_user.id }}{{ (current_user.full_name|first)|upper }}</strong>
       · {{ current_user.email }}
-      · {{ 'rôle' if fr else 'role' }} <strong>{{ current_user.role }}</strong>
+      · <strong>{% if current_user.role == 'both' %}{{ 'client et pilote' if fr else 'client and pilot' }}{% elif current_user.role == 'pilot' %}{{ 'pilote' if fr else 'pilot' }}{% else %}{{ 'client' if fr else 'client' }}{% endif %}</strong>
       {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
       {% if unread %} · <strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %}{% endif %}
     </div>
@@ -19,7 +19,7 @@
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
     {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>{% endif %}
     {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Devenir pilote' if fr else 'Become a pilot' }}</a>{% endif %}
-    <a class="ghost" href="{{ url_for('settings') }}">⚙ {{ 'Paramètres' if fr else 'Settings' }}</a>
+    <a class="ghost" href="{{ url_for('settings') }}">{{ 'Paramètres' if fr else 'Settings' }}</a>
   </div>
 </section>
 
@@ -28,10 +28,12 @@
   <div class="cockpit-tile">
     <span class="label">{{ 'Profil pilote' if fr else 'Pilot profile' }}</span>
     <h2>{{ my_pilot_profile.headline or ("Compléter mon accroche →" if fr else "Complete my tagline →") }}</h2>
-    <span class="num-big">
-      {% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★{% else %}—{% endif %}
-    </span>
-    <div class="mini-profile" style="margin-top: 8px;">
+    {# Le gros chiffre d'une tuile doit appeler une action. Une note « — »
+       faute d'avis n'en appelait aucune ; la completude de la fiche, si. #}
+    <span class="num-big">{{ vis.score }}<span class="unit">%</span></span>
+    <div class="muted small mono tile-qualifier">{{ 'de fiche complète' if fr else 'profile complete' }}</div>
+    <div class="mini-profile" style="margin-top: 12px;">
+      <div class="row"><span>{{ 'Note' if fr else 'Rating' }}</span><strong>{% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★ · {{ my_pilot_profile.rating.count }}{% else %}{{ 'aucun avis' if fr else 'no reviews' }}{% endif %}</strong></div>
       <div class="row"><span>{{ 'Disponibilité' if fr else 'Availability' }}</span><strong>{% if my_pilot_profile.is_available %}{{ 'En vol' if fr else 'Flying' }}{% else %}{{ 'Au sol' if fr else 'Grounded' }}{% endif %}</strong></div>
       <div class="row"><span>{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong></div>
       <div class="row"><span>{{ 'Rayon' if fr else 'Radius' }}</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
@@ -51,15 +53,13 @@
   {% if is_client %}
   <div class="cockpit-tile">
     <span class="label">{{ 'Mes missions publiées' if fr else 'My posted jobs' }}</span>
-    <h2>{{ 'Missions' if fr else 'Jobs' }} {{ my_missions|length }}</h2>
-    <span class="num-big">{{ my_missions|selectattr('status','equalto','open')|list|length }}</span>
-    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      {{ 'en attente de pilote' if fr else 'awaiting a pilot' }}
-    </div>
+    {% set ouvertes = my_missions|selectattr('status','equalto','open')|list|length %}
+    {% set assigned = my_missions|selectattr('status','equalto','assigned')|list|length %}
+    {% set done = my_missions|selectattr('status','equalto','done')|list|length %}
+    <span class="num-big">{{ ouvertes }}</span>
+    <div class="muted small mono tile-qualifier">{{ 'en attente de pilote' if fr else 'awaiting a pilot' }}</div>
     <div class="footnote">
-      {% set assigned = my_missions|selectattr('status','equalto','assigned')|list|length %}
-      {% set done = my_missions|selectattr('status','equalto','done')|list|length %}
-      {% if fr %}{{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}{% else %}{{ assigned }} assigned · {{ done }} delivered{% endif %}
+      {% if fr %}{{ my_missions|length }} au total · {{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}{% else %}{{ my_missions|length }} in total · {{ assigned }} assigned · {{ done }} delivered{% endif %}
     </div>
   </div>
   {% endif %}
@@ -67,27 +67,23 @@
   {% if is_pilot %}
   <div class="cockpit-tile">
     <span class="label">{{ 'Mes offres' if fr else 'My bids' }}</span>
-    <h2>{{ 'Soumissions' if fr else 'Bids' }} {{ my_bids|length }}</h2>
+    {% set acc = my_bids|selectattr('my_bid_status','equalto','accepted')|list|length %}
     <span class="num-big">{{ my_bids|selectattr('my_bid_status','equalto','pending')|list|length }}</span>
-    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      {{ 'en attente de réponse' if fr else 'awaiting a reply' }}
-    </div>
+    <div class="muted small mono tile-qualifier">{{ 'en attente de réponse' if fr else 'awaiting a reply' }}</div>
     <div class="footnote">
-      {% set acc = my_bids|selectattr('my_bid_status','equalto','accepted')|list|length %}
-      {% if fr %}{{ acc }} acceptée{{ 's' if acc > 1 else '' }}{% else %}{{ acc }} accepted{% endif %}
+      {% if fr %}{{ my_bids|length }} envoyée{{ 's' if my_bids|length > 1 else '' }} · {{ acc }} acceptée{{ 's' if acc > 1 else '' }}{% else %}{{ my_bids|length }} sent · {{ acc }} accepted{% endif %}
     </div>
   </div>
   {% endif %}
 
   <div class="cockpit-tile">
     <span class="label">{{ 'Mes réservations' if fr else 'My bookings' }}</span>
-    <h2>Bookings {{ my_bookings|length }}</h2>
-    <span class="num-big">{{ my_bookings|selectattr('status','equalto','scheduled')|list|length + my_bookings|selectattr('status','equalto','in_progress')|list|length }}</span>
-    <div class="muted small mono" style="text-transform: uppercase; letter-spacing: .12em;">
-      {{ 'en cours' if fr else 'in progress' }}
-    </div>
+    {% set actives = my_bookings|selectattr('status','equalto','scheduled')|list|length + my_bookings|selectattr('status','equalto','in_progress')|list|length %}
+    {% set finies = my_bookings|selectattr('status','equalto','completed')|list|length %}
+    <span class="num-big">{{ actives }}</span>
+    <div class="muted small mono tile-qualifier">{{ 'en cours' if fr else 'in progress' }}</div>
     <div class="footnote">
-      {% if fr %}{{ my_bookings|selectattr('status','equalto','completed')|list|length }} terminée{{ 's' if my_bookings|selectattr('status','equalto','completed')|list|length > 1 else '' }}{% else %}{{ my_bookings|selectattr('status','equalto','completed')|list|length }} completed{% endif %}
+      {% if fr %}{{ my_bookings|length }} au total · {{ finies }} terminée{{ 's' if finies > 1 else '' }}{% else %}{{ my_bookings|length }} in total · {{ finies }} completed{% endif %}
     </div>
   </div>
 </div>

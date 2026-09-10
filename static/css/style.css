@@ -2097,3 +2097,9 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 .vis-list li a { font-weight: 600; }
 .vis-list li.blocking a { color: var(--signal); }
 .vis-list li .small { flex: 1; min-width: 220px; }
+
+/* ---- Tuiles du cockpit : un seul chiffre par tuile, sa légende dessous ---- */
+.cockpit-tile .num-big .unit { font-size: 1.4rem; color: var(--ink-dim); margin-inline-start: 2px; }
+.cockpit-tile .tile-qualifier {
+  text-transform: uppercase; letter-spacing: .12em; line-height: 1.3;
+}

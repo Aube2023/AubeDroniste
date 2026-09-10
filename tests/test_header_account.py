@@ -27,3 +27,32 @@ def test_header_logged_in_shows_name_and_account_link(make_user, auth_client):
     # avatar unifié : la pastille est câblée sur l'avatar AubeMail (source de vérité)
     assert "js-self-avatar" in html
     assert "/aubemail/api/avatar/" in html
+
+
+# ---------------------------------------------------------------------------
+# Tableau de bord : lisibilité des tuiles
+# ---------------------------------------------------------------------------
+
+def test_tableau_de_bord_sans_anglais_ni_valeur_brute(auth_client, make_user, app_ctx):
+    import services
+    u = make_user("cockpit", role="both", country="Canada", city="Montréal")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    html = auth_client(u["id"]).get("/espace").data.decode()
+    assert "Bookings" not in html                  # etait en dur dans une page FR
+    assert "rôle both" not in html                 # valeur brute de la base
+    assert "client et pilote" in html              # role lisible
+    assert "⚙" not in html
+
+
+def test_tuiles_un_seul_chiffre_par_tuile(auth_client, make_user, app_ctx):
+    """Chaque tuile portait un compte dans son titre ET un autre en gros,
+    souvent contradictoires (« Bookings 1 » au-dessus d'un gros « 0 »)."""
+    import services
+    u = make_user("cockpit2", role="both")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    html = auth_client(u["id"]).get("/espace").data.decode()
+    assert "Soumissions 0" not in html and "Missions 0" not in html
+    assert "au total" in html                      # les totaux passent en pied
+    # la tuile profil montre la completude, pas un tiret muet
+    assert 'class="num-big">' in html
+    assert "de fiche complète" in html

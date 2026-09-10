@@ -1553,6 +1553,7 @@ def dashboard():
         admin_pending_insurances=(services.count_insurances_pending()
                                   if user.get("is_admin") else 0),
         portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
+        vis=services.pilot_visibility(user["id"]) if is_pilot else None,
     )
 
 
