@@ -101,7 +101,10 @@ def test_visibilite_liste_ce_qui_manque(auth_client, make_user, app_ctx):
     v = services.pilot_visibility(u["id"])
     assert 0 < v["score"] < 100
     assert "specialties" in v["missing_blocking"]      # aucune specialite cochee
-    assert "payouts" in v["missing_blocking"]          # Stripe pas active
+    # Stripe n'est reclame que si Connect est ouvert cote plateforme : sinon
+    # on demanderait au pilote une demarche qui n'aboutit pas.
+    import config
+    assert ("payouts" in v["missing_blocking"]) == config.STRIPE_CONNECT_ENABLED
 
     html = auth_client(u["id"]).get("/espace/pilote").data.decode()
     assert 'class="visibility-block"' in html

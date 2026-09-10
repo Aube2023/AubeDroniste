@@ -15,6 +15,7 @@ from typing import Iterable, Optional
 
 import db
 from config import (
+    STRIPE_CONNECT_ENABLED,
     DELIVERABLES,
     MAX_PILOT_LINKS,
     PILOT_LINK_KINDS,
@@ -310,9 +311,11 @@ def pilot_visibility(user_id: int) -> dict:
         ("deliverables", bool(p.get("deliverables")), 2, False),
         # Preuves hors plateforme : decisives tant que le reseau est jeune.
         ("links", bool(p.get("links")), 1, False),
-        # Sans Stripe, un client peut reserver mais l'argent n'arrive pas.
-        ("payouts", bool(p.get("stripe_charges_enabled")), 2, True),
     ]
+    # Ne reclamer Stripe que si Connect est reellement ouvert cote plateforme :
+    # sinon on demanderait au pilote une demarche qui n'aboutit pas.
+    if STRIPE_CONNECT_ENABLED:
+        items.append(("payouts", bool(p.get("stripe_charges_enabled")), 2, True))
     total = sum(w for _k, _ok, w, _b in items)
     done = sum(w for _k, ok, w, _b in items if ok)
     return {
