@@ -1138,6 +1138,12 @@ def pilot_detail(user_id):
     public_name = profile["full_name"] if reveal else masked
     avatar = profile.get("avatar_path") or ""
     avatar_url = (seo.CANONICAL_BASE + "/media/" + avatar[8:]) if avatar.startswith("uploads/") else None
+    if not avatar_url:
+        # Pas de photo de profil : l'apercu partage sur LinkedIn ou Facebook
+        # prend la premiere realisation plutot que le logo generique.
+        cover = services.portfolio_cover(user_id)
+        if cover:
+            avatar_url = seo.CANONICAL_BASE + "/media/" + cover
     page_seo = seo.pilot_profile(
         getattr(g, "lang", i18n.DEFAULT),
         name=public_name, city=profile.get("city") or "",

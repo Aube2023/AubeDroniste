@@ -72,7 +72,7 @@
   <div class="chips" style="gap: 8px; margin-bottom: 12px;">
     {% for it in portfolio[:6] %}
       {% if it.kind == 'image' %}
-      <img src="{{ url_for('media_file', filename=it.file_path[8:]) }}" alt=""
+      <img src="{{ url_for('media_file', filename=it.stored_filename) }}" alt=""
            loading="lazy" style="width: 76px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--rule);">
       {% else %}
       <span class="tag">🎬 {{ it.title or ('Vidéo' if fr else 'Video') }}</span>

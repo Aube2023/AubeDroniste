@@ -264,3 +264,52 @@ def test_acces_aux_photos_depuis_le_profil_et_le_tableau_de_bord(auth_client, ma
 
     assert "Mes réalisations" in c.get("/espace").data.decode()
     assert c.get("/espace/pilote/portfolio").status_code == 200
+
+
+def _ajoute_piece(db, uid, kind="image", nom="a.jpg", ordre=0):
+    db.execute("INSERT INTO pilot_portfolio_items (pilot_user_id, kind, original_filename,"
+               " stored_filename, mime_type, sort_order) VALUES (?,?,?,?,?,?)",
+               (uid, kind, nom, f"portfolio_u{uid}/{nom}",
+                "image/jpeg" if kind == "image" else "video/mp4", ordre))
+
+
+def test_vignettes_du_profil_pointent_le_bon_fichier(auth_client, make_user, app_ctx):
+    """Les realisations sont servies par stored_filename : une autre colonne
+    donnerait des images cassees, silencieusement."""
+    import db, services
+    u = make_user("vign_p", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+    _ajoute_piece(db, u["id"], nom="vue.jpg")
+    html = auth_client(u["id"]).get("/espace/pilote").data.decode()
+    assert f'/media/portfolio_u{u["id"]}/vue.jpg' in html
+
+
+def test_apercu_partage_reprend_une_realisation_sans_avatar(client, make_user, app_ctx):
+    """og:image = avatar si present, sinon premiere photo, sinon logo."""
+    import db, services
+    u = make_user("og_p", role="pilot")
+    services.upsert_pilot_profile(u["id"], is_available=1)
+
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert "brand/og-image.png" in html                    # ni avatar ni photo
+
+    _ajoute_piece(db, u["id"], kind="video", nom="film.mp4", ordre=0)
+    _ajoute_piece(db, u["id"], kind="image", nom="aerien.jpg", ordre=1)
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert f'og:image" content="https://pilot.aubeetoilee.com/media/portfolio_u{u["id"]}/aerien.jpg"' in html
+    assert "film.mp4" not in html.split("og:image")[1][:200]   # jamais une video
+
+    services.upsert_pilot_profile(u["id"])
+    db.execute("UPDATE users SET avatar_path=? WHERE id=?", ("uploads/avatar_x.jpg", u["id"]))
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert 'og:image" content="https://pilot.aubeetoilee.com/media/avatar_x.jpg"' in html
+
+
+def test_portfolio_cover_ignore_les_videos(app_ctx, make_user):
+    import db, services
+    u = make_user("cover_p", role="pilot")
+    assert services.portfolio_cover(u["id"]) is None
+    _ajoute_piece(db, u["id"], kind="video", nom="v.mp4")
+    assert services.portfolio_cover(u["id"]) is None
+    _ajoute_piece(db, u["id"], kind="image", nom="p.jpg")
+    assert services.portfolio_cover(u["id"]) == f"portfolio_u{u['id']}/p.jpg"

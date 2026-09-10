@@ -2577,6 +2577,21 @@ def list_portfolio_items(pilot_user_id: int) -> list:
     return [dict(r) for r in rows]
 
 
+def portfolio_cover(pilot_user_id: int) -> Optional[str]:
+    """Chemin media de la premiere PHOTO du portfolio, ou None.
+
+    Sert d'image d'apercu (og:image) quand le pilote n'a pas d'avatar : une
+    vraie image aerienne partagee sur LinkedIn vaut mieux que notre logo. On
+    ignore les videos, qu'aucun reseau ne sait afficher en apercu."""
+    row = db.fetchone(
+        "SELECT stored_filename FROM pilot_portfolio_items "
+        "WHERE pilot_user_id=? AND kind='image' AND stored_filename <> '' "
+        "ORDER BY sort_order ASC, id DESC LIMIT 1",
+        (pilot_user_id,),
+    )
+    return row["stored_filename"] if row else None
+
+
 def count_portfolio_items(pilot_user_id: int,
                           kind: Optional[str] = None) -> int:
     """Nombre de pieces du portfolio, filtrable par kind ('video' / 'image')."""
