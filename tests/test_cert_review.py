@@ -179,3 +179,122 @@ def test_review_routes_forbidden_for_non_admin(client, auth_client, make_user):
                   data={"check_name": "1", "check_number": "1", "check_valid": "1"}).status_code == 403
     assert c.post(f"/admin/certifications/{cid}/refuser", data={"note": "x"}).status_code == 403
     assert c.get("/admin/certifications").status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Assurance RC pro : declaration du pilote vs attestation controlee
+# ---------------------------------------------------------------------------
+
+def test_assurance_declaree_ne_donne_pas_le_badge(app_ctx, make_user):
+    import services
+    u = make_user("rc_decl", role="pilot")
+    services.upsert_pilot_profile(u["id"], insurance=1, insurance_company="AXA")
+    etat = services.insurance_state(services.get_pilot_profile(u["id"]))
+    assert etat["declared"] and etat["status"] == "none" and not etat["is_valid"]
+    assert u["id"] not in {p["id"] for p in services.search_pilots(only_insured=True, limit=500)}
+
+
+def test_depot_puis_verification(app_ctx, make_user):
+    import services
+    u = make_user("rc_ok", role="pilot")
+    services.submit_insurance(u["id"], company="Hiscox", policy="P-9",
+                              expires_at="2099-01-01", document_path="uploads/a.pdf")
+    etat = services.insurance_state(services.get_pilot_profile(u["id"]))
+    assert etat["status"] == "pending" and not etat["is_valid"] and etat["has_document"]
+    assert u["id"] in {r["user_id"] for r in services.list_insurances_for_review("pending")}
+
+    services.review_insurance(u["id"], None, "verified", "contrôlé")
+    etat = services.insurance_state(services.get_pilot_profile(u["id"]))
+    assert etat["status"] == "verified" and etat["is_valid"]
+    assert u["id"] in {p["id"] for p in services.search_pilots(only_insured=True, limit=500)}
+
+    # Une nouvelle attestation efface le verdict : le controle ne vaut que
+    # pour la piece controlee.
+    services.submit_insurance(u["id"], company="Hiscox", policy="P-10",
+                              expires_at="2099-06-01", document_path="uploads/b.pdf")
+    prof = services.get_pilot_profile(u["id"])
+    assert prof["insurance_status"] == "pending" and prof["insurance_note"] is None
+    assert prof["insurance_reviewed_at"] is None
+    assert prof["insurance_expires_at"] == "2099-06-01"
+    assert u["id"] not in {p["id"] for p in services.search_pilots(only_insured=True, limit=500)}
+
+
+def test_attestation_echue_perd_le_badge(app_ctx, make_user):
+    import services
+    u = make_user("rc_exp", role="pilot")
+    services.submit_insurance(u["id"], expires_at="2020-03-01", document_path="uploads/c.pdf")
+    services.review_insurance(u["id"], None, "verified")
+    etat = services.insurance_state(services.get_pilot_profile(u["id"]))
+    assert etat["status"] == "verified" and etat["is_expired"] and not etat["is_valid"]
+    assert u["id"] not in {p["id"] for p in services.search_pilots(only_insured=True, limit=500)}
+
+
+def test_refus_transmet_le_motif(app_ctx, make_user):
+    import services
+    u = make_user("rc_ko", role="pilot")
+    services.submit_insurance(u["id"], document_path="uploads/d.pdf")
+    services.review_insurance(u["id"], None, "rejected", "attestation illisible")
+    prof = services.get_pilot_profile(u["id"])
+    assert prof["insurance_status"] == "rejected"
+    assert prof["insurance_note"] == "attestation illisible"
+
+
+def test_depot_par_le_pilote_et_revue_admin(client, auth_client, make_user, app_ctx):
+    import db, io, services
+    pilote = make_user("rc_web", role="pilot")
+    c = auth_client(pilote["id"])
+    r = c.post("/espace/pilote/assurance", data={
+        "insurance_company": "AXA", "insurance_policy": "P-77",
+        "insurance_expires_at": "2099-12-31",
+        "document": (io.BytesIO(b"%PDF-1.4 attestation"), "rc.pdf"),
+    }, content_type="multipart/form-data")
+    assert r.status_code in (302, 303)
+    prof = services.get_pilot_profile(pilote["id"])
+    assert prof["insurance_status"] == "pending" and prof["insurance_document_path"]
+
+    # sans attestation, rien a verifier : refuse
+    autre = make_user("rc_sans", role="pilot")
+    r = auth_client(autre["id"]).post("/espace/pilote/assurance", data={"insurance_company": "X"})
+    assert r.status_code in (302, 303)
+    assert services.get_pilot_profile(autre["id"])["insurance_status"] in (None, "none")
+
+    admin = make_user("rc_admin", role="both")
+    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (admin["id"],))
+    a = auth_client(admin["id"])
+    assert "AXA" in a.get("/admin/assurances").data.decode()
+    # sans les cases de controle, la validation est refusee
+    a.post(f"/admin/assurances/{pilote['id']}/verifier", data={})
+    assert services.get_pilot_profile(pilote["id"])["insurance_status"] == "pending"
+    a.post(f"/admin/assurances/{pilote['id']}/verifier",
+           data={"check_name": "1", "check_scope": "1", "check_dates": "1"})
+    assert services.get_pilot_profile(pilote["id"])["insurance_status"] == "verified"
+
+
+def test_profil_pilote_affiche_l_etat_de_l_assurance(auth_client, make_user, app_ctx):
+    import services
+    u = make_user("rc_vue", role="pilot")
+    c = auth_client(u["id"])
+    html = c.get("/espace/pilote").data.decode()
+    assert 'id="assurance"' in html and "Aucune attestation déposée" in html
+    assert "après contrôle de votre attestation" in html     # la case est une declaration
+
+    services.submit_insurance(u["id"], company="Hiscox", expires_at="2099-01-01",
+                              document_path="uploads/x.pdf")
+    assert "En vérification" in c.get("/espace/pilote").data.decode()
+
+    services.review_insurance(u["id"], None, "rejected", "illisible")
+    html = c.get("/espace/pilote").data.decode()
+    assert "Refusée" in html and "illisible" in html          # le motif remonte au pilote
+
+    services.review_insurance(u["id"], None, "verified")
+    assert "Vérifiée" in c.get("/espace/pilote").data.decode()
+
+
+def test_attestation_cloisonnee(client, auth_client, make_user, app_ctx):
+    import services
+    pilote = make_user("rc_priv", role="pilot")
+    services.submit_insurance(pilote["id"], document_path="uploads/e.pdf")
+    curieux = make_user("rc_curieux", role="client")
+    assert auth_client(curieux["id"]).get(f"/pilotes/{pilote['id']}/assurance/document").status_code == 403
+    # le pilote lui-meme y accede (404 : le fichier de test n'existe pas sur disque)
+    assert auth_client(pilote["id"]).get(f"/pilotes/{pilote['id']}/assurance/document").status_code in (200, 404)

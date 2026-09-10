@@ -142,12 +142,22 @@
     </div>
     {% endif %}
 
-    {% if pilot.insurance %}
+    {% if pilot.insurance or insurance.status != 'none' %}
     <h3 style="margin-top: 24px;">{{ 'Couverture RC pro' if fr else 'Liability insurance' }}</h3>
     <div class="muted small">
-      <span class="tag tag-ok">{{ 'Assuré' if fr else 'Insured' }}</span>
+      {% if insurance.is_valid %}
+        <span class="tag tag-ok">✓ {{ 'Assurance vérifiée' if fr else 'Insurance verified' }}</span>
+        {% if pilot.insurance_expires_at %}<span class="mono" style="font-size: 11px;"> · {{ "jusqu'au" if fr else 'until' }} {{ pilot.insurance_expires_at }}</span>{% endif %}
+      {% else %}
+        {# Declaree mais pas controlee (ou echue) : on le dit, plutot que de
+           laisser croire a une garantie que nous n'avons pas verifiee. #}
+        <span class="tag">{{ 'Assurance déclarée, non vérifiée' if fr else 'Insurance declared, not verified' }}</span>
+      {% endif %}
       {% if pilot.insurance_company %}<br><span class="mono" style="text-transform: uppercase; letter-spacing: .1em; font-size: 11px;">{{ pilot.insurance_company }}</span>{% endif %}
-      {% if pilot.insurance_policy %}<span class="mono" style="font-size: 11px;"> · {{ 'n°' if fr else 'no.' }} {{ pilot.insurance_policy }}</span>{% endif %}
+      {% if pilot.insurance_policy and can_view_credentials %}<span class="mono" style="font-size: 11px;"> · {{ 'n°' if fr else 'no.' }} {{ pilot.insurance_policy }}</span>{% endif %}
+      {% if insurance.has_document and can_view_credentials %}
+      <br><a href="{{ url_for('pilot_insurance_document', user_id=pilot.id) }}" target="_blank" rel="noopener noreferrer">{{ "Voir l'attestation →" if fr else 'View certificate →' }}</a>
+      {% endif %}
     </div>
     {% endif %}
 

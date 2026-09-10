@@ -344,6 +344,20 @@ def send_booking_cancelled_by_pilot(*, client: dict, pilot: dict, booking: dict,
     )
 
 
+def send_insurance_reviewed(*, pilot: dict, decision: str, note: str = "",
+                            company: str = "", is_valid: bool = False) -> bool:
+    """Resultat de la revue de l'attestation RC pro (verifiee / refusee)."""
+    ok = decision == "verified"
+    return send(
+        to=pilot["email"],
+        subject=("Assurance vérifiée / Insurance verified — AubePilot" if ok
+                 else "Attestation refusée / Certificate declined — AubePilot"),
+        template="insurance_reviewed",
+        context={"pilot": pilot, "decision": decision, "note": note,
+                 "company": company, "is_valid": is_valid},
+    )
+
+
 def send_certification_reviewed(*, pilot: dict, cert: dict, decision: str,
                                 note: str = "", profile_verified: bool = False) -> bool:
     """Resultat de la revue d'un justificatif de brevet (verifie / refuse)."""

@@ -24,10 +24,10 @@
         {% else %}
         <div class="headline">« {{ p.headline or ('Disponible pour vos prises de vue.' if fr else 'Available for your aerial shots.') }} »</div>
         {% endif %}
-        {% if p.verified_authorities or p.insurance %}
+        {% if p.verified_authorities or p.insured_verified %}
         <div class="auth-chips">
           {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ a }}</span>{% endfor %}
-          {% if p.insurance %}<span class="auth-chip insured">{{ 'RC pro' if fr else 'Insured' }}</span>{% endif %}
+          {% if p.insured_verified %}<span class="auth-chip insured" title="{{ 'Attestation contrôlée par notre équipe' if fr else 'Certificate checked by our team' }}">✓ {{ 'RC pro' if fr else 'Insured' }}</span>{% endif %}
         </div>
         {% endif %}
       </div>

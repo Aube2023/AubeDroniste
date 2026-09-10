@@ -1140,6 +1140,7 @@ def pilot_detail(user_id):
         reviews=services.reviews_for(user_id),
         reveal_identity=reveal,
         can_view_credentials=can_view_credentials,
+        insurance=services.insurance_state(profile),
         masked_name=masked,
         packages=services.list_pilot_packages(user_id, only_active=True),
         portfolio=services.list_portfolio_items(user_id),
@@ -1532,6 +1533,8 @@ def dashboard():
                             if user.get("is_admin") else 0),
         admin_pending_certs=(services.count_certifications_pending()
                              if user.get("is_admin") else 0),
+        admin_pending_insurances=(services.count_insurances_pending()
+                                  if user.get("is_admin") else 0),
     )
 
 
@@ -1685,9 +1688,10 @@ def pilot_edit():
             currency=(request.form.get("currency") or DEFAULT_CURRENCY).upper(),
             travel_radius_km=_to_int(request.form.get("travel_radius_km"), 50),
             accepts_remote=1 if _to_bool(request.form.get("accepts_remote")) else 0,
+            # L'assurance se depose a part (attestation + echeance + controle
+            # admin) : voir pilot_insurance. Decocher la case retire seulement
+            # la declaration ; le verdict, lui, se revoque cote admin.
             insurance=1 if _to_bool(request.form.get("insurance")) else 0,
-            insurance_company=(request.form.get("insurance_company") or "").strip() or None,
-            insurance_policy=(request.form.get("insurance_policy") or "").strip() or None,
             is_available=1 if _to_bool(request.form.get("is_available")) else 0,
             languages=(request.form.get("languages") or "").strip() or None,
             portfolio_url=(request.form.get("portfolio_url") or "").strip() or None,
@@ -1732,9 +1736,11 @@ def pilot_edit():
         _ping_index([f"/pilotes/{user['id']}", "/pilotes"])
         return redirect(url_for("pilot_edit"))
 
+    profile = services.get_pilot_profile(user["id"])
     return render_template(
         "pilot_edit.html",
-        profile=services.get_pilot_profile(user["id"]),
+        profile=profile,
+        insurance_state=services.insurance_state(profile),
         identity_locked=services.is_identity_locked(user["id"]),
         pending_name_change=services.has_pending_name_change(user["id"]),
     )
@@ -1765,6 +1771,64 @@ def pilot_add_certification():
     )
     flash("Certification ajoutee.", "success")
     return redirect(url_for("pilot_edit"))
+
+
+@app.route("/espace/pilote/assurance", methods=["POST"])
+@auth.login_required
+def pilot_insurance():
+    """Depot ou mise a jour de l'attestation RC pro. Tout nouveau document
+    repasse en attente : un controle ne vaut que pour la piece controlee."""
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+    doc_path = ""
+    f = request.files.get("document")
+    if f and f.filename:
+        ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+        if ext not in ALLOWED_DOC_EXT:
+            flash("Format d'attestation refusé (PDF, PNG ou JPG).", "error")
+            return redirect(url_for("pilot_edit") + "#assurance")
+        safe = f"u{user['id']}_rc_{int(time.time())}.{ext}"
+        f.save(os.path.join(UPLOAD_DIR, safe))
+        doc_path = f"uploads/{safe}"
+    profile = services.get_pilot_profile(user["id"]) or {}
+    if not doc_path and not profile.get("insurance_document_path"):
+        flash("Joignez l'attestation d'assurance : sans elle, rien à vérifier.", "error")
+        return redirect(url_for("pilot_edit") + "#assurance")
+    services.submit_insurance(
+        user["id"],
+        company=request.form.get("insurance_company") or "",
+        policy=request.form.get("insurance_policy") or "",
+        expires_at=request.form.get("insurance_expires_at") or "",
+        document_path=doc_path,
+    )
+    flash("Attestation reçue. Elle passe en vérification ; le badge « RC pro » "
+          "s'affichera une fois contrôlée.", "success")
+    _ping_index([f"/pilotes/{user['id']}"])
+    return redirect(url_for("pilot_edit") + "#assurance")
+
+
+@app.route("/pilotes/<int:user_id>/assurance/document")
+@auth.login_required
+def pilot_insurance_document(user_id):
+    """Meme cloisonnement que les brevets : l'admin, le pilote lui-meme, ou un
+    client ayant une relation financee."""
+    viewer_id = g.user["id"]
+    if not (g.user.get("is_admin") or viewer_id == user_id
+            or services.client_can_view_pilot_credentials(viewer_id, user_id)):
+        abort(403)
+    profile = services.get_pilot_profile(user_id)
+    rel = (profile or {}).get("insurance_document_path") or ""
+    if not rel.startswith("uploads/"):
+        abort(404)
+    resp = make_response(send_from_directory(UPLOAD_DIR, rel[len("uploads/"):],
+                                             as_attachment=False))
+    resp.headers["Cache-Control"] = "private, no-store, max-age=0"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    resp.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+    resp.headers["Content-Disposition"] = "inline"
+    return resp
 
 
 @app.route("/espace/pilote/certification/<int:cert_id>/supprimer", methods=["POST"])
@@ -1955,6 +2019,75 @@ def admin_reject_name_change(req_id):
 # ---------------------------------------------------------------------------
 # Admin — verification des certifications pilote
 # ---------------------------------------------------------------------------
+
+# Ce que l'admin atteste avant de valider une attestation : on controle la
+# PIECE contre le COMPTE, pas seulement le PDF.
+INSURANCE_CHECKS = (
+    ("check_name", "assuré identique au nom du compte"),
+    ("check_scope", "responsabilité civile professionnelle couvrant l'activité drone"),
+    ("check_dates", "attestation lisible et en cours de validité"),
+)
+
+
+@app.route("/admin/assurances")
+@auth.admin_required
+def admin_insurances():
+    status = request.args.get("status", "pending")
+    if status not in ("pending", "verified", "rejected", "all"):
+        status = "pending"
+    return render_template(
+        "admin_assurances.html",
+        rows=services.list_insurances_for_review(status),
+        status=status,
+        checks=INSURANCE_CHECKS,
+        counts={s: len(services.list_insurances_for_review(s, limit=10000))
+                for s in ("pending", "verified", "rejected")},
+        seo=_NOINDEX,
+    )
+
+
+def _admin_review_insurance(user_id: int, decision: str, ok_msg: str):
+    note = (request.form.get("note") or "").strip()
+    back = url_for("admin_insurances", status=request.form.get("back") or "pending")
+    if decision == "rejected" and len(note) < 3:
+        flash("Indiquez le motif du refus (le pilote le verra).", "error")
+        return redirect(back)
+    if decision == "verified":
+        missing = [label for key, label in INSURANCE_CHECKS
+                   if not _to_bool(request.form.get(key))]
+        if missing:
+            flash("Vérification refusée : cochez chaque contrôle ("
+                  + " ; ".join(missing) + ").", "error")
+            return redirect(back)
+        note = "contrôles : assuré ✓ portée ✓ validité ✓" + (f" — {note}" if note else "")
+    res = services.review_insurance(user_id, g.user["id"], decision, note)
+    if not res:
+        flash("Profil introuvable.", "error")
+    else:
+        extra = (" Badge « RC pro » actif." if res["state"]["is_valid"]
+                 else " (Attestation échue : badge non activé.)" if decision == "verified"
+                 else " Badge retiré.")
+        flash(ok_msg + extra, "success" if decision == "verified" else "info")
+    return redirect(back)
+
+
+@app.route("/admin/assurances/<int:user_id>/verifier", methods=["POST"])
+@auth.admin_required
+def admin_verify_insurance(user_id):
+    return _admin_review_insurance(user_id, "verified", "Attestation vérifiée.")
+
+
+@app.route("/admin/assurances/<int:user_id>/refuser", methods=["POST"])
+@auth.admin_required
+def admin_reject_insurance(user_id):
+    return _admin_review_insurance(user_id, "rejected", "Attestation refusée, pilote prévenu.")
+
+
+@app.route("/admin/assurances/<int:user_id>/devalider", methods=["POST"])
+@auth.admin_required
+def admin_unverify_insurance(user_id):
+    return _admin_review_insurance(user_id, "pending", "Attestation remise en attente.")
+
 
 @app.route("/admin/visites")
 @auth.admin_required

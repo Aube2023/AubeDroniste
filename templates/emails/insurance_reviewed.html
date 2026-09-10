@@ -1,0 +1,43 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}{% if decision == 'verified' %}Assurance vérifiée / Insurance verified{% else %}Attestation refusée / Certificate declined{% endif %} — AubePilot{% endblock %}
+{% block preview %}{% if decision == 'verified' %}Votre attestation RC pro est vérifiée · Your insurance certificate is verified.{% else %}Votre attestation n'a pas pu être validée · Your certificate could not be validated.{% endif %}{% endblock %}
+
+{% block content %}
+{% set ok = decision == 'verified' %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">FR, {% if ok %}Assurance vérifiée{% else %}Attestation refusée{% endif %}</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    {% if ok %}Votre assurance RC pro est vérifiée.{% else %}Votre attestation n'a pas pu être validée.{% endif %}
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Notre équipe a contrôlé votre attestation{% if company %} ({{ company }}){% endif %}.
+      {% if is_valid %}Le badge <strong>« RC pro »</strong> est maintenant visible sur votre profil, et vous apparaissez dans le filtre <strong>« assurance vérifiée »</strong> de l'annuaire.{% else %}Attention : l'attestation est échue, le badge ne s'active qu'avec une couverture en cours de validité.{% endif %}
+    {% else %}
+      Motif : <strong>{{ note or "document illisible ou incomplet" }}</strong>. Déposez une attestation lisible (PDF ou photo nette, assuré identique au nom de votre compte) depuis votre espace pilote.
+    {% endif %}
+  </p>
+  <p style="margin:20px 0 0;">
+    <a href="{{ site_url }}/espace/pilote#assurance" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Mon assurance</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">EN, {% if ok %}Insurance verified{% else %}Certificate declined{% endif %}</div>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Our team checked your certificate{% if company %} ({{ company }}){% endif %}.
+      {% if is_valid %}The <strong>"Insured"</strong> badge is now visible on your profile, and you appear in the directory's <strong>"verified insurance"</strong> filter.{% else %}Note: the certificate has expired; the badge only activates with current cover.{% endif %}
+    {% else %}
+      Reason: <strong>{{ note or "unreadable or incomplete document" }}</strong>. Upload a readable certificate (PDF or sharp photo, insured name matching your account) from your pilot dashboard.
+    {% endif %}
+  </p>
+  <p style="margin:18px 0 0;">
+    <a href="{{ site_url }}/espace/pilote#assurance" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">My insurance</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

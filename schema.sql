@@ -46,9 +46,17 @@ CREATE TABLE IF NOT EXISTS pilot_profiles (
     currency          TEXT NOT NULL DEFAULT 'EUR',
     travel_radius_km  INTEGER NOT NULL DEFAULT 50,
     accepts_remote    INTEGER NOT NULL DEFAULT 0, -- accepte missions hors zone
-    insurance         INTEGER NOT NULL DEFAULT 0, -- assure RC pro
+    insurance         INTEGER NOT NULL DEFAULT 0, -- DECLARE par le pilote
     insurance_company TEXT,
     insurance_policy  TEXT,
+    -- Controle de l'attestation par l'admin, comme pour les brevets. Le badge
+    -- public « RC pro » ne s'allume que sur 'verified' et hors echeance.
+    insurance_expires_at    TEXT,
+    insurance_document_path TEXT,
+    insurance_status        TEXT NOT NULL DEFAULT 'none',  -- none|pending|verified|rejected
+    insurance_note          TEXT,                          -- motif, montre au pilote
+    insurance_reviewed_at   TEXT,
+    insurance_reviewed_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
     is_available      INTEGER NOT NULL DEFAULT 1,
     languages         TEXT,                       -- "fr,ar,en"
     portfolio_url     TEXT,

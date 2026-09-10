@@ -1,0 +1,21 @@
+AUBEPILOT, {% if decision == 'verified' %}ASSURANCE VÉRIFIÉE / INSURANCE VERIFIED{% else %}ATTESTATION REFUSÉE / CERTIFICATE DECLINED{% endif %}
+============================================
+
+[FR]
+{% if decision == 'verified' %}Votre attestation RC pro est vérifiée.
+{% if is_valid %}Le badge « RC pro » est actif sur votre profil et vous apparaissez dans le filtre « assurance vérifiée ».{% else %}Attention : l'attestation est échue, le badge ne s'active qu'avec une couverture en cours.{% endif %}{% else %}Votre attestation d'assurance n'a pas pu être validée.
+Motif : {{ note or "document illisible ou incomplet" }}
+Déposez une attestation lisible depuis votre espace pilote.{% endif %}
+{{ site_url }}/espace/pilote#assurance
+
+------------------------------------------------------------
+
+[EN]
+{% if decision == 'verified' %}Your liability insurance certificate is verified.
+{% if is_valid %}The "Insured" badge is active on your profile and you appear in the "verified insurance" filter.{% else %}Note: the certificate has expired; the badge only activates with current cover.{% endif %}{% else %}Your insurance certificate could not be validated.
+Reason: {{ note or "unreadable or incomplete document" }}
+Upload a readable certificate from your pilot dashboard.{% endif %}
+{{ site_url }}/espace/pilote#assurance
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

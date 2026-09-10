@@ -136,6 +136,15 @@ _ADD_COLUMNS = [
     ("pilot_profiles", "school_programs", "TEXT"),
     # Courriel public de contact de la compagnie (pilotes pro / compagnies de drone).
     ("pilot_profiles", "business_email", "TEXT"),
+    # Assurance RC pro : `insurance` reste la DECLARATION du pilote ; le
+    # controle admin vit a cote (attestation + echeance + verdict), comme
+    # pour les brevets. Le badge public ne suit que le verdict.
+    ("pilot_profiles", "insurance_expires_at", "TEXT"),
+    ("pilot_profiles", "insurance_document_path", "TEXT"),
+    ("pilot_profiles", "insurance_status", "TEXT NOT NULL DEFAULT 'none'"),
+    ("pilot_profiles", "insurance_note", "TEXT"),
+    ("pilot_profiles", "insurance_reviewed_at", "TEXT"),
+    ("pilot_profiles", "insurance_reviewed_by", "INTEGER"),
     # Commission degressive : taux applique a CE booking (NULL sur les anciens
     # bookings -> deduit de platform_fee / agreed_price, cf. services.booking_fee_pct).
     ("bookings", "platform_fee_pct", "REAL"),

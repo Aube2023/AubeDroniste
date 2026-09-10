@@ -216,14 +216,29 @@ def test_search_pilots_trust_filters(make_user, app_ctx):
         title="Operations avancees (RPAS)", reference="TC-1")
     services.set_certification_verified(cert_id, True)
     services.add_certification(plain["id"], authority="DGAC", title="A2")  # non verifie
-    services.upsert_pilot_profile(insured["id"], insurance=1,
+    # « Assuré » = attestation CONTROLEE et non echue, pas une case cochee.
+    declared = make_user("trust_decl", role="pilot")
+    expired = make_user("trust_exp", role="pilot")
+    services.upsert_pilot_profile(declared["id"], insurance=1,
                                   insurance_company="Hiscox", insurance_policy="P-1")
+    services.submit_insurance(insured["id"], company="Hiscox", policy="P-2",
+                              expires_at="2099-12-31", document_path="uploads/x.pdf")
+    services.review_insurance(insured["id"], None, "verified")
+    services.submit_insurance(expired["id"], company="AXA", policy="P-3",
+                              expires_at="2020-01-01", document_path="uploads/y.pdf")
+    services.review_insurance(expired["id"], None, "verified")
 
     ids = {p["id"] for p in services.search_pilots(only_verified=True, limit=500)}
     assert verified["id"] in ids and plain["id"] not in ids and insured["id"] not in ids
 
     ids = {p["id"] for p in services.search_pilots(only_insured=True, limit=500)}
-    assert insured["id"] in ids and verified["id"] not in ids
+    assert insured["id"] in ids                 # attestation verifiee, valide
+    assert declared["id"] not in ids            # seulement declaree
+    assert expired["id"] not in ids             # verifiee mais echue
+    assert verified["id"] not in ids            # brevet verifie n'est pas une assurance
+    by_id = {p["id"]: p for p in services.search_pilots(limit=500)}
+    assert by_id[insured["id"]]["insured_verified"] == 1
+    assert by_id[declared["id"]]["insured_verified"] == 0
 
     ids = {p["id"] for p in services.search_pilots(authority="Transport Canada", limit=500)}
     assert verified["id"] in ids and plain["id"] not in ids

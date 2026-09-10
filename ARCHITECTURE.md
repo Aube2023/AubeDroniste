@@ -273,6 +273,30 @@ dans `STRIPE_WEBHOOK_SECRET`.
   12/h, pot de miel `website`, validation) → `mailer.send_contact_message`
   (Reply-To = expéditeur) + `mailer.send_contact_ack` + `audit_log`.
 
+## Confiance affichée : brevets et assurance
+
+Deux promesses faites au client, deux circuits identiques : le badge ne suit
+jamais une déclaration, seulement une pièce contrôlée.
+
+| | Brevets | Assurance RC pro |
+|---|---|---|
+| Table | `pilot_certifications` (une ligne par brevet) | colonnes `insurance_*` de `pilot_profiles` |
+| Dépôt | `/espace/pilote/certification` | `/espace/pilote/assurance` |
+| Revue | `/admin/certifications` | `/admin/assurances` |
+| Verdict | `review_status` + `is_verified` | `insurance_status` |
+| Badge public | `users.is_verified` (recalculé par `refresh_user_verified`) | `services.INSURED_VERIFIED_SQL` |
+| Échéance | `expires_at` fait tomber le badge | `insurance_expires_at` idem |
+
+- `insurance` (la case cochée) reste une **déclaration** du pilote : elle
+  n'allume aucun badge et ne fait pas passer le filtre `only_insured`, qui
+  exige `insurance_status = 'verified'` et une couverture non échue.
+- Tout nouveau dépôt remet le verdict à `pending` : un contrôle ne vaut que
+  pour la pièce contrôlée (`services.submit_insurance`).
+- L'attestation est cloisonnée comme un brevet : admin, le pilote lui-même,
+  ou un client ayant une relation financée (`/pilotes/<id>/assurance/document`).
+- La fiche publique dit l'état plutôt que de se taire : « Assurance vérifiée »
+  ou « Assurance déclarée, non vérifiée ».
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement

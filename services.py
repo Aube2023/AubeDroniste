@@ -225,6 +225,9 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
         "p.years_experience, p.hourly_rate, p.daily_rate, "
         "p.currency AS p_currency, p.travel_radius_km, p.accepts_remote, p.insurance, "
         "p.insurance_company, p.insurance_policy, p.is_available, p.languages, "
+        "p.insurance_expires_at, p.insurance_document_path, p.insurance_note, "
+        "COALESCE(p.insurance_status, 'none') AS insurance_status, "
+        "p.insurance_reviewed_at, "
         "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at "
         "FROM users u LEFT JOIN pilot_profiles p ON p.user_id = u.id "
         "WHERE u.id=?",
@@ -291,6 +294,13 @@ def add_certification(pilot_user_id: int, *, authority: str, title: str,
          expires_at or None, document_path or None),
     )
     return cur.lastrowid
+
+
+# Assurance verifiee et non echue : la meme condition qu'en SQL, cote Python.
+INSURED_VERIFIED_SQL = (
+    "p.insurance_status = 'verified' AND (p.insurance_expires_at IS NULL "
+    "OR p.insurance_expires_at = '' OR p.insurance_expires_at >= date('now'))"
+)
 
 
 def cert_is_expired(expires_at) -> bool:
@@ -400,6 +410,128 @@ def refresh_user_verified(user_id: int) -> bool:
     flag = 1 if row and row["n"] else 0
     db.execute("UPDATE users SET is_verified=? WHERE id=?", (flag, user_id))
     return bool(flag)
+
+
+# ---------------------------------------------------------------------------
+# Assurance RC pro : declaration du pilote + attestation controlee par l'admin
+#
+# Meme regle que pour les brevets : sans justificatif il n'y a rien a
+# controler, donc rien a promettre. Le badge public et le filtre « assuré »
+# ne suivent que le verdict admin, et tombent a l'echeance.
+# ---------------------------------------------------------------------------
+
+INSURANCE_STATUSES = ("none", "pending", "verified", "rejected")
+
+
+def insurance_state(profile) -> dict:
+    """{status, is_expired, is_valid, declared} pour une ligne pilot_profiles."""
+    p = dict(profile or {})
+    status = p.get("insurance_status") or "none"
+    expired = cert_is_expired(p.get("insurance_expires_at"))
+    return {
+        "status": status,
+        "is_expired": expired,
+        "is_valid": status == "verified" and not expired,
+        "declared": bool(p.get("insurance")),
+        "has_document": bool(p.get("insurance_document_path")),
+    }
+
+
+def submit_insurance(user_id: int, *, company: str = "", policy: str = "",
+                     expires_at: str = "", document_path: str = "") -> None:
+    """Le pilote depose ou met a jour son attestation : tout nouveau document
+    repasse en attente, un controle ne vaut que pour la piece controlee."""
+    # SQL explicite plutot qu'upsert_pilot_profile : il faut pouvoir REMETTRE
+    # a NULL le verdict precedent, ce que l'upsert (qui ignore les None) ne
+    # sait pas faire, et ces colonnes ne doivent pas etre modifiables depuis
+    # le formulaire de profil.
+    db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (user_id,))
+    champs = [
+        ("insurance_company", (company or "").strip()[:120] or None),
+        ("insurance_policy", (policy or "").strip()[:80] or None),
+        ("insurance_expires_at", (expires_at or "").strip()[:10] or None),
+    ]
+    if document_path:
+        champs.append(("insurance_document_path", document_path))
+    sets = [f"{nom} = ?" for nom, _ in champs] + [
+        "insurance = 1", "insurance_status = 'pending'", "insurance_note = NULL",
+        "insurance_reviewed_at = NULL", "insurance_reviewed_by = NULL",
+        "updated_at = datetime('now')",
+    ]
+    db.execute(f"UPDATE pilot_profiles SET {', '.join(sets)} WHERE user_id = ?",
+               [v for _, v in champs] + [user_id])
+
+
+def review_insurance(user_id: int, admin_user_id: Optional[int],
+                     decision: str, note: str = "") -> Optional[dict]:
+    """Verdict de l'admin sur l'attestation. Trace dans l'audit et notifie
+    le pilote (best effort, comme pour les brevets)."""
+    if decision not in ("verified", "rejected", "pending"):
+        raise ValueError(f"decision invalide: {decision}")
+    profile = db.fetchone("SELECT * FROM pilot_profiles WHERE user_id=?", (user_id,))
+    if not profile:
+        return None
+    note = (note or "").strip()[:1000]
+    db.execute(
+        "UPDATE pilot_profiles SET insurance_status=?, insurance_note=?, "
+        "insurance_reviewed_at=datetime('now'), insurance_reviewed_by=? WHERE user_id=?",
+        (decision, note or None, admin_user_id, user_id),
+    )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'insurance_review', ?, ?)",
+        (admin_user_id, f"user:{user_id}",
+         json.dumps({"decision": decision, "note": note})),
+    )
+    fresh = db.fetchone("SELECT * FROM pilot_profiles WHERE user_id=?", (user_id,))
+    state = insurance_state(fresh)
+    if decision in ("verified", "rejected"):
+        try:
+            import mailer
+            pilot = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?", (user_id,))
+            if pilot and pilot["email"]:
+                mailer.send_insurance_reviewed(
+                    pilot=dict(pilot), decision=decision, note=note,
+                    company=(fresh["insurance_company"] if fresh else "") or "",
+                    is_valid=state["is_valid"],
+                )
+        except Exception as exc:
+            log.warning("email insurance_reviewed failed for user=%s : %s", user_id, exc)
+    return {"profile": dict(fresh) if fresh else {}, "state": state}
+
+
+def list_insurances_for_review(status: str = "pending", limit: int = 200) -> list:
+    """File de revue admin. `pending` = attestation deposee et pas encore
+    controlee ; sans document il n'y a rien a examiner."""
+    q = ("SELECT u.id AS user_id, u.full_name, u.username, u.country, u.city, "
+         "       p.insurance, p.insurance_company, p.insurance_policy, "
+         "       p.insurance_expires_at, p.insurance_document_path, "
+         "       COALESCE(p.insurance_status,'none') AS insurance_status, "
+         "       p.insurance_note, p.insurance_reviewed_at "
+         "FROM pilot_profiles p JOIN users u ON u.id = p.user_id "
+         "WHERE u.deleted_at IS NULL AND p.insurance_document_path IS NOT NULL "
+         "  AND p.insurance_document_path <> '' ")
+    args: list = []
+    if status in ("pending", "verified", "rejected"):
+        q += "AND COALESCE(p.insurance_status,'none') = ? "
+        args.append(status)
+    q += "ORDER BY p.insurance_reviewed_at IS NULL DESC, u.id LIMIT ?"
+    args.append(limit)
+    out = []
+    for r in db.fetchall(q, args):
+        d = dict(r)
+        d["state"] = insurance_state(d)
+        out.append(d)
+    return out
+
+
+def count_insurances_pending() -> int:
+    row = db.fetchone(
+        "SELECT COUNT(*) AS n FROM pilot_profiles p JOIN users u ON u.id = p.user_id "
+        "WHERE u.deleted_at IS NULL AND COALESCE(p.insurance_status,'none') = 'pending' "
+        "  AND p.insurance_document_path IS NOT NULL AND p.insurance_document_path <> ''"
+    )
+    return int(row["n"]) if row else 0
 
 
 def refresh_all_user_verified() -> int:
@@ -633,7 +765,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
 
     Filtres « confiance » (facon annuaire pro) :
       only_verified -> au moins un brevet controle par l'admin (ou compte verifie)
-      only_insured  -> assurance RC pro declaree
+      only_insured  -> attestation RC pro verifiee par l'admin et non echue
       authority     -> detient un brevet de cette autorite (ex. Transport Canada)
     Chaque resultat expose `verified_authorities` (codes des autorites dont un
     brevet est verifie) et `certs_verified` pour les badges des cartes.
@@ -647,6 +779,9 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "       u.is_verified, u.avatar_path, u.bio, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
+        "       COALESCE(p.insurance_status, 'none') AS insurance_status, "
+        "       p.insurance_expires_at, "
+        f"       CASE WHEN {INSURED_VERIFIED_SQL} THEN 1 ELSE 0 END AS insured_verified, "
         "       COALESCE(p.kind, 'pro') AS kind, p.business_name, p.school_programs, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
         "       COALESCE(r.review_count, 0) AS rating_count, "
@@ -678,7 +813,9 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
     if only_verified:
         q.append("AND (u.is_verified = 1 OR COALESCE(c.n_verified, 0) > 0)")
     if only_insured:
-        q.append("AND p.insurance = 1")
+        # « Assuré » filtre sur une attestation CONTROLEE et non echue : une
+        # case cochee par le pilote ne suffit pas a le promettre a un client.
+        q.append(f"AND {INSURED_VERIFIED_SQL}")
     if authority:
         q.append(
             "AND EXISTS (SELECT 1 FROM pilot_certifications pc "

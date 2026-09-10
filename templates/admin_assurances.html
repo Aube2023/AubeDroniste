@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Assurances à vérifier, AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 18px;">
+  <span class="eyebrow">Admin · Assurances</span>
+  <h1>Attestations RC pro.</h1>
+  <p class="lead muted">
+    Même règle que pour les brevets : le badge « RC pro » que voient les clients, et le filtre
+    « assuré » de l'annuaire, ne suivent que ce que vous validez ici. Une case cochée par le pilote
+    ne promet rien.
+  </p>
+</div>
+
+<nav class="faq-nav" aria-label="Filtres">
+  <a href="{{ url_for('admin_insurances', status='pending') }}" {% if status == 'pending' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>À vérifier · {{ counts.pending }}</a>
+  <a href="{{ url_for('admin_insurances', status='verified') }}" {% if status == 'verified' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Vérifiées · {{ counts.verified }}</a>
+  <a href="{{ url_for('admin_insurances', status='rejected') }}" {% if status == 'rejected' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Refusées · {{ counts.rejected }}</a>
+  <a href="{{ url_for('admin_insurances', status='all') }}" {% if status == 'all' %}style="border-color: var(--amber); color: var(--amber);"{% endif %}>Toutes</a>
+</nav>
+
+{% for r in rows %}
+{% set doc_url = url_for('pilot_insurance_document', user_id=r.user_id) if r.insurance_document_path else none %}
+{% set ext = (r.insurance_document_path or '').rsplit('.', 1)[-1]|lower %}
+<div class="card" id="rc-{{ r.user_id }}">
+  <div class="row-between" style="align-items: start; gap: 16px;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px; font-size: 1.25rem;">
+        <a href="{{ url_for('pilot_detail', user_id=r.user_id) }}">{{ r.full_name }}</a>
+      </h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        #{{ r.user_id }} · {{ r.username }} · {{ r.country }}{% if r.city %} · {{ r.city }}{% endif %}
+      </div>
+    </div>
+    <div>
+      {% if r.state.is_valid %}<span class="tag tag-ok">vérifiée</span>
+      {% elif r.insurance_status == 'verified' %}<span class="tag tag-urgent">vérifiée mais échue</span>
+      {% elif r.insurance_status == 'rejected' %}<span class="tag tag-urgent">refusée</span>
+      {% else %}<span class="tag tag-open">à vérifier</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="stack-list" style="margin: 12px 0;">
+    <div class="row-between">
+      <span class="muted">Nom du compte (à comparer à l'attestation)</span>
+      <span><strong style="font-size: 1.05rem;">{{ r.full_name }}</strong></span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Compagnie déclarée</span>
+      <span>{{ r.insurance_company or '—' }}</span>
+    </div>
+    <div class="row-between">
+      <span class="muted">N° de police déclaré</span>
+      <span class="mono">{{ r.insurance_policy or '—' }}</span>
+    </div>
+    <div class="row-between">
+      <span class="muted">Échéance déclarée</span>
+      <span>{% if r.insurance_expires_at %}{{ r.insurance_expires_at }}{% if r.state.is_expired %} <span class="tag tag-urgent">passée</span>{% endif %}{% else %}<span class="muted">non précisée</span>{% endif %}</span>
+    </div>
+  </div>
+
+  {% if doc_url %}
+  <div class="row-between" style="margin: 6px 0 8px;">
+    <span class="eyebrow" style="margin: 0;">Attestation ({{ ext|upper }})</span>
+    <a href="{{ doc_url }}" target="_blank" rel="noopener noreferrer" class="ghost">Ouvrir en plein écran →</a>
+  </div>
+  <div class="doc-preview">
+    {% if ext in ('png', 'jpg', 'jpeg', 'webp') %}
+      <img src="{{ doc_url }}" alt="Attestation de {{ r.full_name }}" loading="lazy">
+    {% else %}
+      <iframe src="{{ doc_url }}#toolbar=1&view=FitH" title="Attestation de {{ r.full_name }}" loading="lazy"></iframe>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if r.insurance_note %}
+  <p class="small" style="margin: 10px 0 0; color: {% if r.insurance_status == 'rejected' %}var(--signal){% else %}var(--ink-dim){% endif %};">
+    Note : {{ r.insurance_note }}
+  </p>
+  {% endif %}
+
+  {% if r.insurance_status != 'verified' %}
+  <div class="grid-2" style="margin-top: 16px; gap: 12px;">
+    <form method="post" action="{{ url_for('admin_verify_insurance', user_id=r.user_id) }}">
+      {{ csrf_input() }}
+      <input type="hidden" name="back" value="{{ status }}">
+      <div class="small" style="margin-bottom: 6px;"><strong>Contrôles obligatoires</strong> (comparer l'attestation au compte) :</div>
+      <label class="check"><input type="checkbox" name="check_name" value="1" required> L'assuré est <strong>{{ r.full_name }}</strong></label>
+      <label class="check"><input type="checkbox" name="check_scope" value="1" required> Responsabilité civile professionnelle couvrant l'activité drone</label>
+      <label class="check"><input type="checkbox" name="check_dates" value="1" required> Attestation lisible{% if r.insurance_expires_at %}, valide jusqu'au {{ r.insurance_expires_at }}{% else %}, en cours de validité{% endif %}</label>
+      <label class="small" style="margin-top: 8px;">Note interne (facultatif)<input name="note" maxlength="1000" placeholder="ex. police confirmée auprès de l'assureur"></label>
+      <button class="cta" type="submit" style="margin-top: 8px;" data-confirm="Valider cette attestation ? Le badge « RC pro » sera actif.">✓ Vérifier l'attestation</button>
+    </form>
+    <form method="post" action="{{ url_for('admin_reject_insurance', user_id=r.user_id) }}">
+      {{ csrf_input() }}
+      <input type="hidden" name="back" value="{{ status }}">
+      <label class="small">Motif du refus (transmis au pilote)<input name="note" maxlength="1000" required placeholder="ex. attestation illisible, nom différent, échéance passée"></label>
+      <button class="ghost danger" type="submit" style="margin-top: 8px;" data-confirm="Refuser cette attestation ? Le pilote recevra le motif.">✗ Refuser</button>
+    </form>
+  </div>
+  {% else %}
+  <form method="post" action="{{ url_for('admin_unverify_insurance', user_id=r.user_id) }}" style="margin-top: 16px;">
+    {{ csrf_input() }}
+    <input type="hidden" name="back" value="{{ status }}">
+    <div class="row-between" style="gap: 12px; flex-wrap: wrap;">
+      <label class="small" style="flex: 1; min-width: 240px;">Motif (facultatif)<input name="note" maxlength="1000" placeholder="ex. police résiliée, doute sur le document"></label>
+      <button class="ghost danger" type="submit" data-confirm="Retirer la vérification de cette assurance ?">Révoquer la vérification</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% else %}
+<div class="empty-state">
+  <strong>{% if status == 'pending' %}Aucune attestation à vérifier.{% elif status == 'verified' %}Aucune attestation vérifiée.{% elif status == 'rejected' %}Aucune attestation refusée.{% else %}Aucune attestation déposée.{% endif %}</strong>
+  <p>Les pilotes déposent la leur depuis leur profil, section « Assurance RC pro ».</p>
+</div>
+{% endfor %}
+
+{% endblock %}

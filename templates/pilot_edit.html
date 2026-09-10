@@ -168,12 +168,14 @@
     <label class="check"><input type="checkbox" name="accepts_urgent" value="1" {% if profile.accepts_urgent %}checked{% endif %}> {{ 'Missions urgentes' if fr else 'Urgent jobs' }}</label>
   </div>
 
-  <h2>{{ 'Assurance RC pro' if fr else 'Liability insurance' }}</h2>
+  <h2 id="assurance">{{ 'Assurance RC pro' if fr else 'Liability insurance' }}</h2>
   <div class="grid-3">
-    <label class="check"><input type="checkbox" name="insurance" value="1" {% if profile.insurance %}checked{% endif %}> {{ 'Assuré' if fr else 'Insured' }}</label>
-    <label>{{ 'Compagnie' if fr else 'Company' }}<input name="insurance_company" value="{{ profile.insurance_company or '' }}"></label>
-    <label>{{ 'N° police' if fr else 'Policy no.' }}<input name="insurance_policy" value="{{ profile.insurance_policy or '' }}"></label>
+    <label class="check"><input type="checkbox" name="insurance" value="1" {% if profile.insurance %}checked{% endif %}> {{ 'Je suis assuré' if fr else 'I am insured' }}</label>
   </div>
+  <p class="muted small" style="margin-top: 6px;">
+    {{ "Cette case est une déclaration. Le badge « RC pro » visible par les clients ne s'affiche qu'après contrôle de votre attestation, comme pour vos brevets."
+       if fr else "This box is a declaration. The « Insured » badge clients see only appears once your certificate has been checked, like your licences." }}
+  </p>
 
   <h2>{{ 'Spécialités' if fr else 'Specialties' }}</h2>
   <div class="spec-groups">
@@ -241,6 +243,42 @@
       </form>
     </div>
     {% else %}<p class="muted">{{ 'Aucune.' if fr else 'None yet.' }}</p>{% endfor %}
+
+    {# ---- Attestation RC pro : depot + etat du controle ---- #}
+    {% set ins = insurance_state %}
+    <h3 style="margin-top: 28px;">{{ "Attestation d'assurance" if fr else 'Insurance certificate' }}</h3>
+    {% if ins.status == 'verified' and not ins.is_expired %}
+      <p><span class="tag tag-ok">{{ 'Vérifiée' if fr else 'Verified' }}</span>
+        {% if profile.insurance_expires_at %} · {{ "valide jusqu'au" if fr else 'valid until' }} {{ profile.insurance_expires_at }}{% endif %}</p>
+    {% elif ins.status == 'verified' and ins.is_expired %}
+      <p><span class="tag tag-urgent">{{ 'Échue' if fr else 'Expired' }}</span>
+        {{ "Déposez une attestation à jour pour retrouver le badge." if fr else 'Upload a current certificate to get the badge back.' }}</p>
+    {% elif ins.status == 'pending' %}
+      <p><span class="tag tag-open">{{ 'En vérification' if fr else 'Under review' }}</span>
+        {{ 'Nous contrôlons votre attestation.' if fr else 'We are checking your certificate.' }}</p>
+    {% elif ins.status == 'rejected' %}
+      <p><span class="tag tag-urgent">{{ 'Refusée' if fr else 'Rejected' }}</span>
+        {% if profile.insurance_note %}<br><span class="small">{{ profile.insurance_note }}</span>{% endif %}</p>
+    {% else %}
+      <p class="muted">{{ 'Aucune attestation déposée.' if fr else 'No certificate uploaded yet.' }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('pilot_insurance') }}" enctype="multipart/form-data">
+      {{ csrf_input() }}
+      <div class="grid-3">
+        <label>{{ 'Compagnie' if fr else 'Company' }}<input name="insurance_company" value="{{ profile.insurance_company or '' }}" maxlength="120"></label>
+        <label>{{ 'N° police' if fr else 'Policy no.' }}<input name="insurance_policy" value="{{ profile.insurance_policy or '' }}" maxlength="80"></label>
+        <label>{{ "Valide jusqu'au" if fr else 'Valid until' }}<input type="date" name="insurance_expires_at" value="{{ profile.insurance_expires_at or '' }}"></label>
+      </div>
+      <label>{{ 'Attestation (PDF, PNG ou JPG)' if fr else 'Certificate (PDF, PNG or JPG)' }}
+        <input type="file" name="document" accept=".pdf,.png,.jpg,.jpeg,.webp">
+      </label>
+      <p class="muted small">
+        {{ "Visible uniquement par notre équipe et par un client qui a déjà payé une mission avec vous. Toute nouvelle attestation repasse en vérification."
+           if fr else 'Visible only to our team and to a client who has already paid for a job with you. Any new certificate goes back under review.' }}
+      </p>
+      <button class="cta" type="submit">{{ "Envoyer l'attestation" if fr else 'Send certificate' }}</button>
+    </form>
 
     <form method="post" action="{{ url_for('pilot_add_certification') }}" enctype="multipart/form-data">
         {{ csrf_input() }}

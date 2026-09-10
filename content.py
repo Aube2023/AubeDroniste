@@ -119,16 +119,18 @@ _FAQ = [
       "en": "What is a “verified” profile?"},
      {"fr": "Le pilote a téléversé le justificatif de son brevet (DGAC, EASA, "
             "Transport Canada, FAA, ASECNA…) et notre équipe l'a contrôlé "
-            "manuellement. Le badge apparaît sur le brevet et sur le profil, le nom "
-            "du pilote est alors verrouillé, et l'assurance responsabilité civile "
-            "professionnelle est affichée avec sa compagnie et son numéro de "
-            "police. Vous pouvez filtrer la recherche pour ne voir que ces profils.",
+            "manuellement. Le badge apparaît sur le brevet et sur le profil, et le "
+            "nom du pilote est alors verrouillé. L'assurance responsabilité civile "
+            "professionnelle suit le même chemin : le badge « RC pro » ne s'affiche "
+            "qu'après contrôle de l'attestation, et tombe à son échéance. Vous pouvez "
+            "filtrer la recherche sur l'un comme sur l'autre.",
       "en": "The pilot uploaded proof of their licence (DGAC, EASA, Transport "
             "Canada, FAA, ASECNA…) and our team checked it manually. The badge "
             "appears on the licence and on the profile, the pilot's name is then "
-            "locked, and professional liability insurance is shown with its "
-            "company and policy number. You can filter the search to only see "
-            "these profiles."}),
+            "locked. Professional liability insurance follows the same path: the "
+            "\u201cInsured\u201d badge only appears once the certificate has been "
+            "checked, and drops at its expiry date. You can filter the search on "
+            "either one."}),
     ("urgent", "clients", False,
      {"fr": "Puis-je publier une mission urgente ?",
       "en": "Can I post an urgent mission?"},
