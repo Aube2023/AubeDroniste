@@ -396,6 +396,29 @@ relance 400 ms après un déplacement. Le panneau rappelle que ce sont des
 récepteurs bénévoles, que l'altitude est barométrique et que ce n'est pas un
 radar de contrôle aérien.
 
+## Collectes « Soutenez ce pilote »
+
+Un pilote **vérifié** (brevet contrôlé) **et payable** (compte Connect avec
+versements actifs) peut ouvrir une collecte : titre, **matériel financé**,
+**pourquoi** (80 caractères minimum), objectif entre `CAMPAIGN_GOAL_MIN` et
+`CAMPAIGN_GOAL_MAX`. Une seule collecte active par pilote. Tant que
+`STRIPE_CONNECT_ENABLED` vaut 0, personne ne peut en ouvrir : les fonds ne
+pourraient pas être versés.
+
+Financement **souple** : chaque contribution payée est versée au pilote dès
+confirmation (`transfer_contribution`, transfert Stripe idempotent
+`contribution-<id>`), moins `CAMPAIGN_FEE_PCT` (1 % par défaut). Pas de
+tout-ou-rien, donc pas de remboursement si l'objectif n'est pas atteint ; le
+soutien le lit avant de payer, ainsi que « ce n'est ni un achat ni un don
+déductible ». Un soutien peut être anonyme et n'a pas besoin de compte.
+
+Chemin d'une contribution : `POST /pilotes/<id>/soutenir` → ligne `pending`
+→ Checkout (métadonnée `contribution_id`) → webhook `checkout.session.completed`
+avec les mêmes contrôles de cohérence qu'une réservation → `paid` (total et
+compteur mis à jour) → `transferred`. Si le pilote n'a pas encore de compte
+au moment du paiement, la contribution reste `paid` et
+`transfer_pending_contributions()` la verse plus tard (à appeler du cron).
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement

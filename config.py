@@ -168,6 +168,15 @@ LATE_CANCELLATION_FEE_PCT = 25.0
 # integral, mission remise en ligne).
 CANCELLATION_GRACE_HOURS = 2
 CANCELLATION_SERVICE_FEE_PCT = 10.0
+
+# Collectes « Soutenez ce pilote » : un pilote verifie explique quel materiel
+# il veut financer et pourquoi ; chaque contribution lui est versee des
+# qu'elle est payee (financement souple, pas de tout-ou-rien), moins la part
+# de la plateforme ci-dessous.
+CAMPAIGN_FEE_PCT = float(os.environ.get("AUBEPILOT_CAMPAIGN_FEE_PCT", "1.0"))
+CAMPAIGN_GOAL_MIN, CAMPAIGN_GOAL_MAX = 200.0, 50000.0
+CONTRIBUTION_MIN, CONTRIBUTION_MAX = 5.0, 5000.0
+CONTRIBUTION_PRESETS = (20, 50, 100, 250)
 CANCELLATION_SERVICE_FEE_CAP = 150.0   # plafond, en unites de la devise de la mission
 
 # Statuts

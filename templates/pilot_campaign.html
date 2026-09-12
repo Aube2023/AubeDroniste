@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set fr = (lang == 'fr') %}
+{% block title %}{{ 'Ma collecte' if fr else 'My fundraiser' }} · AubePilot{% endblock %}
+{% block content %}
+
+<div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div>
+    <span class="eyebrow">{{ t('campaign.eyebrow') }}</span>
+    <h1>{{ 'Ma collecte' if fr else 'My fundraiser' }}</h1>
+    <p class="muted" style="max-width: 62ch;">
+      {{ "Un drone, un capteur, une formation : dites ce que vous voulez financer et pourquoi. Chaque contribution vous est versée dès qu'elle est payée, moins " ~ fee_pct|int ~ " % pour la plateforme. Pas de tout-ou-rien : ce qui est donné vous reste, objectif atteint ou non."
+         if fr else "A drone, a sensor, a course: say what you want to fund and why. Each contribution is paid out to you as soon as it clears, minus " ~ fee_pct|int ~ "% for the platform. No all-or-nothing: what is given stays yours, goal reached or not." }}
+    </p>
+  </div>
+  <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ 'Profil pilote' if fr else 'Pilot profile' }}</a>
+</div>
+
+{% if not can_open and not campaign %}
+<div class="alert alert-info">
+  <span class="eyebrow">{{ 'Pas encore disponible pour vous' if fr else 'Not available for you yet' }}</span>
+  <p style="margin: 6px 0 0;">
+    {% if not profile.is_verified %}{{ "Une collecte demande un brevet vérifié : c'est la garantie donnée à ceux qui donnent. Téléversez votre justificatif depuis votre profil." if fr else 'A fundraiser requires a verified licence: that is the guarantee given to those who give. Upload your proof from your profile.' }}
+    {% else %}{{ "Le paiement en ligne n'est pas encore ouvert : les contributions ne pourraient pas vous être versées. La collecte s'ouvrira avec l'encaissement Stripe." if fr else 'Online payment is not open yet: contributions could not be paid out to you. Fundraisers open together with Stripe payouts.' }}{% endif %}
+  </p>
+</div>
+{% endif %}
+
+{% if campaign %}
+<section class="card">
+  <div class="row-between" style="flex-wrap: wrap; gap: 8px;">
+    <span class="eyebrow">{{ 'En cours' if fr else 'Active' }}</span>
+    <a href="{{ url_for('pilot_detail', user_id=current_user.id) }}#soutenir" class="ghost">{{ 'Voir sur ma fiche →' if fr else 'See on my page →' }}</a>
+  </div>
+  <div class="campaign-bar"><span style="width: {{ campaign.progress_pct }}%;"></span></div>
+  <div class="row-between" style="flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+    <span><strong>{{ campaign.raised_amount|int }} {{ campaign.currency }}</strong> <span class="muted">/ {{ campaign.goal_amount|int }}</span></span>
+    <span class="muted small">{{ t('campaign.supporters', n=campaign.contributors) }}</span>
+  </div>
+  {% if contributions %}
+  <ul class="stack-list" style="margin-top: 14px;">
+    {% for c in contributions %}
+    <li class="row-between"><span>{{ c.supporter_name or t('campaign.anon') }}{% if c.message %} <span class="muted">· « {{ c.message }} »</span>{% endif %}</span><strong>{{ c.amount|int }} {{ c.currency }}</strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" style="margin-top: 16px;" data-confirm="{{ 'Clôturer la collecte ? Les contributions déjà versées vous restent acquises.' if fr else 'Close the fundraiser? Contributions already paid out stay yours.' }}">
+    {{ csrf_input() }}<input type="hidden" name="action" value="close">
+    <button type="submit" class="ghost danger">{{ 'Clôturer la collecte' if fr else 'Close the fundraiser' }}</button>
+  </form>
+</section>
+{% endif %}
+
+{% if can_open or campaign %}
+<form method="post" class="card">
+  {{ csrf_input() }}
+  <h2>{{ (('Modifier ma collecte' if campaign else 'Ouvrir une collecte') if fr else ('Edit my fundraiser' if campaign else 'Open a fundraiser')) }}</h2>
+  <label>{{ 'Titre' if fr else 'Title' }} <span class="muted small">({{ t('common.required') }})</span>
+    <input name="title" maxlength="120" required value="{{ campaign.title if campaign else '' }}" placeholder="{{ 'Un drone thermique pour les inspections de toiture' if fr else 'A thermal drone for roof inspections' }}">
+  </label>
+  <label>{{ 'Ce que la collecte finance' if fr else 'What the fundraiser pays for' }} <span class="muted small">({{ t('common.required') }})</span>
+    <input name="equipment" maxlength="160" required value="{{ campaign.equipment if campaign else '' }}" placeholder="{{ 'DJI Mavic 3 Thermal + batteries' }}">
+  </label>
+  <label>{{ 'Pourquoi, et pour quelles missions' if fr else 'Why, and for which jobs' }} <span class="muted small">({{ t('common.required') }} · {{ '80 caractères minimum' if fr else '80 characters minimum' }})</span>
+    <textarea name="reason" rows="6" maxlength="3000" required placeholder="{{ "Ce que ce matériel changera dans votre travail, à qui il servira, ce que vous ne pouvez pas faire aujourd'hui sans lui." if fr else 'What this gear will change in your work, who it will serve, what you cannot do today without it.' }}">{{ campaign.reason if campaign else '' }}</textarea>
+  </label>
+  <label>{{ 'Objectif' if fr else 'Goal' }} ({{ (profile.p_currency or 'CAD') }}, {{ goal_min }}–{{ goal_max }})
+    <input name="goal_amount" type="number" min="{{ goal_min }}" max="{{ goal_max }}" step="1" required value="{{ campaign.goal_amount|int if campaign else '' }}">
+  </label>
+  <p class="muted small">{{ t('campaign.pilot_terms', fee=fee_pct|int) }}</p>
+  <button type="submit" class="cta">{{ ('Enregistrer' if campaign else 'Ouvrir la collecte') if fr else ('Save' if campaign else 'Open the fundraiser') }}</button>
+</form>
+{% endif %}
+
+{% endblock %}

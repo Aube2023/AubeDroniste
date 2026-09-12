@@ -199,12 +199,50 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at)",
     "CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day)",
     "CREATE INDEX IF NOT EXISTS idx_pilot_links_user ON pilot_links(pilot_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id)",
 ]
 
 
 # Tables additives idempotentes (memes regles que les index : schema.sql ne
 # tourne que sur une base neuve, la prod passe par run_migrations()).
 _ADD_TABLES = [
+    # Collectes « Soutenez ce pilote » + contributions (cf. services.campaign_*).
+    """CREATE TABLE IF NOT EXISTS pilot_campaigns (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    pilot_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title          TEXT NOT NULL,                    -- « Un drone thermique pour l'inspection »
+    equipment      TEXT NOT NULL,                    -- ce que finance la collecte (modele, materiel)
+    reason         TEXT NOT NULL,                    -- pourquoi, pour quelles missions, pour qui
+    goal_amount    REAL NOT NULL,
+    currency       TEXT NOT NULL DEFAULT 'CAD',
+    raised_amount  REAL NOT NULL DEFAULT 0,          -- brut des contributions PAYEES
+    contributors   INTEGER NOT NULL DEFAULT 0,
+    status         TEXT NOT NULL DEFAULT 'active',   -- active | closed
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at     TEXT,
+    closed_at      TEXT
+)""",
+    """CREATE TABLE IF NOT EXISTS campaign_contributions (
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    campaign_id              INTEGER NOT NULL REFERENCES pilot_campaigns(id) ON DELETE CASCADE,
+    supporter_user_id        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    supporter_name           TEXT,                   -- affiche si is_public
+    supporter_email          TEXT,
+    amount                   REAL NOT NULL,          -- brut paye par le soutien
+    platform_fee             REAL NOT NULL DEFAULT 0,-- part plateforme (CAMPAIGN_FEE_PCT)
+    currency                 TEXT NOT NULL,
+    message                  TEXT,
+    is_public                INTEGER NOT NULL DEFAULT 1,
+    status                   TEXT NOT NULL DEFAULT 'pending', -- pending | paid | transferred | refunded
+    stripe_session_id        TEXT,
+    stripe_payment_intent_id TEXT,
+    stripe_transfer_id       TEXT,
+    created_at               TEXT NOT NULL DEFAULT (datetime('now')),
+    paid_at                  TEXT,
+    transferred_at           TEXT
+)""",
     # Livrables proposes par un pilote (ce que le client recoit).
     """CREATE TABLE IF NOT EXISTS pilot_deliverables (
     pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

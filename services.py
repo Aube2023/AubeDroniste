@@ -15,6 +15,11 @@ from typing import Iterable, Optional
 
 import db
 from config import (
+    CAMPAIGN_FEE_PCT,
+    CAMPAIGN_GOAL_MAX,
+    CAMPAIGN_GOAL_MIN,
+    CONTRIBUTION_MAX,
+    CONTRIBUTION_MIN,
     STRIPE_CONNECT_ENABLED,
     DELIVERABLES,
     MAX_PILOT_LINKS,
@@ -235,7 +240,8 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
         "COALESCE(p.insurance_status, 'none') AS insurance_status, "
         "p.insurance_reviewed_at, "
         "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at, "
-        "COALESCE(p.stripe_charges_enabled, 0) AS stripe_charges_enabled "
+        "COALESCE(p.stripe_charges_enabled, 0) AS stripe_charges_enabled, "
+        "COALESCE(p.stripe_payouts_enabled, 0) AS stripe_payouts_enabled, p.stripe_account_id "
         "FROM users u LEFT JOIN pilot_profiles p ON p.user_id = u.id "
         "WHERE u.id=?",
         (user_id,),
@@ -670,6 +676,241 @@ def count_insurances_pending() -> int:
         "  AND p.insurance_document_path IS NOT NULL AND p.insurance_document_path <> ''"
     )
     return int(row["n"]) if row else 0
+
+
+# ---------------------------------------------------------------------------
+# Collectes « Soutenez ce pilote »
+#
+# Un pilote VERIFIE (au moins un brevet controle) dit quel materiel il veut
+# financer et pourquoi. Financement souple : chaque contribution payee lui
+# est versee aussitot, moins CAMPAIGN_FEE_PCT ; pas de tout-ou-rien, donc pas
+# de remboursement automatique si l'objectif n'est pas atteint, et l'ecran
+# le dit au soutien avant qu'il paie. Une seule collecte active par pilote.
+# Le versement passe par Stripe Connect : sans compte connecte, pas de
+# collecte (la verification vit dans app.py, qui connait l'etat de Connect).
+# ---------------------------------------------------------------------------
+
+CAMPAIGN_STATUSES = ("active", "closed")
+
+
+def campaign_fee(amount: float) -> float:
+    return round(float(amount) * CAMPAIGN_FEE_PCT / 100.0, 2)
+
+
+def get_campaign(campaign_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT c.*, u.full_name AS pilot_full_name, u.username AS pilot_username, "
+        "       u.is_verified AS pilot_is_verified "
+        "FROM pilot_campaigns c JOIN users u ON u.id = c.pilot_user_id WHERE c.id=?",
+        (campaign_id,),
+    )
+    return _decorate_campaign(row) if row else None
+
+
+def active_campaign_for(pilot_user_id: int) -> Optional[dict]:
+    row = db.fetchone(
+        "SELECT c.*, u.full_name AS pilot_full_name, u.username AS pilot_username, "
+        "       u.is_verified AS pilot_is_verified "
+        "FROM pilot_campaigns c JOIN users u ON u.id = c.pilot_user_id "
+        "WHERE c.pilot_user_id=? AND c.status='active' ORDER BY c.id DESC LIMIT 1",
+        (pilot_user_id,),
+    )
+    return _decorate_campaign(row) if row else None
+
+
+def _decorate_campaign(row) -> dict:
+    d = dict(row)
+    goal = float(d.get("goal_amount") or 0)
+    raised = float(d.get("raised_amount") or 0)
+    d["progress_pct"] = int(min(100, round(100 * raised / goal))) if goal else 0
+    d["reached"] = goal > 0 and raised >= goal
+    d["fee_pct"] = CAMPAIGN_FEE_PCT
+    return d
+
+
+def validate_campaign(*, title: str, equipment: str, reason: str, goal_amount) -> list:
+    """Motifs de refus (vide = valide). Le titre, le materiel et le pourquoi
+    sont obligatoires : une collecte sans explication n'a pas sa place."""
+    erreurs = []
+    if len((title or "").strip()) < 8:
+        erreurs.append("title")
+    if len((equipment or "").strip()) < 4:
+        erreurs.append("equipment")
+    if len((reason or "").strip()) < 80:
+        erreurs.append("reason")
+    try:
+        goal = float(goal_amount)
+    except (TypeError, ValueError):
+        goal = 0.0
+    if not (CAMPAIGN_GOAL_MIN <= goal <= CAMPAIGN_GOAL_MAX):
+        erreurs.append("goal")
+    return erreurs
+
+
+def create_campaign(pilot_user_id: int, *, title: str, equipment: str, reason: str,
+                    goal_amount, currency: str) -> Optional[int]:
+    """None si le pilote a deja une collecte active ou si les champs sont
+    invalides (a verifier en amont avec validate_campaign)."""
+    if validate_campaign(title=title, equipment=equipment, reason=reason, goal_amount=goal_amount):
+        return None
+    if active_campaign_for(pilot_user_id):
+        return None
+    cur = db.execute(
+        "INSERT INTO pilot_campaigns (pilot_user_id, title, equipment, reason, goal_amount, currency) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (pilot_user_id, title.strip()[:120], equipment.strip()[:160], reason.strip()[:3000],
+         round(float(goal_amount), 2), (currency or "CAD").upper()[:3]),
+    )
+    return cur.lastrowid
+
+
+def update_campaign(campaign_id: int, pilot_user_id: int, *, title: str, equipment: str,
+                    reason: str, goal_amount) -> bool:
+    if validate_campaign(title=title, equipment=equipment, reason=reason, goal_amount=goal_amount):
+        return False
+    cur = db.execute(
+        "UPDATE pilot_campaigns SET title=?, equipment=?, reason=?, goal_amount=?, "
+        "updated_at=datetime('now') WHERE id=? AND pilot_user_id=? AND status='active'",
+        (title.strip()[:120], equipment.strip()[:160], reason.strip()[:3000],
+         round(float(goal_amount), 2), campaign_id, pilot_user_id),
+    )
+    return cur.rowcount > 0
+
+
+def close_campaign(campaign_id: int, pilot_user_id: int) -> bool:
+    cur = db.execute(
+        "UPDATE pilot_campaigns SET status='closed', closed_at=datetime('now') "
+        "WHERE id=? AND pilot_user_id=? AND status='active'",
+        (campaign_id, pilot_user_id),
+    )
+    return cur.rowcount > 0
+
+
+def list_campaigns(limit: int = 12) -> list:
+    """Collectes actives, les plus recentes d'abord (accueil, annuaire)."""
+    rows = db.fetchall(
+        "SELECT c.*, u.full_name AS pilot_full_name, u.username AS pilot_username, "
+        "       u.is_verified AS pilot_is_verified, u.city AS pilot_city, u.country AS pilot_country "
+        "FROM pilot_campaigns c JOIN users u ON u.id = c.pilot_user_id "
+        "WHERE c.status='active' AND u.deleted_at IS NULL ORDER BY c.id DESC LIMIT ?",
+        (limit,),
+    )
+    return [_decorate_campaign(r) for r in rows]
+
+
+def create_contribution(campaign_id: int, *, amount, currency: str, supporter_user_id=None,
+                        supporter_name: str = "", supporter_email: str = "",
+                        message: str = "", is_public: bool = True) -> Optional[int]:
+    """Contribution en attente de paiement. None si montant hors bornes ou
+    collecte fermee."""
+    try:
+        amt = round(float(amount), 2)
+    except (TypeError, ValueError):
+        return None
+    if not (CONTRIBUTION_MIN <= amt <= CONTRIBUTION_MAX):
+        return None
+    camp = get_campaign(campaign_id)
+    if not camp or camp["status"] != "active":
+        return None
+    cur = db.execute(
+        "INSERT INTO campaign_contributions (campaign_id, supporter_user_id, supporter_name, "
+        "supporter_email, amount, platform_fee, currency, message, is_public) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (campaign_id, supporter_user_id, (supporter_name or "").strip()[:80] or None,
+         (supporter_email or "").strip()[:160] or None, amt, campaign_fee(amt),
+         (currency or camp["currency"]).upper()[:3], (message or "").strip()[:500] or None,
+         1 if is_public else 0),
+    )
+    return cur.lastrowid
+
+
+def get_contribution(contribution_id: int) -> Optional[dict]:
+    row = db.fetchone("SELECT * FROM campaign_contributions WHERE id=?", (contribution_id,))
+    return dict(row) if row else None
+
+
+def attach_contribution_session(contribution_id: int, session_id: str) -> None:
+    db.execute("UPDATE campaign_contributions SET stripe_session_id=? WHERE id=?",
+               (session_id, contribution_id))
+
+
+def mark_contribution_paid(contribution_id: int, payment_intent_id: Optional[str] = None) -> bool:
+    """Paiement confirme (webhook ou mode fake). Idempotent : une seule fois
+    depuis 'pending'. Met a jour le total et le nombre de soutiens, puis tente
+    le versement au pilote ; s'il echoue, la contribution reste 'paid' et sera
+    rejouee (transfer_pending_contributions)."""
+    with db.transaction():
+        cur = db.execute(
+            "UPDATE campaign_contributions SET status='paid', paid_at=datetime('now'), "
+            "stripe_payment_intent_id=COALESCE(?, stripe_payment_intent_id) "
+            "WHERE id=? AND status='pending'",
+            (payment_intent_id, contribution_id), commit=False,
+        )
+        if cur.rowcount == 0:
+            return False
+        c = get_contribution(contribution_id)
+        db.execute(
+            "UPDATE pilot_campaigns SET raised_amount = raised_amount + ?, "
+            "contributors = contributors + 1, updated_at=datetime('now') WHERE id=?",
+            (c["amount"], c["campaign_id"]), commit=False,
+        )
+    transfer_contribution(contribution_id)
+    return True
+
+
+def transfer_contribution(contribution_id: int) -> Optional[str]:
+    """Verse au pilote le net (montant - part plateforme). Idempotent cote
+    Stripe (cle contribution-<id>)."""
+    c = get_contribution(contribution_id)
+    if not c or c["status"] != "paid":
+        return None
+    camp = get_campaign(c["campaign_id"])
+    if not camp:
+        return None
+    pilot_acc = get_pilot_stripe_account(camp["pilot_user_id"])
+    if not pilot_acc:
+        log.warning("contribution %s : pilote %s sans compte Connect, versement differe",
+                    contribution_id, camp["pilot_user_id"])
+        return None
+    import payments
+    net = round(float(c["amount"]) - float(c["platform_fee"]), 2)
+    transfer_id = payments.release_to_pilot(
+        booking_id=contribution_id, pilot_amount=net, currency=c["currency"],
+        pilot_account_id=pilot_acc, kind="contribution",
+    )
+    if not transfer_id:
+        return None
+    db.execute(
+        "UPDATE campaign_contributions SET status='transferred', stripe_transfer_id=?, "
+        "transferred_at=datetime('now') WHERE id=? AND status='paid'",
+        (transfer_id, contribution_id),
+    )
+    return transfer_id
+
+
+def transfer_pending_contributions() -> int:
+    """Cron / rattrapage : contributions payees jamais versees (compte Connect
+    arrive apres, Stripe indisponible sur le moment)."""
+    rows = db.fetchall("SELECT id FROM campaign_contributions WHERE status='paid' ORDER BY id")
+    return sum(1 for r in rows if transfer_contribution(r["id"]))
+
+
+def list_contributions(campaign_id: int, limit: int = 50) -> list:
+    """Soutiens confirmes, pour l'affichage public (anonymes masques)."""
+    rows = db.fetchall(
+        "SELECT id, supporter_name, amount, currency, message, is_public, paid_at "
+        "FROM campaign_contributions WHERE campaign_id=? AND status IN ('paid','transferred') "
+        "ORDER BY paid_at DESC, id DESC LIMIT ?",
+        (campaign_id, limit),
+    )
+    out = []
+    for r in rows:
+        d = dict(r)
+        if not d["is_public"]:
+            d["supporter_name"] = None
+            d["message"] = None
+        out.append(d)
+    return out
 
 
 def refresh_all_user_verified() -> int:

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Paiement simulé · AubePilot{% endblock %}
+{% block content %}
+<div class="card form-card" style="max-width: 640px;">
+  <span class="eyebrow">Mode démo · Stripe non configuré</span>
+  <h1>Contribution à une collecte</h1>
+  <div class="card" style="background: var(--paper-3); margin: 18px 0;">
+    <h2 style="font-size: 1.1rem; margin: 0 0 6px;">{{ campaign.title }}</h2>
+    <div class="muted small">{{ campaign.equipment }}</div>
+  </div>
+  <table style="width: 100%; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 18px 0;">
+    <tr><td style="padding: 12px 0;">Contribution</td><td style="padding: 12px 0; text-align: right; font-weight: 600;">{{ contribution.amount|int }} {{ contribution.currency }}</td></tr>
+    <tr><td style="padding: 12px 0;" class="muted small">→ Pilote</td><td style="padding: 12px 0; text-align: right;" class="mono small">{{ (contribution.amount - contribution.platform_fee)|round(2) }} {{ contribution.currency }}</td></tr>
+    <tr><td style="padding: 12px 0;" class="muted small">→ AubePilot ({{ campaign.fee_pct|int }} %)</td><td style="padding: 12px 0; text-align: right;" class="mono small">{{ contribution.platform_fee }} {{ contribution.currency }}</td></tr>
+  </table>
+  <form method="post">{{ csrf_input() }}<button type="submit" class="cta">Simuler le paiement</button></form>
+</div>
+{% endblock %}

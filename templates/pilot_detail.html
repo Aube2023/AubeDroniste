@@ -308,6 +308,56 @@
 </section>
 {% endif %}
 
+{% if campaign %}
+<section class="card campaign" id="soutenir">
+  <span class="eyebrow">{{ t('campaign.eyebrow') }}</span>
+  <h2 class="card-title" style="margin-bottom: 4px;">{{ campaign.title }}</h2>
+  <p class="muted small" style="margin: 0 0 12px;">{{ t('campaign.for') }} <strong>{{ campaign.equipment }}</strong></p>
+
+  <div class="campaign-bar" role="img" aria-label="{{ campaign.progress_pct }} %"><span style="width: {{ campaign.progress_pct }}%;"></span></div>
+  <div class="row-between" style="flex-wrap: wrap; gap: 8px; margin: 8px 0 14px;">
+    <span><strong>{{ campaign.raised_amount|int }} {{ campaign.currency }}</strong> <span class="muted">/ {{ campaign.goal_amount|int }} {{ campaign.currency }}</span></span>
+    <span class="muted small">{{ t('campaign.supporters', n=campaign.contributors) }}{% if campaign.reached %} · <span class="tag tag-ok">{{ t('campaign.reached') }}</span>{% endif %}</span>
+  </div>
+
+  <h3 style="margin: 0 0 6px;">{{ t('campaign.why') }}</h3>
+  <p style="white-space: pre-line; margin: 0 0 18px;">{{ campaign.reason }}</p>
+
+  {% if request.args.get('soutien') == 'merci' %}
+  <div class="alert alert-ok"><span class="eyebrow">{{ t('campaign.thanks_title') }}</span><p style="margin: 6px 0 0;">{{ t('campaign.thanks') }}</p></div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('campaign_contribute', user_id=pilot.id) }}" class="campaign-form">
+    {{ csrf_input() }}
+    <div class="chips" style="gap: 8px; margin-bottom: 10px;">
+      {% for a in contribution_presets %}
+      <label class="chip-check"><input type="radio" name="amount" value="{{ a }}" {% if loop.index == 2 %}checked{% endif %}> {{ a }} {{ campaign.currency }}</label>
+      {% endfor %}
+      <label class="chip-check">{{ t('campaign.other') }} <input type="number" name="amount_other" min="{{ contribution_min }}" max="{{ contribution_max }}" step="1" style="width: 90px; margin-inline-start: 6px;"></label>
+    </div>
+    {% if not current_user %}
+    <div class="grid-2" style="gap: 10px;">
+      <label>{{ t('campaign.your_name') }}<input name="supporter_name" maxlength="80"></label>
+      <label>{{ t('campaign.your_email') }}<input name="supporter_email" type="email" maxlength="160"></label>
+    </div>
+    {% endif %}
+    <label>{{ t('campaign.message') }}<input name="message" maxlength="500" placeholder="{{ t('campaign.message_ph') }}"></label>
+    <label class="check"><input type="checkbox" name="anonymous" value="1"> {{ t('campaign.anonymous') }}</label>
+    <p class="muted small" style="margin: 8px 0 12px;">{{ t('campaign.terms', fee=campaign.fee_pct|int) }}</p>
+    <button type="submit" class="cta">{{ t('campaign.cta') }}</button>
+  </form>
+
+  {% if campaign_contributions %}
+  <h3 style="margin: 22px 0 8px;">{{ t('campaign.recent') }}</h3>
+  <ul class="stack-list">
+    {% for c in campaign_contributions %}
+    <li class="row-between"><span>{{ c.supporter_name or t('campaign.anon') }}{% if c.message %} <span class="muted">· « {{ c.message }} »</span>{% endif %}</span><strong>{{ c.amount|int }} {{ c.currency }}</strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if packages and not is_shop %}
 <section class="card">
   <span class="eyebrow">{% if is_school %}{{ 'Nos formations' if fr else 'Our courses' }}{% else %}{{ 'Catalogue' if fr else 'Catalogue' }}{% endif %}</span>

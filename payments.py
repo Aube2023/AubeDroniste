@@ -250,6 +250,44 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
     return session.id, session.url
 
 
+def create_contribution_session(*, contribution_id: int, amount: float, currency: str,
+                                campaign_title: str, pilot_name: str, return_path: str,
+                                supporter_email: Optional[str] = None) -> Tuple[str, str]:
+    """Checkout d'une contribution a une collecte. Meme modele que la mission :
+    la plateforme encaisse, puis vire au pilote (moins sa part). Le webhook
+    reconnait la contribution par metadata.contribution_id."""
+    s = _require_stripe_or_fake()
+    if s is None:
+        return (f"cs_fake_contrib_{contribution_id}_{int(time.time())}",
+                f"{SITE_URL}/stripe/fake-contribution/{contribution_id}")
+    amount_cents = int(round(float(amount) * 100))
+    kwargs = dict(
+        mode="payment",
+        payment_method_types=["card"],
+        line_items=[{
+            "price_data": {
+                "currency": currency.lower(),
+                "product_data": {
+                    "name": f"Soutien à {pilot_name[:60]} — {campaign_title[:70]}",
+                    "description": "Contribution à une collecte de pilote via AubePilot",
+                },
+                "unit_amount": amount_cents,
+            },
+            "quantity": 1,
+        }],
+        metadata={"contribution_id": str(contribution_id)},
+        success_url=f"{SITE_URL}{return_path}?soutien=merci",
+        cancel_url=f"{SITE_URL}{return_path}?soutien=annule",
+        idempotency_key=f"contribution-{contribution_id}-checkout",
+    )
+    if supporter_email:
+        kwargs["customer_email"] = supporter_email
+    session = s.checkout.Session.create(**kwargs)
+    log.info("checkout contribution %s -> session %s (%d cents %s)",
+             contribution_id, session.id, amount_cents, currency.upper())
+    return session.id, session.url
+
+
 def get_payment_intent_from_session(session_id: str) -> Optional[str]:
     """Recupere l'ID PaymentIntent associé a une Checkout Session."""
     if STRIPE_FAKE_MODE and session_id.startswith("cs_fake_"):

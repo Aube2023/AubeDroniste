@@ -43,6 +43,13 @@ def main():
     with app.app_context():
         from flask import g
         g.db = db._connect()
+        # Contributions payees jamais versees (compte Connect arrive apres)
+        try:
+            n = services.transfer_pending_contributions()
+            if n:
+                log.info("contributions versees en rattrapage : %d", n)
+        except Exception as exc:
+            log.warning("rattrapage contributions : %s", exc)
         ids = services.stale_funded_bookings(AUTO_RELEASE_DAYS)
         log.info("trouvé %d booking(s) à libérer (>%dj sans validation)",
                  len(ids), AUTO_RELEASE_DAYS)

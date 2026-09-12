@@ -1231,6 +1231,10 @@ def pilot_detail(user_id):
         reveal_identity=reveal,
         can_view_credentials=can_view_credentials,
         insurance=services.insurance_state(profile),
+        campaign=services.active_campaign_for(user_id),
+        campaign_contributions=(lambda c: services.list_contributions(c["id"], 12) if c else [])(services.active_campaign_for(user_id)),
+        contribution_presets=config.CONTRIBUTION_PRESETS,
+        contribution_min=int(config.CONTRIBUTION_MIN), contribution_max=int(config.CONTRIBUTION_MAX),
         masked_name=masked,
         packages=services.list_pilot_packages(user_id, only_active=True),
         portfolio=services.list_portfolio_items(user_id),
@@ -3329,6 +3333,116 @@ def booking_settle_offline(booking_id):
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 
+# ---------------------------------------------------------------------------
+# Collectes « Soutenez ce pilote »
+# ---------------------------------------------------------------------------
+
+def _campaigns_open_for(profile) -> bool:
+    """Un pilote peut ouvrir une collecte s'il est verifie ET peut etre paye
+    (compte Connect avec versements actifs). Sans Connect ouvert cote
+    plateforme, personne."""
+    return bool(config.STRIPE_CONNECT_ENABLED and profile
+                and profile.get("is_verified") and profile.get("stripe_payouts_enabled"))
+
+
+@app.route("/espace/pilote/collecte", methods=["GET", "POST"])
+@auth.login_required
+def pilot_campaign():
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+    profile = services.get_pilot_profile(user["id"])
+    campaign = services.active_campaign_for(user["id"])
+    can_open = _campaigns_open_for(profile)
+    if request.method == "POST":
+        action = request.form.get("action") or "save"
+        if action == "close" and campaign:
+            services.close_campaign(campaign["id"], user["id"])
+            flash("Collecte clôturée. Les contributions déjà versées vous restent acquises.", "info")
+            return redirect(url_for("pilot_campaign"))
+        if not can_open and not campaign:
+            flash("Une collecte demande un brevet vérifié et des paiements activés.", "error")
+            return redirect(url_for("pilot_campaign"))
+        champs = dict(title=request.form.get("title") or "", equipment=request.form.get("equipment") or "",
+                      reason=request.form.get("reason") or "", goal_amount=request.form.get("goal_amount"))
+        erreurs = services.validate_campaign(**champs)
+        if erreurs:
+            libelles = {"title": "un titre (8 caractères ou plus)", "equipment": "le matériel à financer",
+                        "reason": "une explication d'au moins 80 caractères", "goal": f"un objectif entre {int(config.CAMPAIGN_GOAL_MIN)} et {int(config.CAMPAIGN_GOAL_MAX)}"}
+            flash("Il manque : " + ", ".join(libelles[e] for e in erreurs) + ".", "error")
+            return redirect(url_for("pilot_campaign"))
+        if campaign:
+            services.update_campaign(campaign["id"], user["id"], **champs)
+            flash("Collecte mise à jour.", "success")
+        else:
+            services.create_campaign(user["id"], currency=(profile or {}).get("p_currency") or "CAD", **champs)
+            flash("Collecte ouverte. Elle apparaît sur votre fiche publique ; partagez-la.", "success")
+            _ping_index([f"/pilotes/{user['id']}"])
+        return redirect(url_for("pilot_campaign"))
+    return render_template(
+        "pilot_campaign.html", profile=profile, campaign=campaign, can_open=can_open,
+        contributions=services.list_contributions(campaign["id"]) if campaign else [],
+        goal_min=int(config.CAMPAIGN_GOAL_MIN), goal_max=int(config.CAMPAIGN_GOAL_MAX),
+        fee_pct=config.CAMPAIGN_FEE_PCT,
+    )
+
+
+@app.route("/pilotes/<int:user_id>/soutenir", methods=["POST"])
+@security.rate_limit(per_minute=10, per_hour=60)
+def campaign_contribute(user_id):
+    """Le soutien choisit un montant ; on cree la contribution puis on l'envoie
+    payer chez Stripe. Pas besoin de compte : un soutien peut etre anonyme."""
+    campaign = services.active_campaign_for(user_id)
+    if not campaign:
+        abort(404)
+    # Un montant libre saisi l'emporte sur le bouton coche
+    amount = _to_float(request.form.get("amount_other")) or _to_float(request.form.get("amount"))
+    if amount is None or not (config.CONTRIBUTION_MIN <= amount <= config.CONTRIBUTION_MAX):
+        flash(f"Montant entre {int(config.CONTRIBUTION_MIN)} et {int(config.CONTRIBUTION_MAX)} {campaign['currency']}.", "error")
+        return redirect(url_for("pilot_detail", user_id=user_id) + "#soutenir")
+    u = getattr(g, "user", None)
+    cid = services.create_contribution(
+        campaign["id"], amount=amount, currency=campaign["currency"],
+        supporter_user_id=u["id"] if u else None,
+        supporter_name=(request.form.get("supporter_name") or (u["full_name"] if u else "")),
+        supporter_email=(request.form.get("supporter_email") or (u["email"] if u else "")),
+        message=request.form.get("message") or "",
+        is_public=not _to_bool(request.form.get("anonymous")),
+    )
+    if not cid:
+        flash("Contribution impossible pour le moment.", "error")
+        return redirect(url_for("pilot_detail", user_id=user_id) + "#soutenir")
+    try:
+        session_id, url = payments.create_contribution_session(
+            contribution_id=cid, amount=amount, currency=campaign["currency"],
+            campaign_title=campaign["title"],
+            pilot_name=services.mask_full_name(campaign["pilot_full_name"]),
+            return_path=url_for("pilot_detail", user_id=user_id),
+            supporter_email=(u["email"] if u else (request.form.get("supporter_email") or None)),
+        )
+    except payments.PaymentUnavailableError:
+        flash("Le paiement en ligne est indisponible. Aucun débit n'a été effectué.", "error")
+        return redirect(url_for("pilot_detail", user_id=user_id) + "#soutenir")
+    services.attach_contribution_session(cid, session_id)
+    return redirect(url)
+
+
+@app.route("/stripe/fake-contribution/<int:contribution_id>", methods=["GET", "POST"])
+def stripe_fake_contribution(contribution_id):
+    """Paiement simule d'une contribution, en mode FAKE seulement."""
+    if not payments.is_fake():
+        abort(404)
+    c = services.get_contribution(contribution_id)
+    if not c:
+        abort(404)
+    camp = services.get_campaign(c["campaign_id"])
+    if request.method == "POST":
+        services.mark_contribution_paid(contribution_id, payment_intent_id=f"pi_fake_contrib_{contribution_id}")
+        flash("Contribution simulée reçue. Merci pour ce pilote.", "success")
+        return redirect(url_for("pilot_detail", user_id=camp["pilot_user_id"]) + "?soutien=merci")
+    return render_template("stripe_fake_contribution.html", contribution=c, campaign=camp)
+
+
 @app.route("/stripe/fake-checkout/<int:booking_id>", methods=["GET", "POST"])
 @auth.login_required
 def stripe_fake_checkout(booking_id):
@@ -3373,8 +3487,28 @@ def stripe_webhook():
     if etype == "checkout.session.completed":
         obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
         bid = obj.get("metadata", {}).get("booking_id") if isinstance(obj, dict) else obj.metadata.get("booking_id")
+        contrib_id = obj.get("metadata", {}).get("contribution_id") if isinstance(obj, dict) else obj.metadata.get("contribution_id")
         pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
-        if bid:
+        if contrib_id:
+            # Contribution a une collecte : memes controles de coherence qu'une
+            # reservation (session attendue, statut paye, montant et devise).
+            try:
+                contrib = services.get_contribution(int(contrib_id))
+            except (TypeError, ValueError):
+                contrib = None
+            session_id = obj.get("id") if isinstance(obj, dict) else obj.id
+            payment_status = obj.get("payment_status") if isinstance(obj, dict) else obj.payment_status
+            amount_total = obj.get("amount_total") if isinstance(obj, dict) else obj.amount_total
+            currency = obj.get("currency") if isinstance(obj, dict) else obj.currency
+            expected = int(round(float(contrib["amount"]) * 100)) if contrib else None
+            if (contrib and contrib.get("stripe_session_id") == str(session_id)
+                    and payment_status == "paid" and amount_total == expected
+                    and str(currency or "").upper() == str(contrib["currency"]).upper() and pi_id):
+                services.mark_contribution_paid(int(contrib_id), payment_intent_id=str(pi_id))
+            else:
+                log.error("webhook contribution ignore: donnees incoherentes contribution=%r session=%r",
+                          contrib_id, session_id)
+        elif bid:
             try:
                 booking = services.get_booking(int(bid))
             except (TypeError, ValueError):
