@@ -55,6 +55,9 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
 #aube-map .aube-meteo .flight.caution{background:#fef3c7;color:#92400e}
 #aube-map .aube-meteo .flight.nogo{background:#fee2e2;color:#991b1b}
 #aube-map .aube-meteo .small{font-size:11px;color:#6b6f7a;margin-top:6px}
+#aube-map .aube-meteo .radar{margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);font-size:12px}
+#aube-map .aube-meteo .scale{display:block;height:8px;border-radius:4px;margin:4px 0 2px;background:linear-gradient(90deg,#7fd0ff,#2f7fe6,#22c55e,#facc15,#f97316,#dc2626,#7f1d1d)}
+#aube-map .aube-meteo .radar .err{color:#991b1b}
 #aube-map .aube-pop-meteo{margin-top:6px;font-size:12px;color:#444}
 #aube-map .aube-pop-meteo .flight{font-weight:700}
 #aube-map .aube-pop-meteo .favorable{color:#166534}
@@ -176,6 +179,15 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
   // visiteur n'a pas appuye sur le bouton.
   var M = L10N.meteo || {};
   var meteoOn = false, meteoTimer = null, meteoPanel = null, meteoCache = {};
+  var radarState = { time: null, error: false };
+  function radarBlock() {
+    if (radarState.error) return '<div class="radar"><span class="err">' + esc(M.radarError || '') + '</span></div>';
+    if (!radarState.time) return '';
+    var t = new Date(radarState.time * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    return '<div class="radar"><b>' + esc(String(M.radarTime || '{t}').replace('{t}', t)) + '</b>' +
+      '<span class="scale" aria-hidden="true"></span><span class="small" style="margin:0">' + esc(M.legend || '') + '</span>' +
+      '<div class="small">' + esc(M.radarEmpty || '') + '</div></div>';
+  }
   function meteoKey(lat, lng) { return lat.toFixed(2) + ',' + lng.toFixed(2); }
   function fetchMeteo(lat, lng) {
     var k = meteoKey(lat, lng);
@@ -196,6 +208,7 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
     if (d.temp != null) parts.push(Math.round(d.temp) + ' °C');
     parts.push((M.cond || {})[d.condition] || d.condition || '');
     if (d.wind != null) parts.push(fmt(M.wind, Math.round(d.wind)) + (d.gusts != null ? ' (' + fmt(M.gusts, Math.round(d.gusts)) + ')' : ''));
+    if (d.precip != null) parts.push(fmt(M.precip, d.precip));
     return parts.filter(Boolean).join(' · ');
   }
   function renderMeteoPanel() {
@@ -209,6 +222,7 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
         '<div class="v">' + esc(conditionLine(d)) + '</div>' +
         '<div><span class="k" style="display:inline;margin-right:6px">' + esc(M.flight || '') + '</span>' + flightLine(d) + '</div>' +
         '<div class="small">' + esc(M.disclaimer || '') + '</div>' +
+        radarBlock() +
         '<div class="small">' + esc(M.credit || '') + '</div>';
     });
   }
@@ -217,7 +231,9 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
     fetch('/api/meteo/radar', {credentials: 'same-origin'})
       .then(function (r) { return r.status === 200 ? r.json() : null; })
       .then(function (d) {
-        if (!d || !d.latest || map.getSource('aube-radar')) return;
+        if (!d || !d.latest) { radarState.error = true; renderMeteoPanel(); return; }
+        radarState.time = d.latest.time;
+        if (map.getSource('aube-radar')) { renderMeteoPanel(); return; }
         // RainViewer ne sert le radar que jusqu'au zoom 7 : au-dela, il renvoie
         // une tuile grise avec un message peint dedans, en HTTP 200, que la
         // carte afficherait telle quelle. maxzoom=7 fait etirer les tuiles z7
@@ -231,10 +247,16 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
         var ls = map.getStyle().layers || [], first;
         for (var i = 0; i < ls.length; i++) { if (ls[i].type === 'symbol') { first = ls[i].id; break; } }
         map.addLayer({ id: 'aube-radar', type: 'raster', source: 'aube-radar',
-                       paint: { 'raster-opacity': 0.55, 'raster-fade-duration': 150 } }, first);
+                       paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 150 } }, first);
+        renderMeteoPanel();
       })
-      .catch(function () {});
+      .catch(function () { radarState.error = true; renderMeteoPanel(); });
   }
+  // Une tuile radar qui echoue (plafond de requetes, service en panne) : on le
+  // dit dans le panneau plutot que de laisser croire qu'il ne pleut pas.
+  map.on('error', function (e) {
+    if (e && e.sourceId === 'aube-radar' && !radarState.error) { radarState.error = true; renderMeteoPanel(); }
+  });
   function MeteoToggle() {}
   MeteoToggle.prototype.onAdd = function () {
     var wrap = document.createElement('div');
