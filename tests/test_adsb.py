@@ -96,3 +96,10 @@ def test_helicoptere_reconnu_sans_categorie():
 def test_carte_a_des_symboles_helicoptere(client):
     html = client.get("/pilotes").data.decode()
     assert "heli-" in html and "rotorcraft" in html
+
+
+def test_panneaux_fermables_et_zoom_minimal(client):
+    html = client.get("/pilotes").data.decode()
+    assert "aube-panel-x" in html                 # croix de fermeture
+    assert '"zoomIn":' in html and "ADSB_MIN_ZOOM" in html
+    assert '"about":' in html and "details.about" in html

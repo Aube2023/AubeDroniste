@@ -461,6 +461,7 @@ def _map_l10n() -> dict:
         "adsb": {
             "button": t("adsb.button"), "on": t("adsb.on"), "off": t("adsb.off"),
             "summary": t("adsb.summary", n="{n}", low="{low}"), "unavailable": t("adsb.unavailable"),
+            "zoomIn": t("adsb.zoom_in"),
             "notice": t("adsb.notice"), "credit": t("adsb.credit"),
             "alt": t("adsb.alt"), "speed": t("adsb.speed"), "track": t("adsb.track"),
             "climb": t("adsb.climb"), "descent": t("adsb.descent"), "ground": t("adsb.ground"),
@@ -469,6 +470,7 @@ def _map_l10n() -> dict:
                                                      "rotorcraft", "glider", "balloon", "ultralight",
                                                      "uav", "space", "vehicle", "unknown")},
         },
+        "about": t("map.about"), "close": t("map.close"),
         "meteo": {
             "button": t("meteo.button"), "on": t("meteo.on"), "off": t("meteo.off"),
             "here": t("meteo.here"), "wind": t("meteo.wind", v="{v}"), "gusts": t("meteo.gusts", v="{v}"),

@@ -74,6 +74,22 @@ html[data-theme="dark"] #aube-map .aube-pop-meteo{color:#c9c9ce}
 #aube-map .aube-traffic .emg{color:#991b1b;font-weight:700}
 html[data-theme="dark"] #aube-map .aube-traffic{background:rgba(23,24,29,.94);color:#e9e9ec}
 html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
+/* Panneaux : croix de fermeture, avertissements replies, compacts sur telephone */
+#aube-map .aube-meteo,#aube-map .aube-traffic{padding-right:30px}
+#aube-map .aube-panel-x{position:absolute;top:4px;right:4px;width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:#6b6f7a;font:600 16px/24px system-ui;cursor:pointer;padding:0}
+#aube-map .aube-panel-x:hover{background:rgba(0,0,0,.08);color:#2b2b31}
+#aube-map details.about{margin-top:6px;font-size:11px;color:#6b6f7a}
+#aube-map details.about summary{cursor:pointer;list-style:none;color:#8b9cf0;font-weight:600}
+#aube-map details.about summary::-webkit-details-marker{display:none}
+#aube-map details.about summary::after{content:" +"}
+#aube-map details.about[open] summary::after{content:" −"}
+html[data-theme="dark"] #aube-map .aube-panel-x{color:#9ca3af}
+html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,255,.1);color:#e9e9ec}
+@media (max-width:640px){
+  #aube-map .aube-meteo,#aube-map .aube-traffic{max-width:calc(100% - 64px);font-size:12px;padding:8px 28px 8px 10px}
+  #aube-map .aube-meteo .v{font-size:13px}
+  #aube-map .aube-traffic{bottom:30px}
+}
 </style>
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ 'Carte interactive des pilotes et missions' if lang == 'fr' else 'Interactive map of pilots and missions' }}"></div>
@@ -177,6 +193,20 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
   // Open-Meteo, cache 10 min) ; les tuiles radar viennent de RainViewer comme
   // le fond de carte vient d'OpenFreeMap. Rien n'est charge tant que le
   // visiteur n'a pas appuye sur le bouton.
+  // Bouton × d'un panneau : il masque le texte, le calque reste actif. Le
+  // bouton de la barre le fait reapparaitre. Sur telephone, ces panneaux
+  // prenaient tout l'ecran.
+  function panelClose(panel) {
+    var x = document.createElement('button');
+    x.type = 'button'; x.className = 'aube-panel-x'; x.textContent = '×';
+    x.setAttribute('aria-label', L10N.close || 'Close');
+    x.addEventListener('click', function () { panel.hidden = true; });
+    panel.appendChild(x);
+  }
+  function aboutBlock(lines) {
+    return '<details class="about"><summary>' + esc(L10N.about || 'About') + '</summary>' +
+      lines.filter(Boolean).map(function (l) { return '<div>' + esc(l) + '</div>'; }).join('') + '</details>';
+  }
   var M = L10N.meteo || {};
   var meteoOn = false, meteoTimer = null, meteoPanel = null, meteoCache = {};
   var radarState = { time: null, error: false };
@@ -216,14 +246,14 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
     var c = map.getCenter();
     fetchMeteo(c.lat, c.lng).then(function (d) {
       if (!meteoOn) return;
-      if (!d) { meteoPanel.innerHTML = '<div class="small">' + esc(M.unavailable || '') + '</div>'; return; }
-      meteoPanel.innerHTML =
+      var body = meteoPanel.querySelector('.body');
+      if (!d) { body.innerHTML = '<div class="small">' + esc(M.unavailable || '') + '</div>'; return; }
+      body.innerHTML =
         '<div class="k">' + esc(M.here || '') + '</div>' +
         '<div class="v">' + esc(conditionLine(d)) + '</div>' +
         '<div><span class="k" style="display:inline;margin-right:6px">' + esc(M.flight || '') + '</span>' + flightLine(d) + '</div>' +
-        '<div class="small">' + esc(M.disclaimer || '') + '</div>' +
         radarBlock() +
-        '<div class="small">' + esc(M.credit || '') + '</div>';
+        aboutBlock([M.disclaimer, M.credit]);
     });
   }
   function addRadar() {
@@ -273,6 +303,8 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
         meteoPanel = document.createElement('div');
         meteoPanel.className = 'aube-meteo';
         meteoPanel.setAttribute('role', 'status');
+        meteoPanel.innerHTML = '<div class="body"></div>';
+        panelClose(meteoPanel);
         el.appendChild(meteoPanel);
       }
       meteoPanel.hidden = !meteoOn;
@@ -363,20 +395,28 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
     if (src) src.setData({ type: 'FeatureCollection', features: feats });
     if (adsbPanel) {
       var emg = (d.aircraft || []).filter(function (a) { return a.emergency; }).length;
-      adsbPanel.innerHTML = '<div class="v">' + esc(String(A.summary || '{n} · {low}').replace('{n}', d.count).replace('{low}', d.low_count)) + '</div>' +
+      adsbPanel.querySelector('.body').innerHTML =
+        '<div class="v">' + esc(String(A.summary || '{n} · {low}').replace('{n}', d.count).replace('{low}', d.low_count)) + '</div>' +
         (emg ? '<div class="emg">' + esc(A.emergency || '') + ' · ' + emg + '</div>' : '') +
-        '<div class="small">' + esc(A.notice || '') + '</div><div class="small">' + esc(A.credit || '') + '</div>';
+        aboutBlock([A.notice, A.credit]);
     }
   }
+  var ADSB_MIN_ZOOM = 5;   // en dessous, le centre de la carte est un ocean : rien a demander
   function pollTraffic() {
     if (!adsbOn || document.hidden) return;
+    if (map.getZoom() < ADSB_MIN_ZOOM) {
+      var src0 = map.getSource('aube-adsb');
+      if (src0) src0.setData({ type: 'FeatureCollection', features: [] });
+      if (adsbPanel) adsbPanel.querySelector('.body').innerHTML = '<div class="small">' + esc(A.zoomIn || '') + '</div>';
+      return;
+    }
     var c = map.getCenter();
     fetch('/api/adsb?lat=' + c.lat.toFixed(3) + '&lng=' + c.lng.toFixed(3) + '&radius_nm=' + viewRadiusNm(), {credentials: 'same-origin'})
       .then(function (r) { return r.status === 200 ? r.json() : null; })
       .then(function (d) {
         if (!adsbOn) return;
         if (d) renderTraffic(d);
-        else if (adsbPanel) adsbPanel.innerHTML = '<div class="small">' + esc(A.unavailable || '') + '</div>';
+        else if (adsbPanel) adsbPanel.querySelector('.body').innerHTML = '<div class="small">' + esc(A.unavailable || '') + '</div>';
       })
       .catch(function () {});
   }
@@ -414,6 +454,8 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
         adsbPanel = document.createElement('div');
         adsbPanel.className = 'aube-traffic';
         adsbPanel.setAttribute('role', 'status');
+        adsbPanel.innerHTML = '<div class="body"></div>';
+        panelClose(adsbPanel);
         el.appendChild(adsbPanel);
       }
       adsbPanel.hidden = !adsbOn;
