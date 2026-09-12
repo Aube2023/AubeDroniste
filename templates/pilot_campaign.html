@@ -8,8 +8,8 @@
     <span class="eyebrow">{{ t('campaign.eyebrow') }}</span>
     <h1>{{ 'Ma collecte' if fr else 'My fundraiser' }}</h1>
     <p class="muted" style="max-width: 62ch;">
-      {{ "Un drone, un capteur, une formation : dites ce que vous voulez financer et pourquoi. Chaque contribution vous est versée dès qu'elle est payée, moins " ~ fee_pct|int ~ " % pour la plateforme. Pas de tout-ou-rien : ce qui est donné vous reste, objectif atteint ou non."
-         if fr else "A drone, a sensor, a course: say what you want to fund and why. Each contribution is paid out to you as soon as it clears, minus " ~ fee_pct|int ~ "% for the platform. No all-or-nothing: what is given stays yours, goal reached or not." }}
+      {{ "Un drone, un capteur, une formation : dites ce que vous voulez financer et pourquoi. Chaque contribution vous est versée dès qu'elle est payée, moins " ~ fee_pct|int ~ " % tout compris pour la plateforme (frais bancaires inclus). Pas de tout-ou-rien : ce qui est donné vous reste, objectif atteint ou non."
+         if fr else "A drone, a sensor, a course: say what you want to fund and why. Each contribution is paid out to you as soon as it clears, minus " ~ fee_pct|int ~ "% all-in for the platform (payment fees included). No all-or-nothing: what is given stays yours, goal reached or not." }}
     </p>
   </div>
   <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ 'Profil pilote' if fr else 'Pilot profile' }}</a>

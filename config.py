@@ -172,10 +172,16 @@ CANCELLATION_SERVICE_FEE_PCT = 10.0
 # Collectes « Soutenez ce pilote » : un pilote verifie explique quel materiel
 # il veut financer et pourquoi ; chaque contribution lui est versee des
 # qu'elle est payee (financement souple, pas de tout-ou-rien), moins la part
-# de la plateforme ci-dessous.
-CAMPAIGN_FEE_PCT = float(os.environ.get("AUBEPILOT_CAMPAIGN_FEE_PCT", "1.0"))
+# de la plateforme ci-dessous, TOUT COMPRIS : les frais Stripe (2,9 % + 0,30
+# par paiement au Canada, plus pour une carte etrangere) sont dedans, le
+# pilote ne voit qu'un seul taux. C'est le tarif du marche : Ulule et
+# KissKissBankBank prennent 8 % TTC frais inclus, Kickstarter et Indiegogo
+# 5 % + 3 a 5 % de frais, Patreon de 8 a 12 % plus les frais. A 1 % on
+# perdait de l'argent sur chaque contribution ; a 5 % il restait ~2 %.
+CAMPAIGN_FEE_PCT = float(os.environ.get("AUBEPILOT_CAMPAIGN_FEE_PCT", "8.0"))
 CAMPAIGN_GOAL_MIN, CAMPAIGN_GOAL_MAX = 200.0, 50000.0
-CONTRIBUTION_MIN, CONTRIBUTION_MAX = 5.0, 5000.0
+# Minimum 10 : sous ce montant, les 0,30 fixes de Stripe mangent la part.
+CONTRIBUTION_MIN, CONTRIBUTION_MAX = 10.0, 5000.0
 CONTRIBUTION_PRESETS = (20, 50, 100, 250)
 CANCELLATION_SERVICE_FEE_CAP = 150.0   # plafond, en unites de la devise de la mission
 

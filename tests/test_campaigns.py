@@ -100,7 +100,7 @@ def test_parcours_complet(client, auth_client, make_user, app_ctx, monkeypatch):
     assert r.status_code in (302, 303) and "/stripe/fake-contribution/" in r.headers["Location"]
     cid = int(r.headers["Location"].rsplit("/", 1)[1])
     contrib = services.get_contribution(cid)
-    assert contrib["status"] == "pending" and contrib["platform_fee"] == 0.5     # 1 %
+    assert contrib["status"] == "pending" and contrib["platform_fee"] == 4.0     # 8 % tout compris
 
     # paiement simule : payee, versee, total mis a jour
     client.post(f"/stripe/fake-contribution/{cid}")
