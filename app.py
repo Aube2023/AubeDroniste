@@ -24,6 +24,7 @@ import db
 import geocode
 import geoip
 import i18n
+import meteo
 import payments
 import security
 import seo
@@ -456,6 +457,16 @@ def _map_l10n() -> dict:
         "reviews": t("common.reviews", n="{n}"), "new": t("common.new_pilot"),
         "verified": t("common.verified"), "urgent": t("common.urgent"),
         "kinds": {k: t(f"kind.{k}.short") for k in ("pro", "recreational", "school", "company", "shop")},
+        "meteo": {
+            "button": t("meteo.button"), "on": t("meteo.on"), "off": t("meteo.off"),
+            "here": t("meteo.here"), "wind": t("meteo.wind", v="{v}"), "gusts": t("meteo.gusts", v="{v}"),
+            "flight": t("meteo.flight"), "radar": t("meteo.radar"),
+            "unavailable": t("meteo.unavailable"), "disclaimer": t("meteo.disclaimer"),
+            "credit": t("meteo.credit"),
+            "levels": {k: t(f"meteo.{k}") for k in ("favorable", "caution", "nogo")},
+            "reasons": {k: t(f"meteo.r.{k}") for k in ("wind", "rain", "snow", "storm", "visibility", "cold")},
+            "cond": {k: t(f"meteo.cond.{k}") for k in ("clear", "partly", "cloudy", "fog", "drizzle", "rain", "snow", "storm", "unknown")},
+        },
     }
 
 
@@ -964,6 +975,34 @@ def _public_mission_json(m: dict) -> dict:
     out["lat"] = services._fuzz_coord(m.get("lat"), 2)
     out["lng"] = services._fuzz_coord(m.get("lng"), 2)
     return out
+
+
+@app.route("/api/meteo")
+@security.rate_limit(per_minute=60, per_hour=900)
+def api_meteo():
+    """Conditions au point + verdict de vol (relais Open-Meteo, cache 10 min).
+    204 si la source ne repond pas : la carte reste utilisable sans meteo."""
+    lat = _to_float(request.args.get("lat"))
+    lng = _to_float(request.args.get("lng"))
+    if lat is None or lng is None:
+        return jsonify({"error": "lat/lng requis"}), 400
+    data = meteo.current(lat, lng)
+    if not data:
+        return ("", 204)
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "public, max-age=300"
+    return resp
+
+
+@app.route("/api/meteo/radar")
+@security.rate_limit(per_minute=30, per_hour=300)
+def api_meteo_radar():
+    data = meteo.radar()
+    if not data:
+        return ("", 204)
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "public, max-age=120"
+    return resp
 
 
 @app.route("/api/near")

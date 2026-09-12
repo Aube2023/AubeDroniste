@@ -355,6 +355,29 @@ Les conséquences se déduisent de là :
 Ce que ça coûte est écrit à l'écran, des deux côtés : pas de séquestre, pas de
 remboursement par la plateforme, aucune commission perçue.
 
+## Météo sur la carte
+
+`meteo.py` relaie deux sources ouvertes, sans clé, les mêmes que le service
+AubeMeteo de la suite : Open-Meteo pour les conditions en un point, RainViewer
+pour l'index du radar. `/api/meteo?lat&lng` renvoie température, vent,
+rafales, précipitations, visibilité, famille de condition (codes WMO) et un
+**verdict de vol** (`favorable` / `caution` / `nogo`, avec ses raisons) ;
+`/api/meteo/radar` donne l'hôte des tuiles et les dernières images.
+
+- Le navigateur ne demande les conditions qu'à notre serveur ; coordonnées
+  arrondies au centième de degré et cache de 10 min, donc une zone n'est
+  interrogée qu'une fois quel que soit le trafic. Les tuiles radar, elles,
+  sont chargées par MapLibre directement (d'où `tilecache.rainviewer.com`
+  dans `connect-src`), comme le fond OpenFreeMap.
+- Seuils du verdict dans `meteo.py` (vent 25/40 km/h, rafales 40/55, pluie,
+  neige, orage, visibilité < 3 km, froid ≤ -10 °C) : ceux des drones grand
+  public et pro légers. C'est une aide, pas une autorisation, et l'écran le
+  dit.
+- Côté carte (`_map.html`) : bouton « Météo » à côté de « Satellite », rien
+  n'est chargé avant le clic ; panneau au centre de la carte, rafraîchi au
+  `moveend` ; conditions ajoutées dans la fenêtre d'un marqueur à l'ouverture.
+- Tests sans réseau : `meteo._get_json` se remplace, comme `geocode._fetch`.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement
