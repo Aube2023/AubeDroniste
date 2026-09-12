@@ -63,7 +63,7 @@
   <!-- Wordmark -->
   <g transform="translate(220, 80)">
     <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="42" font-weight="500" fill="#0a1428" letter-spacing="-1.5">Aube<tspan font-weight="400">Pilot</tspan></text>
-    <text x="0" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="10" font-weight="500" fill="#5a6378" letter-spacing="3.5">RÉSEAU PILOTE FRANCOPHONE</text>
+    <text x="0" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="10" font-weight="500" fill="#5a6378" letter-spacing="3.5">RÉSEAU PILOTE INTERNATIONAL</text>
     <line x1="0" y1="36" x2="50" y2="36" stroke="#c4633f" stroke-width="2"/>
     <text x="0" y="54" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#7a8294">Le ciel n'a pas de frontière</text>
   </g>
