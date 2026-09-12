@@ -25,6 +25,7 @@
   /* Accents — crépuscule indigo + lueur violette */
   --amber:        #4257b2;          /* indigo, contraste sur blanc */
   --amber-soft:   #6b7fd0;
+  --amber-rgb:    66, 87, 178;      /* même teinte, pour les rgba() */
   --teal:         #1e7a6a;
   --signal:       #c0413a;
   --gold:         #7a5fc4;           /* violet « étoilé » */
@@ -59,6 +60,7 @@
   /* Accent indigo/violet conservé pour la cohérence avec le clair */
   --amber:        #8b9cf0;
   --amber-soft:   #aab8f7;
+  --amber-rgb:    139, 156, 240;
   --teal:         #4ec0a6;
   --signal:       #e3584a;
   --gold:         #b39ee8;
@@ -69,6 +71,63 @@
   --bg-veil-top:  rgba(10,10,14,0.60);
   --bg-veil:      rgba(10,10,14,0.90);
 }
+
+/* =========================================================================
+   PALETTES D'ACCENT — choisies dans Paramètres (users.accent), appliquées
+   par data-accent sur <html>. Chaque palette redéfinit seulement les
+   couleurs d'accent ; surfaces et texte restent ceux du thème clair/sombre.
+   Contraste vérifié : ≥ 4.9:1 pour --amber sur blanc et sur noir.
+   ========================================================================= */
+
+[data-accent="ambre"] {
+  --amber: #a8560a; --amber-soft: #c8762a; --gold: #9c6f12; --amber-rgb: 168, 86, 10;
+}
+[data-theme="dark"][data-accent="ambre"] {
+  --amber: #f0a35a; --amber-soft: #f7bd85; --gold: #f2c56b; --amber-rgb: 240, 163, 90;
+}
+[data-accent="emeraude"] {
+  --amber: #1e7a4f; --amber-soft: #2f9a68; --gold: #237a7a; --amber-rgb: 30, 122, 79;
+}
+[data-theme="dark"][data-accent="emeraude"] {
+  --amber: #4fd19a; --amber-soft: #7fe0b8; --gold: #5fd0d0; --amber-rgb: 79, 209, 154;
+}
+[data-accent="corail"] {
+  --amber: #c2453a; --amber-soft: #d8665a; --gold: #b5591a; --amber-rgb: 194, 69, 58;
+}
+[data-theme="dark"][data-accent="corail"] {
+  --amber: #ff8a7a; --amber-soft: #ffa99c; --gold: #ffb070; --amber-rgb: 255, 138, 122;
+}
+[data-accent="azur"] {
+  --amber: #1b6fb8; --amber-soft: #3b8ed6; --gold: #1a7f8c; --amber-rgb: 27, 111, 184;
+}
+[data-theme="dark"][data-accent="azur"] {
+  --amber: #6dbdff; --amber-soft: #95d0ff; --gold: #63d6e6; --amber-rgb: 109, 189, 255;
+}
+[data-accent="ardoise"] {
+  --amber: #4b5566; --amber-soft: #697588; --gold: #5a6b8c; --amber-rgb: 75, 85, 102;
+}
+[data-theme="dark"][data-accent="ardoise"] {
+  --amber: #a7b1c4; --amber-soft: #c0c8d6; --gold: #aab8d4; --amber-rgb: 167, 177, 196;
+}
+
+/* Sélecteur de palette (Paramètres) : une pastille par palette, l'entrée
+   radio reste accessible au clavier. */
+.accent-picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 14px; }
+.accent-picker label {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0;
+  padding: 6px 12px 6px 6px; border: 1px solid var(--rule); border-radius: 999px;
+  cursor: pointer; font-size: 0.9rem; color: var(--ink-soft); background: var(--paper);
+}
+.accent-picker label:hover { border-color: var(--amber); color: var(--ink); }
+.accent-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.accent-picker .swatch {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  background: linear-gradient(135deg, var(--sw-1), var(--sw-2));
+  box-shadow: inset 0 0 0 2px var(--paper);
+}
+.accent-picker input:checked ~ .swatch { box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 2px var(--amber); }
+.accent-picker input:checked ~ span:last-child { color: var(--ink); font-weight: 600; }
+.accent-picker input:focus-visible ~ .swatch { outline: 2px solid var(--amber); outline-offset: 2px; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -227,10 +286,10 @@ form.inline { display: inline; margin: 0; }
   letter-spacing: -.01em;
   cursor: pointer;
   text-transform: none;
-  box-shadow: 0 6px 18px rgba(66, 87, 178, 0.28);
+  box-shadow: 0 6px 18px rgba(var(--amber-rgb), 0.28);
   transition: transform .12s ease, box-shadow .18s ease, filter .15s ease;
 }
-.cta:hover { filter: brightness(1.07); color: var(--cta-fg); transform: translateY(-1px); box-shadow: 0 9px 24px rgba(66, 87, 178, 0.36); }
+.cta:hover { filter: brightness(1.07); color: var(--cta-fg); transform: translateY(-1px); box-shadow: 0 9px 24px rgba(var(--amber-rgb), 0.36); }
 .cta:active { transform: translateY(0); filter: brightness(.98); }
 .cta-accent, button.cta-accent { background: var(--amber); color: var(--cta-fg); }
 .cta-accent:hover { background: var(--amber-soft); color: var(--cta-fg); }
@@ -365,7 +424,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 .tag-ok       { color: var(--teal); border-color: rgba(78,169,147,.4); }
 .tag-urgent   { color: var(--signal); border-color: rgba(207,72,56,.4); background: rgba(207,72,56,.06); }
-.tag-open, .tag-pending, .tag-scheduled { color: var(--amber); border-color: rgba(66,87,178,.4); }
+.tag-open, .tag-pending, .tag-scheduled { color: var(--amber); border-color: rgba(var(--amber-rgb), .4); }
 .tag-assigned, .tag-in_progress         { color: var(--gold); border-color: rgba(122,95,196,.4); }
 .tag-done, .tag-completed, .tag-accepted { color: var(--teal); border-color: rgba(78,169,147,.4); }
 .tag-cancelled, .tag-rejected, .tag-withdrawn, .tag-disputed { color: var(--ink-dim); }
@@ -525,7 +584,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   display: grid; grid-template-columns: 1fr auto;
   align-items: center;
   padding: 10px 14px;
-  background: linear-gradient(90deg, rgba(66,87,178,.1), transparent 70%);
+  background: linear-gradient(90deg, rgba(var(--amber-rgb), .1), transparent 70%);
   border-bottom: 1px solid var(--rule);
 }
 .pilot-card .callsign {
@@ -719,8 +778,8 @@ img.avatar { object-fit: cover; }
 }
 .msg-mine {
   align-self: flex-end;
-  background: rgba(66,87,178,.08);
-  border-color: rgba(66,87,178,.4);
+  background: rgba(var(--amber-rgb), .08);
+  border-color: rgba(var(--amber-rgb), .4);
 }
 .msg .muted { font: 500 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 
@@ -1158,7 +1217,7 @@ img.avatar { object-fit: cover; }
 .role-cards .role-card:hover { border-color: var(--amber); transform: translateY(-1px); }
 .role-cards input:checked + .role-card {
   border-color: var(--amber);
-  background: rgba(66,87,178,.08);
+  background: rgba(var(--amber-rgb), .08);
 }
 .role-cards input:focus-visible + .role-card {
   outline: 2px solid var(--amber); outline-offset: 2px;
@@ -1200,7 +1259,7 @@ img.avatar { object-fit: cover; }
   color: var(--ink-dim); cursor: pointer;
   transition: color .15s ease, background .15s ease;
 }
-.password-toggle:hover { color: var(--amber); background: rgba(66,87,178,.08); }
+.password-toggle:hover { color: var(--amber); background: rgba(var(--amber-rgb), .08); }
 .password-toggle svg { width: 19px; height: 19px; display: block; }
 .password-toggle svg[hidden] { display: none; }
 
@@ -1309,7 +1368,7 @@ img.avatar { object-fit: cover; }
 .patch-shield {
   width: 48px; height: 48px;
   background:
-    linear-gradient(135deg, rgba(66,87,178,.25), rgba(66,87,178,.08)),
+    linear-gradient(135deg, rgba(var(--amber-rgb), .25), rgba(var(--amber-rgb), .08)),
     var(--paper);
   border: 1px solid var(--amber);
   display: grid; place-items: center;
@@ -1608,7 +1667,7 @@ img.avatar { object-fit: cover; }
 .alert .quote   { margin: 6px 0 0; font-style: italic; }
 .alert-ok      { border-inline-start-color: var(--teal);    background: rgba(30,122,106,.08); }
 .alert-ok .eyebrow { color: var(--teal); }
-.alert-info    { border-inline-start-color: var(--amber);   background: rgba(66,87,178,.06); }
+.alert-info    { border-inline-start-color: var(--amber);   background: rgba(var(--amber-rgb), .06); }
 .alert-neutral { border-inline-start-color: var(--ink-dim); background: var(--paper-3); }
 /* Avis juridique Québec / français obligatoire — ton ambré distinct (conservé). */
 .alert-warn      { border-inline-start-color: #b87519; background: rgba(184,117,25,.08); }
@@ -1814,7 +1873,7 @@ a, button { touch-action: manipulation; }
     width: 44px; height: 44px; margin-top: -24px;
     border-radius: 50%;
     background: var(--amber); color: var(--cta-fg);
-    box-shadow: 0 6px 18px rgba(66,87,178,.35);
+    box-shadow: 0 6px 18px rgba(var(--amber-rgb), .35);
   }
   .mobile-tabs .tab-fab svg { width: 20px; height: 20px; }
   .mobile-tabs .tab-publish.on .tab-fab { background: var(--amber-soft); }
@@ -1862,9 +1921,9 @@ a, button { touch-action: manipulation; }
   color: var(--teal); border: 1px solid rgba(30,122,106,.35);
   background: rgba(30,122,106,.06);
 }
-.auth-chip.insured { color: var(--amber); border-color: rgba(66,87,178,.35); background: rgba(66,87,178,.06); }
+.auth-chip.insured { color: var(--amber); border-color: rgba(var(--amber-rgb), .35); background: rgba(var(--amber-rgb), .06); }
 .distance-chip { color: var(--amber); font-family: var(--mono); font-weight: 600; }
-.tag.distance-chip { border-color: rgba(66,87,178,.4); }
+.tag.distance-chip { border-color: rgba(var(--amber-rgb), .4); }
 
 /* --- accueil : pourquoi AubePilot --- */
 .trust-grid {
@@ -2007,7 +2066,7 @@ a, button { touch-action: manipulation; }
 /* --- carte interactive : liaison liste <-> marqueurs --- */
 .pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-inline-start: 4px; }
 .pilot-card .map-pin:hover { opacity: 1; }
-.pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(66,87,178,.25); }
+.pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(var(--amber-rgb), .25); }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
 @media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }

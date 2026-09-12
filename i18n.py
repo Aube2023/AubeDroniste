@@ -48,6 +48,12 @@ LANGUAGE_META = {
     "bn": ("বাংলা",       "🇧🇩"),
 }
 
+# Palettes d'accent de l'interface : le nom est celui d'un ciel, la couleur
+# celle des boutons, liens et reperes. Definies dans style.css sous
+# [data-accent="..."] ; « aube » est la palette d'origine (indigo).
+ACCENTS = ("aube", "ambre", "emeraude", "corail", "azur", "ardoise")
+DEFAULT_ACCENT = "aube"
+
 # Langues ecrites de droite a gauche : <html dir="rtl"> + surcharges CSS.
 RTL = ("ur", "ar")
 

@@ -369,6 +369,9 @@ def _inject_globals():
         "lang_flag": i18n.lang_flag,
         "lang_dir": i18n.lang_dir,
         "lang_prefix": i18n.url_prefix(getattr(g, "lang", i18n.DEFAULT)),
+        # Palette du compte connecte (le navigateur garde aussi la sienne)
+        "accent": ((getattr(g, "user", None) or {}).get("accent") or ""),
+        "accents": i18n.ACCENTS,
         "slugify": seo.slugify,
         "country_name": lambda name: i18n.country_name(name, getattr(g, "lang", i18n.DEFAULT)),
         "og_locale": i18n.og_locale,
@@ -1671,6 +1674,7 @@ def settings_account():
         lat=_to_float(request.form.get("lat")),
         lng=_to_float(request.form.get("lng")),
         lang=lang,
+        accent=(request.form.get("accent") or "").strip(),
     )
     flash("Paramètres enregistrés." + (" (Le nom est verrouillé : passez par une demande de changement de nom.)"
                                        if res["name_locked"] and request.form.get("full_name") else ""),

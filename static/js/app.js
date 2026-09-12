@@ -47,6 +47,15 @@ function toggleTheme() {
   syncThemeColor(next);
 }
 
+// Palette d'accent (Paramètres) : aperçu immédiat, mémorisé sur l'appareil ;
+// le serveur l'enregistre sur le compte à la soumission du formulaire.
+function pickAccent(name) {
+  const html = document.documentElement;
+  if (!name || name === 'aube') html.removeAttribute('data-accent');
+  else html.setAttribute('data-accent', name);
+  try { localStorage.setItem('aube-accent', name || 'aube'); } catch (e) {}
+}
+
 // Aligne la couleur de la barre système (Android/TWA, iOS PWA) sur le thème.
 function syncThemeColor(theme) {
   const m = document.querySelector('meta[name="theme-color"]');
@@ -148,6 +157,7 @@ document.addEventListener('click', function (e) {
     case 'use-location': e.preventDefault(); useMyLocation(); break;
     case 'near-me': e.preventDefault(); findNearMe(t.getAttribute('data-url') || '/pilotes'); break;
     case 'toggle-theme': toggleTheme(); break;
+    case 'pick-accent': pickAccent(t.value); break;
     case 'reload': e.preventDefault(); location.reload(); break;
     case 'open-details': {
       var d = document.getElementById(t.getAttribute('data-target'));

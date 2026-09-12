@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Iterable, Optional
 
 import db
+import i18n
 from config import (
     CAMPAIGN_FEE_PCT,
     CAMPAIGN_GOAL_MAX,
@@ -3531,7 +3532,7 @@ ACTIVE_BOOKING_STATUSES = ("pending_payment", "funded", "in_progress", "disputed
 def update_account(user_id: int, *, full_name: Optional[str] = None, phone: Optional[str] = None,
                    country: Optional[str] = None, city: Optional[str] = None,
                    lat: Optional[float] = None, lng: Optional[float] = None,
-                   lang: Optional[str] = None) -> dict:
+                   lang: Optional[str] = None, accent: Optional[str] = None) -> dict:
     """Identite + base + langue. Le nom n'est modifiable que tant qu'aucun
     justificatif n'a ete televerse (sinon : demande de changement de nom).
     Retourne {"name_locked": bool}."""
@@ -3541,7 +3542,10 @@ def update_account(user_id: int, *, full_name: Optional[str] = None, phone: Opti
         "country": (country or "").strip()[:80] or None,
         "city": (city or "").strip()[:120] or None,
         "lat": lat, "lng": lng,
-        "lang": lang if lang in ("fr", "en") else None,
+        # Toutes les langues du site, pas seulement fr/en (sinon un pilote qui
+        # choisit l'ourdou retombait sur « aucune »).
+        "lang": lang if lang in i18n.SUPPORTED else None,
+        "accent": accent if accent in i18n.ACCENTS and accent != i18n.DEFAULT_ACCENT else None,
     }
     if full_name is not None and not locked and len(full_name.strip()) >= 2:
         fields["full_name"] = full_name.strip()[:120]

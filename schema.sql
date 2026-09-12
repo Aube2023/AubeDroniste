@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_verified   INTEGER NOT NULL DEFAULT 0,
     is_admin      INTEGER NOT NULL DEFAULT 0,
     -- Parametres du compte (/espace/parametres)
-    lang          TEXT,                             -- 'fr' | 'en' (langue preferee)
+    lang          TEXT,                             -- langue preferee (i18n.SUPPORTED)
+    accent        TEXT,                             -- palette d'accent (i18n.ACCENTS), NULL = aube
     notify_bids     INTEGER NOT NULL DEFAULT 1,     -- client : nouveau devis / devis revise
     notify_messages INTEGER NOT NULL DEFAULT 1,     -- messagerie
     notify_alerts   INTEGER NOT NULL DEFAULT 1,     -- pilote : missions publiees dans le rayon

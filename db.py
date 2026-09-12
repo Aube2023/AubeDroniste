@@ -155,6 +155,8 @@ _ADD_COLUMNS = [
     # ni sequestre, ni commission, aucun mouvement Stripe.
     ("bookings", "settled_offline", "INTEGER NOT NULL DEFAULT 0"),
     ("bookings", "settled_offline_at", "TEXT"),
+    # Palette d'accent choisie par le compte (cf. i18n.ACCENTS) ; NULL = « aube ».
+    ("users", "accent", "TEXT"),
     # Verrou metier additif pour serialiser les actions financieres Stripe
     # entre plusieurs workers sans modifier les comptes ou etats existants.
     ("bookings", "payment_action", "TEXT"),

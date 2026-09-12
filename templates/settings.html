@@ -59,10 +59,35 @@
 
     <label>{{ 'Langue préférée' if fr else 'Preferred language' }}
       <select name="lang">
-        <option value="fr" {% if (user.lang or lang) == 'fr' %}selected{% endif %}>Français</option>
-        <option value="en" {% if (user.lang or lang) == 'en' %}selected{% endif %}>English</option>
+        {% for code in supported_langs %}
+        <option value="{{ code }}" {% if (user.lang or lang) == code %}selected{% endif %}>{{ lang_flag(code) }} {{ lang_name(code) }}</option>
+        {% endfor %}
       </select>
     </label>
+
+    <span class="eyebrow" style="margin-top: 8px;">{{ "Couleurs de l'interface" if fr else 'Interface colours' }}</span>
+    <p class="muted small" style="margin: 4px 0 8px;">
+      {{ "Choisissez la teinte des boutons, liens et repères. Elle vous suit sur tous vos appareils une fois enregistrée ; le mode clair ou sombre se règle avec le bouton Nuit / Aube en haut de page." if fr else 'Pick the tint of buttons, links and highlights. It follows you on every device once saved; light or dark mode is the Night / Dawn button at the top of the page.' }}
+    </p>
+    <div class="accent-picker" role="radiogroup" aria-label="{{ 'Palette' if fr else 'Palette' }}">
+      {% set _cur_accent = user.accent or 'aube' %}
+      {% set _accent_names = {
+        'aube':     ('Aube',     'Dawn',     '#4257b2', '#7a5fc4'),
+        'ambre':    ('Ambre',    'Amber',    '#a8560a', '#e0a040'),
+        'emeraude': ('Émeraude', 'Emerald',  '#1e7a4f', '#4fd19a'),
+        'corail':   ('Corail',   'Coral',    '#c2453a', '#ff9a70'),
+        'azur':     ('Azur',     'Azure',    '#1b6fb8', '#63d6e6'),
+        'ardoise':  ('Ardoise',  'Slate',    '#4b5566', '#a7b1c4'),
+      } %}
+      {% for code in accents %}
+      {% set _n = _accent_names[code] %}
+      <label>
+        <input type="radio" name="accent" value="{{ code }}" data-action="pick-accent" {% if _cur_accent == code %}checked{% endif %}>
+        <span class="swatch" style="--sw-1: {{ _n[2] }}; --sw-2: {{ _n[3] }};" aria-hidden="true"></span>
+        <span>{{ _n[0] if fr else _n[1] }}</span>
+      </label>
+      {% endfor %}
+    </div>
     <button class="cta" type="submit">{{ 'Enregistrer' if fr else 'Save' }}</button>
   </form>
 

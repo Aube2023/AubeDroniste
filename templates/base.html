@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}" data-lang-prefix="{{ lang_prefix }}">
+<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}" data-lang-prefix="{{ lang_prefix }}"{% if current_user %} data-accent="{{ accent or 'aube' }}" data-accent-from="account"{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -54,6 +54,16 @@
         document.documentElement.setAttribute('data-theme', theme);
         var mc = document.querySelector('meta[name="theme-color"]');
         if (mc) mc.setAttribute('content', theme === 'dark' ? '#0a0a0c' : '#f8f9fd');
+        // Palette d'accent : celle du compte fait foi (déjà posée par le
+        // serveur) et se recopie dans le navigateur ; sinon, la dernière
+        // choisie sur cet appareil.
+        var root = document.documentElement;
+        if (root.getAttribute('data-accent-from') === 'account') {
+          localStorage.setItem('aube-accent', root.getAttribute('data-accent') || 'aube');
+        } else {
+          var acc = localStorage.getItem('aube-accent');
+          if (acc && acc !== 'aube') root.setAttribute('data-accent', acc);
+        }
       } catch (e) {}
     })();
   </script>

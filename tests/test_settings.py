@@ -156,3 +156,54 @@ def test_deleted_pilot_disappears_from_directory(client, make_user, app_ctx):
     assert services.delete_account(p["id"])["ok"]
     assert not any(x["id"] == p["id"] for x in services.search_pilots(country="France", limit=500))
     assert not any(x["id"] == p["id"] for x in services.featured_pilots(500))
+
+
+def test_accent_palette_saved_and_applied(client, auth_client, make_user):
+    """Palette d'accent : pastilles dans Parametres, enregistree sur le compte,
+    posee par le serveur sur <html data-accent> (anti-FOUC) ; « aube » = NULL,
+    valeur inconnue ignoree. Le select de langue liste toutes les langues."""
+    import db
+    import i18n
+    u = make_user("set_accent", role="pilot")
+    c = auth_client(u["id"])
+    html = c.get("/espace/parametres").data.decode()
+    for code in i18n.ACCENTS:
+        assert f'name="accent" value="{code}"' in html
+    assert 'data-action="pick-accent"' in html
+    assert 'data-accent="aube" data-accent-from="account"' in html
+    # toutes les langues, pas seulement fr/en
+    for code in i18n.SUPPORTED:
+        assert f'<option value="{code}"' in html
+
+    c.post("/espace/parametres/compte", data={"country": "Canada", "lang": "ur", "accent": "emeraude"})
+    with client.application.app_context():
+        row = dict(db.fetchone("SELECT lang, accent FROM users WHERE id=?", (u["id"],)))
+    assert row == {"lang": "ur", "accent": "emeraude"}
+    html = auth_client(u["id"]).get("/espace/parametres").data.decode()
+    assert 'data-accent="emeraude" data-accent-from="account"' in html
+    assert 'value="emeraude" data-action="pick-accent" checked' in html
+
+    # retour a la palette d'origine -> NULL ; valeur inconnue -> ignoree (NULL)
+    for sent in ("aube", "fuchsia"):
+        c.post("/espace/parametres/compte", data={"country": "Canada", "lang": "fr", "accent": sent})
+        with client.application.app_context():
+            assert db.fetchone("SELECT accent FROM users WHERE id=?", (u["id"],))["accent"] is None
+
+    # visiteur anonyme : rien de pose par le serveur, le navigateur decide
+    anon = client.application.test_client().get("/")
+    assert anon.status_code == 200 and 'data-accent-from="account"' not in anon.data.decode()
+
+
+def test_accent_palettes_defined_in_css():
+    """Chaque palette a ses variables clair + sombre ; plus d'indigo en dur
+    dans les teintes translucides (sinon la palette ne s'applique pas)."""
+    import re
+    import i18n
+    css = open("static/css/style.css", encoding="utf-8").read()
+    for code in i18n.ACCENTS:
+        if code == i18n.DEFAULT_ACCENT:
+            continue
+        assert f'[data-accent="{code}"] {{' in css
+        assert f'[data-theme="dark"][data-accent="{code}"] {{' in css
+    assert not re.search(r"rgba\(66, ?87, ?178", css)
+    assert "--amber-rgb" in css
