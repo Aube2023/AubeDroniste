@@ -21,6 +21,7 @@ import auth
 import config
 import content
 import db
+import adsb
 import geocode
 import geoip
 import i18n
@@ -457,6 +458,17 @@ def _map_l10n() -> dict:
         "reviews": t("common.reviews", n="{n}"), "new": t("common.new_pilot"),
         "verified": t("common.verified"), "urgent": t("common.urgent"),
         "kinds": {k: t(f"kind.{k}.short") for k in ("pro", "recreational", "school", "company", "shop")},
+        "adsb": {
+            "button": t("adsb.button"), "on": t("adsb.on"), "off": t("adsb.off"),
+            "summary": t("adsb.summary", n="{n}", low="{low}"), "unavailable": t("adsb.unavailable"),
+            "notice": t("adsb.notice"), "credit": t("adsb.credit"),
+            "alt": t("adsb.alt"), "speed": t("adsb.speed"), "track": t("adsb.track"),
+            "climb": t("adsb.climb"), "descent": t("adsb.descent"), "ground": t("adsb.ground"),
+            "low": t("adsb.low"), "emergency": t("adsb.emergency"), "squawk": t("adsb.squawk"),
+            "cat": {k: t(f"adsb.cat.{k}") for k in ("light", "small", "large", "heavy", "highperf",
+                                                     "rotorcraft", "glider", "balloon", "ultralight",
+                                                     "uav", "space", "vehicle", "unknown")},
+        },
         "meteo": {
             "button": t("meteo.button"), "on": t("meteo.on"), "off": t("meteo.off"),
             "here": t("meteo.here"), "wind": t("meteo.wind", v="{v}"), "gusts": t("meteo.gusts", v="{v}"),
@@ -991,6 +1003,23 @@ def api_meteo():
         return ("", 204)
     resp = jsonify(data)
     resp.headers["Cache-Control"] = "public, max-age=300"
+    return resp
+
+
+@app.route("/api/adsb")
+@security.rate_limit(per_minute=40, per_hour=1200)
+def api_adsb():
+    """Trafic aerien ADS-B autour d'un point (relais adsb.lol, cache 10 s).
+    Une carte interroge toutes les 15 s tant que le calque est actif."""
+    lat = _to_float(request.args.get("lat"))
+    lng = _to_float(request.args.get("lng"))
+    if lat is None or lng is None:
+        return jsonify({"error": "lat/lng requis"}), 400
+    data = adsb.nearby(lat, lng, _to_int(request.args.get("radius_nm"), 50) or 50)
+    if data is None:
+        return ("", 204)
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "public, max-age=10"
     return resp
 
 

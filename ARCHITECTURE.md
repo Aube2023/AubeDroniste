@@ -378,6 +378,24 @@ rafales, précipitations, visibilité, famille de condition (codes WMO) et un
   `moveend` ; conditions ajoutées dans la fenêtre d'un marqueur à l'ouverture.
 - Tests sans réseau : `meteo._get_json` se remplace, comme `geocode._fetch`.
 
+## Trafic aérien ADS-B sur la carte
+
+`adsb.py` relaie adsb.lol (réseau communautaire de récepteurs, données CC0,
+usage commercial permis) : `/api/adsb?lat&lng&radius_nm` renvoie les
+aéronefs autour du point, normalisés (altitude en m **et** en pieds, vitesse
+en km/h et nœuds, cap, taux de montée, catégorie d'émetteur traduite,
+urgences 7500/7600/7700), triés du plus bas au plus haut. Cache de 10 s par
+zone (dixième de degré) et rayon ; rayon borné à 10–150 nm ; 400 aéronefs
+maximum. Le navigateur ne parle qu'à notre serveur.
+
+Côté carte : bouton « Aéronefs », rien avant le clic ; symboles orientés par
+le cap, orange sous 1 500 m (la tranche qui concerne un drone), bleu
+au-dessus, rouge en urgence ; libellé indicatif à partir du zoom 7 ; sondage
+toutes les 15 s tant que le calque est actif et l'onglet visible, plus une
+relance 400 ms après un déplacement. Le panneau rappelle que ce sont des
+récepteurs bénévoles, que l'altitude est barométrique et que ce n'est pas un
+radar de contrôle aérien.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement

@@ -63,6 +63,14 @@ html[data-theme="dark"] #aube-map .maplibregl-popup-tip{border-top-color:#17181d
 html[data-theme="dark"] #aube-map .aube-meteo{background:rgba(23,24,29,.94);color:#e9e9ec}
 html[data-theme="dark"] #aube-map .aube-meteo .k,html[data-theme="dark"] #aube-map .aube-meteo .small{color:#9ca3af}
 html[data-theme="dark"] #aube-map .aube-pop-meteo{color:#c9c9ce}
+/* Panneau trafic aerien : compte + avertissement, sous la meteo */
+#aube-map .aube-traffic{position:absolute;left:10px;bottom:34px;z-index:5;max-width:300px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(0,0,0,.18);font:12px/1.4 system-ui;color:#2b2b31}
+#aube-map .aube-traffic[hidden]{display:none}
+#aube-map .aube-traffic .v{font-weight:600;font-size:13px}
+#aube-map .aube-traffic .small{font-size:11px;color:#6b6f7a;margin-top:4px}
+#aube-map .aube-traffic .emg{color:#991b1b;font-weight:700}
+html[data-theme="dark"] #aube-map .aube-traffic{background:rgba(23,24,29,.94);color:#e9e9ec}
+html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
 </style>
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
   <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ 'Carte interactive des pilotes et missions' if lang == 'fr' else 'Interactive map of pilots and missions' }}"></div>
@@ -255,6 +263,139 @@ html[data-theme="dark"] #aube-map .aube-pop-meteo{color:#c9c9ce}
   };
   MeteoToggle.prototype.onRemove = function () { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); };
   map.addControl(new MeteoToggle(), 'top-right');
+
+  // ---- Trafic aerien ADS-B : situation reelle autour de la zone.
+  // Relaye par notre serveur (adsb.lol, cache 10 s) ; sondage toutes les 15 s
+  // tant que le calque est actif et l'onglet visible. Symboles orientes par
+  // le cap ; orange sous 1 500 m (la tranche qui concerne un drone), bleu
+  // au-dessus, rouge en urgence.
+  var A = L10N.adsb || {};
+  var adsbOn = false, adsbTimer = null, adsbMoveTimer = null, adsbPanel = null, adsbReady = false, adsbLast = null;
+  var PLANE = function (fill) {
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">' +
+      '<path d="M12 1.5c-.6 0-1.1.6-1.1 1.4v6.3L2.4 14v2.1l8.5-2.6v4.3l-2.3 1.7v1.6l3.4-1 3.4 1v-1.6l-2.3-1.7v-4.3l8.5 2.6V14l-8.5-4.8V2.9c0-.8-.5-1.4-1.1-1.4z" ' +
+      'fill="' + fill + '" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/></svg>');
+  };
+  function loadPlaneIcons(cb) {
+    if (adsbReady) { cb(); return; }
+    var icons = { 'plane-low': '#e0801a', 'plane-high': '#3b6fd6', 'plane-emg': '#c62828' }, pending = 3;
+    Object.keys(icons).forEach(function (name) {
+      var img = new Image(28, 28);
+      img.onload = function () { if (!map.hasImage(name)) map.addImage(name, img); if (--pending === 0) { adsbReady = true; cb(); } };
+      img.onerror = function () { if (--pending === 0) { adsbReady = true; cb(); } };
+      img.src = PLANE(icons[name]);
+    });
+  }
+  function viewRadiusNm() {
+    var b = map.getBounds(), c = map.getCenter(), ne = b.getNorthEast();
+    var dLat = (ne.lat - c.lat) * 111, dLng = (ne.lng - c.lng) * 111 * Math.cos(c.lat * Math.PI / 180);
+    return Math.max(10, Math.min(150, Math.round(Math.sqrt(dLat * dLat + dLng * dLng) / 1.852)));
+  }
+  function altText(a) {
+    if (a.on_ground) return A.ground || 'on ground';
+    if (a.alt_m == null) return '';
+    return (A.alt || 'altitude') + ' ' + a.alt_m + ' m (' + a.alt_ft + ' ft)';
+  }
+  function aircraftPopup(a) {
+    var cat = (A.cat || {})[a.category] || a.category || '';
+    var lines = [];
+    if (a.type || a.desc) lines.push(esc([a.type, a.desc].filter(Boolean).join(' · ')));
+    lines.push(esc(cat) + (a.reg ? ' · ' + esc(a.reg) : ''));
+    lines.push(esc(altText(a)) + (a.low && !a.on_ground ? ' · <b style="color:#b45309">' + esc(A.low || '') + '</b>' : ''));
+    if (a.speed_kmh != null) lines.push(esc((A.speed || 'speed') + ' ' + a.speed_kmh + ' km/h (' + a.speed_kt + ' kt)') + (a.track != null ? ' · ' + esc((A.track || 'track') + ' ' + Math.round(a.track) + '°') : ''));
+    if (a.vrate_ms) lines.push(esc((a.vrate_ms > 0 ? (A.climb || '') : (A.descent || '')) + ' ' + Math.abs(a.vrate_ms) + ' m/s'));
+    if (a.squawk) lines.push(esc((A.squawk || 'squawk') + ' ' + a.squawk));
+    var head = a.emergency ? '<div class="aube-pop-head" style="background:#c62828"><span>' + esc(A.emergency || 'EMERGENCY') + '</span></div>'
+                           : '<div class="aube-pop-head" style="background:' + (a.low ? '#e0801a' : '#3b6fd6') + '"><span>' + esc(cat) + '</span></div>';
+    return '<div class="aube-pop">' + head + '<div class="aube-pop-body"><b>' + esc(a.callsign || a.reg || a.hex || '') + '</b>' +
+      lines.map(function (l) { return '<div class="aube-pop-muted">' + l + '</div>'; }).join('') + '</div></div>';
+  }
+  function renderTraffic(d) {
+    adsbLast = d;
+    var feats = (d.aircraft || []).map(function (a) {
+      return { type: 'Feature', geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
+               properties: { id: a.hex || a.callsign, icon: a.emergency ? 'plane-emg' : (a.low ? 'plane-low' : 'plane-high'),
+                             track: a.track || 0, label: a.callsign || a.reg || '', low: a.low ? 1 : 0, a: JSON.stringify(a) } };
+    });
+    var src = map.getSource('aube-adsb');
+    if (src) src.setData({ type: 'FeatureCollection', features: feats });
+    if (adsbPanel) {
+      var emg = (d.aircraft || []).filter(function (a) { return a.emergency; }).length;
+      adsbPanel.innerHTML = '<div class="v">' + esc(String(A.summary || '{n} · {low}').replace('{n}', d.count).replace('{low}', d.low_count)) + '</div>' +
+        (emg ? '<div class="emg">' + esc(A.emergency || '') + ' · ' + emg + '</div>' : '') +
+        '<div class="small">' + esc(A.notice || '') + '</div><div class="small">' + esc(A.credit || '') + '</div>';
+    }
+  }
+  function pollTraffic() {
+    if (!adsbOn || document.hidden) return;
+    var c = map.getCenter();
+    fetch('/api/adsb?lat=' + c.lat.toFixed(3) + '&lng=' + c.lng.toFixed(3) + '&radius_nm=' + viewRadiusNm(), {credentials: 'same-origin'})
+      .then(function (r) { return r.status === 200 ? r.json() : null; })
+      .then(function (d) {
+        if (!adsbOn) return;
+        if (d) renderTraffic(d);
+        else if (adsbPanel) adsbPanel.innerHTML = '<div class="small">' + esc(A.unavailable || '') + '</div>';
+      })
+      .catch(function () {});
+  }
+  function ensureTrafficLayer() {
+    if (map.getSource('aube-adsb')) return;
+    map.addSource('aube-adsb', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'aube-adsb', type: 'symbol', source: 'aube-adsb',
+      layout: { 'icon-image': ['get', 'icon'], 'icon-rotate': ['get', 'track'], 'icon-rotation-alignment': 'map',
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.55, 9, 0.9, 13, 1.1],
+                'icon-allow-overlap': true, 'icon-ignore-placement': true,
+                'text-field': ['step', ['zoom'], '', 7, ['get', 'label']], 'text-size': 10, 'text-offset': [0, 1.3],
+                'text-anchor': 'top', 'text-optional': true, 'text-font': ['Noto Sans Regular'] },
+      paint: { 'text-color': DARK ? '#e9e9ec' : '#1d1f26', 'text-halo-color': DARK ? '#17181d' : '#ffffff', 'text-halo-width': 1.2 } });
+    map.on('click', 'aube-adsb', function (e) {
+      var f = e.features && e.features[0]; if (!f) return;
+      var a = JSON.parse(f.properties.a);
+      new maplibregl.Popup({ offset: 14, maxWidth: '280px' }).setLngLat(f.geometry.coordinates).setHTML(aircraftPopup(a)).addTo(map);
+    });
+    map.on('mouseenter', 'aube-adsb', function () { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'aube-adsb', function () { map.getCanvas().style.cursor = ''; });
+  }
+  function AdsbToggle() {}
+  AdsbToggle.prototype.onAdd = function () {
+    var wrap = document.createElement('div');
+    wrap.className = 'maplibregl-ctrl maplibregl-ctrl-group aube-sat-ctrl';
+    var b = document.createElement('button');
+    b.type = 'button'; b.title = A.on || 'Aircraft'; b.setAttribute('aria-pressed', 'false');
+    b.textContent = A.button || 'Aircraft';
+    b.addEventListener('click', function () {
+      adsbOn = !adsbOn;
+      b.setAttribute('aria-pressed', String(adsbOn));
+      b.classList.toggle('on', adsbOn);
+      b.title = adsbOn ? (A.off || '') : (A.on || '');
+      if (!adsbPanel) {
+        adsbPanel = document.createElement('div');
+        adsbPanel.className = 'aube-traffic';
+        adsbPanel.setAttribute('role', 'status');
+        el.appendChild(adsbPanel);
+      }
+      adsbPanel.hidden = !adsbOn;
+      clearInterval(adsbTimer);
+      if (adsbOn) {
+        loadPlaneIcons(function () {
+          ensureTrafficLayer();
+          map.setLayoutProperty('aube-adsb', 'visibility', 'visible');
+          pollTraffic();
+          adsbTimer = setInterval(pollTraffic, 15000);
+        });
+      } else if (map.getLayer('aube-adsb')) {
+        map.setLayoutProperty('aube-adsb', 'visibility', 'none');
+      }
+    });
+    wrap.appendChild(b);
+    this._c = wrap;
+    return wrap;
+  };
+  AdsbToggle.prototype.onRemove = function () { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); };
+  map.addControl(new AdsbToggle(), 'top-right');
+  map.on('moveend', function () { if (adsbOn) { clearTimeout(adsbMoveTimer); adsbMoveTimer = setTimeout(pollTraffic, 400); } });
+  document.addEventListener('visibilitychange', function () { if (adsbOn && !document.hidden) pollTraffic(); });
   map.on('moveend', function () {
     if (!meteoOn) return;
     clearTimeout(meteoTimer);
