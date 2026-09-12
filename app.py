@@ -1236,6 +1236,7 @@ def pilot_detail(user_id):
         insurance=services.insurance_state(profile),
         campaign=services.active_campaign_for(user_id),
         campaign_contributions=(lambda c: services.list_contributions(c["id"], 12) if c else [])(services.active_campaign_for(user_id)),
+        contributions_open=_contributions_open_for(profile),
         contribution_presets=config.CONTRIBUTION_PRESETS,
         contribution_min=int(config.CONTRIBUTION_MIN), contribution_max=int(config.CONTRIBUTION_MAX),
         masked_name=masked,
@@ -3341,12 +3342,19 @@ def booking_settle_offline(booking_id):
 # Collectes « Soutenez ce pilote »
 # ---------------------------------------------------------------------------
 
-def _campaigns_open_for(profile) -> bool:
-    """Un pilote peut ouvrir une collecte s'il est verifie ET peut etre paye
-    (compte Connect avec versements actifs). Sans Connect ouvert cote
-    plateforme, personne."""
+def _campaign_can_open(profile) -> bool:
+    """Un pilote peut ecrire et publier une collecte des que son brevet est
+    verifie : c'est la garantie donnee a ceux qui donnent. Elle parait sur sa
+    fiche tout de suite, meme si l'argent ne peut pas encore circuler."""
+    return bool(profile and profile.get("is_verified"))
+
+
+def _contributions_open_for(profile) -> bool:
+    """Les contributions en ligne, elles, attendent que le pilote puisse etre
+    paye (Connect ouvert cote plateforme + versements actifs sur son compte) :
+    on n'encaisse pas un soutien qu'on ne saurait pas reverser."""
     return bool(config.STRIPE_CONNECT_ENABLED and profile
-                and profile.get("is_verified") and profile.get("stripe_payouts_enabled"))
+                and profile.get("stripe_payouts_enabled") and payments.is_available())
 
 
 @app.route("/espace/pilote/collecte", methods=["GET", "POST"])
@@ -3357,7 +3365,7 @@ def pilot_campaign():
         abort(403)
     profile = services.get_pilot_profile(user["id"])
     campaign = services.active_campaign_for(user["id"])
-    can_open = _campaigns_open_for(profile)
+    can_open = _campaign_can_open(profile)
     if request.method == "POST":
         action = request.form.get("action") or "save"
         if action == "close" and campaign:
@@ -3365,7 +3373,7 @@ def pilot_campaign():
             flash("Collecte clôturée. Les contributions déjà versées vous restent acquises.", "info")
             return redirect(url_for("pilot_campaign"))
         if not can_open and not campaign:
-            flash("Une collecte demande un brevet vérifié et des paiements activés.", "error")
+            flash("Une collecte demande un brevet vérifié.", "error")
             return redirect(url_for("pilot_campaign"))
         champs = dict(title=request.form.get("title") or "", equipment=request.form.get("equipment") or "",
                       reason=request.form.get("reason") or "", goal_amount=request.form.get("goal_amount"))
@@ -3385,6 +3393,8 @@ def pilot_campaign():
         return redirect(url_for("pilot_campaign"))
     return render_template(
         "pilot_campaign.html", profile=profile, campaign=campaign, can_open=can_open,
+        contributions_open=_contributions_open_for(profile),
+        connect_enabled=bool(config.STRIPE_CONNECT_ENABLED),
         contributions=services.list_contributions(campaign["id"]) if campaign else [],
         goal_min=int(config.CAMPAIGN_GOAL_MIN), goal_max=int(config.CAMPAIGN_GOAL_MAX),
         fee_pct=config.CAMPAIGN_FEE_PCT,
@@ -3399,6 +3409,9 @@ def campaign_contribute(user_id):
     campaign = services.active_campaign_for(user_id)
     if not campaign:
         abort(404)
+    if not _contributions_open_for(services.get_pilot_profile(user_id)):
+        flash("Les contributions en ligne ne sont pas encore ouvertes pour cette collecte. Aucun débit n'a été effectué.", "error")
+        return redirect(url_for("pilot_detail", user_id=user_id) + "#soutenir")
     # Un montant libre saisi l'emporte sur le bouton coche
     amount = _to_float(request.form.get("amount_other")) or _to_float(request.form.get("amount"))
     if amount is None or not (config.CONTRIBUTION_MIN <= amount <= config.CONTRIBUTION_MAX):

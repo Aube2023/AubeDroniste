@@ -2,7 +2,8 @@
 
 Financement souple : chaque contribution payee est versee au pilote (moins
 la part plateforme), pas de tout-ou-rien. Ouverture reservee aux pilotes
-verifies avec des versements actifs, et seulement si Connect est ouvert.
+verifies ; les contributions en ligne, elles, attendent que le pilote puisse
+etre paye (Connect ouvert + versements actifs).
 """
 import pytest
 
@@ -41,14 +42,39 @@ def test_ouverture_reservee_aux_verifies_et_payables(client, auth_client, make_u
     assert services.active_campaign_for(u["id"]) is None
 
 
-def test_fermee_tant_que_connect_est_ferme(auth_client, make_user, app_ctx, monkeypatch):
+def test_visible_sans_connect_mais_contributions_fermees(client, auth_client, make_user, app_ctx, monkeypatch):
+    """Sans Connect (ou sans versements actifs), un pilote verifie ecrit et
+    publie quand meme sa collecte : elle parait sur sa fiche avec le materiel,
+    le pourquoi et les boutons de partage. Seul le paiement attend ; un POST
+    direct est refuse sans rien creer."""
     import config, db, services
     monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
     u = _verifie_payable(make_user, services, db, "camp_noconnect")
     c = auth_client(u["id"])
-    assert "pas encore ouvert" in c.get("/espace/pilote/collecte").data.decode()
+    html = c.get("/espace/pilote/collecte").data.decode()
+    assert "Ouvrir une collecte" in html and "pas encore ouvert sur la plateforme" in html
     c.post("/espace/pilote/collecte", data=CHAMPS)
-    assert services.active_campaign_for(u["id"]) is None
+    assert services.active_campaign_for(u["id"]) is not None
+    assert "Contributions en ligne" in c.get("/espace/pilote/collecte").data.decode()
+
+    pub = client.application.test_client().get(f"/pilotes/{u['id']}").data.decode()
+    assert "Soutenez ce pilote" in pub and "Mavic 3 Thermal" in pub and "infiltrations" in pub
+    assert 'action="/pilotes/%d/soutenir"' % u["id"] not in pub          # pas de formulaire
+    assert "pas encore ouvertes" in pub and "linkedin.com/sharing" in pub  # mais on partage
+    r = client.application.test_client().post(f"/pilotes/{u['id']}/soutenir", data={"amount": "50"})
+    assert r.status_code in (302, 303) and "fake-contribution" not in r.headers.get("Location", "")
+    assert services.list_contributions(services.active_campaign_for(u["id"])["id"]) == []
+
+    # Connect ouvert mais versements du pilote inactifs : meme regle
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", True)
+    services.set_pilot_stripe_account(u["id"], f"acct_fake_{u['id']}", charges_enabled=True, payouts_enabled=False)
+    assert "activez vos versements Stripe" in c.get("/espace/pilote/collecte").data.decode()
+    pub = client.application.test_client().get(f"/pilotes/{u['id']}").data.decode()
+    assert 'action="/pilotes/%d/soutenir"' % u["id"] not in pub
+    # versements actifs : le formulaire apparait
+    services.set_pilot_stripe_account(u["id"], f"acct_fake_{u['id']}", charges_enabled=True, payouts_enabled=True)
+    pub = client.application.test_client().get(f"/pilotes/{u['id']}").data.decode()
+    assert 'action="/pilotes/%d/soutenir"' % u["id"] in pub
 
 
 def test_parcours_complet(client, auth_client, make_user, app_ctx, monkeypatch):

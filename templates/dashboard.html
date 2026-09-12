@@ -17,7 +17,8 @@
   </div>
   <div class="cockpit-actions">
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
-    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>{% endif %}
+    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>
+    <a class="ghost" href="{{ url_for('pilot_campaign') }}">{{ 'Ma collecte' if fr else 'My fundraiser' }}</a>{% endif %}
     {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Devenir pilote' if fr else 'Become a pilot' }}</a>{% endif %}
     <a class="ghost" href="{{ url_for('settings') }}">{{ 'Paramètres' if fr else 'Settings' }}</a>
   </div>

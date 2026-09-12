@@ -327,6 +327,15 @@
   <div class="alert alert-ok"><span class="eyebrow">{{ t('campaign.thanks_title') }}</span><p style="margin: 6px 0 0;">{{ t('campaign.thanks') }}</p></div>
   {% endif %}
 
+  {% if not contributions_open %}
+  <div class="alert alert-info" style="margin-bottom: 14px;">
+    <p style="margin: 0;">{{ t('campaign.contrib_soon') }}</p>
+  </div>
+  {% with share_url = (seo_alternates.get(lang) or (canonical_base ~ request.path)) ~ '#soutenir',
+          share_text = campaign.title, share_hint = t('campaign.share_hint') %}
+  {% include "_share.html" %}
+  {% endwith %}
+  {% else %}
   <form method="post" action="{{ url_for('campaign_contribute', user_id=pilot.id) }}" class="campaign-form">
     {{ csrf_input() }}
     <div class="chips" style="gap: 8px; margin-bottom: 10px;">
@@ -346,6 +355,7 @@
     <p class="muted small" style="margin: 8px 0 12px;">{{ t('campaign.terms', fee=campaign.fee_pct|int) }}</p>
     <button type="submit" class="cta">{{ t('campaign.cta') }}</button>
   </form>
+  {% endif %}
 
   {% if campaign_contributions %}
   <h3 style="margin: 22px 0 8px;">{{ t('campaign.recent') }}</h3>
