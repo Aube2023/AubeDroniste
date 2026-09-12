@@ -181,7 +181,11 @@ def current(lat: float, lng: float) -> Optional[dict]:
 
 def radar() -> Optional[dict]:
     """Index RainViewer : hôte des tuiles + dernières images passées.
-    Le navigateur compose ensuite {host}{path}/256/{z}/{x}/{y}/2/1_1.png."""
+    Le navigateur compose ensuite {host}{path}/512/{z}/{x}/{y}/2/1_1.png.
+
+    Deux limites du service, vérifiées : le radar n'existe que jusqu'au zoom
+    7 (au-delà, une tuile grise portant un message, en HTTP 200, que la carte
+    afficherait telle quelle) et 500 tuiles par minute et par adresse IP."""
     def load():
         raw = _get_json(RAINVIEWER_URL)
         if not raw or not raw.get("host"):

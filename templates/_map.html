@@ -210,15 +210,20 @@ html[data-theme="dark"] #aube-map .aube-pop-meteo{color:#c9c9ce}
       .then(function (r) { return r.status === 200 ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.latest || map.getSource('aube-radar')) return;
+        // RainViewer ne sert le radar que jusqu'au zoom 7 : au-dela, il renvoie
+        // une tuile grise avec un message peint dedans, en HTTP 200, que la
+        // carte afficherait telle quelle. maxzoom=7 fait etirer les tuiles z7
+        // au lieu d'en demander d'autres ; en 512 px, quatre fois moins de
+        // requetes, ce qui menage aussi le plafond de 500 tuiles/min par IP.
         map.addSource('aube-radar', {
-          type: 'raster', tileSize: 256, maxzoom: 12,
-          tiles: [d.host + d.latest.path + '/256/{z}/{x}/{y}/2/1_1.png'],
+          type: 'raster', tileSize: 512, minzoom: 0, maxzoom: 7,
+          tiles: [d.host + d.latest.path + '/512/{z}/{x}/{y}/2/1_1.png'],
           attribution: 'Radar &copy; RainViewer'
         });
         var ls = map.getStyle().layers || [], first;
         for (var i = 0; i < ls.length; i++) { if (ls[i].type === 'symbol') { first = ls[i].id; break; } }
         map.addLayer({ id: 'aube-radar', type: 'raster', source: 'aube-radar',
-                       paint: { 'raster-opacity': 0.55 } }, first);
+                       paint: { 'raster-opacity': 0.55, 'raster-fade-duration': 150 } }, first);
       })
       .catch(function () {});
   }
