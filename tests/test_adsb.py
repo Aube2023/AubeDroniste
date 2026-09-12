@@ -80,4 +80,19 @@ def test_api_adsb(client, monkeypatch):
 
 def test_carte_embarque_le_bouton_aeronefs(client):
     html = client.get("/pilotes").data.decode()
-    assert '"adsb":' in html and "/api/adsb" in html and "plane-low" in html
+    assert '"adsb":' in html and "/api/adsb" in html and "'plane-'" in html
+
+
+def test_helicoptere_reconnu_sans_categorie():
+    # A7 emis : helicoptere ; categorie absente mais type ICAO connu : helicoptere aussi
+    assert adsb.normalize(_ac(category="A7", t="H60"))["category"] == "rotorcraft"
+    assert adsb.normalize(_ac(category="?", t="R44"))["category"] == "rotorcraft"
+    assert adsb.normalize(_ac(category="?", t="ec35"))["category"] == "rotorcraft"
+    assert adsb.normalize(_ac(category="?", t="C172"))["category"] == "unknown"
+    # une categorie emise l'emporte sur le type
+    assert adsb.normalize(_ac(category="A1", t="R44"))["category"] == "light"
+
+
+def test_carte_a_des_symboles_helicoptere(client):
+    html = client.get("/pilotes").data.decode()
+    assert "heli-" in html and "rotorcraft" in html

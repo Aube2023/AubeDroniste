@@ -48,6 +48,19 @@ CATEGORIES = {
 }
 EMERGENCY_SQUAWKS = {"7500": "hijack", "7600": "radio", "7700": "emergency"}
 
+# Beaucoup d'helicopteres legers n'emettent pas leur categorie (« ? ») : on
+# reconnait alors le type ICAO. Liste des designateurs courants, pas
+# exhaustive ; un type inconnu reste « aeronef ».
+HELICOPTER_TYPES = {
+    "A109", "A119", "A129", "A139", "A169", "A189", "AS32", "AS3B", "AS50", "AS55",
+    "AS65", "B06", "B06T", "B105", "B222", "B230", "B407", "B412", "B429", "B430",
+    "B47G", "B505", "BK17", "EC20", "EC25", "EC30", "EC35", "EC45", "EC55", "EC75",
+    "EH10", "EN28", "EN48", "EXPL", "G2CA", "H12T", "H125", "H135", "H145", "H160",
+    "H175", "H225", "H500", "H53", "H60", "H64", "HUCO", "KMAX", "LYNX", "MD52",
+    "MD60", "MI17", "MI24", "MI26", "MI8", "NH90", "PUMA", "R22", "R44", "R66",
+    "S330", "S51", "S61", "S64", "S65C", "S76", "S92", "SUCO", "UH1", "UH1Y", "V22",
+}
+
 _cache: dict = {}
 _lock = threading.Lock()
 
@@ -87,13 +100,16 @@ def normalize(a: dict) -> Optional[dict]:
     squawk = str(a.get("squawk") or "").strip()
     emergency = a.get("emergency")
     emerg = EMERGENCY_SQUAWKS.get(squawk) or (emergency if emergency and emergency != "none" else None)
+    category = CATEGORIES.get(a.get("category") or "", "unknown")
+    if category == "unknown" and str(a.get("t") or "").upper() in HELICOPTER_TYPES:
+        category = "rotorcraft"
     return {
         "hex": a.get("hex"),
         "callsign": (a.get("flight") or "").strip() or None,
         "reg": a.get("r") or None,
         "type": a.get("t") or None,
         "desc": a.get("desc") or None,
-        "category": CATEGORIES.get(a.get("category") or "", "unknown"),
+        "category": category,
         "lat": round(lat, 4), "lng": round(lng, 4),
         "on_ground": on_ground,
         "alt_ft": int(round(alt_ft)) if alt_ft is not None else None,
