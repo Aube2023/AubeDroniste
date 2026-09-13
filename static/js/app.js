@@ -159,6 +159,13 @@ document.addEventListener('click', function (e) {
     case 'toggle-theme': toggleTheme(); break;
     case 'pick-accent': pickAccent(t.value); break;
     case 'reload': e.preventDefault(); location.reload(); break;
+    case 'open-hidden': {
+      // Déplie un bloc masqué (hidden) et retire le bouton
+      e.preventDefault();
+      document.querySelectorAll(t.getAttribute('data-target')).forEach(function (el) { el.hidden = false; });
+      t.remove();
+      break;
+    }
     case 'open-details': {
       var d = document.getElementById(t.getAttribute('data-target'));
       if (d) d.open = true;
