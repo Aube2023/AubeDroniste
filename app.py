@@ -157,6 +157,7 @@ def _attach():
     # canonique, et un robot verrait une page differente selon son en-tete) ;
     # on propose la langue du navigateur dans un bandeau, c'est tout. Les
     # pages privees, hors moteurs, gardent la negociation.
+    g.in_app = _in_app()
     url_lang = getattr(g, "url_lang", None)
     u = getattr(g, "user", None)
     cookie = request.cookies.get(i18n.COOKIE)
@@ -312,6 +313,16 @@ def _is_bot() -> bool:
     return any(m in (request.user_agent.string or "").lower() for m in _BOT_UA)
 
 
+# Application mobile (mobile/, Flutter) : WebView avec sa propre barre
+# d'onglets native. Elle se presente avec cet agent ; on ne lui sert alors ni
+# la barre d'onglets web ni le pied de page, sinon la navigation est en double.
+APP_UA_MARK = "aubepilotmobile"
+
+
+def _in_app() -> bool:
+    return APP_UA_MARK in (request.user_agent.string or "").lower()
+
+
 @app.after_request
 def _count_visit(resp):
     # Compteur de visites public, SANS AUCUN COOKIE : on incremente a l'arrivee
@@ -354,6 +365,7 @@ def _visits_display() -> int:
 def _inject_globals():
     return {
         "current_user": getattr(g, "user", None),
+        "in_app": bool(getattr(g, "in_app", False)),
         "site_visits": _visits_display(),
         "mission_types": MISSION_TYPES,
         "drone_categories": DRONE_CATEGORIES,

@@ -64,6 +64,11 @@ const String kAppModeJs = '''
   s.id = 'aubepilot-app-css';
   s.textContent =
       'footer.footer{display:none !important}'
+    // Barre d'onglets web du site (≤760px) : la notre est native, sinon
+    // deux menus en bas. Le serveur ne la sert deja plus a cet agent
+    // (html.in-app), ceci couvre une page en cache.
+    + '.mobile-tabs{display:none !important}'
+    + '.page{padding-bottom:24px !important}'
     + '.topnav > a,.topnav form,.zone-pill{display:none !important}'
     + 'header.topbar{padding-top:6px;padding-bottom:6px}'
     + 'body{padding-bottom:12px}';
@@ -186,7 +191,7 @@ class _WebHomeState extends State<WebHome> {
     _controller = WebViewController.fromPlatformCreationParams(params)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(kPaper)
-      ..setUserAgent('AubePilotMobile/1.3 (Android)')
+      ..setUserAgent('AubePilotMobile/1.4.1 (Android)')
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: _onNavigationRequest,
         onPageStarted: (url) {

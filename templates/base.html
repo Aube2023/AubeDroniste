@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}" data-lang-prefix="{{ lang_prefix }}"{% if current_user %} data-accent="{{ accent or 'aube' }}" data-accent-from="account"{% endif %}>
+<html lang="{{ lang }}" dir="{{ lang_dir(lang) }}" data-lang-prefix="{{ lang_prefix }}"{% if in_app %} class="in-app"{% endif %}{% if current_user %} data-accent="{{ accent or 'aube' }}" data-accent-from="account"{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -195,7 +195,9 @@
   </div>
 </footer>
 
-{# Barre d'onglets mobile (≤760px) : navigation principale style app native #}
+{# Barre d'onglets mobile (≤760px) : navigation principale style app native.
+   Pas dans l'application Flutter : elle a la sienne (voir _in_app). #}
+{% if not in_app %}
 <nav class="mobile-tabs" aria-label="Navigation">
   <a href="{{ url_for('index') }}" class="{{ 'on' if request.endpoint == 'index' else '' }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v11h5v-6h4v6h5V10"/></svg>
@@ -225,6 +227,7 @@
   </a>
   {% endif %}
 </nav>
+{% endif %}
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/phone.js') }}"></script>

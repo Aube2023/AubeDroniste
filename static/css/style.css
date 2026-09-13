@@ -1832,6 +1832,13 @@ a, button { touch-action: manipulation; }
 
 .mobile-tabs { display: none; }
 
+/* Dans l'application mobile (html.in-app, WebView Flutter) : la barre
+   d'onglets est native, sous la WebView. Ni barre web, ni pied de page, ni
+   marge reservee en bas ; le haut ne garde que logo, langue et thème. */
+html.in-app footer.footer, html.in-app .mobile-tabs { display: none !important; }
+html.in-app .page { padding-bottom: 24px !important; }
+html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav form { display: none !important; }
+
 @media (max-width: 760px) {
   /* Topbar une seule ligne : la navigation principale vit dans .mobile-tabs */
   .topbar {

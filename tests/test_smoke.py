@@ -196,3 +196,13 @@ def test_home_and_directory_embed_interactive_map(client):
     directory = client.get("/pilotes").data.decode()
     assert 'id="aube-map"' in directory and 'window.AubeMap' in directory
     assert 'data-pilot-id=' in directory or "Aucun pilote" in directory
+
+
+def test_application_mobile_sans_barre_web(client):
+    """La WebView de l'app Flutter (agent AubePilotMobile/…) a sa propre barre
+    d'onglets : le site ne lui sert pas la sienne (sinon deux menus en bas)."""
+    normal = client.get("/").data.decode()
+    assert 'class="mobile-tabs"' in normal and 'class="in-app"' not in normal
+    app = client.get("/", headers={"User-Agent": "AubePilotMobile/1.4 (Android)"}).data.decode()
+    assert 'class="mobile-tabs"' not in app and '<html lang="fr" dir="ltr" data-lang-prefix="" class="in-app"' in app
+    client.get("/lang/fr")
