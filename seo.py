@@ -74,6 +74,14 @@ _S = {
 }
 
 
+# Langues externes (i18n.EXTRA_LANGS) : leurs titres/descriptions viennent de
+# translations/<code>.json, section "seo".
+for _code in i18n.EXTRA_LANGS:
+    for _key, _txt in (i18n.load_extra(_code).get("seo") or {}).items():
+        if _key in _S:
+            _S[_key][_code] = _txt
+
+
 def _s(lang, key, *, city="", country="", **kw):
     """`city`/`country` alimentent {place} (affichage) et {in_place} (francais,
     avec la bonne preposition) ; les autres variables passent telles quelles."""

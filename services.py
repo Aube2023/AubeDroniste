@@ -351,6 +351,43 @@ def most_viewed_profiles(days: int = 30, limit: int = 10) -> list:
     )]
 
 
+def visits_daily_detail(days: int = 30) -> list:
+    """Une ligne par jour (du plus recent au plus ancien) : pages vues
+    humaines et robots, nombre de pays, premier pays, arrivees par moteur de
+    recherche et par reseau social. Les jours sans visite n'apparaissent pas."""
+    since = f"-{max(1, int(days))} days"
+    by_day: dict = {}
+    for r in db.fetchall(
+        "SELECT day, kind, SUM(views) AS views, COUNT(DISTINCT country) AS countries "
+        "FROM visit_countries WHERE day >= date('now', ?) GROUP BY day, kind", (since,)):
+        d = by_day.setdefault(r["day"], {"day": r["day"], "human": 0, "bot": 0, "countries": 0,
+                                         "top_country": None, "top_views": 0, "search": 0, "social": 0})
+        d[r["kind"]] = int(r["views"])
+        if r["kind"] == "human":
+            d["countries"] = int(r["countries"])
+    for r in db.fetchall(
+        "SELECT day, country, views FROM visit_countries WHERE kind='human' AND day >= date('now', ?) "
+        "ORDER BY day, views DESC", (since,)):
+        d = by_day.get(r["day"])
+        if d and int(r["views"]) > d["top_views"] and r["country"] != "??":
+            d["top_country"], d["top_views"] = r["country"], int(r["views"])
+    for r in db.fetchall(
+        "SELECT day, host, views FROM visit_referrers WHERE day >= date('now', ?)", (since,)):
+        d = by_day.get(r["day"])
+        if d:
+            fam = referrer_family(r["host"])
+            if fam in ("search", "social"):
+                d[fam] += int(r["views"])
+    return [by_day[k] for k in sorted(by_day, reverse=True)]
+
+
+def visits_export_rows(days: int = 30) -> list:
+    """Lignes brutes (jour, pays, type, pages vues) pour un export CSV."""
+    return [dict(r) for r in db.fetchall(
+        "SELECT day, country, kind, views FROM visit_countries WHERE day >= date('now', ?) "
+        "ORDER BY day DESC, kind, views DESC", (f"-{max(1, int(days))} days",))]
+
+
 def visits_totals(days: int = 30) -> dict:
     rows = db.fetchall(
         "SELECT kind, SUM(views) AS views FROM visit_countries "

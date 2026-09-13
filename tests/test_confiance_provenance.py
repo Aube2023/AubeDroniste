@@ -112,3 +112,23 @@ def test_compteur_public_ignore_les_comptes_supprimes(app_ctx, make_user):
     assert services.public_stats()["pilots"] == before + 1
     db.execute("UPDATE users SET deleted_at=datetime('now') WHERE id=?", (u["id"],))
     assert services.public_stats()["pilots"] == before
+
+
+def test_jour_par_jour_et_export_csv(client, auth_client, make_user, app_ctx):
+    import db, services
+    anon = client.application.test_client()
+    anon.get("/pilotes", headers={"Referer": "https://www.google.com/"})
+    anon.get("/", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
+    rows = services.visits_daily_detail(7)
+    assert rows and rows[0]["human"] >= 1 and rows[0]["bot"] >= 1 and rows[0]["search"] >= 1
+    u = make_user("admin_jpj", role="both")
+    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (u["id"],))
+    c = auth_client(u["id"])
+    html = c.get("/admin/visites?jours=7").data.decode()
+    assert "Jour par jour" in html and "Exporter en CSV" in html and "Premier pays" in html
+    r = c.get("/admin/visites.csv?jours=7")
+    assert r.status_code == 200 and "text/csv" in r.headers["Content-Type"]
+    body = r.data.decode("utf-8-sig")
+    assert body.splitlines()[0] == "jour;pays;nom;type;pages_vues" and ";visiteur;" in body
+    # reserve aux admins
+    assert anon.get("/admin/visites.csv").status_code in (302, 403)

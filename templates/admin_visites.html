@@ -148,8 +148,44 @@
 </ul>
 {% endif %}
 
+{% if daily_detail %}
+<div class="row-between" style="align-items: baseline; flex-wrap: wrap; gap: 12px; margin-top: 36px;">
+  <h2 style="margin: 0; font-size: 1.1rem;">Jour par jour</h2>
+  <a class="ghost" href="{{ url_for('admin_visits_csv', jours=days) }}">Exporter en CSV ({{ days }} jours)</a>
+</div>
+<p class="muted small" style="margin: 4px 0 12px;">Du plus récent au plus ancien. « Recherche » et « Réseaux » : arrivées venues d'un moteur de recherche ou d'un réseau social ce jour-là.</p>
+<div style="overflow-x: auto;">
+<table class="table-simple" style="width: 100%; border-collapse: collapse; min-width: 640px;">
+  <thead>
+    <tr>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Jour</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Visiteurs</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Robots</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Pays</th>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Premier pays</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Recherche</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Réseaux</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in daily_detail %}
+    <tr>
+      <td class="mono" style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">{{ d.day }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);"><strong>{{ d.human }}</strong></td>
+      <td class="mono muted" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ d.bot }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ d.countries }}</td>
+      <td style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">{% if d.top_country %}<span aria-hidden="true">{{ flag(d.top_country) }}</span> {{ country_name(d.top_country) }} <span class="muted mono small">{{ d.top_views }}</span>{% else %}—{% endif %}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ d.search or '·' }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ d.social or '·' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
 {% if daily %}
-<h2 style="margin-top: 36px; font-size: 1.1rem;">Jour par jour</h2>
+<h2 style="margin-top: 36px; font-size: 1.1rem;">Courbe</h2>
 {% set maxi = daily|map(attribute='views')|max %}
 <div style="display: flex; align-items: flex-end; gap: 3px; height: 120px; margin-top: 12px;">
   {% for d in daily %}

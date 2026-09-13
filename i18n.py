@@ -23,7 +23,11 @@ from config import PILOT_SHARE_PCT, PLATFORM_FEE_PCT
 #   {fee} = commission plateforme, {pilot_share} = part reversee au pilote.
 _FMT_DEFAULTS = {"fee": int(PLATFORM_FEE_PCT), "pilot_share": int(PILOT_SHARE_PCT)}
 
-SUPPORTED = ("fr", "en", "es", "ru", "hi", "uk", "tr", "ur", "bn")
+# Ordre du menu : les neuf premieres vivent dans _T ci-dessous ; les cinq
+# suivantes (ajoutees le 2026-09-13 d'apres la provenance des visiteurs :
+# monde arabe, Bresil, Allemagne, Vietnam, Indonesie) sont dans
+# translations/<code>.json et fusionnees a l'import (voir _load_extra).
+SUPPORTED = ("fr", "en", "es", "ru", "hi", "uk", "tr", "ur", "bn", "ar", "pt", "de", "vi", "id")
 DEFAULT = "fr"
 COOKIE = "aube_lang"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 an
@@ -46,6 +50,8 @@ LANGUAGE_META = {
     "tr": ("Türkçe",     "🇹🇷"),
     "ur": ("اردو",        "🇵🇰"),
     "bn": ("বাংলা",       "🇧🇩"),
+    "vi": ("Tiếng Việt", "🇻🇳"),
+    "id": ("Indonesia",  "🇮🇩"),
 }
 
 # Palettes d'accent de l'interface : le nom est celui d'un ciel, la couleur
@@ -85,9 +91,9 @@ RTL = ("ur", "ar")
 
 # Locale Open Graph (og:locale) par langue.
 LOCALES = {
-    "fr": "fr_CA", "en": "en_US", "es": "es_ES", "pt": "pt_PT", "de": "de_DE",
+    "fr": "fr_CA", "en": "en_US", "es": "es_ES", "pt": "pt_BR", "de": "de_DE",
     "it": "it_IT", "ru": "ru_RU", "ar": "ar_AR", "zh": "zh_CN", "hi": "hi_IN",
-    "uk": "uk_UA", "tr": "tr_TR", "ur": "ur_PK", "bn": "bn_BD",
+    "uk": "uk_UA", "tr": "tr_TR", "ur": "ur_PK", "bn": "bn_BD", "vi": "vi_VN", "id": "id_ID",
 }
 
 
@@ -1797,6 +1803,38 @@ _T = {
     "vis.done":          {"fr": "Tout y est. Votre fiche est complète.", "en": "All done. Your profile is complete.", "es": "Todo listo. Su ficha está completa.", "ru": "Всё готово. Профиль заполнен.", "hi": "सब पूरा। आपकी प्रोफ़ाइल पूर्ण है।", "uk": "Усе готово. Ваш профіль заповнений.", "tr": "Hepsi tamam. Profiliniz eksiksiz.", "ur": "سب مکمل۔ آپ کی پروفائل مکمل ہے۔", "bn": "সব হয়েছে। আপনার প্রোফাইল সম্পূর্ণ।"},
     "landing.by_specialty":      {"fr": "Par spécialité", "en": "By specialty", "es": "Por especialidad", "ru": "По специализациям", "hi": "विशेषज्ञता के अनुसार", "uk": "За спеціалізацією", "tr": "Uzmanlığa göre", "ur": "اسپیشلٹی کے لحاظ سے", "bn": "বিশেষত্ব অনুযায়ী"},
 }
+
+
+# ---------------------------------------------------------------------------
+# Langues ajoutees apres coup : translations/<code>.json = {"months": [...],
+# "ui": {cle: texte}, "seo": {cle: texte}, "countries": {nom_fr: nom}}.
+# Fusionnees ici dans _T, MONTHS et _COUNTRY_NAMES (seo.py lit sa part
+# lui-meme). Une cle absente du JSON retombe sur le francais, et le test de
+# parite (tests/test_i18n_parite.py) le signale.
+# ---------------------------------------------------------------------------
+
+EXTRA_LANGS = ("ar", "pt", "de", "vi", "id")
+_TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")
+
+
+def load_extra(code: str) -> dict:
+    """Le fichier JSON d'une langue externe ({} s'il manque ou est invalide)."""
+    try:
+        with open(os.path.join(_TRANSLATIONS_DIR, f"{code}.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+for _code in EXTRA_LANGS:
+    _data = load_extra(_code)
+    for _key, _txt in (_data.get("ui") or {}).items():
+        if _key in _T:
+            _T[_key][_code] = _txt
+    if len(_data.get("months") or ()) == 12:
+        MONTHS[_code] = tuple(_data["months"])
+    if _data.get("countries"):
+        _COUNTRY_NAMES[_code] = dict(_data["countries"])
 
 
 def status_label(code: str, lang: Optional[str] = None) -> str:

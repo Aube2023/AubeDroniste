@@ -2249,9 +2249,32 @@ def admin_visits():
         pages=services.visits_by_page(days, kind=kind),
         referrers=services.visits_by_referrer(days),
         top_profiles=services.most_viewed_profiles(days),
+        daily_detail=services.visits_daily_detail(days),
+        country_name=lambda code: i18n.country_name(geoip.country_fr(code), lang),
+        flag=geoip.flag,
         geoip_ok=geoip.available(),
         seo=_NOINDEX,
     )
+
+
+@app.route("/admin/visites.csv")
+@auth.admin_required
+def admin_visits_csv():
+    """Export brut jour x pays x type, pour un tableur. Memes garanties : ce
+    sont des compteurs, il n'y a rien de personnel dedans."""
+    import csv
+    import io
+    days = min(max(_to_int(request.args.get("jours"), 30) or 30, 1), 365)
+    out = io.StringIO()
+    w = csv.writer(out, delimiter=";")
+    w.writerow(["jour", "pays", "nom", "type", "pages_vues"])
+    for r in services.visits_export_rows(days):
+        w.writerow([r["day"], r["country"], geoip.country_fr(r["country"]) if r["country"] != "??" else "Non localisé",
+                    "visiteur" if r["kind"] == "human" else "robot", r["views"]])
+    resp = make_response("\ufeff" + out.getvalue())          # BOM : Excel lit l'UTF-8
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = f'attachment; filename="aubepilot-visites-{days}j.csv"'
+    return resp
 
 
 @app.route("/admin/messages")
