@@ -1892,6 +1892,8 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 
   /* Dégage l'espace derrière la barre d'onglets */
   .page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  /* Les liens déjà dans la barre d'onglets ne se répètent pas dans le pied de page */
+  .footer-in-tabs { display: none; }
   .footer { padding-bottom: calc(64px + env(safe-area-inset-bottom)); margin-top: 48px; }
 
   /* iOS zoome dans les champs < 16px : on force 16px sur mobile */
