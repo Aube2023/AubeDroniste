@@ -58,6 +58,11 @@
   <div class="vis-gauge" role="img" aria-label="{{ t('vis.score', n=vis['score']) }}">
     <span style="width: {{ vis['score'] }}%;"></span>
   </div>
+  {% if profile_views is defined and profile_views %}
+  <p class="muted small" style="margin: 10px 0 0;">
+    {% if profile_views.d30 %}👁 {{ t('vis.views', n=profile_views.d30, w=profile_views.d7) }}{% else %}{{ t('vis.views_none') }}{% endif %}
+  </p>
+  {% endif %}
 
   {% if todo %}
   <ul class="vis-list">

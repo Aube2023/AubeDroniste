@@ -114,10 +114,15 @@ service.
 Nous comptons les pages vues et le pays d'origine des visites, sans cookie de
 mesure, sans traceur et sans outil externe. Le pays est déduit de l'adresse IP
 sur notre propre serveur, au moyen d'une base locale, puis <strong>l'adresse est
-immédiatement oubliée</strong> : seul un compteur « pays, jour, nombre de pages
-vues » est conservé. Aucune donnée de fréquentation ne se rapporte à une
-personne identifiable, et rien ne permet de reconnaître un visiteur d'une
-visite à l'autre. Ces compteurs ne sont ni vendus ni transmis à un tiers.
+immédiatement oubliée</strong> : seuls des compteurs par jour sont conservés :
+« pays, nombre de pages vues », « page consultée, nombre de vues », et « site
+d'origine, nombre d'arrivées ». Pour le site d'origine, nous ne retenons que le
+nom de domaine transmis par votre navigateur (par exemple « google.com »),
+jamais la page ni la recherche qui vous a amené ici. Les fiches de pilotes ont
+de plus un compteur de vues par jour, montré au pilote concerné sous forme de
+nombre. Aucune donnée de fréquentation ne se rapporte à une personne
+identifiable, et rien ne permet de reconnaître un visiteur d'une visite à
+l'autre. Ces compteurs ne sont ni vendus ni transmis à un tiers.
 </p>
 
 <h2>11. Carte interactive</h2>

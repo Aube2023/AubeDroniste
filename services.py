@@ -221,6 +221,136 @@ def visits_daily(days: int = 30, *, kind: str = "human") -> list:
     return [{"day": r["day"], "views": int(r["views"])} for r in rows]
 
 
+SEARCH_ENGINE_HOSTS = ("google.", "bing.com", "duckduckgo.com", "yahoo.", "yandex.", "baidu.com",
+                       "ecosia.org", "qwant.com", "brave.com", "startpage.com", "ask.com", "seznam.cz")
+SOCIAL_HOSTS = ("linkedin.com", "lnkd.in", "facebook.com", "fb.com", "instagram.com", "t.co", "twitter.com",
+                "x.com", "t.me", "reddit.com", "youtube.com", "youtu.be", "tiktok.com", "pinterest.",
+                "threads.net", "whatsapp.com", "snapchat.com")
+
+
+def referrer_host(referrer: Optional[str], own_host: str = "") -> Optional[str]:
+    """Domaine d'origine d'une visite, ou 'direct'. None quand le referent est
+    notre propre site (navigation interne, pas une arrivee). On retire le
+    « www. » et on ne garde jamais le chemin : « google.com », pas la requete."""
+    ref = (referrer or "").strip()
+    if not ref:
+        return "direct"
+    try:
+        from urllib.parse import urlsplit
+        host = (urlsplit(ref).hostname or "").lower().strip(".")
+    except ValueError:
+        return None
+    if not host:
+        return "direct"
+    if host.startswith("www."):
+        host = host[4:]
+    own = (own_host or "").lower().split(":")[0]
+    if own.startswith("www."):
+        own = own[4:]
+    if own and (host == own or host.endswith("." + own)):
+        return None
+    return host[:120]
+
+
+def referrer_family(host: str) -> str:
+    """search | social | direct | site : pour regrouper la provenance."""
+    if host == "direct":
+        return "direct"
+    h = host.lower()
+
+    def match(patterns):
+        for s in patterns:
+            if s.endswith("."):                  # famille de domaines : google., yahoo.
+                if h == s[:-1] or h.startswith(s) or ("." + s) in ("." + h):
+                    return True
+            elif h == s or h.endswith("." + s):  # domaine exact ou sous-domaine
+                return True
+        return False
+
+    if match(SEARCH_ENGINE_HOSTS):
+        return "search"
+    if match(SOCIAL_HOSTS):
+        return "social"
+    return "site"
+
+
+def bump_page_visit(path: str, *, is_bot: bool = False, referrer: Optional[str] = None,
+                    own_host: str = "") -> None:
+    """Une page vue de plus pour ce chemin ; et, pour un humain qui ARRIVE
+    (referent externe ou absent), un point pour le site d'origine."""
+    p = (path or "/").split("?", 1)[0][:120]
+    kind = "bot" if is_bot else "human"
+    db.execute(
+        "INSERT INTO visit_pages(day, path, kind, views) VALUES(date('now'), ?, ?, 1) "
+        "ON CONFLICT(day, path, kind) DO UPDATE SET views = views + 1", (p, kind),
+    )
+    if is_bot:
+        return
+    host = referrer_host(referrer, own_host)
+    if host:
+        db.execute(
+            "INSERT INTO visit_referrers(day, host, views) VALUES(date('now'), ?, 1) "
+            "ON CONFLICT(day, host) DO UPDATE SET views = views + 1", (host,),
+        )
+
+
+def visits_by_page(days: int = 30, *, kind: str = "human", limit: int = 25) -> list:
+    rows = db.fetchall(
+        "SELECT path, SUM(views) AS views FROM visit_pages WHERE kind = ? AND day >= date('now', ?) "
+        "GROUP BY path ORDER BY views DESC, path LIMIT ?",
+        (kind, f"-{max(1, int(days))} days", int(limit)),
+    )
+    out = [{"path": r["path"], "views": int(r["views"])} for r in rows]
+    total = db.fetchone("SELECT COALESCE(SUM(views), 0) AS v FROM visit_pages WHERE kind = ? AND day >= date('now', ?)",
+                        (kind, f"-{max(1, int(days))} days"))["v"] or 1
+    for r in out:
+        r["share"] = round(100 * r["views"] / total, 1)
+    return out
+
+
+def visits_by_referrer(days: int = 30, *, limit: int = 25) -> dict:
+    """{rows: [{host, family, views, share}], families: {search, social, site, direct}}."""
+    rows = db.fetchall(
+        "SELECT host, SUM(views) AS views FROM visit_referrers WHERE day >= date('now', ?) "
+        "GROUP BY host ORDER BY views DESC, host",
+        (f"-{max(1, int(days))} days",),
+    )
+    out = [{"host": r["host"], "views": int(r["views"]), "family": referrer_family(r["host"])} for r in rows]
+    total = sum(r["views"] for r in out) or 1
+    fam = {"search": 0, "social": 0, "site": 0, "direct": 0}
+    for r in out:
+        r["share"] = round(100 * r["views"] / total, 1)
+        fam[r["family"]] += r["views"]
+    return {"rows": out[:limit], "families": fam, "total": total if out else 0}
+
+
+def bump_profile_view(pilot_user_id: int) -> None:
+    db.execute(
+        "INSERT INTO profile_views(day, pilot_user_id, views) VALUES(date('now'), ?, 1) "
+        "ON CONFLICT(day, pilot_user_id) DO UPDATE SET views = views + 1", (int(pilot_user_id),),
+    )
+
+
+def profile_view_counts(pilot_user_id: int) -> dict:
+    """{d7, d30, total} vues de la fiche (hors robots et hors le pilote)."""
+    row = db.fetchone(
+        "SELECT COALESCE(SUM(CASE WHEN day >= date('now', '-7 days') THEN views END), 0) AS d7, "
+        "       COALESCE(SUM(CASE WHEN day >= date('now', '-30 days') THEN views END), 0) AS d30, "
+        "       COALESCE(SUM(views), 0) AS total FROM profile_views WHERE pilot_user_id=?",
+        (int(pilot_user_id),),
+    )
+    return {"d7": int(row["d7"]), "d30": int(row["d30"]), "total": int(row["total"])}
+
+
+def most_viewed_profiles(days: int = 30, limit: int = 10) -> list:
+    return [dict(r) for r in db.fetchall(
+        "SELECT v.pilot_user_id AS user_id, u.username, u.full_name, SUM(v.views) AS views "
+        "FROM profile_views v JOIN users u ON u.id = v.pilot_user_id "
+        "WHERE v.day >= date('now', ?) GROUP BY v.pilot_user_id ORDER BY views DESC LIMIT ?",
+        (f"-{max(1, int(days))} days", int(limit)),
+    )]
+
+
 def visits_totals(days: int = 30) -> dict:
     rows = db.fetchall(
         "SELECT kind, SUM(views) AS views FROM visit_countries "
@@ -2412,6 +2542,69 @@ def add_review(*, booking_id: int, author_user_id: int, target_user_id: int,
     )
 
 
+# Reactivite : delai de PREMIERE reponse du pilote par conversation (une
+# mission x un interlocuteur), mesure sur les messages. Il faut assez de
+# conversations repondues pour que ca veuille dire quelque chose, et un
+# pilote qui laisse un tiers des gens sans reponse n'a pas de badge.
+RESPONSE_WINDOW_DAYS = 180
+RESPONSE_MIN_ANSWERED = 3
+RESPONSE_MIN_RATE = 0.7
+RESPONSE_UNANSWERED_AFTER_H = 48
+RESPONSE_BUCKETS_H = (1, 3, 12, 24, 72)      # affiche « moins de N h »
+
+
+def _parse_dt(s: str):
+    from datetime import datetime
+    return datetime.strptime(s[:19], "%Y-%m-%d %H:%M:%S")
+
+
+def pilot_response_time(pilot_user_id: int) -> Optional[dict]:
+    """{under_h, median_h, answered, rate} ou None si pas assez de donnees,
+    taux de reponse trop bas, ou mediane au-dela de 72 h (pas de badge
+    negatif : l'absence de badge suffit)."""
+    from datetime import datetime
+    rows = db.fetchall(
+        "SELECT mission_id, sender_user_id, recipient_user_id, created_at FROM messages "
+        "WHERE (sender_user_id=? OR recipient_user_id=?) AND created_at >= datetime('now', ?) "
+        "ORDER BY created_at, id",
+        (pilot_user_id, pilot_user_id, f"-{RESPONSE_WINDOW_DAYS} days"),
+    )
+    first_in, reply = {}, {}
+    for r in rows:
+        if r["recipient_user_id"] == pilot_user_id:
+            first_in.setdefault((r["mission_id"], r["sender_user_id"]), r["created_at"])
+        else:
+            key = (r["mission_id"], r["recipient_user_id"])
+            if key in first_in and key not in reply:
+                reply[key] = r["created_at"]
+    delays = []
+    for key, t0 in first_in.items():
+        if key in reply:
+            delays.append((_parse_dt(reply[key]) - _parse_dt(t0)).total_seconds() / 3600.0)
+    now = datetime.utcnow()
+    unanswered = sum(1 for key, t0 in first_in.items()
+                     if key not in reply and (now - _parse_dt(t0)).total_seconds() / 3600.0 > RESPONSE_UNANSWERED_AFTER_H)
+    answered = len(delays)
+    if answered < RESPONSE_MIN_ANSWERED:
+        return None
+    rate = answered / float(answered + unanswered)
+    if rate < RESPONSE_MIN_RATE:
+        return None
+    delays.sort()
+    mid = len(delays) // 2
+    median = delays[mid] if len(delays) % 2 else (delays[mid - 1] + delays[mid]) / 2.0
+    under = next((b for b in RESPONSE_BUCKETS_H if median <= b), None)
+    if under is None:
+        return None
+    return {"under_h": under, "median_h": round(median, 1), "answered": answered, "rate": round(rate, 2)}
+
+
+def pilot_completed_count(pilot_user_id: int) -> int:
+    row = db.fetchone("SELECT COUNT(*) AS n FROM bookings WHERE pilot_user_id=? AND status='completed'",
+                      (pilot_user_id,))
+    return int(row["n"]) if row else 0
+
+
 def pilot_rating(user_id: int) -> dict:
     row = db.fetchone(
         "SELECT AVG(rating) AS avg, COUNT(*) AS n "
@@ -2920,11 +3113,12 @@ def mark_deliverable_pushed(deliverable_id: int, service: str,
 
 def public_stats() -> dict:
     pilots = db.fetchone(
-        "SELECT COUNT(*) AS n FROM users WHERE role IN ('pilot', 'both')"
+        "SELECT COUNT(*) AS n FROM users WHERE role IN ('pilot', 'both') AND deleted_at IS NULL"
     )["n"]
     missions = db.fetchone("SELECT COUNT(*) AS n FROM missions WHERE status='open'")["n"]
     countries = db.fetchone(
-        "SELECT COUNT(DISTINCT country) AS n FROM users WHERE country IS NOT NULL AND country<>''"
+        "SELECT COUNT(DISTINCT country) AS n FROM users "
+        "WHERE country IS NOT NULL AND country<>'' AND deleted_at IS NULL"
     )["n"]
     completed = db.fetchone(
         "SELECT COUNT(*) AS n FROM bookings WHERE status='completed'"

@@ -425,6 +425,33 @@ CREATE TABLE IF NOT EXISTS visit_countries (
 );
 CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day);
 
+-- Pages les plus vues et sites d'origine (domaine seulement, jamais le chemin
+-- du referent), memes garanties : ni IP, ni cookie, ni visiteur unique.
+CREATE TABLE IF NOT EXISTS visit_pages (
+    day     TEXT NOT NULL,
+    path    TEXT NOT NULL,
+    kind    TEXT NOT NULL DEFAULT 'human',
+    views   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, path, kind)
+);
+CREATE INDEX IF NOT EXISTS idx_visit_pages_day ON visit_pages(day);
+CREATE TABLE IF NOT EXISTS visit_referrers (
+    day     TEXT NOT NULL,
+    host    TEXT NOT NULL,                  -- 'direct' sans referent
+    views   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, host)
+);
+CREATE INDEX IF NOT EXISTS idx_visit_referrers_day ON visit_referrers(day);
+
+-- Vues d'une fiche pilote par jour (hors robots et hors le pilote lui-meme).
+CREATE TABLE IF NOT EXISTS profile_views (
+    day           TEXT NOT NULL,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    views         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, pilot_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_profile_views_pilot ON profile_views(pilot_user_id, day);
+
 
 -- Livrables proposes par un pilote : ce que le CLIENT recoit (panorama 360,
 -- orthophoto, rapport d'inspection...), par opposition aux capacites du

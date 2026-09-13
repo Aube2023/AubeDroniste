@@ -175,8 +175,11 @@ def test_pages_pays_et_ville_listent_le_pilote(client, app_ctx, make_user):
     html = client.get("/en/pilotes/pays/maroc/casablanca").data.decode()
     assert "Drone pilots in Casablanca" in html
     assert "Morocco" in html                              # nom de pays traduit (fil d'Ariane)
-    assert client.get("/pilotes/pays/nulle-part").status_code == 404
-    assert client.get("/pilotes/pays/maroc/nulle-part").status_code == 404
+    # cookie « en » pose par la visite precedente : l'URL nue redirige d'abord
+    # vers sa version anglaise, qui n'existe pas non plus
+    assert client.get("/pilotes/pays/nulle-part", follow_redirects=True).status_code == 404
+    assert client.get("/pilotes/pays/maroc/nulle-part", follow_redirects=True).status_code == 404
+    client.get("/lang/fr")
 
 
 def test_page_specialite_vide_noindex(client):

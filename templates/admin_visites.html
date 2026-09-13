@@ -75,6 +75,79 @@
   </tbody>
 </table>
 
+{% if referrers.total %}
+<h2 style="margin-top: 36px; font-size: 1.1rem;">D'où ils arrivent</h2>
+<p class="muted small" style="margin: 4px 0 12px;">
+  Site d'origine des arrivées (visiteurs humains). On ne garde que le nom de domaine du référent, jamais la page
+  ni la recherche ; « direct » = adresse tapée, favori, application ou navigateur qui masque l'origine
+  (la plupart des applis mobiles et des courriels). La navigation à l'intérieur du site n'est pas comptée.
+</p>
+{% set fam = referrers.families %}
+<div class="stat-rail" style="margin: 0 0 16px;">
+  <div><span class="v">{{ (100 * fam.search / referrers.total)|round|int }}%</span><span class="k">Moteurs de recherche · {{ fam.search }}</span></div>
+  <div><span class="v">{{ (100 * fam.social / referrers.total)|round|int }}%</span><span class="k">Réseaux sociaux · {{ fam.social }}</span></div>
+  <div><span class="v">{{ (100 * fam.site / referrers.total)|round|int }}%</span><span class="k">Autres sites · {{ fam.site }}</span></div>
+  <div><span class="v">{{ (100 * fam.direct / referrers.total)|round|int }}%</span><span class="k">Direct · {{ fam.direct }}</span></div>
+</div>
+<table class="table-simple" style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Origine</th>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Type</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Arrivées</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Part</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set fam_label = {'search': 'Moteur de recherche', 'social': 'Réseau social', 'site': 'Site', 'direct': 'Direct'} %}
+    {% for r in referrers.rows %}
+    <tr>
+      <td class="mono" style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">{{ r.host }}</td>
+      <td class="muted small" style="padding: 7px 10px; border-bottom: 1px solid var(--rule);">{{ fam_label[r.family] }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.views }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.share }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if pages %}
+<h2 style="margin-top: 36px; font-size: 1.1rem;">Pages les plus vues</h2>
+<p class="muted small" style="margin: 4px 0 12px;">
+  Chemin sans paramètres, {{ 'visiteurs humains' if kind == 'human' else 'robots' }}. Les pages par langue
+  (<code>/en/…</code>, <code>/ur/…</code>) sont comptées séparément : c'est ce qui dit quelle langue attire.
+</p>
+<table class="table-simple" style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Page</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Pages vues</th>
+      <th style="text-align: end; padding: 8px 10px; border-bottom: 1px solid var(--rule);">Part</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in pages %}
+    <tr>
+      <td class="mono small" style="padding: 7px 10px; border-bottom: 1px solid var(--rule); word-break: break-all;"><a href="{{ r.path }}">{{ r.path }}</a></td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.views }}</td>
+      <td class="mono" style="padding: 7px 10px; text-align: end; border-bottom: 1px solid var(--rule);">{{ r.share }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if top_profiles %}
+<h2 style="margin-top: 36px; font-size: 1.1rem;">Fiches pilotes les plus vues</h2>
+<p class="muted small" style="margin: 4px 0 12px;">Vues par des visiteurs (robots et le pilote lui-même exclus). Chaque pilote voit son propre compteur dans son espace.</p>
+<ul class="stack-list">
+  {% for p in top_profiles %}
+  <li class="row-between"><a href="{{ url_for('pilot_detail', user_id=p.user_id) }}">{{ p.full_name or p.username }}</a><strong class="mono">{{ p.views }}</strong></li>
+  {% endfor %}
+</ul>
+{% endif %}
+
 {% if daily %}
 <h2 style="margin-top: 36px; font-size: 1.1rem;">Jour par jour</h2>
 {% set maxi = daily|map(attribute='views')|max %}

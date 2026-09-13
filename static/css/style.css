@@ -110,6 +110,11 @@
   --amber: #a7b1c4; --amber-soft: #c0c8d6; --gold: #aab8d4; --amber-rgb: 167, 177, 196;
 }
 
+/* Repères de confiance sous le nom (fiche pilote) */
+.trust-row { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.trust-row li { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.02em; color: var(--ink-dim); }
+.trust-row li.on { color: var(--teal); }
+
 /* Sélecteur de palette (Paramètres) : une pastille par palette, l'entrée
    radio reste accessible au clavier. */
 .accent-picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 14px; }

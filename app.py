@@ -234,6 +234,9 @@ def _urlquote(value) -> str:
 @app.url_value_preprocessor
 def _pull_lang(endpoint, values):
     # Retire <lang> des arguments de vue : les fonctions gardent leur signature.
+    # Toujours (re)pose : sous un app_context deja pousse (tests), `g` survit
+    # d'une requete a l'autre et la langue de l'URL precedente collerait.
+    g.url_lang = None
     if values and "lang" in values and endpoint in LANG_ENDPOINTS:
         g.url_lang = values.pop("lang")
 
@@ -321,10 +324,19 @@ def _count_visit(resp):
         bot = _is_bot()
         if i18n.split_prefix(request.path)[1] == "/" and not bot:
             services.bump_visits()
-        # Provenance : pays resolu a la volee, jamais l'IP (voir geoip.py).
+        # Provenance : pays resolu a la volee, jamais l'IP (voir geoip.py) ;
+        # page vue et domaine d'origine (jamais le chemin du referent).
         if request.endpoint in LANG_ENDPOINTS:
             services.bump_country_visit(geoip.country_code(security.client_ip()),
                                         is_bot=bot)
+            services.bump_page_visit(request.path, is_bot=bot, referrer=request.referrer,
+                                     own_host=request.host)
+            # Vues de fiche : pour le pilote, hors robots et hors lui-meme.
+            if request.endpoint == "pilot_detail" and not bot:
+                pid = (request.view_args or {}).get("user_id")
+                me = getattr(g, "user", None)
+                if pid and not (me and me["id"] == pid):
+                    services.bump_profile_view(pid)
     except Exception:
         pass
     return resp
@@ -1234,6 +1246,11 @@ def pilot_detail(user_id):
         reveal_identity=reveal,
         can_view_credentials=can_view_credentials,
         insurance=services.insurance_state(profile),
+        trust={
+            "member_since": i18n.month_year(profile.get("created_at"), getattr(g, "lang", i18n.DEFAULT)),
+            "response": services.pilot_response_time(user_id),
+            "completed": services.pilot_completed_count(user_id),
+        },
         campaign=services.active_campaign_for(user_id),
         campaign_contributions=(lambda c: services.list_contributions(c["id"], 12) if c else [])(services.active_campaign_for(user_id)),
         contributions_open=_contributions_open_for(profile),
@@ -1635,6 +1652,7 @@ def dashboard():
                                   if user.get("is_admin") else 0),
         portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
         vis=services.pilot_visibility(user["id"]) if is_pilot else None,
+        profile_views=services.profile_view_counts(user["id"]) if is_pilot else None,
     )
 
 
@@ -1846,6 +1864,7 @@ def pilot_edit():
         profile=profile,
         insurance_state=services.insurance_state(profile),
         vis=services.pilot_visibility(user["id"]),
+        profile_views=services.profile_view_counts(user["id"]),
         portfolio=services.list_portfolio_items(user["id"]),
         identity_locked=services.is_identity_locked(user["id"]),
         pending_name_change=services.has_pending_name_change(user["id"]),
@@ -2215,6 +2234,9 @@ def admin_visits():
         "admin_visites.html", rows=rows, days=days, kind=kind,
         daily=services.visits_daily(days, kind=kind),
         totals=services.visits_totals(days),
+        pages=services.visits_by_page(days, kind=kind),
+        referrers=services.visits_by_referrer(days),
+        top_profiles=services.most_viewed_profiles(days),
         geoip_ok=geoip.available(),
         seo=_NOINDEX,
     )

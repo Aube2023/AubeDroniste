@@ -200,6 +200,9 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_msg_recip_read ON messages(mission_id, recipient_user_id, read_at)",
     "CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at)",
     "CREATE INDEX IF NOT EXISTS idx_visit_countries_day ON visit_countries(day)",
+    "CREATE INDEX IF NOT EXISTS idx_visit_pages_day ON visit_pages(day)",
+    "CREATE INDEX IF NOT EXISTS idx_visit_referrers_day ON visit_referrers(day)",
+    "CREATE INDEX IF NOT EXISTS idx_profile_views_pilot ON profile_views(pilot_user_id, day)",
     "CREATE INDEX IF NOT EXISTS idx_pilot_links_user ON pilot_links(pilot_user_id)",
     "CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
@@ -268,6 +271,31 @@ _ADD_TABLES = [
     views   INTEGER NOT NULL DEFAULT 0,     -- pages vues (pas de visiteurs uniques :
                                             -- rien ne permet de les distinguer)
     PRIMARY KEY (day, country, kind)
+)""",
+    # Pages les plus vues et sites d'origine, par jour. Meme regle que
+    # visit_countries : ni IP, ni cookie, ni visiteur unique. Du referent on ne
+    # garde que le nom de domaine (jamais le chemin ni la requete), et rien
+    # quand il vient de notre propre site.
+    """CREATE TABLE IF NOT EXISTS visit_pages (
+    day     TEXT NOT NULL,
+    path    TEXT NOT NULL,                  -- chemin sans parametres, 120 car. max
+    kind    TEXT NOT NULL DEFAULT 'human',  -- human | bot
+    views   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, path, kind)
+)""",
+    """CREATE TABLE IF NOT EXISTS visit_referrers (
+    day     TEXT NOT NULL,
+    host    TEXT NOT NULL,                  -- domaine d'origine, 'direct' sans referent
+    views   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, host)
+)""",
+    # Vues d'une fiche pilote, par jour : montre au pilote que sa fiche vit.
+    # Exclut ses propres passages et les robots ; aucun visiteur n'est retenu.
+    """CREATE TABLE IF NOT EXISTS profile_views (
+    day           TEXT NOT NULL,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    views         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, pilot_user_id)
 )""",
     # Compteur de visites du site (valeur cumulee ; affichee + config.SITE_VISIT_BASE).
     """CREATE TABLE IF NOT EXISTS site_counters (

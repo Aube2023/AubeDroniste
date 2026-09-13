@@ -54,6 +54,32 @@ LANGUAGE_META = {
 ACCENTS = ("aube", "ambre", "emeraude", "corail", "azur", "ardoise")
 DEFAULT_ACCENT = "aube"
 
+# Noms de mois, pour « Membre depuis mai 2026 » dans la langue de la page.
+MONTHS = {
+    "fr": ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"),
+    "en": ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"),
+    "es": ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"),
+    "ru": ("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"),
+    "hi": ("जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"),
+    "uk": ("січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"),
+    "tr": ("Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"),
+    "ur": ("جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"),
+    "bn": ("জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"),
+}
+
+
+def month_year(date_str, lang: str = DEFAULT) -> str:
+    """'2026-05-06 12:00:00' -> « mai 2026 » (ou '' si la date est absente)."""
+    s = str(date_str or "")
+    if len(s) < 7 or not s[:4].isdigit() or not s[5:7].isdigit():
+        return ""
+    m = int(s[5:7])
+    if not 1 <= m <= 12:
+        return ""
+    names = MONTHS.get(lang) or MONTHS[DEFAULT]
+    return f"{names[m - 1]} {s[:4]}"
+
+
 # Langues ecrites de droite a gauche : <html dir="rtl"> + surcharges CSS.
 RTL = ("ur", "ar")
 
@@ -1670,6 +1696,12 @@ _T = {
     "meteo.credit":     {"fr": "Météo : Open-Meteo · Radar : RainViewer", "en": "Weather: Open-Meteo · Radar: RainViewer", "es": "Tiempo: Open-Meteo · Radar: RainViewer", "ru": "Погода: Open-Meteo · Радар: RainViewer", "hi": "मौसम: Open-Meteo · रडार: RainViewer", "uk": "Погода: Open-Meteo · Радар: RainViewer", "tr": "Hava: Open-Meteo · Radar: RainViewer", "ur": "موسم: Open-Meteo · ریڈار: RainViewer", "bn": "আবহাওয়া: Open-Meteo · রাডার: RainViewer"},
 
     # ---- Collecte « Soutenez ce pilote »
+    # Reperes de confiance sur la fiche (anciennete, reactivite, livraisons)
+    "trust.member_since":    {"fr": "Membre depuis {date}", "en": "Member since {date}", "es": "Miembro desde {date}", "ru": "На платформе с {date}", "hi": "{date} से सदस्य", "uk": "На платформі з {date}", "tr": "{date} tarihinden beri üye", "ur": "{date} سے رکن", "bn": "{date} থেকে সদস্য"},
+    "trust.responds_h":      {"fr": "Répond en général en moins de {n} h", "en": "Usually replies within {n} h", "es": "Suele responder en menos de {n} h", "ru": "Обычно отвечает быстрее чем за {n} ч", "hi": "आम तौर पर {n} घंटे के भीतर जवाब", "uk": "Зазвичай відповідає менш ніж за {n} год", "tr": "Genellikle {n} saat içinde yanıtlar", "ur": "عموماً {n} گھنٹے میں جواب", "bn": "সাধারণত {n} ঘণ্টার মধ্যে উত্তর"},
+    "trust.responds_d":      {"fr": "Répond en général en moins de {n} jours", "en": "Usually replies within {n} days", "es": "Suele responder en menos de {n} días", "ru": "Обычно отвечает быстрее чем за {n} дн.", "hi": "आम तौर पर {n} दिनों के भीतर जवाब", "uk": "Зазвичай відповідає менш ніж за {n} дні", "tr": "Genellikle {n} gün içinde yanıtlar", "ur": "عموماً {n} دن میں جواب", "bn": "সাধারণত {n} দিনের মধ্যে উত্তর"},
+    "trust.responds_title":  {"fr": "Mesuré sur ses conversations des 6 derniers mois", "en": "Measured on their conversations over the last 6 months", "es": "Medido en sus conversaciones de los últimos 6 meses", "ru": "По переписке за последние 6 месяцев", "hi": "पिछले 6 महीनों की बातचीत पर मापा गया", "uk": "За листуванням за останні 6 місяців", "tr": "Son 6 aydaki yazışmalarına göre", "ur": "پچھلے 6 ماہ کی گفتگو پر ماپا گیا", "bn": "গত ৬ মাসের কথোপকথনের ভিত্তিতে"},
+    "trust.completed":       {"fr": "{n} mission(s) livrée(s) ici", "en": "{n} job(s) delivered here", "es": "{n} misión(es) entregada(s) aquí", "ru": "{n} заказ(ов) выполнено здесь", "hi": "यहाँ {n} मिशन पूरे", "uk": "{n} замовлень виконано тут", "tr": "Burada {n} görev teslim edildi", "ur": "یہاں {n} مشن مکمل", "bn": "এখানে {n}টি মিশন সম্পন্ন"},
     "campaign.eyebrow":      {"fr": "Soutenez ce pilote", "en": "Support this pilot", "es": "Apoye a este piloto", "ru": "Поддержите пилота", "hi": "इस पायलट का समर्थन करें", "uk": "Підтримайте пілота", "tr": "Bu pilotu destekleyin", "ur": "اس پائلٹ کی مدد کریں", "bn": "এই পাইলটকে সহায়তা করুন"},
     "campaign.for":          {"fr": "Pour financer :", "en": "To fund:", "es": "Para financiar:", "ru": "Цель сбора:", "hi": "इसके लिए धन:", "uk": "Мета збору:", "tr": "Finanse edilecek:", "ur": "مالی مدد کے لیے:", "bn": "অর্থায়নের জন্য:"},
     "campaign.why":          {"fr": "Pourquoi", "en": "Why", "es": "Por qué", "ru": "Зачем", "hi": "क्यों", "uk": "Навіщо", "tr": "Neden", "ur": "کیوں", "bn": "কেন"},
@@ -1750,6 +1782,8 @@ _T = {
 
     # ---- Visibilite du pilote : ce qui lui manque pour etre trouve
     "vis.title":         {"fr": "Être trouvé", "en": "Getting found", "es": "Que le encuentren", "ru": "Чтобы вас находили", "hi": "खोजे जाना", "uk": "Щоб вас знаходили", "tr": "Bulunmak", "ur": "نظر میں آنا", "bn": "খুঁজে পাওয়া"},
+    "vis.views":         {"fr": "Votre fiche a été vue {n} fois sur 30 jours ({w} sur 7 jours), robots exclus.", "en": "Your page was viewed {n} times over 30 days ({w} over 7 days), bots excluded.", "es": "Su ficha se vio {n} veces en 30 días ({w} en 7 días), sin robots.", "ru": "Ваш профиль просмотрели {n} раз за 30 дней ({w} за 7 дней), без роботов.", "hi": "आपकी प्रोफ़ाइल 30 दिनों में {n} बार देखी गई (7 दिनों में {w}), बॉट को छोड़कर।", "uk": "Ваш профіль переглянули {n} разів за 30 днів ({w} за 7 днів), без роботів.", "tr": "Profiliniz 30 günde {n} kez görüntülendi (7 günde {w}), botlar hariç.", "ur": "آپ کا پروفائل 30 دنوں میں {n} بار دیکھا گیا (7 دنوں میں {w})، روبوٹس کے بغیر۔", "bn": "আপনার প্রোফাইল ৩০ দিনে {n} বার দেখা হয়েছে (৭ দিনে {w}), বট বাদে।"},
+    "vis.views_none":    {"fr": "Aucune vue de votre fiche sur 30 jours (robots exclus) : chaque point ci-dessous la rend plus visible.", "en": "No views of your page over 30 days (bots excluded): each item below makes it more visible.", "es": "Ninguna visita a su ficha en 30 días (sin robots): cada punto de abajo la hace más visible.", "ru": "Ни одного просмотра профиля за 30 дней (без роботов): каждый пункт ниже делает его заметнее.", "hi": "30 दिनों में आपकी प्रोफ़ाइल की कोई व्यू नहीं (बॉट छोड़कर): नीचे का हर बिंदु इसे और दृश्य बनाता है।", "uk": "Жодного перегляду профілю за 30 днів (без роботів): кожен пункт нижче робить його помітнішим.", "tr": "30 günde profil görüntülenmesi yok (botlar hariç): aşağıdaki her madde onu daha görünür kılar.", "ur": "30 دنوں میں آپ کے پروفائل کا کوئی ویو نہیں (روبوٹس کے بغیر): نیچے کا ہر نکتہ اسے نمایاں بناتا ہے۔", "bn": "৩০ দিনে আপনার প্রোফাইলের কোনো ভিউ নেই (বট বাদে): নিচের প্রতিটি বিষয় এটিকে আরও দৃশ্যমান করে।"},
     "vis.score":         {"fr": "Fiche complète à {n} %", "en": "Profile {n}% complete", "es": "Ficha completa al {n} %", "ru": "Профиль заполнен на {n} %", "hi": "प्रोफ़ाइल {n}% पूर्ण", "uk": "Профіль заповнено на {n} %", "tr": "Profil %{n} tamam", "ur": "پروفائل {n} فیصد مکمل", "bn": "প্রোফাইল {n}% সম্পূর্ণ"},
     "vis.blocking":      {"fr": "Bloquant : tant que ce point manque, vous êtes absent d'un canal entier.",
                           "en": "Blocking: while this is missing you are absent from an entire channel.",
