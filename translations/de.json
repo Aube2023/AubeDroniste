@@ -315,6 +315,7 @@
 "register.city_ph": "z. B. Berlin",
 "register.use_location": "Meinen Standort verwenden",
 "register.location_hint": "Optional, aber empfohlen: So finden Kunden Sie mit „in meiner Nähe“, wo immer Sie auf der Welt sind.",
+"register.captcha_failed": "Die Roboter-Prüfung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
 "register.honeypot": "Dieses Feld nicht ausfüllen",
 "register.already_member": "Schon Mitglied?",
 "register.login_link": "Anmelden",

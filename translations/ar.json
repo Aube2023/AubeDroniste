@@ -315,6 +315,7 @@
 "register.city_ph": "مثال: الدار البيضاء",
 "register.use_location": "استخدام موقعي",
 "register.location_hint": "اختياري لكن موصى به: يتيح للعملاء العثور عليك « بالقرب مني »، أينما كنت في العالم.",
+"register.captcha_failed": "فشل التحقق من أنك لست روبوتًا. حاول مرة أخرى.",
 "register.honeypot": "لا تملأ هذا الحقل",
 "register.already_member": "عضو بالفعل؟",
 "register.login_link": "تسجيل الدخول",

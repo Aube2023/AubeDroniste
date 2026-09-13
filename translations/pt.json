@@ -315,6 +315,7 @@
 "register.city_ph": "ex.: São Paulo",
 "register.use_location": "Usar minha posição",
 "register.location_hint": "Opcional, mas recomendado: permite que os clientes encontrem você « perto de mim », onde quer que esteja no mundo.",
+"register.captcha_failed": "A verificação anti-robô falhou. Tente novamente.",
 "register.honeypot": "Não preencha este campo",
 "register.already_member": "Já é membro?",
 "register.login_link": "Entrar",

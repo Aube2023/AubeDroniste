@@ -135,7 +135,9 @@ def apply_security_headers(resp):
     )
     # CSP — autorise Google Fonts (typo), Stripe (frames + js) et MapLibre GL
     # (carte interactive : JS/CSS via unpkg, style + tuiles vectorielles OpenFreeMap,
-    # web workers via blob:).
+    # web workers via blob:). unpkg heberge n'importe quel paquet npm : on ne
+    # l'autorise que sur le chemin exact de MapLibre (servi sans redirection,
+    # sinon la restriction de chemin tomberait), doublé d'un hash SRI dans _map.html.
     # script-src : plus de 'unsafe-inline' — les <script> inline legitimes portent
     # nonce="{{ csp_nonce }}" (genere par requete dans app._attach). Un nonce present
     # fait ignorer 'unsafe-inline' par le navigateur : tous les gestionnaires inline
@@ -143,8 +145,8 @@ def apply_security_headers(resp):
     nonce = getattr(g, "csp_nonce", "") or secrets.token_urlsafe(16)
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; "
-        "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com https://unpkg.com https://aubemail.com https://captcha.aubeetoilee.com; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; "
+        "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com https://unpkg.com/maplibre-gl@4.7.1/dist/ https://aubemail.com https://captcha.aubeetoilee.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com/maplibre-gl@4.7.1/dist/; "
         "font-src 'self' data: https://fonts.gstatic.com; "
         "img-src 'self' data: blob: https:; "
         "worker-src 'self' blob:; "

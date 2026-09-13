@@ -105,7 +105,11 @@ def test_api_map_coords_are_fuzzed(client):
 
 def test_csp_allows_maplibre(client):
     csp = client.get("/").headers.get("Content-Security-Policy", "")
-    assert "https://unpkg.com" in csp
+    # unpkg sert n'importe quel paquet npm : seul le chemin exact de MapLibre
+    # est admis (script-src ET style-src), jamais l'hote entier.
+    assert "https://unpkg.com/maplibre-gl@4.7.1/dist/" in csp
+    assert "https://unpkg.com " not in csp and "https://unpkg.com;" not in csp
+    assert "'unsafe-inline'" not in csp.split("script-src", 1)[1].split(";", 1)[0]
     # Fond de carte OpenFreeMap (style JSON + tuiles vectorielles + glyphes +
     # sprites, tous charges en fetch) -> doit etre en connect-src. CARTO
     # (ancien fond) exige une cle d'API depuis 2026 : filigrane sur les tuiles.

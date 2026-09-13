@@ -1481,7 +1481,7 @@ def register():
             )
             if not ok_cap:
                 log.warning("aubecaptcha refuse a l'inscription : %s", raison)
-                flash("Vérification anti-robot échouée. Réessayez.", "error")
+                flash(i18n.t("register.captcha_failed", getattr(g, "lang", i18n.DEFAULT)), "error")
                 return render_template("register.html", seo=_register_seo())
 
         # SECURITE : si l'identifiant correspond a un compte systeme AubeMail

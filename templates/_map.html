@@ -19,7 +19,8 @@
 {% set _height = map_height|default('440px') %}
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" crossorigin="anonymous">
 <style>
 /* Popups restyles (jour / nuit). Le contenu peint lui-meme son fond. */
 #aube-map .maplibregl-popup-content{padding:0;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.28);font:13.5px/1.5 system-ui;background:#fff}
@@ -105,7 +106,9 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     <button type="button" class="ghost" id="map-fit" style="margin-left:auto;padding:6px 10px;font-size:.8rem;">{{ 'Tout afficher' if lang == 'fr' else 'Show all' }}</button>
   </div>
 </div>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+{# SRI : le CDN ne peut pas nous servir autre chose que cette version exacte. #}
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+        integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" crossorigin="anonymous"></script>
 <script nonce="{{ csp_nonce }}">
 (function () {
   var el = document.getElementById('aube-map');

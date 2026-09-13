@@ -315,6 +315,7 @@
 "register.city_ph": "mis. Jakarta",
 "register.use_location": "Gunakan posisi saya",
 "register.location_hint": "Opsional tapi disarankan: memungkinkan klien menemukan Anda lewat « di dekat saya », di mana pun Anda berada di dunia.",
+"register.captcha_failed": "Verifikasi anti-robot gagal. Silakan coba lagi.",
 "register.honeypot": "Jangan isi kolom ini",
 "register.already_member": "Sudah menjadi anggota?",
 "register.login_link": "Masuk",

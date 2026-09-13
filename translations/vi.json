@@ -315,6 +315,7 @@
 "register.city_ph": "vd: Hà Nội",
 "register.use_location": "Dùng vị trí của tôi",
 "register.location_hint": "Tùy chọn nhưng nên dùng: giúp khách hàng tìm thấy bạn với « gần tôi », dù bạn ở đâu trên thế giới.",
+"register.captcha_failed": "Kiểm tra chống robot không thành công. Vui lòng thử lại.",
 "register.honeypot": "Không điền vào ô này",
 "register.already_member": "Đã là thành viên?",
 "register.login_link": "Đăng nhập",
