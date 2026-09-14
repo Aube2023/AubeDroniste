@@ -7,6 +7,7 @@
   <h1>{{ 'Trouver un pilote.' if fr else 'Find a pilot.' }}</h1>
   <p class="lead muted">
     {{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage' if fr else 'pilot(s) match your filters' }}{% if params.near_label %}{{ ', du plus proche de ' if fr else ', nearest first around ' }}<strong>{{ params.near_label }}</strong>{% endif %}.
+    {% if params.country == 'États-Unis' %}<a href="{{ url_for('part107') }}">{{ 'Pilotes Part 107 →' if fr else 'Part 107 pilots →' }}</a>{% endif %}
   </p>
 </div>
 

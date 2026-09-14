@@ -1,20 +1,20 @@
 {# Liens vers les pages d'atterrissage de l'annuaire. `hub` = {countries, cities,
    specialties} (services.landing_*). Un moteur decouvre ces pages par ces
    liens, pas seulement par le sitemap ; un visiteur y trouve un raccourci. #}
-{% if hub and (hub.countries or hub.cities or hub.specialties) %}
+{% if hub %}
 <section class="directory-hub" aria-labelledby="hub-title">
   <h2 id="hub-title">{{ t('landing.hub_title') }}</h2>
   <div class="hub-cols">
-    {% if hub.countries %}
+    {# La colonne pays est toujours la : la page Part 107 y tient lieu de page Etats-Unis. #}
     <div class="hub-col">
       <h3>{{ t('landing.by_country') }}</h3>
       <ul class="hub-list">
-        {% for c in hub.countries %}
+        {% for c in hub.countries if c.name != 'États-Unis' %}
         <li><a href="{{ url_for('pilots_by_country', slug=c.slug) }}">{{ country_name(c.name) }}</a> <span class="n">{{ c.n }}</span></li>
         {% endfor %}
+        <li><a href="{{ url_for('part107') }}">{{ country_name('États-Unis') }} · Part 107</a></li>
       </ul>
     </div>
-    {% endif %}
     {% if hub.cities %}
     <div class="hub-col">
       <h3>{{ t('landing.by_city') }}</h3>

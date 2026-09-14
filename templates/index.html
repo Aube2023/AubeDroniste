@@ -68,14 +68,14 @@
     </div>
     {% endfor %}
   </div>
-  {% set shown = ['FAA', 'Transport Canada', 'EASA', 'DGAC', 'CAA_UK', 'CASA', 'DGCA_IN', 'CAAC', 'JCAB', 'GCAA_AE', 'ANAC_BR', 'ASECNA'] %}
+  {% set shown = ['EASA', 'DGAC', 'CAA_UK', 'Transport Canada', 'FAA', 'ANAC_BR', 'DGAC_MA', 'ASECNA', 'DGCA_IN', 'CAAC', 'JCAB', 'CASA', 'GCAA_AE'] %}
   <div class="world-auths">
     <span class="lbl">{{ t('home.world.auth_label') }}</span>
     <div class="auth-chips">
       {% for code in shown %}<span class="auth-chip" title="{{ auth_label(code) }}">✓ {{ auth_chip(code) }}</span>{% endfor %}
       <span class="auth-chip more">{{ t('home.world.auth_more', n=(licence_authorities|length) - (shown|length) - 1) }}</span>
     </div>
-    <a class="ghost" href="{{ url_for('part107') }}"><span aria-hidden="true">🇺🇸</span> {{ t('home.world.usa') }}</a>
+    <a class="ghost" href="{{ url_for('pilots_search') }}">{{ t('home.world.all') }}</a>
   </div>
 </section>
 

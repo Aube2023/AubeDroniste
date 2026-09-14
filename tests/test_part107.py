@@ -18,7 +18,13 @@ def test_page_part_107(client):
     assert client.get("/ru/part-107").status_code == 404
     assert "/part-107</loc>" in client.get("/sitemap-en.xml").data.decode()
     client.get("/lang/fr")
-    assert 'href="/part-107"' in client.get("/missions").data.decode()   # pied de page
+    # pas de lien Part 107 au pied de page ni sur l'accueil : un pays parmi les autres.
+    assert 'href="/part-107"' not in client.get("/missions").data.decode()
+    assert 'href="/part-107"' not in client.get("/").data.decode()
+    # la page tient lieu de page « États-Unis » dans l'annuaire, et sous le filtre États-Unis
+    assert 'href="/part-107">États-Unis · Part 107' in client.get("/pilotes").data.decode()
+    assert 'href="/part-107">Pilotes Part 107' in client.get("/pilotes?country=%C3%89tats-Unis").data.decode()
+    assert 'href="/part-107">Pilotes Part 107' not in client.get("/pilotes?country=Canada").data.decode()
 
 
 def test_pas_de_cuisine_interne_dans_part_107():
@@ -50,7 +56,7 @@ def test_section_reference_mondiale_et_puce_part_107(client, app_ctx, make_user)
     assert "One platform for every pilot in the world." in html
     assert "Wherever you are, pilots are visible here." in html
     assert "✓ FAA Part 107" in html and "more authorities" in html
-    assert 'href="/en/part-107"' in html
+    assert "See pilots from all over the world" in html and "Part 107 pilots in the United States" not in html
     # puce sur la carte pilote : « FAA Part 107 », pas le code nu
     p = make_user("faa_p", role="pilot", country="États-Unis", city="Austin")
     services.upsert_pilot_profile(p["id"], is_available=1)
