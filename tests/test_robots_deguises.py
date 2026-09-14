@@ -76,3 +76,22 @@ def test_le_collecteur_ne_compte_ni_visiteur_ni_arrivee_google(client, app_ctx, 
     assert services.visits_totals(1)["human"] == avant["human"] + 1
     ref_fin = {r["host"]: r["views"] for r in services.visits_by_referrer(1)["rows"]}
     assert ref_fin.get("google.com", 0) == ref_avant.get("google.com", 0) + 1
+
+
+def test_referent_impossible_et_client_hints_incoherents(browser_headers):
+    h = dict(browser_headers, Host="localhost.localdomain")
+    # apres un 302 un navigateur garde la page d'origine, jamais /lang/xx
+    assert bots.reason(dict(h, Referer="https://localhost.localdomain/lang/ur?next=%2Ftr%2Fpilotes")) == "referer-redirect"
+    # un navigateur serialise toujours le chemin : « https://site » nu n'existe pas
+    assert bots.reason(dict(h, Referer="https://localhost.localdomain")) == "referer-origin"
+    assert bots.reason(dict(h, Referer="https://localhost.localdomain/")) is None
+    assert bots.reason(dict(h, Referer="https://www.google.com")) is None       # autre site : pas notre affaire
+    # agent tire au sort, Client Hints fixes : les versions ne concordent plus
+    assert bots.reason(dict(h, **{"Sec-CH-UA": '"Chromium";v="120", "Google Chrome";v="120", "Not-A.Brand";v="99"'})) == "client-hints-mismatch"
+    assert bots.reason(dict(h, **{"Sec-CH-UA-Platform": '"Windows"'})) == "platform-mismatch"   # UA dit Macintosh
+    assert bots.reason(dict(h, **{"Sec-CH-UA-Platform": '"macOS"'})) is None
+    assert bots.reason(dict(h, **{"Sec-CH-UA-Mobile": "?1"})) == "mobile-mismatch"
+    # Edge et Opera : la version Chromium figure dans les marques, ca passe
+    edge = h["User-Agent"] + " Edg/145.0.0.0"
+    assert bots.reason(dict(h, **{"User-Agent": edge, "Sec-CH-UA": '"Microsoft Edge";v="145", "Chromium";v="145", "Not-A.Brand";v="99"'})) is None
+    assert "Cookie-names=" in bots.describe(dict(h, Cookie="aube_lang=fr; session=abc")) and "abc" not in bots.describe(dict(h, Cookie="session=abc"))

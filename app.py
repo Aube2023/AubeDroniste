@@ -308,7 +308,12 @@ def _is_bot() -> bool:
     """Robots comptes a part pour ne pas gonfler la frequentation « humaine » :
     agents avoues (GPTBot, Semrush...) ET collecteurs deguises en Chrome, que
     seuls les en-tetes trahissent (voir bots.py). Aucun en-tete n'est garde."""
-    return bots.is_bot(request.headers)
+    why = bots.reason(request.headers)
+    if why in ("referer-origin", "referer-redirect"):
+        # Etude du collecteur du 13 septembre 2026 : on note ce qu'il envoie
+        # (sans adresse ni cookie) pour affiner les regles ; a retirer ensuite.
+        app.logger.info("robot deguise (%s) %s : %s", why, request.path, bots.describe(request.headers))
+    return why is not None
 
 
 # Application mobile (mobile/, Flutter) : WebView avec sa propre barre
