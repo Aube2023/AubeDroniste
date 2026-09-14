@@ -5,7 +5,7 @@
 <article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
 
 <h1>Politique de confidentialité</h1>
-<p class="muted small">Dernière mise à jour : 9 mai 2026 · Version 1.0</p>
+<p class="muted small">Dernière mise à jour : 13 septembre 2026 · Version 1.1 (première version : 9 mai 2026)</p>
 
 <p class="lead">
 La présente politique décrit comment <strong>Aube Pilot</strong>, marque
@@ -27,12 +27,12 @@ le contacter à tout moment :
 
 <h2>2. Renseignements que nous collectons</h2>
 <ul>
-  <li><strong>Compte</strong> : nom complet, identifiant, courriel, mot de passe (chiffré).</li>
-  <li><strong>Profil pilote</strong> : tarifs, certifications (DGAC, EASA, Transport Canada, FAA, ASECNA…), assurance RC pro, drones, langues, géolocalisation déclarée.</li>
+  <li><strong>Compte</strong> : nom complet, identifiant, courriel, mot de passe (haché, jamais conservé en clair). L'identifiant et le mot de passe sont ceux de votre compte <strong>AubeMail</strong>, le service d'identité de L'Aube Étoilée : s'inscrire sur Aube Pilot crée ce compte, et s'y connecter le vérifie.</li>
+  <li><strong>Profil pilote</strong> : tarifs, certifications (DGAC, EASA, Transport Canada, FAA, ASECNA…) et le document qui les prouve, assurance RC pro (assureur, numéro de police, attestation), drones, langues, géolocalisation déclarée, et, si vous demandez un changement de nom après vérification, le justificatif d'identité fourni.</li>
   <li><strong>Profil client</strong> : ville, pays, téléphone (facultatif).</li>
   <li><strong>Missions et offres</strong> : description, budget, dates, localisation, échanges.</li>
   <li><strong>Paiements</strong> : traités par Stripe Connect ; nous conservons l'identifiant Stripe et l'historique des transactions, jamais les coordonnées bancaires complètes.</li>
-  <li><strong>Données techniques</strong> : adresse IP, agent utilisateur, journal d'accès (≤ 90 jours).</li>
+  <li><strong>Données techniques</strong> : adresse IP et navigateur, à trois endroits seulement : les journaux d'accès du serveur (conservés 14 jours pour le serveur web, 4 semaines pour l'application), la session ouverte à la connexion (supprimée à son expiration, 30 jours au plus après votre dernière visite) et le message envoyé par le formulaire de contact (adresse IP effacée après 90 jours, le message reste pour le suivi).</li>
 </ul>
 
 <h2>3. Finalités du traitement</h2>
@@ -41,7 +41,8 @@ le contacter à tout moment :
   <li>Vérification des certifications et de l'assurance.</li>
   <li>Traitement des paiements en escrow et des éventuels remboursements.</li>
   <li>Notifications transactionnelles (offres, messages, rappels).</li>
-  <li>Sécurité, prévention de la fraude, médiation des litiges.</li>
+  <li>Sécurité, prévention de la fraude (dont la vérification « je ne suis pas un robot » à l'inscription, par notre propre service AubeCaptcha), médiation des litiges.</li>
+  <li>À votre demande seulement, copie d'un livrable reçu vers votre AubeDrive ou AubePhotos (services de L'Aube Étoilée).</li>
   <li>Statistiques agrégées et anonymisées sur l'usage de la plateforme.</li>
 </ul>
 
@@ -59,26 +60,31 @@ votre Espace ou en écrivant au RPRP.
   <li>Compte actif : tant que vous l'utilisez.</li>
   <li>Compte inactif : 36 mois, puis anonymisation ou suppression.</li>
   <li>Documents fiscaux et factures : 6 ans (obligation légale).</li>
-  <li>Journaux d'accès et logs techniques : 90 jours.</li>
-  <li>Avis publiés : conservés tant que l'auteur ou la cible existe.</li>
+  <li>Journaux d'accès et données techniques : 90 jours au plus (détail à la section 2).</li>
+  <li>Compteurs de fréquentation (section 10) : conservés sans limite, car ils ne concernent personne en particulier.</li>
+  <li>Missions, devis, réservations, messages et avis : conservés après la suppression d'un compte, sous forme anonymisée, pour l'autre partie et la comptabilité.</li>
 </ul>
 
 <h2>6. Transferts hors Québec</h2>
 <p>
 Conformément à l'article 17 de la Loi 25, nous évaluons chaque transfert
-hors Québec. Aube Pilot est hébergé sur des serveurs situés à
-<strong>Toronto / New Jersey (Vultr)</strong>. Les paiements transitent par
-<strong>Stripe (Irlande / États-Unis)</strong>. Une évaluation des facteurs
-relatifs à la vie privée (EFVP) est disponible sur demande au RPRP.
+hors Québec. Aube Pilot est hébergé sur un serveur situé à
+<strong>Toronto (Vultr)</strong>, où se trouvent aussi vos documents téléversés
+et nos copies de sauvegarde. Les paiements transitent par
+<strong>Stripe (Irlande / États-Unis)</strong>. Les services extérieurs nommés
+aux sections 9 et 11 (polices de caractères, cartographie, géocodage, météo,
+trafic aérien) sont établis aux États-Unis ou en Europe ; aucun d'eux ne reçoit
+votre nom ni votre compte. Une évaluation des facteurs relatifs à la vie privée
+(EFVP) peut être demandée au RPRP.
 </p>
 
 <h2>7. Vos droits</h2>
 <p>Vous pouvez à tout moment demander :</p>
 <ul>
-  <li><strong>Accès</strong> à vos renseignements (export complet en JSON et CSV).</li>
+  <li><strong>Accès</strong> à vos renseignements : export complet en JSON, en un clic depuis vos paramètres.</li>
   <li><strong>Rectification</strong> en cas d'inexactitude.</li>
-  <li><strong>Suppression</strong> (effacement) de votre compte et données associées, sous réserve des obligations légales (factures, etc.).</li>
-  <li><strong>Portabilité</strong> de vos données dans un format structuré et couramment utilisé.</li>
+  <li><strong>Suppression</strong> de votre compte, depuis vos paramètres : nom, courriel, téléphone, photo, position, présentation et tous les documents téléversés (brevets, justificatifs, attestation, photos, portfolio) sont effacés ; le compte ne peut plus se connecter ni apparaître nulle part. Les missions, devis, réservations, messages et avis restent, anonymisés, pour l'autre partie et pour les obligations légales (factures). La suppression attend qu'aucune mission ni aucun paiement ne soit en cours. Votre compte AubeMail, lui, se gère sur aubemail.com.</li>
+  <li><strong>Portabilité</strong> de vos données dans un format structuré et couramment utilisé (le même export JSON).</li>
   <li><strong>Opposition</strong> au traitement à des fins de marketing.</li>
   <li><strong>Retrait du consentement</strong> à tout moment.</li>
   <li><strong>Information sur le profilage automatisé</strong> : aucun profilage 100 % automatisé n'est utilisé pour des décisions ayant un impact significatif.</li>
@@ -87,24 +93,34 @@ relatifs à la vie privée (EFVP) est disponible sur demande au RPRP.
 
 <h2>8. Sécurité</h2>
 <p>
-Mots de passe hachés (scrypt), connexions HTTPS / TLS 1.2+, sessions
-signées, journaux d'accès limités, audits internes trimestriels.
-En cas d'incident de confidentialité, nous notifierons sans délai la
-Commission d'accès à l'information du Québec (CAI) et les personnes
-concernées, conformément à l'article 3.5 de la Loi 25.
+Mots de passe jamais conservés en clair (hachage salé avec fonction à coût :
+yescrypt, bcrypt ou scrypt selon le compte), connexions HTTPS en TLS 1.2 ou 1.3
+uniquement, sessions signées, documents privés (brevets, justificatifs,
+livrables) servis seulement à leur propriétaire et aux vérificateurs, journaux
+d'accès limités, revues de sécurité internes régulières (la dernière en
+septembre 2026). En cas d'incident de confidentialité présentant un risque de
+préjudice sérieux, nous aviserons avec diligence la Commission d'accès à
+l'information du Québec (CAI) et les personnes concernées, conformément à
+l'article 3.5 de la Loi 25.
 </p>
 
 <h2>9. Cookies</h2>
 <p>
 Aube Pilot utilise un strict minimum de cookies : <code>aubepilot_sid</code>
-(identifiant de session signé, HttpOnly, 30 jours) et <code>csrf_token</code>
-(protection contre la falsification de requêtes), tous deux strictement
-nécessaires au fonctionnement, ainsi que <code>aube_lang</code> (langue choisie,
-365 jours). La préférence d'affichage jour / nuit est conservée dans le stockage
+(identifiant de session signé, HttpOnly, 30 jours, prolongés tant que vous revenez) et
+<code>session</code> (cookie signé qui porte le jeton contre la falsification de
+requêtes et les messages d'état d'une page à l'autre ; il disparaît à la
+fermeture du navigateur), tous deux strictement nécessaires au fonctionnement,
+ainsi que <code>aube_lang</code> (langue choisie, 365 jours). Les préférences
+d'affichage (jour / nuit, couleur d'accent) sont conservées dans le stockage
 local du navigateur, pas dans un cookie. Aucune publicité, aucun traceur tiers,
-aucun outil d'analyse externe n'est déposé. Les paiements par Stripe Checkout
-déposent leurs propres cookies, uniquement sur <code>checkout.stripe.com</code>,
-hors de notre contrôle. Vous pouvez supprimer ces cookies via les paramètres de
+aucun outil d'analyse externe n'est déposé. Les polices de caractères sont
+chargées depuis Google Fonts : comme pour toute ressource venue d'un autre
+site, Google voit alors l'adresse IP de votre navigateur, sans cookie ni
+identifiant de notre part. Une fois connecté, votre navigateur demande votre
+photo de profil à aubemail.com, notre propre service. Les paiements par Stripe
+Checkout déposent leurs propres cookies, uniquement sur
+<code>checkout.stripe.com</code>, hors de notre contrôle. Vous pouvez supprimer ces cookies via les paramètres de
 votre navigateur ; refuser ceux strictement nécessaires empêche d'utiliser le
 service.
 </p>
@@ -125,10 +141,11 @@ identifiable, et rien ne permet de reconnaître un visiteur d'une visite à
 l'autre. Ces compteurs ne sont ni vendus ni transmis à un tiers.
 </p>
 
-<h2>11. Carte interactive</h2>
+<h2>11. Carte interactive et géocodage</h2>
 <p>
-La carte charge son fond depuis OpenFreeMap et, en vue satellite, les images
-d'Esri ; si vous activez la météo, les tuiles du radar viennent de RainViewer.
+La carte charge sa bibliothèque d'affichage (MapLibre) depuis unpkg.com, son fond
+depuis OpenFreeMap et, en vue satellite, les images d'Esri ; si vous activez la
+météo, les tuiles du radar viennent de RainViewer.
 Comme pour toute image chargée depuis un autre site, ces services voient
 l'adresse IP de votre navigateur au moment du chargement, sans cookie ni
 identifiant de notre part. Les conditions météo elles-mêmes (Open-Meteo)
@@ -136,7 +153,15 @@ sont relayées par notre serveur : votre navigateur ne les demande qu'à nous,
 et une zone n'est interrogée qu'une fois toutes les dix minutes, quel que soit
 le nombre de visiteurs. Le trafic aérien en direct (adsb.lol, données
 publiques CC0) est relayé de la même façon. Rien n'est chargé tant que vous
-n'appuyez pas sur les boutons « Météo » ou « Aéronefs ».
+n'appuyez pas sur les boutons « Météo » ou « Aéronefs ». Lorsque vous saisissez
+une ville ou un code postal pour vous situer, ce texte, et lui seul, est transmis
+depuis notre serveur à Nominatim (OpenStreetMap) pour obtenir des coordonnées ;
+votre adresse IP et votre compte ne lui sont pas communiqués, et la réponse est
+gardée en cache sur notre serveur sans lien avec votre compte. Les trois premiers
+caractères d'un code postal canadien suffisent et sont, eux, résolus sur notre
+serveur sans appel extérieur. Si vous
+utilisez « Ma position », les coordonnées données par votre navigateur ne vont
+qu'à nous.
 </p>
 
 <h2>12. Recours</h2>

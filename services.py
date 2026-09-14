@@ -3899,8 +3899,8 @@ def delete_account(user_id: int) -> dict:
                       "pilot_territories", "pilot_packages", "pilot_portfolio_items"):
             db.execute(f"DELETE FROM {table} WHERE pilot_user_id=?", (user_id,), commit=False)
         db.execute("UPDATE pilot_profiles SET headline=NULL, business_name=NULL, insurance_company=NULL, "
-                   "insurance_policy=NULL, portfolio_url=NULL, languages=NULL, is_available=0 "
-                   "WHERE user_id=?", (user_id,), commit=False)
+                   "insurance_policy=NULL, insurance_document_path=NULL, portfolio_url=NULL, "
+                   "languages=NULL, is_available=0 WHERE user_id=?", (user_id,), commit=False)
         db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,), commit=False)
         db.execute(
             "UPDATE users SET full_name='Compte supprimé', email=?, phone=NULL, bio=NULL, "
@@ -3923,4 +3923,62 @@ def delete_account(user_id: int) -> dict:
             os.remove(os.path.join(DATA_DIR, user["avatar_path"]))
         except OSError:
             pass
+    # Les fichiers televerses par la personne partent avec elle : brevets,
+    # justificatifs d'identite, attestation RC, photos de drones, portfolio.
+    # (Les livrables `booking_<id>/` appartiennent a la reservation et restent
+    # pour l'autre partie.) Sans ce nettoyage, la politique de confidentialite
+    # promettait un effacement que le disque ne faisait pas.
+    _remove_user_uploads(user_id)
     return {"ok": True, "blockers": []}
+
+
+def _remove_user_uploads(user_id: int) -> int:
+    """Efface du disque tous les fichiers nommes d'apres l'utilisateur
+    (`u<id>_*`, `avatar_u<id>_*`, dossier `portfolio_u<id>/`). Retourne le
+    nombre de fichiers retires ; ne leve jamais (la suppression du compte est
+    deja engagee en base)."""
+    import shutil
+    from config import UPLOAD_DIR
+    removed = 0
+    prefixes = (f"u{user_id}_", f"avatar_u{user_id}_")
+    try:
+        for name in os.listdir(UPLOAD_DIR):
+            full = os.path.join(UPLOAD_DIR, name)
+            if name == f"portfolio_u{user_id}" and os.path.isdir(full):
+                removed += sum(len(f) for _, _, f in os.walk(full))
+                shutil.rmtree(full, ignore_errors=True)
+            elif name.startswith(prefixes) and os.path.isfile(full):
+                try:
+                    os.remove(full)
+                    removed += 1
+                except OSError as exc:
+                    log.warning("suppression fichier %s : %s", name, exc)
+    except OSError as exc:
+        log.warning("nettoyage des televersements de u%s : %s", user_id, exc)
+    return removed
+
+
+def purge_technical_data(session_grace_days: int = 1, contact_ip_days: int = 90) -> dict:
+    """Hygiene nocturne des donnees techniques promises « 90 jours au plus »
+    par la politique de confidentialite :
+    - sessions expirees (elles portent IP + navigateur) : supprimees ;
+    - adresse IP des messages du formulaire de contact : effacee apres
+      `contact_ip_days`, le message lui-meme reste (suivi du support).
+    """
+    sessions = db.execute(
+        "DELETE FROM sessions WHERE expires_at < datetime('now', ?)",
+        (f"-{int(session_grace_days)} days",),
+    )
+    contacts = db.execute(
+        "UPDATE contact_messages SET ip=NULL WHERE ip IS NOT NULL "
+        "AND created_at < datetime('now', ?)",
+        (f"-{int(contact_ip_days)} days",),
+    )
+    return {"sessions": _rowcount(sessions), "contact_ips": _rowcount(contacts)}
+
+
+def _rowcount(cur) -> int:
+    try:
+        return int(getattr(cur, "rowcount", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
