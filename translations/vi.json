@@ -36,7 +36,7 @@
 "nav.payouts_cta": "Thiết lập Stripe →",
 "footer.tagline": "Một thương hiệu của L'Aube Étoilée · Đăng nhập chung @aubemail.com",
 "footer.cities": "Làm tại Montréal",
-"home.eyebrow": "Mạng lưới phi công quốc tế, từ 2026",
+"home.eyebrow": "Mạng lưới phi công drone toàn cầu, từ 2026",
 "home.h1_a": "Bầu trời không có biên giới.",
 "home.h1_b": "Phi công của bạn",
 "home.h1_b_em": "cũng vậy.",
@@ -549,7 +549,22 @@
 "updates.eyebrow": "Có gì mới",
 "updates.h": "Những gì đã thay đổi cho bạn.",
 "updates.lead": "Các tính năng được thêm cho phi công và khách hàng, mới nhất trước.",
-"updates.contact_p": "Thiếu một tính năng? Hãy cho chúng tôi biết, danh sách này dài ra như vậy."
+"updates.contact_p": "Thiếu một tính năng? Hãy cho chúng tôi biết, danh sách này dài ra như vậy.",
+"home.world.eyebrow": "Điểm tham chiếu toàn cầu",
+"home.world.h": "Một nền tảng duy nhất cho mọi phi công trên thế giới.",
+"home.world.lead": "Dù bạn ở đâu, phi công đều hiển thị ở đây. Liên hệ với họ, mở rộng mạng lưới, phát triển kỹ năng.",
+"home.world.1.h": "Hiển thị ở đây, khắp nơi",
+"home.world.1.p": "Một phi công đăng ký ở Montréal, Austin, Lyon hay Casablanca xuất hiện trong cùng một danh bạ, trên cùng một bản đồ, với cùng huy hiệu giấy phép đã xác minh.",
+"home.world.2.h": "Liên hệ với họ",
+"home.world.2.p": "Một tin nhắn, một báo giá, một nhiệm vụ: mọi thứ đều qua nền tảng, bằng ngôn ngữ của bạn, không trung gian.",
+"home.world.3.h": "Mở rộng mạng lưới",
+"home.world.3.p": "Phi công, trường học, công ty dịch vụ và cửa hàng gặp nhau ở một nơi, ở hai bên mọi đường biên giới.",
+"home.world.4.h": "Phát triển kỹ năng",
+"home.world.4.p": "Tìm một trường hoặc khóa học gần bạn; thêm giấy phép mới, chúng được kiểm tra rồi hiển thị trên trang của bạn.",
+"home.world.auth_label": "Giấy phép được công nhận",
+"home.world.auth_more": "+ {n} cơ quan khác",
+"home.world.usa": "Phi công Part 107 tại Hoa Kỳ →",
+"footer.part107": "Part 107 · Hoa Kỳ"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",
@@ -581,7 +596,9 @@
 "landing_specialty.description": "So sánh phi công drone được chứng nhận cho {specialty}: giấy phép, thiết bị, đánh giá và giá. Báo giá miễn phí, thanh toán ký quỹ an toàn.",
 "landing_specialty.description_place": "So sánh phi công drone được chứng nhận cho {specialty} tại {place}: giấy phép, thiết bị, đánh giá và giá. Báo giá miễn phí, thanh toán ký quỹ an toàn.",
 "updates_page.title": "Có gì mới — thay đổi cho phi công và khách hàng | AubePilot",
-"updates_page.description": "Các tính năng được thêm vào AubePilot theo từng tháng: bản đồ và thời tiết, hồ sơ phi công, ngôn ngữ, tìm kiếm, trường học, báo giá. Mới nhất trước."
+"updates_page.description": "Các tính năng được thêm vào AubePilot theo từng tháng: bản đồ và thời tiết, hồ sơ phi công, ngôn ngữ, tìm kiếm, trường học, báo giá. Mới nhất trước.",
+"part107_page.title": "Phi công drone Part 107 tại Hoa Kỳ — FAA đã xác minh | AubePilot",
+"part107_page.description": "Tìm phi công drone có chứng chỉ FAA Part 107 theo mã ZIP và so sánh báo giá, hoặc đăng chứng chỉ của bạn: được kiểm tra trong sổ đăng ký FAA, hiển thị dưới dạng huy hiệu, nhìn thấy trên toàn thế giới."
 },
 "countries": {
 "Afghanistan": "Afghanistan",

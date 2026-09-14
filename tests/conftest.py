@@ -64,7 +64,7 @@ BROWSER_HEADERS = {
     "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Site": "cross-site",      # « none » exclurait tout Referer (voir bots.py)
     "Sec-CH-UA": '"Chromium";v="145", "Google Chrome";v="145"',
 }
 

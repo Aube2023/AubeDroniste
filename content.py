@@ -423,3 +423,100 @@ def updates(lang: str = "fr") -> list:
     lang = lang if lang in UPDATES_LANGS else "fr"
     return [{"month": month, "title": title[lang], "items": [i[lang].format(**_FMT) for i in items]}
             for month, title, items in _UPDATES]
+
+
+# ---------------------------------------------------------------------------
+# Page « Part 107 » (/part-107) : les États-Unis ont leur vocabulaire (ZIP
+# code, Remote Pilot Certificate, FAA Airmen registry) ; on le parle. Trois
+# langues, comme les nouveautés ; ailleurs la page reste en français.
+# ---------------------------------------------------------------------------
+
+PART107_LANGS = ("fr", "en", "es")
+
+_PART107 = {
+    "en": {
+        "eyebrow": "United States · FAA Part 107",
+        "h1": "Part 107 drone pilots, visible to the whole world.",
+        "lead": "AubePilot lists FAA-certified remote pilots next to pilots from every other country, in one "
+                "directory and on one map. Clients search by ZIP code and compare quotes; pilots get found, "
+                "contacted and reviewed in one place.",
+        "cta_pilot": "List my Part 107 certificate",
+        "cta_find": "Find a Part 107 pilot",
+        "blocks": [
+            ("A Part 107 badge that means something",
+             "Upload your Remote Pilot Certificate; our team checks it against the FAA Airmen registry before "
+             "the badge appears on your page. Clients can filter to verified pilots only."),
+            ("ZIP code search, coast to coast",
+             "90210, 10001, 73301: a ZIP code, an address or a city, and pilots appear from nearest to "
+             "farthest, on the map and in the list."),
+            ("One platform, worldwide",
+             "Quotes, missions, messaging, reviews and portfolio, in 14 languages. A pilot in Texas and a "
+             "client in Québec work the same way."),
+        ],
+        "pilots_h": "Part 107 pilots listed",
+        "empty": "No U.S. pilot is listed yet. Be the first in your state: your page goes live the day your "
+                 "certificate is checked.",
+        "note": "Commercial drone operations in the United States require an FAA Remote Pilot Certificate "
+                "(14 CFR Part 107). AubePilot shows the badge only after checking the certificate; recreational "
+                "flyers are welcome too, listed as such.",
+    },
+    "fr": {
+        "eyebrow": "États-Unis · FAA Part 107",
+        "h1": "Les pilotes Part 107, visibles du monde entier.",
+        "lead": "AubePilot présente les pilotes certifiés par la FAA à côté des pilotes de tous les autres pays, "
+                "dans un seul annuaire et sur une seule carte. Les clients cherchent par code ZIP et comparent les "
+                "devis ; les pilotes sont trouvés, contactés et notés au même endroit.",
+        "cta_pilot": "Inscrire mon brevet Part 107",
+        "cta_find": "Trouver un pilote Part 107",
+        "blocks": [
+            ("Un badge Part 107 qui veut dire quelque chose",
+             "Téléversez votre Remote Pilot Certificate ; notre équipe le contrôle dans le registre FAA Airmen "
+             "avant que le badge apparaisse sur votre fiche. Les clients peuvent ne voir que les pilotes vérifiés."),
+            ("Recherche par code ZIP, d'une côte à l'autre",
+             "90210, 10001, 73301 : un code ZIP, une adresse ou une ville, et les pilotes s'affichent du plus "
+             "proche au plus loin, sur la carte et dans la liste."),
+            ("Une seule plateforme, mondiale",
+             "Devis, missions, messagerie, avis et portfolio, en 14 langues. Un pilote au Texas et un client au "
+             "Québec travaillent de la même façon."),
+        ],
+        "pilots_h": "Pilotes Part 107 inscrits",
+        "empty": "Aucun pilote américain inscrit pour le moment. Soyez le premier de votre État : votre fiche est "
+                 "en ligne le jour où votre brevet est contrôlé.",
+        "note": "Aux États-Unis, l'usage commercial d'un drone exige un Remote Pilot Certificate de la FAA "
+                "(14 CFR Part 107). AubePilot n'affiche le badge qu'après contrôle du certificat ; les pilotes "
+                "récréatifs sont les bienvenus aussi, présentés comme tels.",
+    },
+    "es": {
+        "eyebrow": "Estados Unidos · FAA Part 107",
+        "h1": "Pilotos Part 107, visibles en todo el mundo.",
+        "lead": "AubePilot presenta a los pilotos certificados por la FAA junto a los pilotos de todos los demás "
+                "países, en un solo directorio y en un solo mapa. Los clientes buscan por código ZIP y comparan "
+                "presupuestos; los pilotos son encontrados, contactados y valorados en el mismo lugar.",
+        "cta_pilot": "Inscribir mi licencia Part 107",
+        "cta_find": "Encontrar un piloto Part 107",
+        "blocks": [
+            ("Una insignia Part 107 que significa algo",
+             "Suba su Remote Pilot Certificate; nuestro equipo lo comprueba en el registro FAA Airmen antes de "
+             "que la insignia aparezca en su ficha. Los clientes pueden ver solo pilotos verificados."),
+            ("Búsqueda por código ZIP, de costa a costa",
+             "90210, 10001, 73301: un código ZIP, una dirección o una ciudad, y los pilotos aparecen del más "
+             "cercano al más lejano, en el mapa y en la lista."),
+            ("Una sola plataforma, mundial",
+             "Presupuestos, misiones, mensajería, reseñas y portafolio, en 14 idiomas. Un piloto en Texas y un "
+             "cliente en Quebec trabajan de la misma manera."),
+        ],
+        "pilots_h": "Pilotos Part 107 inscritos",
+        "empty": "Todavía no hay ningún piloto estadounidense inscrito. Sea el primero de su estado: su ficha "
+                 "está en línea el día en que se comprueba su licencia.",
+        "note": "En Estados Unidos, el uso comercial de un dron exige un Remote Pilot Certificate de la FAA "
+                "(14 CFR Part 107). AubePilot muestra la insignia solo tras comprobar el certificado; los pilotos "
+                "recreativos también son bienvenidos, presentados como tales.",
+    },
+}
+
+# Nom du pays tel qu'il est stocke en base (liste francaise de config.COUNTRIES).
+PART107_COUNTRY = "États-Unis"
+
+
+def part107(lang: str = "fr") -> dict:
+    return _PART107[lang if lang in PART107_LANGS else "fr"]

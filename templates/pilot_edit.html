@@ -169,8 +169,8 @@
       <select name="country">
         <option value="">—</option>
         {% if _cur and _cur not in countries %}<option value="{{ _cur }}" selected>{{ _cur }}</option>{% endif %}
-        <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
-        <optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
+        <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+        <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
       </select>
     </label>
     <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ profile.city or '' }}"></label>

@@ -80,6 +80,9 @@ def test_le_collecteur_ne_compte_ni_visiteur_ni_arrivee_google(client, app_ctx, 
 
 def test_referent_impossible_et_client_hints_incoherents(browser_headers):
     h = dict(browser_headers, Host="localhost.localdomain")
+    # Sec-Fetch-Site: none (adresse tapee, favori) n'a jamais de Referer
+    assert bots.reason(dict(h, Referer="https://www.google.com/", **{"Sec-Fetch-Site": "none"})) == "referer-with-site-none"
+    assert bots.reason(dict(h, **{"Sec-Fetch-Site": "none"})) is None
     # apres un 302 un navigateur garde la page d'origine, jamais /lang/xx
     assert bots.reason(dict(h, Referer="https://localhost.localdomain/lang/ur?next=%2Ftr%2Fpilotes")) == "referer-redirect"
     # un navigateur serialise toujours le chemin : « https://site » nu n'existe pas

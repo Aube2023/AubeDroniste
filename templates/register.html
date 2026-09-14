@@ -150,8 +150,8 @@
         <label>{{ t('register.country') }}
           <select name="country">
             <option value="">—</option>
-            <optgroup label="{{ t('country.common') }}">{% for c in featured_countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</optgroup>
-            <optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
           </select>
         </label>
         <label>{{ t('register.city') }}

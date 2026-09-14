@@ -36,7 +36,7 @@
 "nav.payouts_cta": "Siapkan Stripe →",
 "footer.tagline": "Merek dari L'Aube Étoilée · Login bersama @aubemail.com",
 "footer.cities": "Dibuat di Montréal",
-"home.eyebrow": "Jaringan pilot internasional, sejak 2026",
+"home.eyebrow": "Jaringan pilot drone sedunia, sejak 2026",
 "home.h1_a": "Langit tak punya batas.",
 "home.h1_b": "Pilot Anda",
 "home.h1_b_em": "juga tidak.",
@@ -549,7 +549,22 @@
 "updates.eyebrow": "Yang baru",
 "updates.h": "Apa yang berubah untuk Anda.",
 "updates.lead": "Fitur yang ditambahkan untuk pilot dan klien, dari yang terbaru.",
-"updates.contact_p": "Ada fitur yang kurang? Beri tahu kami, begitulah daftar ini bertambah."
+"updates.contact_p": "Ada fitur yang kurang? Beri tahu kami, begitulah daftar ini bertambah.",
+"home.world.eyebrow": "Referensi dunia",
+"home.world.h": "Satu platform untuk semua pilot di dunia.",
+"home.world.lead": "Di mana pun Anda berada, pilot terlihat di sini. Hubungi mereka, perluas jaringan, kembangkan keterampilan.",
+"home.world.1.h": "Terlihat di sini, di mana pun",
+"home.world.1.p": "Pilot yang terdaftar di Montréal, Austin, Lyon, atau Casablanca muncul di direktori yang sama, di peta yang sama, dengan lencana lisensi terverifikasi yang sama.",
+"home.world.2.h": "Hubungi mereka",
+"home.world.2.p": "Satu pesan, satu penawaran, satu misi: semuanya lewat platform, dalam bahasa Anda, tanpa perantara.",
+"home.world.3.h": "Perluas jaringan Anda",
+"home.world.3.p": "Pilot, sekolah, perusahaan jasa, dan toko bertemu di satu tempat, di kedua sisi perbatasan.",
+"home.world.4.h": "Kembangkan keterampilan Anda",
+"home.world.4.p": "Temukan sekolah atau pelatihan di dekat Anda; tambahkan lisensi baru, akan diperiksa lalu ditampilkan di profil Anda.",
+"home.world.auth_label": "Lisensi yang diakui",
+"home.world.auth_more": "+ {n} otoritas lainnya",
+"home.world.usa": "Pilot Part 107 di Amerika Serikat →",
+"footer.part107": "Part 107 · Amerika Serikat"
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",
@@ -581,7 +596,9 @@
 "landing_specialty.description": "Bandingkan pilot drone bersertifikat untuk {specialty}: lisensi, peralatan, ulasan, dan tarif. Penawaran gratis, pembayaran escrow yang aman.",
 "landing_specialty.description_place": "Bandingkan pilot drone bersertifikat untuk {specialty} di {place}: lisensi, peralatan, ulasan, dan tarif. Penawaran gratis, pembayaran escrow yang aman.",
 "updates_page.title": "Yang baru — perubahan untuk pilot dan klien | AubePilot",
-"updates_page.description": "Fitur yang ditambahkan ke AubePilot bulan demi bulan: peta dan cuaca, profil pilot, bahasa, pencarian, sekolah, penawaran. Dari yang terbaru."
+"updates_page.description": "Fitur yang ditambahkan ke AubePilot bulan demi bulan: peta dan cuaca, profil pilot, bahasa, pencarian, sekolah, penawaran. Dari yang terbaru.",
+"part107_page.title": "Pilot drone Part 107 di Amerika Serikat — terverifikasi FAA | AubePilot",
+"part107_page.description": "Temukan pilot drone bersertifikat FAA Part 107 lewat kode ZIP dan bandingkan penawaran, atau daftarkan sertifikat Anda: diperiksa di registri FAA, ditampilkan sebagai lencana, terlihat di seluruh dunia."
 },
 "countries": {
 "Afghanistan": "Afganistan",

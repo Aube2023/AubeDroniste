@@ -26,7 +26,7 @@
         {% endif %}
         {% if p.verified_authorities or p.insured_verified %}
         <div class="auth-chips">
-          {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ a }}</span>{% endfor %}
+          {% for a in p.verified_authorities %}<span class="auth-chip" title="{{ auth_label(a) }}">✓ {{ auth_chip(a) }}</span>{% endfor %}
           {% if p.insured_verified %}<span class="auth-chip insured" title="{{ 'Attestation contrôlée par notre équipe' if fr else 'Certificate checked by our team' }}">✓ {{ 'RC pro' if fr else 'Insured' }}</span>{% endif %}
         </div>
         {% endif %}

@@ -87,6 +87,10 @@ def reason(headers: Mapping[str, str]) -> Optional[str]:
     # Referent impossible pour un navigateur (voir en tete de module).
     ref = (headers.get("Referer") or "").strip()
     own = (headers.get("Host") or "").lower().split(":")[0]
+    # Sec-Fetch-Site: none = navigation tapee ou favori : un navigateur
+    # n'y joint jamais de Referer. Le collecteur du 13 septembre le fait.
+    if ref and (headers.get("Sec-Fetch-Site") or "").lower() == "none":
+        return "referer-with-site-none"
     if ref and own:
         try:
             parts = urlsplit(ref)

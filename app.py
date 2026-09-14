@@ -216,6 +216,7 @@ LANG_ENDPOINTS = {
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
     "faq": seo.FAQ_LANGS,
     "updates": content.UPDATES_LANGS,
+    "part107": content.PART107_LANGS,
 }
 
 
@@ -364,6 +365,19 @@ def _visits_display() -> int:
         return config.SITE_VISIT_BASE
 
 
+def _country_options(names) -> list:
+    """[(valeur en base, libelle affiche)] tries dans la langue de la page :
+    un Americain voit « United States » a sa place, pas « États-Unis »."""
+    import unicodedata
+    lang = getattr(g, "lang", i18n.DEFAULT)
+
+    def key(label):
+        return unicodedata.normalize("NFKD", label).encode("ascii", "ignore").decode().casefold()
+
+    out = [(c, i18n.country_name(c, lang)) for c in names]
+    return sorted(out, key=lambda x: key(x[1]))
+
+
 @app.context_processor
 def _inject_globals():
     return {
@@ -401,6 +415,8 @@ def _inject_globals():
         "accents": i18n.ACCENTS,
         "slugify": seo.slugify,
         "country_name": lambda name: i18n.country_name(name, getattr(g, "lang", i18n.DEFAULT)),
+        "country_options": _country_options,
+        "auth_chip": lambda code: "FAA Part 107" if code == "FAA" else code.replace("_", " "),
         "og_locale": i18n.og_locale,
         # Stripe
         "stripe_mode": payments.banner_mode(),
@@ -898,6 +914,17 @@ def updates():
     lang = getattr(g, "lang", i18n.DEFAULT)
     return render_template("updates.html", releases=content.updates(lang),
                            seo=seo.updates_page(lang))
+
+
+@app.route("/part-107")
+def part107():
+    """Les Etats-Unis dans leurs mots (ZIP code, Part 107, registre FAA) :
+    la meme promesse que l'annuaire, avec les pilotes americains inscrits."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    country = services.resolve_country_slug(seo.slugify(content.PART107_COUNTRY))
+    pilots = services.pilots_in_place(country_names=country["names"]) if country else []
+    return render_template("part107.html", page=content.part107(lang), pilots=pilots,
+                           country=content.PART107_COUNTRY, seo=seo.part107_page(lang))
 
 
 CONTACT_TOPICS = [

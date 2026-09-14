@@ -2205,3 +2205,20 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 }
 [dir="rtl"] .updates-list li { padding: 12px 22px 12px 0; }
 [dir="rtl"] .updates-list li::before { left: auto; right: 4px; }
+
+/* --- accueil : référence mondiale ; page Part 107 --- */
+.world-grid { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 980px) { .world-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .world-grid { grid-template-columns: 1fr; } }
+.world-auths {
+  margin-top: 22px; padding: 18px 20px;
+  border: 1px solid var(--rule); border-radius: 14px; background: var(--paper-2);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+}
+.world-auths .lbl { font: 600 11px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+.world-auths .auth-chips { margin: 0; flex: 1 1 320px; }
+.world-auths .auth-chip { font-size: 11px; padding: 7px 10px; }
+.world-auths .auth-chip.more { color: var(--ink-soft); border-color: var(--rule); background: transparent; }
+.world-auths .ghost { margin-inline-start: auto; }
+.part107-head .cta-row { margin-top: 22px; }
+.part107-grid { margin: 8px 0 40px; }

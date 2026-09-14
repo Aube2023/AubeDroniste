@@ -36,7 +36,7 @@
 "nav.payouts_cta": "Configurar o Stripe →",
 "footer.tagline": "Uma marca de L'Aube Étoilée · Login compartilhado @aubemail.com",
 "footer.cities": "Feito em Montréal",
-"home.eyebrow": "Rede internacional de pilotos, desde 2026",
+"home.eyebrow": "A rede mundial de pilotos de drone, desde 2026",
 "home.h1_a": "O céu não tem fronteiras.",
 "home.h1_b": "Seus pilotos",
 "home.h1_b_em": "também não.",
@@ -549,7 +549,22 @@
 "updates.eyebrow": "Novidades",
 "updates.h": "O que mudou para você.",
 "updates.lead": "As funções adicionadas para pilotos e clientes, da mais recente à mais antiga.",
-"updates.contact_p": "Falta uma função? Diga-nos, é assim que a lista cresce."
+"updates.contact_p": "Falta uma função? Diga-nos, é assim que a lista cresce.",
+"home.world.eyebrow": "Referência mundial",
+"home.world.h": "Uma única plataforma para todos os pilotos do mundo.",
+"home.world.lead": "Onde quer que esteja, os pilotos estão visíveis aqui. Contacte-os, amplie a sua rede, desenvolva as suas competências.",
+"home.world.1.h": "Visíveis aqui, em todo o lado",
+"home.world.1.p": "Um piloto inscrito em Montreal, Austin, Lyon ou Casablanca aparece no mesmo diretório, no mesmo mapa, com o mesmo selo de licença verificada.",
+"home.world.2.h": "Contacte-os",
+"home.world.2.p": "Uma mensagem, um orçamento, uma missão: tudo passa pela plataforma, no seu idioma, sem intermediários.",
+"home.world.3.h": "Amplie a sua rede",
+"home.world.3.p": "Pilotos, escolas, empresas de serviços e lojas encontram-se no mesmo lugar, dos dois lados das fronteiras.",
+"home.world.4.h": "Desenvolva as suas competências",
+"home.world.4.p": "Encontre uma escola ou formação perto de si; adicione as suas novas licenças, são verificadas e exibidas na sua ficha.",
+"home.world.auth_label": "Licenças reconhecidas",
+"home.world.auth_more": "+ {n} outras autoridades",
+"home.world.usa": "Pilotos Part 107 nos Estados Unidos →",
+"footer.part107": "Part 107 · Estados Unidos"
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",
@@ -581,7 +596,9 @@
 "landing_specialty.description": "Compare pilotos de drone certificados para {specialty}: licenças, equipamento, avaliações e preços. Orçamentos grátis, pagamento em custódia.",
 "landing_specialty.description_place": "Compare pilotos de drone certificados para {specialty} em {place}: licenças, equipamento, avaliações e preços. Orçamentos grátis, pagamento em custódia.",
 "updates_page.title": "Novidades — o que mudou para pilotos e clientes | AubePilot",
-"updates_page.description": "As funções adicionadas ao AubePilot mês a mês: mapa e meteorologia, fichas de pilotos, idiomas, pesquisa, escolas, orçamentos. Da mais recente à mais antiga."
+"updates_page.description": "As funções adicionadas ao AubePilot mês a mês: mapa e meteorologia, fichas de pilotos, idiomas, pesquisa, escolas, orçamentos. Da mais recente à mais antiga.",
+"part107_page.title": "Pilotos de drone Part 107 nos Estados Unidos — licença FAA verificada | AubePilot",
+"part107_page.description": "Encontre um piloto de drone certificado FAA Part 107 por código ZIP e compare orçamentos, ou registe a sua licença: verificada no registo FAA, exibida como selo, visível em todo o mundo."
 },
 "countries": {
 "Afghanistan": "Afeganistão",

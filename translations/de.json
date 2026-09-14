@@ -36,7 +36,7 @@
 "nav.payouts_cta": "Stripe einrichten →",
 "footer.tagline": "Eine Marke von L'Aube Étoilée · Gemeinsame Anmeldung @aubemail.com",
 "footer.cities": "Gemacht in Montréal",
-"home.eyebrow": "Internationales Pilotennetzwerk, seit 2026",
+"home.eyebrow": "Das weltweite Netzwerk der Drohnenpiloten, seit 2026",
 "home.h1_a": "Der Himmel kennt keine Grenzen.",
 "home.h1_b": "Ihre Piloten",
 "home.h1_b_em": "auch nicht.",
@@ -549,7 +549,22 @@
 "updates.eyebrow": "Neuigkeiten",
 "updates.h": "Was sich für Sie geändert hat.",
 "updates.lead": "Die für Piloten und Kunden hinzugefügten Funktionen, neueste zuerst.",
-"updates.contact_p": "Fehlt eine Funktion? Sagen Sie es uns, so wächst diese Liste."
+"updates.contact_p": "Fehlt eine Funktion? Sagen Sie es uns, so wächst diese Liste.",
+"home.world.eyebrow": "Weltweite Referenz",
+"home.world.h": "Eine Plattform für alle Piloten der Welt.",
+"home.world.lead": "Wo immer Sie sind, die Piloten sind hier sichtbar. Kontaktieren Sie sie, erweitern Sie Ihr Netzwerk, bauen Sie Ihre Fähigkeiten aus.",
+"home.world.1.h": "Hier sichtbar, überall",
+"home.world.1.p": "Ein in Montréal, Austin, Lyon oder Casablanca registrierter Pilot erscheint im selben Verzeichnis, auf derselben Karte, mit demselben Abzeichen für die geprüfte Lizenz.",
+"home.world.2.h": "Kontaktieren Sie sie",
+"home.world.2.p": "Eine Nachricht, ein Angebot, ein Auftrag: alles läuft über die Plattform, in Ihrer Sprache, ohne Zwischenhändler.",
+"home.world.3.h": "Erweitern Sie Ihr Netzwerk",
+"home.world.3.p": "Piloten, Schulen, Dienstleister und Shops treffen sich an einem Ort, auf beiden Seiten jeder Grenze.",
+"home.world.4.h": "Bauen Sie Ihre Fähigkeiten aus",
+"home.world.4.p": "Finden Sie eine Schule oder Schulung in Ihrer Nähe; fügen Sie neue Lizenzen hinzu, sie werden geprüft und auf Ihrem Profil angezeigt.",
+"home.world.auth_label": "Anerkannte Lizenzen",
+"home.world.auth_more": "+ {n} weitere Behörden",
+"home.world.usa": "Part-107-Piloten in den USA →",
+"footer.part107": "Part 107 · USA"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",
@@ -581,7 +596,9 @@
 "landing_specialty.description": "Vergleichen Sie zertifizierte Drohnenpiloten für {specialty}: Lizenzen, Ausrüstung, Bewertungen und Preise. Kostenlose Angebote, sichere Zahlung über Treuhandkonto.",
 "landing_specialty.description_place": "Vergleichen Sie zertifizierte Drohnenpiloten für {specialty} in {place}: Lizenzen, Ausrüstung, Bewertungen und Preise. Kostenlose Angebote, sichere Zahlung über Treuhandkonto.",
 "updates_page.title": "Neuigkeiten — was sich für Piloten und Kunden geändert hat | AubePilot",
-"updates_page.description": "Die Monat für Monat zu AubePilot hinzugefügten Funktionen: Karte und Wetter, Pilotenprofile, Sprachen, Suche, Schulen, Angebote. Neueste zuerst."
+"updates_page.description": "Die Monat für Monat zu AubePilot hinzugefügten Funktionen: Karte und Wetter, Pilotenprofile, Sprachen, Suche, Schulen, Angebote. Neueste zuerst.",
+"part107_page.title": "Part-107-Drohnenpiloten in den USA — FAA-geprüft | AubePilot",
+"part107_page.description": "Finden Sie einen FAA-Part-107-zertifizierten Drohnenpiloten per ZIP-Code und vergleichen Sie Angebote, oder tragen Sie Ihr Zertifikat ein: im FAA-Register geprüft, als Abzeichen angezeigt, weltweit sichtbar."
 },
 "countries": {
 "Afghanistan": "Afghanistan",

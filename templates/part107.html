@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+{# `page` = content.part107(lang) ; `pilots` = pilotes americains inscrits ;
+   `country` = nom du pays tel qu'en base (valeur du filtre de l'annuaire). #}
+<nav class="breadcrumb" aria-label="{{ t('nav.breadcrumb') }}">
+  <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a> ›
+  <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a> ›
+  <span>{{ country_name(country) }}</span>
+</nav>
+
+<div class="search-head part107-head">
+  <span class="eyebrow"><span aria-hidden="true">🇺🇸</span> {{ page.eyebrow }}</span>
+  <h1>{{ page.h1 }}</h1>
+  <p class="lead muted">{{ page.lead }}</p>
+  <div class="cta-row">
+    <a href="{{ url_for('register') }}?role=pilot" class="cta cta-big">{{ page.cta_pilot }}</a>
+    <a href="{{ url_for('pilots_search', country=country) }}" class="ghost cta-big">{{ page.cta_find }}</a>
+  </div>
+</div>
+
+<div class="trust-grid part107-grid">
+  {% for h, p in page.blocks %}
+  <div class="trust-tile">
+    <span class="num">{{ '0' ~ loop.index }}</span>
+    <h3>{{ h }}</h3>
+    <p class="muted">{{ p }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<section class="section" id="pilotes">
+  <div class="section-header">
+    <span class="eyebrow">{{ page.eyebrow }}</span>
+    <h2>{{ page.pilots_h }}</h2>
+  </div>
+  <div class="grid-cards">
+    {% for p in pilots %}
+    {% include "_pilot_card.html" %}
+    {% else %}
+      <div class="empty-state">
+        <strong>{{ page.empty }}</strong>
+        <div class="actions-row">
+          <a href="{{ url_for('register') }}?role=pilot" class="cta">{{ page.cta_pilot }}</a>
+          <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.nearby.alt') }}</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <p class="muted small" style="max-width: 72ch; margin-top: 18px;">{{ page.note }}</p>
+</section>
+{% endblock %}
