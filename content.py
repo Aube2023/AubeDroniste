@@ -270,6 +270,16 @@ UPDATES_LANGS = ("fr", "en", "es")
 
 _UPDATES = [
     ("2026-09", {"fr": "Septembre 2026", "en": "September 2026", "es": "Septiembre de 2026"}, [
+        {"fr": "Page Part 107 pour les États-Unis : recherche par code ZIP, brevet FAA contrôlé dans le "
+               "registre officiel, puce « FAA Part 107 » sur les fiches.",
+         "en": "Part 107 page for the United States: ZIP code search, FAA certificate checked against the "
+               "official registry, \"FAA Part 107\" chip on pilot cards.",
+         "es": "Página Part 107 para Estados Unidos: búsqueda por código ZIP, licencia FAA comprobada en el "
+               "registro oficial, etiqueta « FAA Part 107 » en las fichas."},
+        {"fr": "Les listes de pays s'affichent dans votre langue et dans son ordre alphabétique, sur toutes les "
+               "pages.",
+         "en": "Country lists now show in your language, in its alphabetical order, on every page.",
+         "es": "Las listas de países aparecen en su idioma y en su orden alfabético, en todas las páginas."},
         {"fr": "Le site se lit en 14 langues, chaque page avec sa propre adresse : français, anglais, "
                "espagnol, portugais, allemand, arabe, russe, ukrainien, turc, hindi, ourdou, bengali, "
                "vietnamien et indonésien.",
