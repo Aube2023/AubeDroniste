@@ -544,7 +544,12 @@
 "vis.score": "Profil zu {n} % vollständig",
 "vis.blocking": "Blockierend: Solange dieser Punkt fehlt, fehlen Sie in einem ganzen Kanal.",
 "vis.done": "Alles da. Ihr Profil ist vollständig.",
-"landing.by_specialty": "Nach Fachgebiet"
+"landing.by_specialty": "Nach Fachgebiet",
+"footer.updates": "Neuigkeiten",
+"updates.eyebrow": "Neuigkeiten",
+"updates.h": "Was sich für Sie geändert hat.",
+"updates.lead": "Die für Piloten und Kunden hinzugefügten Funktionen, neueste zuerst.",
+"updates.contact_p": "Fehlt eine Funktion? Sagen Sie es uns, so wächst diese Liste."
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",
@@ -574,7 +579,9 @@
 "landing_specialty.title": "Drohnenpiloten — {specialty} | AubePilot",
 "landing_specialty.title_place": "Drohnenpiloten — {specialty} in {place} | AubePilot",
 "landing_specialty.description": "Vergleichen Sie zertifizierte Drohnenpiloten für {specialty}: Lizenzen, Ausrüstung, Bewertungen und Preise. Kostenlose Angebote, sichere Zahlung über Treuhandkonto.",
-"landing_specialty.description_place": "Vergleichen Sie zertifizierte Drohnenpiloten für {specialty} in {place}: Lizenzen, Ausrüstung, Bewertungen und Preise. Kostenlose Angebote, sichere Zahlung über Treuhandkonto."
+"landing_specialty.description_place": "Vergleichen Sie zertifizierte Drohnenpiloten für {specialty} in {place}: Lizenzen, Ausrüstung, Bewertungen und Preise. Kostenlose Angebote, sichere Zahlung über Treuhandkonto.",
+"updates_page.title": "Neuigkeiten — was sich für Piloten und Kunden geändert hat | AubePilot",
+"updates_page.description": "Die Monat für Monat zu AubePilot hinzugefügten Funktionen: Karte und Wetter, Pilotenprofile, Sprachen, Suche, Schulen, Angebote. Neueste zuerst."
 },
 "countries": {
 "Afghanistan": "Afghanistan",

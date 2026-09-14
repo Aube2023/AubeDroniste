@@ -544,7 +544,12 @@
 "vis.score": "Profil lengkap {n} %",
 "vis.blocking": "Menghambat: selama poin ini kosong, Anda absen dari satu saluran penuh.",
 "vis.done": "Semua sudah ada. Profil Anda lengkap.",
-"landing.by_specialty": "Per spesialisasi"
+"landing.by_specialty": "Per spesialisasi",
+"footer.updates": "Yang baru",
+"updates.eyebrow": "Yang baru",
+"updates.h": "Apa yang berubah untuk Anda.",
+"updates.lead": "Fitur yang ditambahkan untuk pilot dan klien, dari yang terbaru.",
+"updates.contact_p": "Ada fitur yang kurang? Beri tahu kami, begitulah daftar ini bertambah."
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",
@@ -574,7 +579,9 @@
 "landing_specialty.title": "Pilot drone — {specialty} | AubePilot",
 "landing_specialty.title_place": "Pilot drone — {specialty} di {place} | AubePilot",
 "landing_specialty.description": "Bandingkan pilot drone bersertifikat untuk {specialty}: lisensi, peralatan, ulasan, dan tarif. Penawaran gratis, pembayaran escrow yang aman.",
-"landing_specialty.description_place": "Bandingkan pilot drone bersertifikat untuk {specialty} di {place}: lisensi, peralatan, ulasan, dan tarif. Penawaran gratis, pembayaran escrow yang aman."
+"landing_specialty.description_place": "Bandingkan pilot drone bersertifikat untuk {specialty} di {place}: lisensi, peralatan, ulasan, dan tarif. Penawaran gratis, pembayaran escrow yang aman.",
+"updates_page.title": "Yang baru — perubahan untuk pilot dan klien | AubePilot",
+"updates_page.description": "Fitur yang ditambahkan ke AubePilot bulan demi bulan: peta dan cuaca, profil pilot, bahasa, pencarian, sekolah, penawaran. Dari yang terbaru."
 },
 "countries": {
 "Afghanistan": "Afganistan",

@@ -256,3 +256,170 @@ def faq(lang: str = "fr", featured_only: bool = False) -> list:
 def faq_categories(lang: str = "fr") -> list:
     lang = "en" if lang == "en" else "fr"
     return [(code, labels[lang]) for code, labels in FAQ_CATEGORIES]
+
+
+# ---------------------------------------------------------------------------
+# Nouveautés : ce qui a changé POUR LES PILOTES ET LES CLIENTS, du plus récent
+# au plus ancien. Une entrée = une fonction qu'on peut aller voir sur le site.
+# Jamais de cuisine interne (serveur, clés, données, sécurité, outils
+# d'administration) : c'est une page pour les utilisateurs, pas un journal
+# technique. Trois langues, comme la FAQ ; ailleurs la page reste en français.
+# ---------------------------------------------------------------------------
+
+UPDATES_LANGS = ("fr", "en", "es")
+
+_UPDATES = [
+    ("2026-09", {"fr": "Septembre 2026", "en": "September 2026", "es": "Septiembre de 2026"}, [
+        {"fr": "Le site se lit en 14 langues, chaque page avec sa propre adresse : français, anglais, "
+               "espagnol, portugais, allemand, arabe, russe, ukrainien, turc, hindi, ourdou, bengali, "
+               "vietnamien et indonésien.",
+         "en": "The site now reads in 14 languages, each page with its own address: French, English, "
+               "Spanish, Portuguese, German, Arabic, Russian, Ukrainian, Turkish, Hindi, Urdu, Bengali, "
+               "Vietnamese and Indonesian.",
+         "es": "El sitio se lee en 14 idiomas, cada página con su propia dirección: francés, inglés, "
+               "español, portugués, alemán, árabe, ruso, ucraniano, turco, hindi, urdu, bengalí, "
+               "vietnamita e indonesio."},
+        {"fr": "Carte : météo en direct avec verdict de vol, radar de précipitations, trafic aérien "
+               "autour de la zone et vue satellite.",
+         "en": "Map: live weather with a fly / no-fly verdict, precipitation radar, live air traffic "
+               "around the area and a satellite view.",
+         "es": "Mapa: meteorología en directo con veredicto de vuelo, radar de precipitaciones, tráfico "
+               "aéreo alrededor de la zona y vista satélite."},
+        {"fr": "Repères de confiance sur chaque fiche pilote : membre depuis, délai de réponse habituel, "
+               "missions livrées.",
+         "en": "Trust markers on every pilot page: member since, usual response time, missions delivered.",
+         "es": "Señales de confianza en cada ficha de piloto: miembro desde, tiempo de respuesta habitual, "
+               "misiones entregadas."},
+        {"fr": "Assurance responsabilité civile : le badge « RC pro » n'apparaît qu'une fois l'attestation "
+               "vérifiée par l'équipe.",
+         "en": "Liability insurance: the \"Pro liability\" badge only appears once the certificate has been "
+               "checked by the team.",
+         "es": "Seguro de responsabilidad civil: la insignia « RC pro » solo aparece cuando el equipo ha "
+               "verificado el certificado."},
+        {"fr": "Les pilotes voient combien de fois leur fiche a été consultée (7 et 30 jours) et ce qui "
+               "leur manque pour être mieux trouvés.",
+         "en": "Pilots see how many times their page was viewed (7 and 30 days) and what they still need "
+               "to add to be found more easily.",
+         "es": "Los pilotos ven cuántas veces se consultó su ficha (7 y 30 días) y qué les falta para que "
+               "los encuentren mejor."},
+        {"fr": "Partage de la fiche pilote en un clic, avec un visuel prêt pour les réseaux sociaux.",
+         "en": "Share a pilot page in one click, with a preview image ready for social networks.",
+         "es": "Compartir la ficha de piloto en un clic, con una imagen lista para las redes sociales."},
+        {"fr": "Fiche pilote plus complète : livrables proposés, présence professionnelle (site, réseaux), "
+               "spécialités regroupées par thème.",
+         "en": "Fuller pilot page: deliverables offered, professional presence (website, social links), "
+               "specialties grouped by theme.",
+         "es": "Ficha de piloto más completa: entregables ofrecidos, presencia profesional (sitio web, "
+               "redes), especialidades agrupadas por tema."},
+        {"fr": "« Soutenez ce pilote » : un pilote peut présenter un drone ou un équipement à financer et "
+               "recevoir des contributions.",
+         "en": "\"Support this pilot\": a pilot can present a drone or equipment to fund and receive "
+               "contributions.",
+         "es": "« Apoye a este piloto »: un piloto puede presentar un dron o un equipo por financiar y "
+               "recibir aportaciones."},
+        {"fr": "Six palettes de couleurs au choix dans le compte (Aube, Ambre, Émeraude, Corail, Azur, "
+               "Ardoise), en plus du mode nuit.",
+         "en": "Six colour palettes to choose from in your account (Dawn, Amber, Emerald, Coral, Azure, "
+               "Slate), on top of night mode.",
+         "es": "Seis paletas de colores a elegir en la cuenta (Amanecer, Ámbar, Esmeralda, Coral, Azur, "
+               "Pizarra), además del modo noche."},
+        {"fr": "Annuaire : deux nouvelles catégories, entreprises de services et boutiques, à côté des "
+               "pilotes et des écoles.",
+         "en": "Directory: two new categories, service companies and shops, alongside pilots and schools.",
+         "es": "Directorio: dos categorías nuevas, empresas de servicios y tiendas, junto a pilotos y "
+               "escuelas."},
+        {"fr": "Pays : liste complète des 195 pays à l'inscription et dans la recherche ; la ville est "
+               "placée sur la carte automatiquement.",
+         "en": "Countries: the full list of 195 countries at sign-up and in search; the city is placed on "
+               "the map automatically.",
+         "es": "Países: lista completa de los 195 países al registrarse y en la búsqueda; la ciudad se "
+               "sitúa en el mapa automáticamente."},
+        {"fr": "Connexion : bouton pour afficher le mot de passe, lien « mot de passe oublié », numéro de "
+               "téléphone avec l'indicatif du pays.",
+         "en": "Sign-in: show-password button, \"forgot password\" link, phone number with country code.",
+         "es": "Inicio de sesión: botón para mostrar la contraseña, enlace « contraseña olvidada », "
+               "teléfono con el prefijo del país."},
+        {"fr": "Fiche école : courriel et téléphone de contact affichés, page « Formations et tarifs ».",
+         "en": "School page: contact email and phone shown, \"Courses and prices\" page.",
+         "es": "Ficha de escuela: correo y teléfono de contacto visibles, página « Formaciones y tarifas »."},
+    ]),
+    ("2026-08", {"fr": "Août 2026", "en": "August 2026", "es": "Agosto de 2026"}, [
+        {"fr": "Recherche par code postal partout dans le monde, et filtre « pilotes certifiés ».",
+         "en": "Search by postal code anywhere in the world, plus a \"certified pilots\" filter.",
+         "es": "Búsqueda por código postal en todo el mundo, y filtro « pilotos certificados »."},
+        {"fr": "Commission dégressive pour les pilotes : {fee} % sur les premières missions avec un client, "
+               "{tier2_fee} % à partir de la mission {tier2_from}, {tier3_fee} % à partir de la mission "
+               "{tier3_from}.",
+         "en": "Sliding commission for pilots: {fee}% on the first missions with a client, {tier2_fee}% "
+               "from mission {tier2_from}, {tier3_fee}% from mission {tier3_from}.",
+         "es": "Comisión decreciente para los pilotos: {fee} % en las primeras misiones con un cliente, "
+               "{tier2_fee} % a partir de la misión {tier2_from}, {tier3_fee} % a partir de la misión "
+               "{tier3_from}."},
+        {"fr": "Écoles de pilotage : page publique des écoles et inscription des organismes de formation.",
+         "en": "Flight schools: public schools page and sign-up for training organisations.",
+         "es": "Escuelas de pilotaje: página pública de escuelas e inscripción de organismos de formación."},
+        {"fr": "Types de profil : pilote professionnel, pilote récréatif ou école, chacun avec sa fiche "
+               "adaptée.",
+         "en": "Profile types: professional pilot, recreational pilot or school, each with its own kind of "
+               "page.",
+         "es": "Tipos de perfil: piloto profesional, piloto recreativo o escuela, cada uno con su ficha "
+               "adaptada."},
+        {"fr": "FAQ complète et formulaire de contact.",
+         "en": "Full FAQ and contact form.",
+         "es": "FAQ completa y formulario de contacto."},
+        {"fr": "On reste connecté : la session se prolonge tant qu'on revient, plus besoin de se "
+               "reconnecter sans cesse.",
+         "en": "You stay signed in: the session extends as long as you keep coming back, no more constant "
+               "re-login.",
+         "es": "La sesión se mantiene: se prolonga mientras vuelva, sin tener que iniciar sesión una y "
+               "otra vez."},
+        {"fr": "Carte : épingles regroupées façon annuaire, icônes distinctes pour pilotes, écoles et "
+               "missions.",
+         "en": "Map: clustered pins, distinct icons for pilots, schools and missions.",
+         "es": "Mapa: marcadores agrupados, iconos distintos para pilotos, escuelas y misiones."},
+    ]),
+    ("2026-06", {"fr": "Juin 2026", "en": "June 2026", "es": "Junio de 2026"}, [
+        {"fr": "Carte interactive sur les pages Pilotes et Missions.",
+         "en": "Interactive map on the Pilots and Missions pages.",
+         "es": "Mapa interactivo en las páginas Pilotos y Misiones."},
+        {"fr": "Ouverture aux pilotes du monde entier, États-Unis compris.",
+         "en": "Open to pilots worldwide, United States included.",
+         "es": "Abierto a pilotos de todo el mundo, Estados Unidos incluido."},
+        {"fr": "Portfolio : vidéos en HD lisibles partout, photos et réalisations sur la fiche.",
+         "en": "Portfolio: HD videos that play everywhere, photos and past work on the page.",
+         "es": "Portafolio: vídeos en HD que se ven en cualquier dispositivo, fotos y trabajos en la ficha."},
+        {"fr": "Une seule photo de profil pour tout l'écosystème Aube, et une pastille « mon compte » dans "
+               "l'en-tête.",
+         "en": "One profile photo across the whole Aube ecosystem, and a \"my account\" chip in the header.",
+         "es": "Una sola foto de perfil para todo el ecosistema Aube, y una pastilla « mi cuenta » en la "
+               "cabecera."},
+    ]),
+    ("2026-05", {"fr": "Mai 2026 · lancement", "en": "May 2026 · launch", "es": "Mayo de 2026 · lanzamiento"}, [
+        {"fr": "Annuaire de pilotes avec brevets, spécialités, rayon d'action et disponibilité.",
+         "en": "Pilot directory with licences, specialties, operating radius and availability.",
+         "es": "Directorio de pilotos con licencias, especialidades, radio de acción y disponibilidad."},
+        {"fr": "Les clients publient des missions, les pilotes répondent avec un devis.",
+         "en": "Clients post missions, pilots reply with a quote.",
+         "es": "Los clientes publican misiones, los pilotos responden con un presupuesto."},
+        {"fr": "Devis détaillé exportable en PDF, forfaits et livrables proposés par le pilote.",
+         "en": "Detailed quote exportable as PDF, packages and deliverables offered by the pilot.",
+         "es": "Presupuesto detallado exportable en PDF, paquetes y entregables ofrecidos por el piloto."},
+        {"fr": "Avis laissés par les clients après une mission réalisée.",
+         "en": "Reviews left by clients after a completed mission.",
+         "es": "Reseñas de los clientes tras una misión realizada."},
+        {"fr": "Alerte par courriel aux pilotes quand une mission est publiée dans leur rayon.",
+         "en": "Email alert to pilots when a mission is posted within their radius.",
+         "es": "Aviso por correo a los pilotos cuando se publica una misión en su radio."},
+        {"fr": "Catalogue de brevets pré-rempli selon l'autorité (Transport Canada, FAA, EASA et d'autres).",
+         "en": "Licence catalogue pre-filled by authority (Transport Canada, FAA, EASA and others).",
+         "es": "Catálogo de licencias precargado según la autoridad (Transport Canada, FAA, EASA y otras)."},
+    ]),
+]
+
+
+def updates(lang: str = "fr") -> list:
+    """[{month, title, items}] du plus récent au plus ancien, dans la langue
+    voulue (français si la page n'y existe pas)."""
+    lang = lang if lang in UPDATES_LANGS else "fr"
+    return [{"month": month, "title": title[lang], "items": [i[lang].format(**_FMT) for i in items]}
+            for month, title, items in _UPDATES]

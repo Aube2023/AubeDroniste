@@ -17,6 +17,7 @@ import sys
 import tempfile
 
 import pytest
+from flask.testing import FlaskClient
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -52,12 +53,41 @@ def isolated_data_dir():
 # App / contexte / client
 # ---------------------------------------------------------------------------
 
+# Le client de test se presente comme un vrai Chrome : depuis bots.py, une
+# page demandee sans Accept-Language, sans Accept HTML ni Sec-Fetch-* est
+# comptee comme robot, et les tests de frequentation attendent un visiteur.
+# Un test qui veut passer pour un robot surcharge le User-Agent.
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Site": "none",
+    "Sec-CH-UA": '"Chromium";v="145", "Google Chrome";v="145"',
+}
+
+
+class BrowserClient(FlaskClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.environ_base.update({"HTTP_" + k.upper().replace("-", "_"): v
+                                  for k, v in BROWSER_HEADERS.items()})
+
+
+@pytest.fixture()
+def browser_headers():
+    return dict(BROWSER_HEADERS)
+
+
 @pytest.fixture(scope="session")
 def _app(isolated_data_dir):
     """App Flask configuree pour les tests (DB isolee, schema + migrations)."""
     import auth
     from app import app as flask_app, bootstrap_db
     import db
+    flask_app.test_client_class = BrowserClient
     # Isolation du fichier de mots de passe dev : auth._DEV_HASH_FILE pointe par
     # defaut sur la racine du projet (.dev_passwords). On le redirige vers le
     # temp dir pour ne pas polluer le vrai fichier quand les tests creent des

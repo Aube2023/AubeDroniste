@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="search-head">
+  <span class="eyebrow">{{ t('updates.eyebrow') }}</span>
+  <h1>{{ t('updates.h') }}</h1>
+  <p class="lead muted">{{ t('updates.lead') }}</p>
+</div>
+
+<nav class="faq-nav" aria-label="{{ t('updates.eyebrow') }}">
+  {% for r in releases %}
+    <a href="#maj-{{ r.month }}">{{ r.title }}</a>
+  {% endfor %}
+</nav>
+
+{% for r in releases %}
+<section class="faq-section updates-section" id="maj-{{ r.month }}">
+  <h2>{{ r.title }}</h2>
+  <ul class="updates-list">
+    {% for item in r['items'] %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+<section class="contact-block">
+  <div>
+    <span class="eyebrow">{{ t('home.contact.eyebrow') }}</span>
+    <h2>{{ t('home.contact.h') }}</h2>
+    <p class="muted">{{ t('updates.contact_p') }}</p>
+  </div>
+  <div class="actions-row">
+    <a class="cta" href="{{ url_for('contact_form') }}">{{ t('contact.h2') }}</a>
+    <a class="ghost" href="{{ url_for('faq') }}">{{ t('footer.faq') }}</a>
+  </div>
+</section>
+
+{% endblock %}

@@ -544,7 +544,12 @@
 "vis.score": "Perfil {n} % completo",
 "vis.blocking": "Bloqueante: enquanto este item faltar, você fica ausente de um canal inteiro.",
 "vis.done": "Está tudo aí. Seu perfil está completo.",
-"landing.by_specialty": "Por especialidade"
+"landing.by_specialty": "Por especialidade",
+"footer.updates": "Novidades",
+"updates.eyebrow": "Novidades",
+"updates.h": "O que mudou para você.",
+"updates.lead": "As funções adicionadas para pilotos e clientes, da mais recente à mais antiga.",
+"updates.contact_p": "Falta uma função? Diga-nos, é assim que a lista cresce."
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",
@@ -574,7 +579,9 @@
 "landing_specialty.title": "Pilotos de drone — {specialty} | AubePilot",
 "landing_specialty.title_place": "Pilotos de drone — {specialty} em {place} | AubePilot",
 "landing_specialty.description": "Compare pilotos de drone certificados para {specialty}: licenças, equipamento, avaliações e preços. Orçamentos grátis, pagamento em custódia.",
-"landing_specialty.description_place": "Compare pilotos de drone certificados para {specialty} em {place}: licenças, equipamento, avaliações e preços. Orçamentos grátis, pagamento em custódia."
+"landing_specialty.description_place": "Compare pilotos de drone certificados para {specialty} em {place}: licenças, equipamento, avaliações e preços. Orçamentos grátis, pagamento em custódia.",
+"updates_page.title": "Novidades — o que mudou para pilotos e clientes | AubePilot",
+"updates_page.description": "As funções adicionadas ao AubePilot mês a mês: mapa e meteorologia, fichas de pilotos, idiomas, pesquisa, escolas, orçamentos. Da mais recente à mais antiga."
 },
 "countries": {
 "Afghanistan": "Afeganistão",

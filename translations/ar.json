@@ -544,7 +544,12 @@
 "vis.score": "الملف مكتمل بنسبة {n} ٪",
 "vis.blocking": "معطِّل: ما دامت هذه النقطة ناقصة، فأنت غائب عن قناة كاملة.",
 "vis.done": "كل شيء موجود. ملفك مكتمل.",
-"landing.by_specialty": "حسب التخصص"
+"landing.by_specialty": "حسب التخصص",
+"footer.updates": "الجديد",
+"updates.eyebrow": "الجديد",
+"updates.h": "ما الذي تغيّر لك.",
+"updates.lead": "الميزات المضافة للطيّارين والعملاء، من الأحدث إلى الأقدم.",
+"updates.contact_p": "تنقصك ميزة؟ أخبرنا، هكذا تطول هذه القائمة."
 },
 "seo": {
 "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",
@@ -574,7 +579,9 @@
 "landing_specialty.title": "طيارو درون — {specialty} | AubePilot",
 "landing_specialty.title_place": "طيارو درون — {specialty} في {place} | AubePilot",
 "landing_specialty.description": "قارن طياري الدرون المعتمدين لـ {specialty}: رخص، معدات، تقييمات وأسعار. عروض أسعار مجانية، دفع آمن في حساب ضمان.",
-"landing_specialty.description_place": "قارن طياري الدرون المعتمدين لـ {specialty} في {place}: رخص، معدات، تقييمات وأسعار. عروض أسعار مجانية، دفع آمن في حساب ضمان."
+"landing_specialty.description_place": "قارن طياري الدرون المعتمدين لـ {specialty} في {place}: رخص، معدات، تقييمات وأسعار. عروض أسعار مجانية، دفع آمن في حساب ضمان.",
+"updates_page.title": "الجديد — ما تغيّر للطيّارين والعملاء | AubePilot",
+"updates_page.description": "الميزات المضافة إلى AubePilot شهرًا بعد شهر: الخريطة والطقس، صفحات الطيّارين، اللغات، البحث، المدارس، عروض الأسعار. من الأحدث إلى الأقدم."
 },
 "countries": {
 "Afghanistan": "أفغانستان",

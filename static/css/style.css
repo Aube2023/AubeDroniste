@@ -2191,3 +2191,17 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 .campaign-bar { height: 10px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
 .campaign-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--amber), var(--teal)); }
 .campaign-form .chip-check input[type=radio] { margin-inline-end: 4px; }
+
+/* --- page Nouveautés (/nouveautes) : une liste par mois --- */
+.updates-section { margin: 32px 0 40px; }
+.updates-list { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.updates-list li {
+  position: relative; padding: 12px 0 12px 22px; border-bottom: 1px solid var(--rule);
+  color: var(--ink-soft); line-height: 1.55; max-width: 72ch;
+}
+.updates-list li::before {
+  content: ""; position: absolute; left: 4px; top: 21px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--amber);
+}
+[dir="rtl"] .updates-list li { padding: 12px 22px 12px 0; }
+[dir="rtl"] .updates-list li::before { left: auto; right: 4px; }

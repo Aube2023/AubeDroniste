@@ -18,6 +18,7 @@ from flask import (
 )
 
 import auth
+import bots
 import config
 import content
 import db
@@ -214,6 +215,7 @@ LANG_ENDPOINTS = {
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
     "faq": seo.FAQ_LANGS,
+    "updates": content.UPDATES_LANGS,
 }
 
 
@@ -302,15 +304,11 @@ def _remember_url_lang(resp):
     return resp
 
 
-# Robots connus : comptes a part pour ne pas gonfler la frequentation
-# « humaine » (GPTBot et Semrush pesent lourd dans les journaux).
-_BOT_UA = ("bot", "crawler", "spider", "slurp", "curl", "wget", "python-requests",
-           "headlesschrome", "monitor", "preview", "scan", "http-client",
-           "facebookexternalhit", "aubestatus")
-
-
 def _is_bot() -> bool:
-    return any(m in (request.user_agent.string or "").lower() for m in _BOT_UA)
+    """Robots comptes a part pour ne pas gonfler la frequentation « humaine » :
+    agents avoues (GPTBot, Semrush...) ET collecteurs deguises en Chrome, que
+    seuls les en-tetes trahissent (voir bots.py). Aucun en-tete n'est garde."""
+    return bots.is_bot(request.headers)
 
 
 # Application mobile (mobile/, Flutter) : WebView avec sa propre barre
@@ -886,6 +884,15 @@ def faq():
         faq_categories=content.faq_categories(lang),
         seo=seo.faq_page(lang),
     )
+
+
+@app.route("/nouveautes")
+def updates():
+    """Ce qui a change pour les pilotes et les clients, mois par mois. Le
+    contenu vit dans content.py (fr, en, es) ; jamais de cuisine interne."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    return render_template("updates.html", releases=content.updates(lang),
+                           seo=seo.updates_page(lang))
 
 
 CONTACT_TOPICS = [
