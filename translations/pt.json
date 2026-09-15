@@ -566,7 +566,13 @@
 "home.world.all": "Ver pilotos do mundo inteiro →",
 "footer.pitch": "A rede mundial que reúne pilotos de drone, clientes e escolas num único mapa.",
 "footer.company": "Empresa",
-"footer.follow": "Siga-nos"
+"footer.follow": "Siga-nos",
+"register.h1_simple": "Crie a sua conta AubePilot.",
+"register.lead_simple": "Gratuito, sem subscrição. Cliente, piloto ou ambos: mude de papel quando quiser a partir do seu espaço.",
+"register.step_role": "O seu papel",
+"register.step_kind": "Que tipo de piloto?",
+"register.step_identity": "Os seus dados",
+"register.step_base": "Onde está?"
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

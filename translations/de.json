@@ -566,7 +566,13 @@
 "home.world.all": "Piloten aus aller Welt ansehen →",
 "footer.pitch": "Das weltweite Netzwerk, das Drohnenpiloten, Auftraggeber und Schulen auf einer Karte zusammenbringt.",
 "footer.company": "Unternehmen",
-"footer.follow": "Folgen Sie uns"
+"footer.follow": "Folgen Sie uns",
+"register.h1_simple": "Erstellen Sie Ihr AubePilot-Konto.",
+"register.lead_simple": "Kostenlos, ohne Abo. Kunde, Pilot oder beides: Sie wechseln die Rolle jederzeit in Ihrem Bereich.",
+"register.step_role": "Ihre Rolle",
+"register.step_kind": "Welche Art von Pilot?",
+"register.step_identity": "Ihre Angaben",
+"register.step_base": "Wo sind Sie?"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

@@ -20,7 +20,7 @@
         {% for code, lbl in profile_kinds %}
         <label>
           <input type="radio" name="kind" value="{{ code }}" {% if loop.first %}checked{% endif %}>
-          <span class="role-card"><span class="icon">▴ {{ kind_label(code, true) }}</span><span class="name">{{ kind_label(code) }}</span></span>
+          <span class="role-card"><span class="name">{{ kind_label(code) }}</span></span>
         </label>
         {% endfor %}
       </div>

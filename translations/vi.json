@@ -566,7 +566,13 @@
 "home.world.all": "Xem phi công từ khắp thế giới →",
 "footer.pitch": "Mạng lưới toàn cầu quy tụ phi công drone, khách hàng và trường đào tạo trên một bản đồ duy nhất.",
 "footer.company": "Công ty",
-"footer.follow": "Theo dõi chúng tôi"
+"footer.follow": "Theo dõi chúng tôi",
+"register.h1_simple": "Tạo tài khoản AubePilot của bạn.",
+"register.lead_simple": "Miễn phí, không cần đăng ký gói. Khách hàng, phi công hoặc cả hai: đổi vai trò bất cứ lúc nào từ không gian của bạn.",
+"register.step_role": "Vai trò của bạn",
+"register.step_kind": "Loại phi công nào?",
+"register.step_identity": "Thông tin của bạn",
+"register.step_base": "Bạn ở đâu?"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -566,7 +566,13 @@
 "home.world.all": "Lihat pilot dari seluruh dunia →",
 "footer.pitch": "Jaringan global yang mempertemukan pilot drone, klien, dan sekolah dalam satu peta.",
 "footer.company": "Perusahaan",
-"footer.follow": "Ikuti kami"
+"footer.follow": "Ikuti kami",
+"register.h1_simple": "Buat akun AubePilot Anda.",
+"register.lead_simple": "Gratis, tanpa langganan. Klien, pilot, atau keduanya: ganti peran kapan saja dari ruang Anda.",
+"register.step_role": "Peran Anda",
+"register.step_kind": "Pilot jenis apa?",
+"register.step_identity": "Informasi Anda",
+"register.step_base": "Di mana Anda?"
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

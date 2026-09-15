@@ -5,31 +5,25 @@
 <section class="auth-split">
   <aside class="auth-aside">
     <span class="eyebrow">{{ t('register.eyebrow') }}</span>
-    <h1>{{ t('register.h1a') }}<em>{{ t('register.h1em') }}</em>{{ t('register.h1b') }}</h1>
-    <p class="lead muted">
-      {{ t('register.lead') }}
-    </p>
+    <h1>{{ t('register.h1_simple') }}</h1>
+    <p class="lead muted">{{ t('register.lead_simple') }}</p>
     <ul class="checklist">
-      <li>{{ t('register.b1a') }}<em>{{ t('register.b1em') }}</em>{{ t('register.b1b') }}</li>
       <li>{{ t('register.bullet_licences') }}</li>
       <li>{{ t('register.bullet_search') }}</li>
       <li>{{ t('register.bullet_fee') }}</li>
-      <li>{{ t('register.eco_pre') }} <a href="https://aubeetoilee.com">L'Aube Étoilée</a>{{ t('register.eco_post') }}</li>
     </ul>
   </aside>
 
-  <form method="post" class="auth-form">
+  <form method="post" class="auth-form auth-steps">
         {{ csrf_input() }}
-    <h2>{{ t('register.create_account') }}</h2>
 
-    <fieldset class="fieldset-block">
-      <legend>{{ t('register.role_legend') }}</legend>
-      <div class="role-cards">
+    <fieldset class="fieldset-block step">
+      <legend>{{ t('register.step_role') }}</legend>
+      <div class="role-cards role-cards-3">
         {% set sel = request.args.get('role','client') %}
         <label>
           <input type="radio" name="role" value="client" {% if sel=='client' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ {{ t('register.role_client') }}</span>
             <span class="name">{{ t('register.role_client_name') }}</span>
             <span class="desc">{{ t('register.role_client_desc') }}</span>
           </span>
@@ -37,7 +31,6 @@
         <label>
           <input type="radio" name="role" value="pilot" {% if sel=='pilot' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ {{ t('register.role_pilot') }}</span>
             <span class="name">{{ t('register.role_pilot_name') }}</span>
             <span class="desc">{{ t('register.role_pilot_desc') }}</span>
           </span>
@@ -45,7 +38,6 @@
         <label>
           <input type="radio" name="role" value="both" {% if sel=='both' %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ {{ t('register.role_both') }}</span>
             <span class="name">{{ t('register.role_both_name') }}</span>
             <span class="desc">{{ t('register.role_both_desc') }}</span>
           </span>
@@ -54,14 +46,13 @@
     </fieldset>
 
     {% set sel_kind = request.args.get('kind', 'pro') %}
-    <fieldset class="fieldset-block" id="kind-block">
-      <legend>{{ t('register.kind_legend') }}</legend>
-      <div class="role-cards">
+    <fieldset class="fieldset-block step" id="kind-block">
+      <legend>{{ t('register.step_kind') }}</legend>
+      <div class="role-cards role-cards-kinds">
         {% for code, lbl in profile_kinds %}
         <label>
           <input type="radio" name="kind" value="{{ code }}" {% if sel_kind == code %}checked{% endif %}>
           <span class="role-card">
-            <span class="icon">▴ {{ kind_label(code, true) }}</span>
             <span class="name">{{ kind_label(code) }}</span>
             <span class="desc">{% if code == 'pro' %}{{ t('register.kind_pro_desc') }}{% elif code == 'recreational' %}{{ t('register.kind_rec_desc') }}{% elif code == 'company' %}{{ t('register.kind_company_desc') }}{% elif code == 'shop' %}{{ t('register.kind_shop_desc') }}{% else %}{{ t('register.kind_school_desc') }}{% endif %}</span>
           </span>
@@ -109,15 +100,17 @@
       })();
     </script>
 
-    <fieldset class="fieldset-block">
-      <legend>{{ t('register.identity_legend') }}</legend>
+    <fieldset class="fieldset-block step">
+      <legend>{{ t('register.step_identity') }}</legend>
       <div class="grid-2">
         <label>{{ t('register.full_name') }} <span class="muted small">({{ t('register.or_school_name') }})</span>
           <input name="full_name" required placeholder="{{ t('register.full_name_ph') }}">
         </label>
-        <label>{{ t('register.username') }}
-          <input name="username" id="reg-username" required minlength="3" maxlength="32" pattern="[a-z0-9_]{3,32}" placeholder="sophie_tremblay" title="3 à 32 caractères : lettres minuscules, chiffres et « _ » uniquement">
-          <span class="field-hint">{{ t('register.aubemail_address') }} : <b id="aubemail-preview">{{ t('register.username_word') }}</b>@aubemail.com</span>
+        <label>{{ t('register.username') }} <span class="muted small">({{ t('register.aubemail_address')|lower }})</span>
+          <span class="input-suffix">
+            <input name="username" id="reg-username" required minlength="3" maxlength="32" pattern="[a-z0-9_]{3,32}" placeholder="sophie_tremblay" title="3 à 32 caractères : lettres minuscules, chiffres et « _ » uniquement" autocomplete="username">
+            <span>@aubemail.com</span>
+          </span>
         </label>
         <label>{{ t('register.password') }}
           <span class="password-field">
@@ -144,8 +137,8 @@
       </label>
     </fieldset>
 
-    <fieldset class="fieldset-block">
-      <legend>{{ t('register.home_base_legend') }}</legend>
+    <fieldset class="fieldset-block step">
+      <legend>{{ t('register.step_base') }}</legend>
       <div class="grid-2">
         <label>{{ t('register.country') }}
           <select name="country">
@@ -160,8 +153,10 @@
       </div>
       <input type="hidden" name="lat" value="">
       <input type="hidden" name="lng" value="">
-      <button type="button" class="ghost" data-action="use-location" style="margin-top:8px">📍 {{ t('register.use_location') }}</button>
-      <p class="muted" style="margin-top:4px;font-size:.85em">{{ t('register.location_hint') }}</p>
+      <div class="row-inline" style="margin-top: 10px;">
+        <button type="button" class="ghost" data-action="use-location">⌖ {{ t('register.use_location') }}</button>
+        <span class="muted small">{{ t('register.location_hint') }}</span>
+      </div>
     </fieldset>
 
     {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
@@ -188,13 +183,12 @@
 
 <script nonce="{{ csp_nonce }}">
 (function () {
-  // ── Adresse AubeMail affichée en direct sous l'identifiant ──
+  // Identifiant : minuscules, chiffres et « _ » seulement, corrigé à la frappe.
   var champUser = document.getElementById('reg-username');
-  var apercuMail = document.getElementById('aubemail-preview');
-  if (champUser && apercuMail) {
+  if (champUser) {
     champUser.addEventListener('input', function () {
-      var v = champUser.value.toLowerCase().replace(/[^a-z0-9_.\-]/g, '');
-      apercuMail.textContent = v || 'identifiant';
+      var v = champUser.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (v !== champUser.value) champUser.value = v;
     });
   }
 })();
