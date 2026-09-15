@@ -2,11 +2,12 @@
 {% block content %}
 {% set fr = (lang == 'fr') %}
 
+{% set n = pilots|length %}
 <div class="search-head">
   <span class="eyebrow">{{ 'Annuaire pilote' if fr else 'Pilot directory' }}</span>
-  <h1>{{ 'Trouver un pilote.' if fr else 'Find a pilot.' }}</h1>
+  <h1>{{ 'Trouver un pilote' if fr else 'Find a pilot' }}</h1>
   <p class="lead muted">
-    {{ pilots|length }} {{ 'pilote(s) correspondent à votre filtrage' if fr else 'pilot(s) match your filters' }}{% if params.near_label %}{{ ', du plus proche de ' if fr else ', nearest first around ' }}<strong>{{ params.near_label }}</strong>{% endif %}.
+    {% if n == 0 %}{{ t('search.pilots_none') }}{% elif n == 1 %}{{ t('search.pilots_one') }}{% else %}{{ t('search.pilots_many', n=n) }}{% endif %}{% if params.near_label and n %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
     {% if params.country == 'États-Unis' %}<a href="{{ url_for('part107') }}">{{ 'Pilotes Part 107 →' if fr else 'Part 107 pilots →' }}</a>{% endif %}
   </p>
 </div>
@@ -42,68 +43,71 @@
   </div>
 </details>
 
-<form method="get" class="filters card">
+{# only_available est coché par défaut : ce n'est pas un filtre « actif » #}
+{% set has_filters = params.near or params.text or params.country or params.city or params.mission_type or params.capability or params.authority or params.min_rating or params.only_verified or params.only_insured or params.near_only %}
+<form method="get" class="search-form">
   {% if params.kind %}<input type="hidden" name="kind" value="{{ params.kind }}">{% endif %}
-  <div class="filter-row">
-    <label>{{ 'Code postal, adresse ou ville' if fr else 'Postal code, address or city' }}
-      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code"
-             placeholder="{{ 'H2X 1Y4 · 75011 · G5Y · Trois-Rivières' }}">
+  <div class="search-bar">
+    <label class="search-field grow">
+      <span>{{ t('home.search_near') }}</span>
+      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('home.search_near_ph') }}">
     </label>
-    <label>{{ 'Rayon' if fr else 'Radius' }}
+    <label class="search-field narrow">
+      <span>{{ t('search.radius') }}</span>
       <select name="radius_km">
         {% for r in search_radius_choices %}<option value="{{ r }}" {% if params.radius_km == r %}selected{% endif %}>{{ r }} km</option>{% endfor %}
       </select>
     </label>
-    <label class="check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> {{ 'Limiter au rayon' if fr else 'Within radius only' }}</label>
+    <label class="search-field">
+      <span>{{ t('home.search_type') }}</span>
+      <select name="mission_type">
+        <option value="">{{ t('home.search_type_any') }}</option>
+        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
+      </select>
+    </label>
+    <button class="cta" type="submit">{{ t('search.btn') }}</button>
   </div>
   {% if params.near_label %}
     <p class="near-note">⌖ {{ 'Autour de' if fr else 'Around' }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ 'tri par distance, les pilotes plus loin restent visibles' if fr else 'sorted by distance, farther pilots stay visible' }}{% endif %}</p>
   {% elif params.near_error %}
     <p class="near-note err">{{ 'Lieu introuvable : essayez « code postal + pays » ou une ville.' if fr else 'Place not found: try “postal code + country” or a city.' }}</p>
   {% endif %}
-
-  <label>{{ 'Rechercher un pilote' if fr else 'Search for a pilot' }}
-    <input name="q" value="{{ params.text }}" type="search"
-           placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
-  </label>
-  <div class="grid-3">
-    <label>{{ 'Pays' if fr else 'Country' }}
-      <select name="country">
-        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
-      </select>
-    </label>
-    <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}"></label>
-    <label>{{ 'Spécialité' if fr else 'Specialty' }}
-      <select name="mission_type">
-        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
-      </select>
-    </label>
-    <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
-      <select name="capability">
-        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for gname, codes in drone_capability_groups %}<optgroup label="{{ gname }}">{% for cap in codes %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap_label(cap) }}</option>{% endfor %}</optgroup>{% endfor %}
-      </select>
-    </label>
-    <label>{{ 'Autorité de certification' if fr else 'Certification authority' }}
-      <select name="authority">
-        <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
-        {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
-      </select>
-    </label>
-    <label>{{ 'Note minimale' if fr else 'Min. rating' }}
-      <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
-    </label>
-  </div>
-  <div class="chips" style="margin-top: 12px;">
+  <div class="search-options">
     <label class="chip-check"><input type="checkbox" name="only_verified" value="1" {% if params.only_verified %}checked{% endif %}> ✓ {{ 'Brevet vérifié' if fr else 'Verified licence' }}</label>
     <label class="chip-check"><input type="checkbox" name="only_insured" value="1" {% if params.only_insured %}checked{% endif %}> {{ 'Assurance vérifiée' if fr else 'Verified insurance' }}</label>
-    <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles uniquement' if fr else 'Available only' }}</label>
-  </div>
-  <div class="row-between" style="margin-top: 20px;">
-    <a href="{{ url_for('pilots_search') }}" class="muted small">{{ 'Réinitialiser' if fr else 'Reset' }}</a>
-    <button class="cta" type="submit">{{ 'Filtrer' if fr else 'Filter' }}</button>
+    <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles' if fr else 'Available' }}</label>
+    <label class="chip-check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> ⌖ {{ t('search.near_only') }}</label>
+    <details class="search-more" {% if params.text or params.country or params.city or params.capability or params.authority or params.min_rating %}open{% endif %}>
+      <summary class="chip-check">{{ t('search.more') }}</summary>
+      <div class="grid-3" style="margin-top: 12px;">
+        <label>{{ 'Nom ou mot-clé' if fr else 'Name or keyword' }}
+          <input name="q" value="{{ params.text }}" type="search" placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
+        </label>
+        <label>{{ t('home.search_country') }}
+          <select name="country">
+            <option value="">{{ t('home.search_country_any') }}</option>
+            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+          </select>
+        </label>
+        <label>{{ t('register.city') }}<input name="city" value="{{ params.city }}" placeholder="{{ t('register.city_ph') }}"></label>
+        <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
+          <select name="capability">
+            <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
+            {% for gname, codes in drone_capability_groups %}<optgroup label="{{ gname }}">{% for cap in codes %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap_label(cap) }}</option>{% endfor %}</optgroup>{% endfor %}
+          </select>
+        </label>
+        <label>{{ 'Autorité de certification' if fr else 'Certification authority' }}
+          <select name="authority">
+            <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
+            {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
+          </select>
+        </label>
+        <label>{{ 'Note minimale' if fr else 'Min. rating' }}
+          <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
+        </label>
+      </div>
+    </details>
+    {% if has_filters %}<a href="{{ url_for('pilots_search', kind=params.kind) if params.kind else url_for('pilots_search') }}" class="chip-check chip-reset">✕ {{ t('search.reset') }}</a>{% endif %}
   </div>
 </form>
 
@@ -114,10 +118,10 @@
   {% include "_pilot_card.html" %}
   {% else %}
     <div class="empty-state">
-      <strong>{{ 'Aucun pilote ne correspond.' if fr else 'No pilot matches.' }}</strong>
+      <strong>{{ t('search.pilots_none') }}</strong>
       <p>{{ 'Élargissez votre recherche : agrandissez le rayon, retirez un filtre (pays, spécialité, brevet vérifié) ou décochez « Limiter au rayon ».' if fr else 'Broaden your search: widen the radius, remove a filter (country, specialty, verified licence) or uncheck “Within radius only”.' }}</p>
       <div class="actions-row">
-        <a href="{{ url_for('pilots_search') }}" class="ghost">{{ 'Réinitialiser les filtres' if fr else 'Reset filters' }}</a>
+        <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('search.reset') }}</a>
         <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ 'Publier une mission et recevoir des devis' if fr else 'Post a mission and get quotes' }}</a>
       </div>
     </div>

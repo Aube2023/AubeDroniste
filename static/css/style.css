@@ -2007,6 +2007,46 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
    sections accueil (pourquoi / rejoindre / FAQ / contact), page contact.
    ========================================================================= */
 
+/* --- pages de recherche : une barre, des options en puces, le reste replié --- */
+.search-form { margin: 14px 0 18px; }
+.search-bar {
+  display: flex; align-items: stretch; gap: 6px;
+  padding: 6px; border-radius: 16px;
+  background: var(--paper); border: 1.5px solid var(--rule);
+  box-shadow: 0 8px 30px rgba(20,22,31,.06);
+}
+.search-field {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  min-width: 0; flex: 1 1 170px; padding: 6px 14px;
+  border-inline-end: 1px solid var(--rule);
+  margin: 0; font-family: var(--sans); text-transform: none; letter-spacing: 0;
+}
+.search-field.grow { flex: 2 1 240px; }
+.search-field.narrow { flex: 0 1 130px; }
+.search-field:last-of-type { border-inline-end: 0; }
+.search-field > span { font: 600 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); }
+.search-bar input, .search-bar select {
+  margin: 0; padding: 4px 0; border: 0; border-radius: 0;
+  background: transparent; color: var(--ink); font-size: 15px; box-shadow: none;
+}
+.search-bar input:focus, .search-bar select:focus { box-shadow: none; }
+.search-bar .cta { flex: 0 0 auto; border-radius: 12px; padding: 0 22px; }
+.search-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.search-options .chip-check { margin: 0; }
+.search-options .chip-reset { color: var(--ink-dim); }
+.search-more { flex: 1 1 100%; }
+.search-more > summary { display: inline-flex; list-style: none; cursor: pointer; width: auto; }
+.search-more > summary::-webkit-details-marker { display: none; }
+.search-more[open] > summary { border-color: var(--amber); color: var(--ink); }
+.search-more .grid-3 label, .search-more .grid-2 label { margin: 0; }
+@media (max-width: 760px) {
+  .search-bar { flex-direction: column; border-radius: 14px; padding: 8px; }
+  .search-field, .search-field:last-of-type, .search-field.narrow { flex: 1 1 auto; border-inline-end: 0; border-bottom: 1px solid var(--rule); padding: 10px 12px; }
+  .search-field:last-of-type { border-bottom: 0; }
+  .search-bar .cta { padding: 14px 22px; margin-top: 4px; }
+  .search-more .grid-3 { grid-template-columns: 1fr; }
+}
+
 /* --- filtre « autour de » : saisie + rayon + case sur une ligne --- */
 .filters .filter-row {
   display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(120px, .8fr) auto;

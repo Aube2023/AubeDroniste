@@ -572,7 +572,20 @@
 "register.step_role": "Peran Anda",
 "register.step_kind": "Pilot jenis apa?",
 "register.step_identity": "Informasi Anda",
-"register.step_base": "Di mana Anda?"
+"register.step_base": "Di mana Anda?",
+"search.btn": "Cari",
+"search.more": "Filter lainnya",
+"search.reset": "Hapus semua",
+"search.radius": "Radius",
+"search.near_only": "Hanya dalam radius",
+"search.urgent_only": "Hanya yang mendesak",
+"search.missions_none": "Belum ada misi terbuka saat ini.",
+"search.missions_one": "Satu misi menunggu pilot",
+"search.missions_many": "{n} misi menunggu pilot",
+"search.pilots_none": "Tidak ada pilot yang cocok.",
+"search.pilots_one": "Satu pilot cocok",
+"search.pilots_many": "{n} pilot cocok",
+"search.nearest_around": "terdekat dari {place} lebih dulu"
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

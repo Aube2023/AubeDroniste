@@ -572,7 +572,20 @@
 "register.step_role": "Ihre Rolle",
 "register.step_kind": "Welche Art von Pilot?",
 "register.step_identity": "Ihre Angaben",
-"register.step_base": "Wo sind Sie?"
+"register.step_base": "Wo sind Sie?",
+"search.btn": "Suchen",
+"search.more": "Weitere Filter",
+"search.reset": "Alles zurücksetzen",
+"search.radius": "Umkreis",
+"search.near_only": "Nur im Umkreis",
+"search.urgent_only": "Nur dringende",
+"search.missions_none": "Derzeit keine offene Mission.",
+"search.missions_one": "Eine Mission wartet auf einen Piloten",
+"search.missions_many": "{n} Missionen warten auf einen Piloten",
+"search.pilots_none": "Kein Pilot passt.",
+"search.pilots_one": "Ein Pilot passt",
+"search.pilots_many": "{n} Piloten passen",
+"search.nearest_around": "die nächsten bei {place} zuerst"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

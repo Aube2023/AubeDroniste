@@ -572,7 +572,20 @@
 "register.step_role": "O seu papel",
 "register.step_kind": "Que tipo de piloto?",
 "register.step_identity": "Os seus dados",
-"register.step_base": "Onde está?"
+"register.step_base": "Onde está?",
+"search.btn": "Pesquisar",
+"search.more": "Mais filtros",
+"search.reset": "Limpar tudo",
+"search.radius": "Raio",
+"search.near_only": "Apenas dentro do raio",
+"search.urgent_only": "Apenas urgentes",
+"search.missions_none": "Nenhuma missão aberta neste momento.",
+"search.missions_one": "Uma missão espera um piloto",
+"search.missions_many": "{n} missões esperam um piloto",
+"search.pilots_none": "Nenhum piloto corresponde.",
+"search.pilots_one": "Um piloto corresponde",
+"search.pilots_many": "{n} pilotos correspondem",
+"search.nearest_around": "do mais próximo de {place}"
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

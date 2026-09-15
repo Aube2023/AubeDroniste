@@ -572,7 +572,20 @@
 "register.step_role": "Vai trò của bạn",
 "register.step_kind": "Loại phi công nào?",
 "register.step_identity": "Thông tin của bạn",
-"register.step_base": "Bạn ở đâu?"
+"register.step_base": "Bạn ở đâu?",
+"search.btn": "Tìm kiếm",
+"search.more": "Thêm bộ lọc",
+"search.reset": "Xóa tất cả",
+"search.radius": "Bán kính",
+"search.near_only": "Chỉ trong bán kính",
+"search.urgent_only": "Chỉ khẩn cấp",
+"search.missions_none": "Hiện chưa có nhiệm vụ nào đang mở.",
+"search.missions_one": "Một nhiệm vụ đang chờ phi công",
+"search.missions_many": "{n} nhiệm vụ đang chờ phi công",
+"search.pilots_none": "Không có phi công phù hợp.",
+"search.pilots_one": "Một phi công phù hợp",
+"search.pilots_many": "{n} phi công phù hợp",
+"search.nearest_around": "gần {place} nhất trước"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

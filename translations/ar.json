@@ -572,7 +572,20 @@
 "register.step_role": "دورك",
 "register.step_kind": "أي نوع من الطيارين؟",
 "register.step_identity": "معلوماتك",
-"register.step_base": "أين أنت؟"
+"register.step_base": "أين أنت؟",
+"search.btn": "بحث",
+"search.more": "مزيد من عوامل التصفية",
+"search.reset": "مسح الكل",
+"search.radius": "نطاق",
+"search.near_only": "ضمن النطاق فقط",
+"search.urgent_only": "العاجل فقط",
+"search.missions_none": "لا توجد مهام مفتوحة حاليًا.",
+"search.missions_one": "مهمة واحدة بانتظار طيار",
+"search.missions_many": "{n} مهام بانتظار طيار",
+"search.pilots_none": "لا يوجد طيار مطابق.",
+"search.pilots_one": "طيار واحد مطابق",
+"search.pilots_many": "{n} طيارين مطابقين",
+"search.nearest_around": "الأقرب إلى {place} أولًا"
 },
 "seo": {
 "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",

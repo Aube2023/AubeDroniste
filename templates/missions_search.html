@@ -1,52 +1,62 @@
 {% extends "base.html" %}
 {% block content %}
 {% set fr = (lang == 'fr') %}
+{% set n = missions|length %}
+{% set has_filters = params.near or params.country or params.mission_type or params.city or params.only_urgent %}
 
-<div class="search-head">
-  <span class="eyebrow">{{ 'Tableau des départs' if fr else 'Departures board' }}</span>
-  <h1>{{ 'Missions ouvertes.' if fr else 'Open missions.' }}</h1>
-  <p class="lead muted">
-    {{ missions|length }} {{ 'mission(s) attendent un pilote' if fr else 'mission(s) awaiting a pilot' }}{% if params.near_label %}{{ ', de la plus proche de ' if fr else ', nearest first around ' }}<strong>{{ params.near_label }}</strong>{% endif %}.
-  </p>
+<div class="search-head row-between" style="align-items: end; gap: 16px; flex-wrap: wrap;">
+  <div>
+    <h1>{{ 'Missions ouvertes' if fr else 'Open missions' }}</h1>
+    <p class="lead muted">
+      {% if n == 0 and not has_filters %}{{ t('search.missions_none') }}{% elif n == 1 %}{{ t('search.missions_one') }}{% else %}{{ t('search.missions_many', n=n) }}{% endif %}{% if params.near_label %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('nav.publish') }}</a>
 </div>
 
-<form method="get" class="filters card">
-  <div class="filter-row">
-    <label>{{ 'Code postal, adresse ou ville' if fr else 'Postal code, address or city' }}
-      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code"
-             placeholder="{{ 'H2X 1Y4 · 75011 · G5Y · Trois-Rivières' }}">
+{# Une barre : lieu, rayon, type, bouton. Le reste replié sous « Plus de filtres ». #}
+<form method="get" class="search-form">
+  <div class="search-bar">
+    <label class="search-field grow">
+      <span>{{ t('home.search_near') }}</span>
+      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('home.search_near_ph') }}">
     </label>
-    <label>{{ 'Rayon' if fr else 'Radius' }}
+    <label class="search-field narrow">
+      <span>{{ t('search.radius') }}</span>
       <select name="radius_km">
         {% for r in search_radius_choices %}<option value="{{ r }}" {% if params.radius_km == r %}selected{% endif %}>{{ r }} km</option>{% endfor %}
       </select>
     </label>
-    <label class="check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> {{ 'Limiter au rayon' if fr else 'Within radius only' }}</label>
+    <label class="search-field">
+      <span>{{ t('home.search_type') }}</span>
+      <select name="mission_type">
+        <option value="">{{ t('home.search_type_any') }}</option>
+        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
+      </select>
+    </label>
+    <button class="cta" type="submit">{{ t('search.btn') }}</button>
   </div>
   {% if params.near_label %}
     <p class="near-note">⌖ {{ 'Autour de' if fr else 'Around' }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ 'tri par distance, les missions plus loin restent visibles' if fr else 'sorted by distance, farther missions stay visible' }}{% endif %}</p>
   {% elif params.near_error %}
     <p class="near-note err">{{ 'Lieu introuvable : essayez « code postal + pays » ou une ville.' if fr else 'Place not found: try “postal code + country” or a city.' }}</p>
   {% endif %}
-  <div class="grid-3">
-    <label>{{ 'Pays' if fr else 'Country' }}
-      <select name="country">
-        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
-      </select>
-    </label>
-    <label>{{ 'Type' if fr else 'Type' }}
-      <select name="mission_type">
-        <option value="">{{ '— tous —' if fr else '— all —' }}</option>
-        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
-      </select>
-    </label>
-    <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ params.city }}" placeholder="{{ 'ex. Montréal' if fr else 'e.g. Toronto' }}"></label>
-    <label class="check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> {{ 'Urgent uniquement' if fr else 'Urgent only' }}</label>
-  </div>
-  <div class="row-between" style="margin-top: 20px;">
-    <a href="{{ url_for('missions_search') }}" class="muted small">{{ 'Réinitialiser' if fr else 'Reset' }}</a>
-    <button class="cta" type="submit">{{ 'Filtrer' if fr else 'Filter' }}</button>
+  <div class="search-options">
+    <label class="chip-check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> ⚡ {{ t('search.urgent_only') }}</label>
+    <label class="chip-check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> ⌖ {{ t('search.near_only') }}</label>
+    <details class="search-more" {% if params.country or params.city %}open{% endif %}>
+      <summary class="chip-check">{{ t('search.more') }}</summary>
+      <div class="grid-2" style="margin-top: 12px;">
+        <label>{{ t('home.search_country') }}
+          <select name="country">
+            <option value="">{{ t('home.search_country_any') }}</option>
+            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}" {% if params.country==c %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+          </select>
+        </label>
+        <label>{{ t('register.city') }}<input name="city" value="{{ params.city }}" placeholder="{{ t('register.city_ph') }}"></label>
+      </div>
+    </details>
+    {% if has_filters or params.near_only %}<a href="{{ url_for('missions_search') }}" class="chip-check chip-reset">✕ {{ t('search.reset') }}</a>{% endif %}
   </div>
 </form>
 
@@ -57,7 +67,7 @@
   <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
     <div class="header">
       <span class="tag">{{ mission_label(m.mission_type) }}</span>
-      {% if m.is_urgent %}<span class="tag tag-urgent">⚡ {{ 'urgent' if fr else 'urgent' }}</span>{% endif %}
+      {% if m.is_urgent %}<span class="tag tag-urgent">⚡ {{ t('common.urgent') }}</span>{% endif %}
       {% if m.distance_km is not none %}<span class="tag distance-chip">≈ {{ m.distance_km|round|int }} km</span>{% endif %}
     </div>
     <h3>{{ m.title }}</h3>
@@ -75,11 +85,20 @@
   </a>
   {% else %}
     <div class="empty-state">
+      {% if has_filters or params.near_only %}
       <strong>{{ 'Aucune mission ne correspond.' if fr else 'No mission matches.' }}</strong>
-      <p>{{ 'Essayez d’agrandir le rayon, de retirer le filtre pays ou type, ou décochez « Urgent uniquement ».' if fr else 'Try widening the radius, removing the country or type filter, or uncheck “Urgent only”.' }}</p>
+      <p>{{ 'Essayez d’agrandir le rayon, de retirer un filtre ou de décocher « Urgent uniquement ».' if fr else 'Try widening the radius, removing a filter or unchecking “Urgent only”.' }}</p>
       <div class="actions-row">
-        <a href="{{ url_for('missions_search') }}" class="ghost">{{ 'Réinitialiser les filtres' if fr else 'Reset filters' }}</a>
+        <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('search.reset') }}</a>
       </div>
+      {% else %}
+      <strong>{{ t('search.missions_none') }}</strong>
+      <p>{{ 'Vous avez un besoin ? Publiez-le : les pilotes de votre secteur reçoivent une alerte et vous envoient leurs devis.' if fr else 'Need a pilot? Post your mission: pilots in your area get an alert and send you their quotes.' }}</p>
+      <div class="actions-row">
+        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('nav.publish') }}</a>
+        <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('nav.pilots') }} →</a>
+      </div>
+      {% endif %}
     </div>
   {% endfor %}
 </div>
