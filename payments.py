@@ -22,9 +22,11 @@ from typing import Optional, Tuple
 from config import (
     PLATFORM_FEE_PCT,
     SITE_URL,
+    STRIPE_CONNECT_ENABLED,
     STRIPE_FAKE_MODE,
     STRIPE_LIVE_MODE,
     STRIPE_PAYMENTS_ENABLED,
+    STRIPE_PUBLISHABLE_KEY,
     STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET,
 )
@@ -529,3 +531,65 @@ def split_amounts(total: float, fee_pct: Optional[float] = None) -> dict:
         "platform": fee,
         "pilot":    round(float(total) - fee, 2),
     }
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic (page admin) : ou en est le compte, sans jamais montrer une cle
+# ---------------------------------------------------------------------------
+
+WEBHOOK_EVENTS_EXPECTED = ("checkout.session.completed", "charge.refunded", "account.updated")
+
+
+def diagnostics() -> dict:
+    """Etat du raccordement Stripe tel que l'API le voit, en lecture seule :
+    mode, compte plateforme, Connect (inscrit ou non), comptes connectes,
+    webhooks. Chaque appel est protege : une erreur devient un message, pas
+    une page blanche. Aucune cle n'apparait dans le resultat."""
+    out = {
+        "mode": banner_mode(),
+        "connect_flag": STRIPE_CONNECT_ENABLED,
+        "webhook_secret": bool(STRIPE_WEBHOOK_SECRET),
+        "publishable": bool(STRIPE_PUBLISHABLE_KEY),
+        "webhook_url": f"{SITE_URL}/stripe/webhook",
+        "account": None, "connect": None, "connected": None, "webhooks": [], "errors": [],
+    }
+    s = _stripe()
+    if s is None:
+        return out
+    try:
+        acc = s.Account.retrieve()
+        out["account"] = {
+            "id": acc.id, "country": acc.get("country"), "currency": acc.get("default_currency"),
+            "name": (acc.get("settings") or {}).get("dashboard", {}).get("display_name")
+                    or (acc.get("business_profile") or {}).get("name"),
+            "charges_enabled": bool(acc.get("charges_enabled")),
+            "payouts_enabled": bool(acc.get("payouts_enabled")),
+            "details_submitted": bool(acc.get("details_submitted")),
+        }
+    except Exception as exc:
+        out["errors"].append(f"compte plateforme : {exc}")
+    try:
+        accounts = s.Account.list(limit=100)
+        out["connect"] = True
+        out["connected"] = [{
+            "id": a.id, "type": a.get("type"), "country": a.get("country"),
+            "charges_enabled": bool(a.get("charges_enabled")),
+            "payouts_enabled": bool(a.get("payouts_enabled")),
+            "details_submitted": bool(a.get("details_submitted")),
+        } for a in accounts.auto_paging_iter()]
+    except Exception as exc:
+        msg = str(exc)
+        out["connect"] = False if "Connect" in msg else None
+        out["errors"].append(f"comptes connectés : {msg}")
+    try:
+        hooks = s.WebhookEndpoint.list(limit=20)
+        for w in hooks.get("data", []):
+            events = list(w.get("enabled_events") or [])
+            out["webhooks"].append({
+                "id": w.id, "url": w.get("url"), "status": w.get("status"), "events": events,
+                "ours": w.get("url") == out["webhook_url"],
+                "missing": [e for e in WEBHOOK_EVENTS_EXPECTED if e not in events and "*" not in events],
+            })
+    except Exception as exc:
+        out["errors"].append(f"webhooks : {exc}")
+    return out

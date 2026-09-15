@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}État de Stripe, AubePilot admin{% endblock %}
+{% block content %}
+{# `d` = payments.diagnostics() : tout vient de l'API Stripe en lecture seule.
+   Aucune cle n'est affichee ; les identifiants de compte ne sont pas secrets. #}
+{% set ok = '<span class="badge verified">oui</span>'|safe %}
+{% set ko = '<span class="tag tag-cancelled">non</span>'|safe %}
+{% macro yn(v) %}{{ ok if v else ko }}{% endmacro %}
+
+<div style="margin-bottom: 18px;">
+  <span class="eyebrow">Admin · Paiements</span>
+  <h1>Où en est Stripe.</h1>
+  <p class="lead muted">
+    Ce que l'API répond, en lecture seule, avec les clés du serveur. Rien ici n'est modifiable :
+    les actions se font dans le dashboard Stripe, puis dans <code>/etc/aubepilot.env</code>.
+  </p>
+</div>
+
+{% for e in d.errors %}
+<div class="alert alert-warn"><p class="mono small" style="margin:0;">{{ e }}</p></div>
+{% endfor %}
+
+<div class="stat-rail" style="margin: 22px 0;">
+  <div><span class="v">{{ d.mode }}</span><span class="k">Mode des clés</span></div>
+  <div><span class="v">{{ 'oui' if d.connect else ('non' if d.connect is sameas false else '?') }}</span><span class="k">Connect activé chez Stripe</span></div>
+  <div><span class="v">{{ 'oui' if d.connect_flag else 'non' }}</span><span class="k">Connect activé dans l'app</span></div>
+  <div><span class="v">{{ d.connected|length if d.connected is not none else '·' }}</span><span class="k">Comptes pilotes connectés</span></div>
+</div>
+
+<section class="card">
+  <span class="eyebrow">Compte plateforme</span>
+  {% if d.account %}
+  <table class="table-simple" style="width: 100%; margin-top: 10px;">
+    <tr><td>Identifiant</td><td class="mono">{{ d.account.id }}</td></tr>
+    <tr><td>Nom</td><td>{{ d.account.name or '—' }}</td></tr>
+    <tr><td>Pays · devise</td><td>{{ d.account.country }} · {{ (d.account.currency or '')|upper }} <span class="muted small">(l'app attend {{ platform_country }})</span></td></tr>
+    <tr><td>Encaissement</td><td>{{ yn(d.account.charges_enabled) }}</td></tr>
+    <tr><td>Virements</td><td>{{ yn(d.account.payouts_enabled) }}</td></tr>
+    <tr><td>Dossier complet</td><td>{{ yn(d.account.details_submitted) }}</td></tr>
+    <tr><td>Clé publiable</td><td>{{ yn(d.publishable) }}</td></tr>
+    <tr><td>Secret de webhook</td><td>{{ yn(d.webhook_secret) }}</td></tr>
+  </table>
+  {% else %}
+  <p class="muted">Aucune clé Stripe sur ce serveur (mode {{ d.mode }}).</p>
+  {% endif %}
+</section>
+
+<section class="card" style="margin-top: 18px;">
+  <span class="eyebrow">Webhooks</span>
+  <p class="muted small">Attendu : <code>{{ d.webhook_url }}</code> avec {{ '`' }}{{ 'checkout.session.completed, charge.refunded, account.updated' }}{{ '`' }}.</p>
+  {% if d.webhooks %}
+  <table class="table-simple" style="width: 100%;">
+    <thead><tr><th style="text-align:start;">URL</th><th>Statut</th><th style="text-align:start;">Évènements</th></tr></thead>
+    {% for w in d.webhooks %}
+    <tr>
+      <td class="mono small">{{ w.url }}{% if w.ours %} <span class="badge verified">le nôtre</span>{% endif %}</td>
+      <td>{{ w.status }}</td>
+      <td class="small">{{ w.events|join(', ') }}{% if w.ours and w.missing %}<br><span class="tag tag-cancelled">manque : {{ w.missing|join(', ') }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">Aucun webhook lisible.</p>
+  {% endif %}
+</section>
+
+{% if d.connected %}
+<section class="card" style="margin-top: 18px;">
+  <span class="eyebrow">Comptes pilotes connectés</span>
+  <table class="table-simple" style="width: 100%;">
+    <thead><tr><th style="text-align:start;">Compte</th><th>Type</th><th>Pays</th><th>Dossier</th><th>Encaissement</th><th>Virements</th></tr></thead>
+    {% for a in d.connected %}
+    <tr><td class="mono small">{{ a.id }}</td><td>{{ a.type }}</td><td>{{ a.country }}</td><td>{{ yn(a.details_submitted) }}</td><td>{{ yn(a.charges_enabled) }}</td><td>{{ yn(a.payouts_enabled) }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endif %}
+
+<section class="card" style="margin-top: 18px;">
+  <span class="eyebrow">Ce qui reste à faire</span>
+  <ol style="line-height: 1.7; max-width: 76ch;">
+    <li>{{ yn(d.connect) }} <strong>Activer Connect</strong> sur ce compte, en mode réel :
+      <a href="https://dashboard.stripe.com/connect/accounts/overview" target="_blank" rel="noopener">dashboard.stripe.com/connect</a>
+      → Commencer → comptes <em>Express</em>, remplir le profil de plateforme. Tant que c'est « non », l'inscription
+      Stripe d'un pilote échoue (« You can only create new accounts if you've signed up for Connect »).</li>
+    <li>Facultatif : Connect → Paramètres → <strong>Cross-border payouts</strong>, pour payer des pilotes hors {{ platform_country }}.</li>
+    <li>{{ yn(d.connect_flag) }} <strong>Basculer l'app</strong> : sur le serveur, <code>STRIPE_CONNECT_ENABLED=1</code> dans
+      <code>/etc/aubepilot.env</code> puis <code>systemctl restart aubepilot</code>. L'onboarding Stripe réapparaît
+      dans l'espace pilote ; « paiement en direct » disparaît.</li>
+    <li><strong>Rouler la clé secrète</strong> si elle a circulé (dashboard → Développeurs → Clés API → Rouler),
+      la coller dans <code>/etc/aubepilot.env</code> sur le serveur, jamais dans un courriel ni un chat, puis
+      redémarrer. Cette page confirme que la nouvelle clé répond.</li>
+    <li>Test réel à petit montant : un pilote fait son onboarding, un client réserve, valide la livraison, et le
+      virement apparaît sur le compte connecté.</li>
+  </ol>
+</section>
+{% endblock %}

@@ -2265,6 +2265,15 @@ def admin_unverify_insurance(user_id):
     return _admin_review_insurance(user_id, "pending", "Attestation remise en attente.")
 
 
+@app.route("/admin/stripe")
+@auth.admin_required
+def admin_stripe():
+    """Ou en est Stripe : mode, compte, Connect, webhooks, et la liste de ce
+    qui reste a faire dans le dashboard. Lecture seule, aucune cle affichee."""
+    return render_template("admin_stripe.html", d=payments.diagnostics(),
+                           platform_country=config.STRIPE_PLATFORM_COUNTRY, seo=_NOINDEX)
+
+
 @app.route("/admin/visites")
 @auth.admin_required
 def admin_visits():
