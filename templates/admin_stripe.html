@@ -11,8 +11,8 @@
   <span class="eyebrow">Admin · Paiements</span>
   <h1>Où en est Stripe.</h1>
   <p class="lead muted">
-    Ce que l'API répond, en lecture seule, avec les clés du serveur. Rien ici n'est modifiable :
-    les actions se font dans le dashboard Stripe, puis dans <code>/etc/aubepilot.env</code>.
+    Ce que l'API répond, avec les clés du serveur. Seule action possible ici : retirer la commission
+    vers la banque ; tout le reste se règle dans le dashboard Stripe, puis dans <code>/etc/aubepilot.env</code>.
   </p>
 </div>
 
@@ -57,10 +57,56 @@
   {% endif %}
 </section>
 
+{% if d.account %}
+<section class="card" style="margin-top: 18px;">
+  <span class="eyebrow">Solde et séquestre</span>
+  {% if d.payout_schedule and not d.payout_schedule.manual %}
+  <div class="alert alert-warn"><p style="margin:0;">
+    Versement automatique <strong>{{ d.payout_schedule.interval }}</strong> (délai {{ d.payout_schedule.delay_days }} j) :
+    Stripe vide le solde vers la banque, séquestre compris. Un virement au pilote validé après ce délai échoue
+    faute de solde. À passer en <strong>manuel</strong> : dashboard → Paramètres → Virements → Calendrier → Manuel,
+    puis retirer la commission depuis cette page.
+  </p></div>
+  {% elif d.payout_schedule %}
+  <p class="muted small">Calendrier de versement manuel : l'argent reste chez Stripe jusqu'au retrait ci-dessous.</p>
+  {% endif %}
+  <table class="table-simple" style="width: 100%; margin-top: 10px;">
+    <thead><tr><th style="text-align:start;">Devise</th><th>Disponible</th><th>En attente</th><th>Sous séquestre</th><th>Retirable</th></tr></thead>
+    {% for cur, b in (d.balance or {}).items() %}
+    <tr>
+      <td class="mono">{{ cur }}</td>
+      <td class="mono">{{ '%.2f' % b.available }}</td>
+      <td class="mono">{{ '%.2f' % b.pending }}</td>
+      <td class="mono">{{ '%.2f' % (reserve.get(cur, 0)) }}</td>
+      <td class="mono"><strong>{{ '%.2f' % withdrawable.get(cur, 0) }}</strong></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">Solde illisible.</td></tr>
+    {% endfor %}
+    {% for cur, amount in reserve.items() if cur not in (d.balance or {}) %}
+    <tr><td class="mono">{{ cur }}</td><td class="mono">—</td><td class="mono">—</td><td class="mono">{{ '%.2f' % amount }}</td><td class="mono">—</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted small">Sous séquestre = réservations payées non clôturées (prix entier) + soutiens de collecte payés non
+    versés. Un séquestre dans une autre devise que le solde est converti avec une marge. « En attente » devient
+    disponible sous 2 à 7 jours ; les virements aux pilotes adossés au paiement passent avant.</p>
+  {% for cur, amount in withdrawable.items() if amount > 0 %}
+  <form method="post" action="{{ url_for('admin_stripe_payout') }}" style="margin-top: 10px; display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
+    {{ csrf_input() }}
+    <input type="hidden" name="currency" value="{{ cur }}">
+    <label>Retirer vers la banque ({{ cur }}, max {{ '%.2f' % amount }})
+      <input type="number" name="amount" step="0.01" min="1" max="{{ amount }}" value="{{ amount }}" style="width: 12ch;">
+    </label>
+    <button type="submit" class="ghost">Retirer</button>
+  </form>
+  {% endfor %}
+</section>
+{% endif %}
+
 <section class="card" style="margin-top: 18px;">
   <span class="eyebrow">Webhooks</span>
-  <p class="muted small">Attendus : <code>{{ d.webhook_url }}</code> avec <code>checkout.session.completed, charge.refunded</code>
-    (paiements), et <code>{{ d.connect_webhook_url }}</code> avec <code>account.updated</code>, créé en mode
+  <p class="muted small">Attendus : <code>{{ d.webhook_url }}</code> avec <code>checkout.session.completed, charge.refunded,
+    charge.dispute.created</code> (paiements ; un évènement manquant s'ajoute dans le dashboard, Développeurs → Webhooks, sans changer de secret), et <code>{{ d.connect_webhook_url }}</code> avec <code>account.updated</code>, créé en mode
     « Connect » (comptes pilotes ; secret {{ yn(d.connect_webhook_secret) }} sur le serveur).
     {% if d.account and not d.connect_webhook_present %}<span class="tag tag-cancelled">webhook Connect absent : l'activation des virements d'un pilote n'est vue qu'à la resynchronisation (ouverture de son espace, cron de nuit)</span>{% endif %}</p>
   {% if d.webhooks %}

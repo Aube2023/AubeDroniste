@@ -115,19 +115,29 @@ def test_diagnostic_lit_les_objets_du_sdk(monkeypatch):
         def list(limit=20):
             return hooks
 
+    class _Balance:
+        @staticmethod
+        def retrieve():
+            return stripe.Balance.construct_from({
+                "object": "balance",
+                "available": [{"amount": 12345, "currency": "cad"}],
+                "pending": [{"amount": 600, "currency": "cad"}]}, "sk")
+
     class _SDK:
         Account = _Accounts
         WebhookEndpoint = _Hooks
+        Balance = _Balance
 
     monkeypatch.setattr(payments, "_stripe", lambda: _SDK())
     monkeypatch.setattr(payments, "STRIPE_ACCOUNT_ID", "acct_autre")
     d = payments.diagnostics()
     assert d["errors"] == []
+    assert d["balance"] == {"CAD": {"available": 123.45, "pending": 6.0}}
     assert d["account"]["id"] == "acct_plat" and d["account"]["name"] == "AubePilot"
     assert d["account_mismatch"] is True
     assert d["connect"] is True and d["connected"][0]["id"] == "acct_pilote"
     assert d["webhooks"][0]["ours"] is True
-    assert d["webhooks"][0]["missing"] == ["charge.refunded"]
+    assert d["webhooks"][0]["missing"] == ["charge.refunded", "charge.dispute.created"]
     assert d["connect_webhook_present"] is False
 
     connected.clear()

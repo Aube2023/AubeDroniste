@@ -3,6 +3,7 @@
 Point d'entree Flask. Auth PAM partagee, SQLite local, templates Jinja
 + une API JSON pour la recherche dynamique cote frontend.
 """
+import json
 import logging
 import os
 import re
@@ -2278,10 +2279,63 @@ def admin_unverify_insurance(user_id):
 @app.route("/admin/stripe")
 @auth.admin_required
 def admin_stripe():
-    """Ou en est Stripe : mode, compte, Connect, webhooks, et la liste de ce
-    qui reste a faire dans le dashboard. Lecture seule, aucune cle affichee."""
-    return render_template("admin_stripe.html", d=payments.diagnostics(),
+    """Ou en est Stripe : mode, compte, Connect, webhooks, solde et part sous
+    sequestre, et la liste de ce qui reste a faire dans le dashboard. Aucune
+    cle affichee. Seule action : retirer la commission vers la banque."""
+    d = payments.diagnostics()
+    reserve = services.escrow_reserve()
+    return render_template("admin_stripe.html", d=d, reserve=reserve,
+                           withdrawable=_withdrawable(d.get("balance") or {}, reserve),
                            platform_country=config.STRIPE_PLATFORM_COUNTRY, seo=_NOINDEX)
+
+
+# Taux prudents pour convertir le sequestre d'une autre devise dans la devise
+# de reglement avant un retrait : on retient plus que necessaire, jamais moins.
+_RESERVE_RATES_TO_CAD = {"CAD": 1.0, "EUR": 1.7, "USD": 1.5, "GBP": 2.0, "CHF": 1.8}
+
+
+def _withdrawable(balance: dict, reserve: dict) -> dict:
+    """Ce que la plateforme peut retirer sans toucher au sequestre, par devise
+    du solde : disponible - sequestre (les sequestres d'autres devises sont
+    convertis avec une marge). Jamais negatif."""
+    out = {}
+    for cur, b in balance.items():
+        held = 0.0
+        for rcur, amount in reserve.items():
+            if rcur == cur:
+                held += amount
+            elif cur == "CAD":
+                held += amount * _RESERVE_RATES_TO_CAD.get(rcur, 2.0)
+            else:
+                held += amount * 2.0
+        out[cur] = round(max(0.0, float(b.get("available") or 0) - held), 2)
+    return out
+
+
+@app.route("/admin/stripe/retirer", methods=["POST"])
+@auth.admin_required
+def admin_stripe_payout():
+    """Retire vers la banque de la plateforme tout ou partie de ce qui n'est
+    pas sous sequestre. Le montant est reborne cote serveur."""
+    cur = (request.form.get("currency") or "CAD").upper()
+    try:
+        asked = float(request.form.get("amount") or 0)
+    except ValueError:
+        asked = 0.0
+    d = payments.diagnostics()
+    cap = _withdrawable(d.get("balance") or {}, services.escrow_reserve()).get(cur, 0.0)
+    amount = round(min(asked, cap), 2) if asked > 0 else cap
+    if amount <= 0:
+        flash("Rien à retirer : tout le solde disponible est sous séquestre.", "info")
+        return redirect(url_for("admin_stripe"))
+    po = payments.create_platform_payout(amount, cur, note="Commission AubePilot")
+    if po:
+        db.execute("INSERT INTO audit_log (user_id, action, target, payload) VALUES (?, 'stripe_payout', ?, ?)",
+                   (g.user["id"], po, json.dumps({"amount": amount, "currency": cur})))
+        flash(f"Retrait de {amount:.2f} {cur} demandé ({po}). Arrivée en banque sous quelques jours.", "success")
+    else:
+        flash("Stripe a refusé le retrait ; rien n'a bougé. Voir le journal.", "error")
+    return redirect(url_for("admin_stripe"))
 
 
 @app.route("/admin/visites")
@@ -3703,6 +3757,13 @@ def _stripe_webhook(secret):
         pi_id = obj.get("payment_intent")
         if pi_id and bool(obj.get("refunded")):
             services.mark_booking_fully_refunded(str(pi_id))
+
+    elif etype == "charge.dispute.created":
+        # Contestation bancaire du client : on gele la reservation (litige),
+        # ni auto-liberation ni validation tant que Stripe n'a pas tranche.
+        pi_id = obj.get("payment_intent")
+        if pi_id:
+            services.mark_booking_disputed_by_stripe(str(pi_id), str(obj.get("reason") or ""))
     return ("ok", 200)
 
 

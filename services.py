@@ -3649,6 +3649,54 @@ def refund_booking(booking_id: int, amount: Optional[float] = None,
     return ok
 
 
+def mark_booking_disputed_by_stripe(payment_intent_id: str, reason: str = "") -> bool:
+    """Contestation carte (chargeback) recue par webhook : la reservation
+    passe en litige, ce qui gele l'auto-liberation et la validation. Une
+    reservation deja terminee (pilote paye) est seulement tracee dans le
+    journal d'audit : c'est a l'equipe de recuperer les fonds (reversal)."""
+    booking = db.fetchone(
+        "SELECT id, status, client_user_id FROM bookings WHERE stripe_payment_intent_id=? LIMIT 1",
+        (payment_intent_id,),
+    )
+    if not booking:
+        return False
+    if booking["status"] in ("funded", "in_progress"):
+        db.execute(
+            "UPDATE bookings SET status='disputed', dispute_reason=? "
+            "WHERE id=? AND status IN ('funded','in_progress')",
+            (("Contestation bancaire (Stripe) : " + (reason or ""))[:1000], booking["id"]),
+        )
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) "
+        "VALUES (?, 'stripe_dispute', ?, ?)",
+        (booking["client_user_id"], f"booking:{booking['id']}",
+         json.dumps({"payment_intent": payment_intent_id, "status_before": booking["status"],
+                     "reason": (reason or "")[:200]})),
+    )
+    return True
+
+
+def escrow_reserve() -> dict:
+    """Argent encaisse qui ne nous appartient pas (encore), par devise :
+    reservations payees non cloturees (prix convenu entier, le pilote peut
+    encore etre paye ou le client rembourse) et soutiens de collecte payes
+    mais pas encore vires. A soustraire du solde Stripe avant tout retrait
+    de la plateforme vers sa banque."""
+    out: dict = {}
+    for r in db.fetchall(
+        "SELECT UPPER(currency) AS cur, COALESCE(SUM(agreed_price), 0) AS total "
+        "FROM bookings WHERE status IN ('funded','in_progress','disputed') "
+        "AND COALESCE(settled_offline, 0) = 0 GROUP BY UPPER(currency)"
+    ):
+        out[r["cur"]] = out.get(r["cur"], 0.0) + float(r["total"] or 0)
+    for r in db.fetchall(
+        "SELECT UPPER(currency) AS cur, COALESCE(SUM(amount - platform_fee), 0) AS total "
+        "FROM campaign_contributions WHERE status='paid' GROUP BY UPPER(currency)"
+    ):
+        out[r["cur"]] = out.get(r["cur"], 0.0) + float(r["total"] or 0)
+    return {k: round(v, 2) for k, v in out.items() if v}
+
+
 def mark_booking_fully_refunded(payment_intent_id: str) -> bool:
     """Reconcile un remboursement integral recu par webhook Stripe.
 
@@ -3678,13 +3726,25 @@ def mark_booking_fully_refunded(payment_intent_id: str) -> bool:
 
 
 def stale_funded_bookings(days: int) -> list:
-    """Bookings `funded` ou `in_progress` non confirmes depuis N jours.
-    Le client a paye mais n'a pas valide -> auto-release au pilote."""
+    """Bookings `funded` ou `in_progress` que le client n'a pas valides et
+    qu'on libere automatiquement au pilote (promesse de la FAQ : « 7 jours
+    apres la livraison »). Trois horloges, toutes ecoulees :
+      - N jours depuis le paiement ;
+      - N jours depuis la fin de mission (end_date, sinon start_date) quand
+        la mission en a une : jamais avant le vol ;
+      - N jours depuis le dernier livrable depose : le client a eu le temps
+        de regarder ce qu'il a recu.
+    Une date de mission illisible compte comme absente."""
     rows = db.fetchall(
-        "SELECT id FROM bookings WHERE status IN ('funded','in_progress') "
-        "AND paid_at IS NOT NULL "
-        "AND datetime(paid_at) < datetime('now', '-' || ? || ' days')",
-        (days,),
+        "SELECT b.id FROM bookings b JOIN missions m ON m.id = b.mission_id "
+        "WHERE b.status IN ('funded','in_progress') "
+        "AND b.paid_at IS NOT NULL "
+        "AND datetime(b.paid_at) < datetime('now', '-' || ? || ' days') "
+        "AND (datetime(COALESCE(m.end_date, m.start_date)) IS NULL "
+        "     OR datetime(COALESCE(m.end_date, m.start_date)) < datetime('now', '-' || ? || ' days')) "
+        "AND COALESCE((SELECT MAX(datetime(d.created_at)) FROM booking_deliverables d "
+        "              WHERE d.booking_id = b.id), '') < datetime('now', '-' || ? || ' days')",
+        (days, days, days),
     )
     return [r["id"] for r in rows]
 

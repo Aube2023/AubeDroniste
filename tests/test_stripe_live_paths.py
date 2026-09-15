@@ -170,3 +170,94 @@ def test_resync_statut_pilote(app_ctx, make_user, monkeypatch):
     db.execute("UPDATE pilot_profiles SET stripe_charges_enabled=1, stripe_payouts_enabled=1 "
                "WHERE stripe_account_id LIKE 'acct_live_%'")
     assert services.sync_pending_pilot_stripe_status() == 0
+
+
+def _age(table, col, where, days, params=()):
+    import db
+    db.execute(f"UPDATE {table} SET {col}=datetime('now', '-{days} days') WHERE {where}", params)
+
+
+def test_auto_liberation_attend_la_fin_de_mission_et_le_dernier_livrable(
+        app_ctx, funded_booking, open_mission, pilot_user):
+    import db
+    import services
+    # Paye il y a 10 jours, mission datee dans 5 jours : pas de liberation
+    _age("bookings", "paid_at", "id=?", 10, (funded_booking,))
+    db.execute("UPDATE missions SET start_date=?, end_date=? WHERE id=?",
+               ("2999-01-01T09:00", "2999-01-01T12:00", open_mission))
+    assert funded_booking not in services.stale_funded_bookings(7)
+    # Mission terminee il y a 8 jours : liberable
+    db.execute("UPDATE missions SET start_date=datetime('now','-9 days'), "
+               "end_date=datetime('now','-8 days') WHERE id=?", (open_mission,))
+    assert funded_booking in services.stale_funded_bookings(7)
+    # Un livrable depose il y a 2 jours relance l'horloge
+    services.add_deliverable(booking_id=funded_booking, uploaded_by_user_id=pilot_user["id"],
+                             label="Photos", original_filename="p.zip", stored_filename="p.zip",
+                             mime_type="application/zip", size_bytes=10)
+    assert funded_booking not in services.stale_funded_bookings(7)
+    _age("booking_deliverables", "created_at", "booking_id=?", 8, (funded_booking,))
+    assert funded_booking in services.stale_funded_bookings(7)
+    # Sans aucune date de mission : le paiement seul fait foi (comme avant)
+    db.execute("UPDATE missions SET start_date=NULL, end_date=NULL WHERE id=?", (open_mission,))
+    assert funded_booking in services.stale_funded_bookings(7)
+    _age("bookings", "paid_at", "id=?", 3, (funded_booking,))
+    assert funded_booking not in services.stale_funded_bookings(7)
+
+
+def test_contestation_carte_gele_la_reservation(client, app_ctx, funded_booking, monkeypatch):
+    import payments
+    import services
+    import db
+    db.execute("UPDATE bookings SET stripe_payment_intent_id='pi_dispute' WHERE id=?", (funded_booking,))
+    monkeypatch.setattr(payments, "is_fake", lambda: False)
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+    monkeypatch.setattr(payments, "parse_webhook", lambda *_a: {
+        "type": "charge.dispute.created",
+        "data": {"object": {"payment_intent": "pi_dispute", "reason": "fraudulent"}}})
+    assert client.post("/stripe/webhook", data=b"x").status_code == 200
+    b = services.get_booking(funded_booking)
+    assert b["status"] == "disputed" and "Contestation bancaire" in (b.get("dispute_reason") or "")
+    # En litige : ni auto-liberation ni validation
+    _age("bookings", "paid_at", "id=?", 30, (funded_booking,))
+    assert funded_booking not in services.stale_funded_bookings(7)
+    assert services.confirm_completion(funded_booking, b["client_user_id"]) is False
+
+
+def test_sequestre_et_retrait(client, auth_client, make_user, app_ctx, funded_booking, monkeypatch):
+    import db
+    import payments
+    import services
+    b = services.get_booking(funded_booking)
+    reserve = services.escrow_reserve()
+    assert reserve.get(b["currency"].upper(), 0) >= float(b["agreed_price"])
+
+    u = make_user("admin_retrait", role="both")
+    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (u["id"],))
+    cur = b["currency"].upper()
+    monkeypatch.setattr(payments, "diagnostics", lambda: {
+        "mode": "LIVE", "connect_flag": True, "webhook_secret": True, "publishable": True,
+        "connect_webhook_secret": False, "connect_webhook_present": False,
+        "webhook_url": "u", "connect_webhook_url": "c", "expected_account": "", "account_mismatch": False,
+        "account": {"id": "acct_x", "name": "AubePilot", "country": "CA", "currency": "cad",
+                    "charges_enabled": True, "payouts_enabled": True, "details_submitted": True},
+        "payout_schedule": {"interval": "daily", "delay_days": 3, "manual": False},
+        "balance": {cur: {"available": reserve[cur] + 50.0, "pending": 12.0}},
+        "connect": True, "connected": [], "webhooks": [], "errors": []})
+    payouts = []
+    monkeypatch.setattr(payments, "create_platform_payout",
+                        lambda amount, currency, note="": payouts.append((amount, currency)) or "po_1")
+    c = auth_client(u["id"])
+    html = c.get("/admin/stripe").data.decode()
+    assert "Sous séquestre" in html and "Manuel" in html and "50.00" in html
+    # Retrait plafonne a ce qui n'est pas sous sequestre, meme si on demande plus
+    r = c.post("/admin/stripe/retirer", data={"currency": cur, "amount": "9999"})
+    assert r.status_code in (302, 303)
+    assert payouts == [(50.0, cur)]
+    # Un visiteur ordinaire ne peut pas retirer
+    v = make_user("pas_admin_retrait", role="client")
+    assert auth_client(v["id"]).post("/admin/stripe/retirer", data={"currency": cur}).status_code == 403
+
+
+def test_webhook_connect_exempt_de_csrf():
+    from security import CSRF_EXEMPT_ROUTES
+    assert {"stripe_webhook", "stripe_webhook_connect"} <= CSRF_EXEMPT_ROUTES

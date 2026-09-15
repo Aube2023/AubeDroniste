@@ -645,7 +645,7 @@ def split_amounts(total: float, fee_pct: Optional[float] = None) -> dict:
 
 # Webhook plateforme (paiements) et webhook Connect (comptes pilotes) : deux
 # endpoints Stripe distincts, chacun avec son secret.
-WEBHOOK_EVENTS_EXPECTED = ("checkout.session.completed", "charge.refunded")
+WEBHOOK_EVENTS_EXPECTED = ("checkout.session.completed", "charge.refunded", "charge.dispute.created")
 CONNECT_WEBHOOK_EVENTS_EXPECTED = ("account.updated",)
 
 
@@ -664,6 +664,7 @@ def diagnostics() -> dict:
         "connect_webhook_secret": bool(STRIPE_CONNECT_WEBHOOK_SECRET),
         "expected_account": STRIPE_ACCOUNT_ID,
         "account_mismatch": False,
+        "payout_schedule": None, "balance": None,
         "account": None, "connect": None, "connected": None, "webhooks": [], "errors": [],
     }
     s = _stripe()
@@ -682,8 +683,17 @@ def diagnostics() -> dict:
             "details_submitted": bool(acc.get("details_submitted")),
         }
         out["account_mismatch"] = bool(STRIPE_ACCOUNT_ID and acc.get("id") != STRIPE_ACCOUNT_ID)
+        sched = ((settings.get("payouts") or {}).get("schedule") or {})
+        out["payout_schedule"] = {
+            "interval": sched.get("interval"), "delay_days": sched.get("delay_days"),
+            "manual": sched.get("interval") == "manual",
+        }
     except Exception as exc:
         out["errors"].append(f"compte plateforme : {exc}")
+    try:
+        out["balance"] = balance()
+    except Exception as exc:
+        out["errors"].append(f"solde : {exc}")
     try:
         accounts = s.Account.list(limit=100)
         out["connected"] = []
@@ -722,3 +732,42 @@ def diagnostics() -> dict:
     except Exception as exc:
         out["errors"].append(f"webhooks : {exc}")
     return out
+
+
+# ---------------------------------------------------------------------------
+# Solde de la plateforme et retrait vers sa banque
+# ---------------------------------------------------------------------------
+
+def balance() -> dict:
+    """Solde Stripe de la plateforme, par devise (majuscules), en unites :
+    {"CAD": {"available": 123.45, "pending": 67.0}}. Vide en mode fake."""
+    s = _stripe()
+    if s is None:
+        return {}
+    b = _plain(s.Balance.retrieve()) or {}
+    out: dict = {}
+    for key in ("available", "pending"):
+        for row in b.get(key) or []:
+            cur = (row.get("currency") or "").upper()
+            out.setdefault(cur, {"available": 0.0, "pending": 0.0})
+            out[cur][key] = round(int(row.get("amount") or 0) / 100.0, 2)
+    return out
+
+
+def create_platform_payout(amount: float, currency: str, note: str = "") -> Optional[str]:
+    """Retrait de la plateforme vers sa banque (calendrier de versement
+    manuel). Retourne l'identifiant du Payout, None en cas de refus."""
+    s = _stripe()
+    if s is None or amount <= 0:
+        return None
+    try:
+        po = s.Payout.create(
+            amount=int(round(float(amount) * 100)), currency=currency.lower(),
+            description=(note or "Commission AubePilot")[:100],
+            metadata={"source": "admin_stripe"},
+        )
+        log.info("payout %s : %.2f %s", po.id, amount, currency.upper())
+        return po.id
+    except Exception as exc:
+        log.error("create_platform_payout(%.2f %s) -> %s", amount, currency, exc)
+        return None

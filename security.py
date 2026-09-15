@@ -30,7 +30,8 @@ log = logging.getLogger("aubepilot.security")
 # ---------------------------------------------------------------------------
 
 CSRF_EXEMPT_ROUTES = {
-    "stripe_webhook",   # Stripe signe la requete differemment
+    "stripe_webhook",          # Stripe signe la requete differemment
+    "stripe_webhook_connect",  # idem, evenements des comptes pilotes
 }
 
 

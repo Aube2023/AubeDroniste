@@ -144,6 +144,7 @@ done
 WH_JSON="$(api POST /webhook_endpoints "url=$WEBHOOK_URL" \
     "enabled_events[]=checkout.session.completed" \
     "enabled_events[]=charge.refunded" \
+    "enabled_events[]=charge.dispute.created" \
     "description=AubePilot paiements (créé par deploy/go-live-stripe.sh)")"
 WH_ID="$(printf '%s' "$WH_JSON" | jget id)"
 if [[ "$WH_ID" == __ERROR__* || -z "$WH_ID" ]]; then err "Création du webhook refusée : ${WH_ID#__ERROR__ }"; exit 1; fi
