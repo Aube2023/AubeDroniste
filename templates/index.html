@@ -31,8 +31,8 @@
     </form>
     <div class="hero-actions">
       <button class="hero-link" type="button" data-action="near-me" data-url="{{ url_for('pilots_search') }}">{{ t('home.nearby.cta') }}</button>
-      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="hero-link">{{ t('home.cta_publish') }} →</a>
-      <a href="{{ url_for('register') }}?role=pilot" class="hero-link">{{ t('home.cta_pilot') }} →</a>
+      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="hero-link">{{ t('home.cta_publish')|replace('→', '')|trim }} →</a>
+      <a href="{{ url_for('register') }}?role=pilot" class="hero-link">{{ t('home.cta_pilot')|replace('→', '')|trim }} →</a>
     </div>
   </div>
 </section>
