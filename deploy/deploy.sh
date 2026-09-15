@@ -218,11 +218,13 @@ AUBE_ALLOW_LOCAL_ACCOUNTS=0
 
 # --- Stripe Connect ---
 # Sans cle, les paiements sont DESACTIVES (jamais simules sur ce SITE_URL HTTPS).
+# Pour brancher le compte reel : sudo bash deploy/go-live-stripe.sh (remplit tout).
 AUBEPILOT_ALLOW_FAKE_PAYMENTS=0
 STRIPE_CONNECT_ENABLED=0
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
+STRIPE_ACCOUNT_ID=
 
 # Auto-libération escrow (jours sans validation client)
 AUBEPILOT_AUTO_RELEASE_DAYS=7

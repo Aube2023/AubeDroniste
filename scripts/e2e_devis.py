@@ -20,6 +20,10 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 os.environ.setdefault("AUBEPILOT_DATA", os.path.join("/tmp", "aubepilot-e2e"))
 os.makedirs(os.environ["AUBEPILOT_DATA"], exist_ok=True)
+# Parcours complet en local : comptes sans AubeMail, et onboarding Stripe
+# simule (sans le drapeau, /espace/pilote/stripe renvoie « paiement en direct »).
+os.environ.setdefault("AUBE_ALLOW_LOCAL_ACCOUNTS", "1")
+os.environ.setdefault("STRIPE_CONNECT_ENABLED", "1")
 
 from app import app, bootstrap_db  # noqa: E402
 import db                           # noqa: E402

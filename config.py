@@ -716,6 +716,10 @@ LICENCE_TITLES_BY_AUTHORITY = {
 # Connect « recipient » (cross-border payouts) : accord de service recipient
 # + capacite transfers seule. Doit correspondre au compte Stripe LIVE.
 STRIPE_PLATFORM_COUNTRY = os.environ.get("STRIPE_PLATFORM_COUNTRY", "CA").strip().upper() or "CA"
+# Identifiant (acct_...) du compte Stripe attendu. Facultatif, pas secret :
+# la page /admin/stripe previent si les cles repondent pour un autre compte
+# (plusieurs comptes Stripe coexistent chez le meme proprietaire).
+STRIPE_ACCOUNT_ID      = os.environ.get("STRIPE_ACCOUNT_ID", "").strip()
 STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()

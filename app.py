@@ -3604,13 +3604,20 @@ def stripe_webhook():
     if not event:
         return ("bad signature", 400)
 
-    etype = event["type"] if isinstance(event, dict) else event.type
+    # parse_webhook rend toujours un dict (payments._plain) : depuis
+    # stripe-python 15 l'objet du SDK n'est plus un dict et n'a plus de .get().
+    etype = event.get("type")
+    obj = (event.get("data") or {}).get("object") or {}
+    meta = obj.get("metadata") or {}
 
     if etype == "checkout.session.completed":
-        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
-        bid = obj.get("metadata", {}).get("booking_id") if isinstance(obj, dict) else obj.metadata.get("booking_id")
-        contrib_id = obj.get("metadata", {}).get("contribution_id") if isinstance(obj, dict) else obj.metadata.get("contribution_id")
-        pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
+        bid = meta.get("booking_id")
+        contrib_id = meta.get("contribution_id")
+        pi_id = obj.get("payment_intent")
+        session_id = obj.get("id")
+        payment_status = obj.get("payment_status")
+        amount_total = obj.get("amount_total")
+        currency = obj.get("currency")
         if contrib_id:
             # Contribution a une collecte : memes controles de coherence qu'une
             # reservation (session attendue, statut paye, montant et devise).
@@ -3618,10 +3625,6 @@ def stripe_webhook():
                 contrib = services.get_contribution(int(contrib_id))
             except (TypeError, ValueError):
                 contrib = None
-            session_id = obj.get("id") if isinstance(obj, dict) else obj.id
-            payment_status = obj.get("payment_status") if isinstance(obj, dict) else obj.payment_status
-            amount_total = obj.get("amount_total") if isinstance(obj, dict) else obj.amount_total
-            currency = obj.get("currency") if isinstance(obj, dict) else obj.currency
             expected = int(round(float(contrib["amount"]) * 100)) if contrib else None
             if (contrib and contrib.get("stripe_session_id") == str(session_id)
                     and payment_status == "paid" and amount_total == expected
@@ -3635,10 +3638,6 @@ def stripe_webhook():
                 booking = services.get_booking(int(bid))
             except (TypeError, ValueError):
                 booking = None
-            session_id = obj.get("id") if isinstance(obj, dict) else obj.id
-            payment_status = obj.get("payment_status") if isinstance(obj, dict) else obj.payment_status
-            amount_total = obj.get("amount_total") if isinstance(obj, dict) else obj.amount_total
-            currency = obj.get("currency") if isinstance(obj, dict) else obj.currency
             expected_cents = int(round(float(booking["agreed_price"]) * 100)) if booking else None
             valid = bool(
                 booking
@@ -3665,10 +3664,9 @@ def stripe_webhook():
                 )
 
     elif etype == "account.updated":
-        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
-        acc_id = obj.get("id") if isinstance(obj, dict) else obj.id
-        ce = bool(obj.get("charges_enabled") if isinstance(obj, dict) else obj.charges_enabled)
-        pe = bool(obj.get("payouts_enabled") if isinstance(obj, dict) else obj.payouts_enabled)
+        acc_id = obj.get("id")
+        ce = bool(obj.get("charges_enabled"))
+        pe = bool(obj.get("payouts_enabled"))
         if acc_id:
             row = db.fetchone(
                 "SELECT user_id FROM pilot_profiles WHERE stripe_account_id=?",
@@ -3678,10 +3676,8 @@ def stripe_webhook():
                 services.update_pilot_stripe_status(row["user_id"], ce, pe)
 
     elif etype == "charge.refunded":
-        obj = event["data"]["object"] if isinstance(event, dict) else event.data.object
-        pi_id = obj.get("payment_intent") if isinstance(obj, dict) else obj.payment_intent
-        fully_refunded = bool(obj.get("refunded")) if isinstance(obj, dict) else bool(obj.refunded)
-        if pi_id and fully_refunded:
+        pi_id = obj.get("payment_intent")
+        if pi_id and bool(obj.get("refunded")):
             services.mark_booking_fully_refunded(str(pi_id))
     return ("ok", 200)
 

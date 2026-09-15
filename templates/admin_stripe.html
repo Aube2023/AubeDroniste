@@ -19,6 +19,13 @@
 {% for e in d.errors %}
 <div class="alert alert-warn"><p class="mono small" style="margin:0;">{{ e }}</p></div>
 {% endfor %}
+{% if d.account_mismatch %}
+<div class="alert alert-warn"><p style="margin:0;">
+  Les clés du serveur répondent pour <span class="mono">{{ d.account.id }}</span>, mais
+  <code>STRIPE_ACCOUNT_ID</code> attend <span class="mono">{{ d.expected_account }}</span>.
+  Plusieurs comptes Stripe coexistent : vérifier lequel a Connect avant tout paiement.
+</p></div>
+{% endif %}
 
 <div class="stat-rail" style="margin: 22px 0;">
   <div><span class="v">{{ d.mode }}</span><span class="k">Mode des clés</span></div>
@@ -27,11 +34,16 @@
   <div><span class="v">{{ d.connected|length if d.connected is not none else '·' }}</span><span class="k">Comptes pilotes connectés</span></div>
 </div>
 
+{% if d.account and d.connect is none and not d.errors %}
+<p class="muted small">« ? » : Stripe renvoie une liste vide, avec ou sans Connect. La réponse ne devient
+  certaine qu'au premier compte pilote connecté (ou à la première erreur « signed up for Connect »).</p>
+{% endif %}
+
 <section class="card">
   <span class="eyebrow">Compte plateforme</span>
   {% if d.account %}
   <table class="table-simple" style="width: 100%; margin-top: 10px;">
-    <tr><td>Identifiant</td><td class="mono">{{ d.account.id }}</td></tr>
+    <tr><td>Identifiant</td><td class="mono">{{ d.account.id }}{% if d.expected_account and not d.account_mismatch %} <span class="badge verified">attendu</span>{% endif %}</td></tr>
     <tr><td>Nom</td><td>{{ d.account.name or '—' }}</td></tr>
     <tr><td>Pays · devise</td><td>{{ d.account.country }} · {{ (d.account.currency or '')|upper }} <span class="muted small">(l'app attend {{ platform_country }})</span></td></tr>
     <tr><td>Encaissement</td><td>{{ yn(d.account.charges_enabled) }}</td></tr>
@@ -79,19 +91,23 @@
 <section class="card" style="margin-top: 18px;">
   <span class="eyebrow">Ce qui reste à faire</span>
   <ol style="line-height: 1.7; max-width: 76ch;">
-    <li>{{ yn(d.connect) }} <strong>Activer Connect</strong> sur ce compte, en mode réel :
+    <li>{{ yn(d.connect) }} <strong>Connect actif</strong> sur le compte plateforme, en mode réel :
       <a href="https://dashboard.stripe.com/connect/accounts/overview" target="_blank" rel="noopener">dashboard.stripe.com/connect</a>
-      → Commencer → comptes <em>Express</em>, remplir le profil de plateforme. Tant que c'est « non », l'inscription
-      Stripe d'un pilote échoue (« You can only create new accounts if you've signed up for Connect »).</li>
+      → Commencer → comptes <em>Express</em>, profil de plateforme rempli. Tant que c'est « non », l'inscription
+      Stripe d'un pilote échoue (« You can only create new accounts if you've signed up for Connect »).
+      Si un autre compte Stripe du même propriétaire a déjà Connect, c'est lui qu'il faut brancher (étape 2).</li>
+    <li>{{ yn(d.connect_flag and d.webhook_secret and not d.account_mismatch) }} <strong>Brancher les clés du bon compte</strong> : sur le serveur,
+      <code>sudo bash /srv/aubepilot/deploy/go-live-stripe.sh</code>. Le script demande la clé secrète et la clé
+      publiable (Développeurs → Clés API, mode réel), vérifie à l'API que le compte répond et que Connect est ouvert,
+      crée lui-même le webhook <code>{{ d.webhook_url }}</code> avec les trois évènements, écrit les variables
+      (dont <code>STRIPE_CONNECT_ENABLED=1</code> et <code>STRIPE_ACCOUNT_ID</code>) et redémarre. Aucune clé ne
+      passe par un courriel ni un chat.</li>
     <li>Facultatif : Connect → Paramètres → <strong>Cross-border payouts</strong>, pour payer des pilotes hors {{ platform_country }}.</li>
-    <li>{{ yn(d.connect_flag) }} <strong>Basculer l'app</strong> : sur le serveur, <code>STRIPE_CONNECT_ENABLED=1</code> dans
-      <code>/etc/aubepilot.env</code> puis <code>systemctl restart aubepilot</code>. L'onboarding Stripe réapparaît
-      dans l'espace pilote ; « paiement en direct » disparaît.</li>
-    <li><strong>Rouler la clé secrète</strong> si elle a circulé (dashboard → Développeurs → Clés API → Rouler),
-      la coller dans <code>/etc/aubepilot.env</code> sur le serveur, jamais dans un courriel ni un chat, puis
-      redémarrer. Cette page confirme que la nouvelle clé répond.</li>
+    <li>Si une ancienne clé secrète a circulé : la <strong>révoquer</strong> dans le dashboard de l'ancien compte
+      (Développeurs → Clés API), et y supprimer le webhook devenu inutile.</li>
     <li>Test réel à petit montant : un pilote fait son onboarding, un client réserve, valide la livraison, et le
-      virement apparaît sur le compte connecté.</li>
+      virement apparaît sur le compte connecté. Cette page doit alors afficher le compte pilote et le webhook
+      « le nôtre » sans évènement manquant.</li>
   </ol>
 </section>
 {% endblock %}

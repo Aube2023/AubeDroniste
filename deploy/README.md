@@ -48,10 +48,14 @@ tu dois remplir :
 sudo nano /etc/aubepilot.env
 # remplir SMTP_HOST, SMTP_USER, SMTP_PASSWORD
 # remplir AUBE_INTERNAL_API_KEY pour provisionner les nouveaux comptes AubeMail
-# remplir STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
-# passer STRIPE_CONNECT_ENABLED=1 quand Connect est réellement activé
 sudo systemctl restart aubepilot
 ```
+
+Pour Stripe, ne rien copier à la main : `sudo bash /srv/aubepilot/deploy/go-live-stripe.sh`
+demande la clé secrète et la clé publiable du compte qui a Connect, vérifie le
+compte à l'API, crée le webhook (secret récupéré à la création), écrit
+`STRIPE_*`, `STRIPE_ACCOUNT_ID` et `STRIPE_CONNECT_ENABLED=1`, puis redémarre.
+La page `/admin/stripe` montre ensuite l'état vu par l'API (sans clé).
 
 ### Mises à jour
 

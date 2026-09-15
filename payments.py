@@ -22,6 +22,7 @@ from typing import Optional, Tuple
 from config import (
     PLATFORM_FEE_PCT,
     SITE_URL,
+    STRIPE_ACCOUNT_ID,
     STRIPE_CONNECT_ENABLED,
     STRIPE_FAKE_MODE,
     STRIPE_LIVE_MODE,
@@ -61,6 +62,27 @@ def _stripe():
         return None
     s.api_key = STRIPE_SECRET_KEY
     return s
+
+
+def _plain(obj):
+    """Copie en dict/list Python d'une reponse du SDK Stripe.
+
+    Depuis stripe-python 15, `StripeObject` n'est plus un dict : plus de
+    `.get()`, un attribut absent leve AttributeError. Tout ce qui sort d'un
+    appel API et qui est lu ailleurs (webhook, page admin) passe donc par ici,
+    quelle que soit la version du SDK : `to_dict()` existe dans toutes les
+    versions et la recursion aplatit les objets imbriques des anciennes.
+    """
+    if obj is None:
+        return None
+    to_dict = getattr(obj, "to_dict", None)
+    if callable(to_dict):
+        obj = to_dict()
+    if isinstance(obj, dict):
+        return {k: _plain(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_plain(v) for v in obj]
+    return obj
 
 
 def is_live() -> bool:
@@ -418,7 +440,7 @@ def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
 # ---------------------------------------------------------------------------
 
 def parse_webhook(payload: bytes, signature: str):
-    """Verifie la signature et retourne l'event Stripe (dict-like).
+    """Verifie la signature et retourne l'event Stripe sous forme de dict.
 
     En mode FAKE (pas de cle Stripe) : on accepte le JSON brut. Sinon, on
     EXIGE STRIPE_WEBHOOK_SECRET — sans secret, le webhook est REFUSE pour
@@ -443,10 +465,12 @@ def parse_webhook(payload: bytes, signature: str):
         )
         return None
     try:
-        return s.Webhook.construct_event(payload, signature, STRIPE_WEBHOOK_SECRET)
+        event = s.Webhook.construct_event(payload, signature, STRIPE_WEBHOOK_SECRET)
     except Exception as exc:
         log.error("webhook signature invalid: %s", exc)
         return None
+    # Toujours un dict pour l'appelant (cf. _plain), comme en mode fake.
+    return _plain(event)
 
 
 # ---------------------------------------------------------------------------
@@ -551,42 +575,52 @@ def diagnostics() -> dict:
         "webhook_secret": bool(STRIPE_WEBHOOK_SECRET),
         "publishable": bool(STRIPE_PUBLISHABLE_KEY),
         "webhook_url": f"{SITE_URL}/stripe/webhook",
+        "expected_account": STRIPE_ACCOUNT_ID,
+        "account_mismatch": False,
         "account": None, "connect": None, "connected": None, "webhooks": [], "errors": [],
     }
     s = _stripe()
     if s is None:
         return out
     try:
-        acc = s.Account.retrieve()
+        acc = _plain(s.Account.retrieve()) or {}
+        settings = acc.get("settings") or {}
         out["account"] = {
-            "id": acc.id, "country": acc.get("country"), "currency": acc.get("default_currency"),
-            "name": (acc.get("settings") or {}).get("dashboard", {}).get("display_name")
+            "id": acc.get("id"), "country": acc.get("country"),
+            "currency": acc.get("default_currency"),
+            "name": (settings.get("dashboard") or {}).get("display_name")
                     or (acc.get("business_profile") or {}).get("name"),
             "charges_enabled": bool(acc.get("charges_enabled")),
             "payouts_enabled": bool(acc.get("payouts_enabled")),
             "details_submitted": bool(acc.get("details_submitted")),
         }
+        out["account_mismatch"] = bool(STRIPE_ACCOUNT_ID and acc.get("id") != STRIPE_ACCOUNT_ID)
     except Exception as exc:
         out["errors"].append(f"compte plateforme : {exc}")
     try:
         accounts = s.Account.list(limit=100)
-        out["connect"] = True
-        out["connected"] = [{
-            "id": a.id, "type": a.get("type"), "country": a.get("country"),
-            "charges_enabled": bool(a.get("charges_enabled")),
-            "payouts_enabled": bool(a.get("payouts_enabled")),
-            "details_submitted": bool(a.get("details_submitted")),
-        } for a in accounts.auto_paging_iter()]
+        out["connected"] = []
+        for a in accounts.auto_paging_iter():
+            a = _plain(a) or {}
+            out["connected"].append({
+                "id": a.get("id"), "type": a.get("type"), "country": a.get("country"),
+                "charges_enabled": bool(a.get("charges_enabled")),
+                "payouts_enabled": bool(a.get("payouts_enabled")),
+                "details_submitted": bool(a.get("details_submitted")),
+            })
+        # Sans Connect, Stripe repond une liste vide plutot qu'une erreur : on
+        # ne conclut « oui » qu'avec au moins un compte connecte ; sinon « ? ».
+        out["connect"] = True if out["connected"] else None
     except Exception as exc:
         msg = str(exc)
         out["connect"] = False if "Connect" in msg else None
         out["errors"].append(f"comptes connectés : {msg}")
     try:
-        hooks = s.WebhookEndpoint.list(limit=20)
-        for w in hooks.get("data", []):
+        hooks = _plain(s.WebhookEndpoint.list(limit=20)) or {}
+        for w in hooks.get("data") or []:
             events = list(w.get("enabled_events") or [])
             out["webhooks"].append({
-                "id": w.id, "url": w.get("url"), "status": w.get("status"), "events": events,
+                "id": w.get("id"), "url": w.get("url"), "status": w.get("status"), "events": events,
                 "ours": w.get("url") == out["webhook_url"],
                 "missing": [e for e in WEBHOOK_EVENTS_EXPECTED if e not in events and "*" not in events],
             })
