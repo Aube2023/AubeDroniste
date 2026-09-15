@@ -289,7 +289,7 @@ def test_booking_page_shows_policy_and_pilot_withdraw(client, auth_client, funde
 def test_cgu_and_faq_reflect_new_rules(client):
     html = client.get("/cgu").data.decode()
     assert "20 %" in html and "15 %" in html and "10 %" in html
-    assert "Fenêtre de grâce" in html and "7.2 Par le pilote" in html
+    assert "Fenêtre de grâce" in html and "14.2 Par le Pilote" in html
     faq = client.get("/faq").data.decode()
     assert "frais de service de 10 %" in faq
     assert "remboursé à 100 %" in faq

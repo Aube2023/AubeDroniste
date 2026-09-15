@@ -167,21 +167,37 @@
 </main>
 
 <footer class="footer">
-  <nav class="footer-legal footer-links" aria-label="{{ t('footer.nav_label') }}">
-    <a href="{{ url_for('pilots_search') }}" class="muted footer-in-tabs">{{ t('nav.pilots') }}</a>
-    <a href="{{ url_for('missions_search') }}" class="muted footer-in-tabs">{{ t('nav.missions') }}</a>
-    <a href="{{ url_for('register') }}?role=pilot" class="muted">{{ t('footer.become_pilot') }}</a>
-    <a href="{{ url_for('schools') }}" class="muted">{{ t('footer.schools') }}</a>
-    <a href="{{ url_for('index') }}#comment-ca-marche" class="muted">{{ t('footer.how') }}</a>
-    <a href="{{ url_for('faq') }}" class="muted">{{ t('footer.faq') }}</a>
-    <a href="{{ url_for('updates') }}" class="muted">{{ t('footer.updates') }}</a>
-    <a href="{{ url_for('contact_form') }}" class="muted">{{ t('footer.contact') }}</a>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="{{ url_for('index') }}" class="brand">
+        <span class="glyph"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="36" height="36"></span>
+        <span><b>Aube</b> Pilot</span>
+      </a>
+      <p>{{ t('footer.pitch') }}</p>
+      <a href="mailto:support@aubemail.com" class="footer-mail">support@aubemail.com</a>
+    </div>
+    <nav aria-label="{{ t('footer.nav_label') }}">
+      <h4>{{ t('footer.nav_label') }}</h4>
+      <a href="{{ url_for('index') }}" class="footer-in-tabs">{{ t('nav.home') }}</a>
+      <a href="{{ url_for('pilots_search') }}" class="footer-in-tabs">{{ t('nav.pilots') }}</a>
+      <a href="{{ url_for('missions_search') }}" class="footer-in-tabs">{{ t('nav.missions') }}</a>
+      <a href="{{ url_for('register') }}?role=pilot">{{ t('footer.become_pilot') }}</a>
+      <a href="{{ url_for('schools') }}">{{ t('footer.schools') }}</a>
+    </nav>
+    <nav aria-label="{{ t('footer.company') }}">
+      <h4>{{ t('footer.company') }}</h4>
+      <a href="{{ url_for('index') }}#comment-ca-marche">{{ t('footer.how') }}</a>
+      <a href="{{ url_for('updates') }}">{{ t('footer.updates') }}</a>
+      <a href="{{ url_for('faq') }}">{{ t('footer.faq') }}</a>
+      <a href="{{ url_for('contact_form') }}">{{ t('footer.contact') }}</a>
+    </nav>
     {% if social_links %}
-      <span class="footer-social">
-        {% for name, url in social_links %}<a href="{{ url }}" class="muted" rel="me noopener" target="_blank">{{ name }}</a>{% endfor %}
-      </span>
+    <nav aria-label="{{ t('footer.follow') }}">
+      <h4>{{ t('footer.follow') }}</h4>
+      {% for name, url in social_links %}<a href="{{ url }}" rel="me noopener" target="_blank">{{ name }}</a>{% endfor %}
+    </nav>
     {% endif %}
-  </nav>
+  </div>
   <nav class="footer-legal" aria-label="Mentions légales">
     <a href="{{ url_for('page_privacy') }}" class="muted">{{ t('footer.privacy') }}</a>
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>

@@ -563,7 +563,10 @@
 "home.world.4.p": "Finden Sie eine Schule oder Schulung in Ihrer Nähe; fügen Sie neue Lizenzen hinzu, sie werden geprüft und auf Ihrem Profil angezeigt.",
 "home.world.auth_label": "Anerkannte Lizenzen",
 "home.world.auth_more": "+ {n} weitere Behörden",
-"home.world.all": "Piloten aus aller Welt ansehen →"
+"home.world.all": "Piloten aus aller Welt ansehen →",
+"footer.pitch": "Das weltweite Netzwerk, das Drohnenpiloten, Auftraggeber und Schulen auf einer Karte zusammenbringt.",
+"footer.company": "Unternehmen",
+"footer.follow": "Folgen Sie uns"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

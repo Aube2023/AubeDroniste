@@ -563,7 +563,10 @@
 "home.world.4.p": "Temukan sekolah atau pelatihan di dekat Anda; tambahkan lisensi baru, akan diperiksa lalu ditampilkan di profil Anda.",
 "home.world.auth_label": "Lisensi yang diakui",
 "home.world.auth_more": "+ {n} otoritas lainnya",
-"home.world.all": "Lihat pilot dari seluruh dunia →"
+"home.world.all": "Lihat pilot dari seluruh dunia →",
+"footer.pitch": "Jaringan global yang mempertemukan pilot drone, klien, dan sekolah dalam satu peta.",
+"footer.company": "Perusahaan",
+"footer.follow": "Ikuti kami"
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

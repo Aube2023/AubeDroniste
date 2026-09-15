@@ -4,7 +4,7 @@
 // affiche /offline. Les assets statiques et les polices sont servis du cache
 // puis rafraîchis en arrière-plan (stale-while-revalidate).
 
-const VERSION = 'aube-sw-v2';
+const VERSION = 'aube-sw-v3';
 const STATIC_CACHE = VERSION + '-static';
 const FONT_CACHE = VERSION + '-fonts';
 const OFFLINE_URL = '/offline';
@@ -15,7 +15,6 @@ const CORE = [
   '/static/js/app.js',
   '/static/brand/logo-mark.svg',
   '/static/brand/icon-192x192.png',
-  '/static/img/bg-aube.jpg',
 ];
 
 self.addEventListener('install', function (e) {

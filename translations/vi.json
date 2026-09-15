@@ -563,7 +563,10 @@
 "home.world.4.p": "Tìm một trường hoặc khóa học gần bạn; thêm giấy phép mới, chúng được kiểm tra rồi hiển thị trên trang của bạn.",
 "home.world.auth_label": "Giấy phép được công nhận",
 "home.world.auth_more": "+ {n} cơ quan khác",
-"home.world.all": "Xem phi công từ khắp thế giới →"
+"home.world.all": "Xem phi công từ khắp thế giới →",
+"footer.pitch": "Mạng lưới toàn cầu quy tụ phi công drone, khách hàng và trường đào tạo trên một bản đồ duy nhất.",
+"footer.company": "Công ty",
+"footer.follow": "Theo dõi chúng tôi"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

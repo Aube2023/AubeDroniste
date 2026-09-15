@@ -34,8 +34,6 @@
   --cta-fg:       #ffffff;          /* texte des boutons accent */
   --topbar-bg:    rgba(248,249,253,0.82);
   --tag-bg:       transparent;
-  --bg-veil-top:  rgba(247,248,252,0.80); /* voile de lisibilité sur le fond d'écran */
-  --bg-veil:      rgba(247,248,252,0.94);
 
   /* Police — display géométrique (feel "mobilité") + corps neutre */
   --display:      'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
@@ -68,8 +66,6 @@
   --cta-fg:       #0a0a0c;
   --topbar-bg:    rgba(10,10,12,0.80);
   --tag-bg:       rgba(255,255,255,0.02);
-  --bg-veil-top:  rgba(10,10,14,0.60);
-  --bg-veil:      rgba(10,10,14,0.90);
 }
 
 /* =========================================================================
@@ -153,23 +149,9 @@ body {
   transition: background-color .25s ease, color .25s ease;
 }
 
-/* Fond d'écran « aube » : image fixe plein écran sous le contenu… */
-body::before {
-  content: "";
-  position: fixed; inset: 0;
-  background: url('../img/bg-aube.jpg') center / cover no-repeat;
-  pointer-events: none;
-  z-index: -2;
-}
-
-/* …et voile dégradé par-dessus pour garder le texte lisible (dosé par thème) */
-body::after {
-  content: "";
-  position: fixed; inset: 0;
-  background: linear-gradient(180deg, var(--bg-veil-top), var(--bg-veil) 60%);
-  pointer-events: none;
-  z-index: -1;
-}
+/* Fond uni (var(--paper)) : plus de photo plein écran. Le seul décor est le
+   bandeau sombre du hero de l'accueil (.hero), à la manière des annuaires
+   sobres : le contenu reste lisible partout, dans les deux thèmes. */
 
 a { color: var(--amber); text-decoration: none; }
 a:hover { color: var(--amber-soft); }
@@ -486,24 +468,77 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 }
 .hero .lead { margin-top: 28px; font-size: 1.2rem; }
 
+/* ============ Hero « bandeau » (accueil) ============
+   Pleine largeur (sort du .page), sombre dans les deux thèmes, trame de
+   points et halo dans la couleur d'accent, contenu centré, recherche en une
+   ligne. Aucune photo : le décor, c'est le texte. */
+
+.hero-band {
+  display: block;
+  width: 100vw;
+  margin: -32px 0 40px calc(50% - 50vw);
+  padding: 72px 24px 56px;
+  color: #f4f4f6;
+  background-color: #0e1016;
+  background-image: radial-gradient(circle at 1px 1px, #1f2230 1px, transparent 0);
+  background-size: 26px 26px;
+  position: relative; overflow: hidden;
+  text-align: center;
+}
+.hero-band::before {
+  content: ""; position: absolute; pointer-events: none;
+  top: -34%; inset-inline-end: -8%; width: 640px; height: 640px;
+  background: radial-gradient(circle, rgba(var(--amber-rgb), .30), transparent 62%);
+}
+.hero-inner { position: relative; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);
+  font: 600 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+  color: #d5d7e2;
+}
+.hero-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-soft); box-shadow: 0 0 10px var(--amber-soft); }
+.hero-band h1 {
+  margin: 22px 0 0;
+  font-size: clamp(2.4rem, 5.6vw, 4.8rem);
+  line-height: .98; letter-spacing: -.02em;
+  color: #ffffff;
+}
+.hero-band h1 em { font-style: normal; color: var(--amber-soft); font-weight: 800; }
+.hero-band .lead { margin: 22px auto 0; max-width: 62ch; color: #b9bcc9; font-size: 1.08rem; line-height: 1.55; }
+
 .hero-search {
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: 28px;
-  position: relative;
+  margin: 30px 0 0; width: 100%;
+  display: flex; align-items: stretch; gap: 6px;
+  padding: 6px; border-radius: 16px;
+  background: #ffffff; box-shadow: 0 18px 50px rgba(0,0,0,.35);
+  text-align: start;
 }
-.hero-search::before {
-  content: "EN VOL"; position: absolute;
-  top: -10px; inset-inline-start: 24px;
-  background: var(--paper); color: var(--amber);
-  font: 700 10px/1 var(--mono); letter-spacing: .22em;
-  padding: 3px 8px; border: 1px solid var(--rule);
+.hero-field { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; flex: 1 1 160px; padding: 6px 14px; border-inline-end: 1px solid #e6e7ee; }
+.hero-field.grow { flex: 2 1 220px; }
+.hero-field:last-of-type { border-inline-end: 0; }
+.hero-field > span { font: 600 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #6b6f80; }
+.hero-search input, .hero-search select {
+  margin: 0; padding: 4px 0; border: 0; border-radius: 0;
+  background: transparent; color: #14161f; font-size: 15px;
+  box-shadow: none;
 }
-.hero-search h2 {
-  font-family: var(--mono); font-size: 13px; font-weight: 500;
-  letter-spacing: .18em; text-transform: uppercase;
-  color: var(--ink-dim); margin-bottom: 16px;
+.hero-search input:focus, .hero-search select:focus { box-shadow: none; }
+.hero-search input::placeholder { color: #9a9db0; }
+.hero-search .cta { flex: 0 0 auto; border-radius: 12px; padding: 0 22px; }
+.hero-actions { margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; }
+.hero-link {
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+  font: 600 14px/1.4 var(--display); color: #d5d7e2;
+}
+.hero-link:hover { color: #ffffff; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 760px) {
+  .hero-band { padding: 48px 18px 40px; margin-top: -32px; }
+  .hero-search { flex-direction: column; border-radius: 14px; padding: 8px; }
+  .hero-field, .hero-field:last-of-type { border-inline-end: 0; border-bottom: 1px solid #e6e7ee; padding: 10px 12px; }
+  .hero-field:last-of-type { border-bottom: 0; }
+  .hero-search .cta { padding: 14px 22px; margin-top: 4px; }
 }
 
 /* ============ Métriques NOTAM ============ */
@@ -878,6 +913,32 @@ img.avatar { object-fit: cover; }
   border-top: 1px solid var(--rule);
   margin-top: 80px;
   padding: 0;
+}
+
+/* Colonnes : marque + pitch + courriel, puis Le réseau / Entreprise / Suivez-nous */
+.footer-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 44px 32px 28px;
+  display: grid; gap: 32px 40px;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+.footer-brand .brand { font-size: 1.15rem; }
+.footer-brand p { margin: 14px 0 12px; max-width: 38ch; color: var(--ink-soft); line-height: 1.55; }
+.footer-mail { font-family: var(--mono); font-size: .9rem; color: var(--ink); }
+.footer-mail:hover { color: var(--amber); }
+.footer-grid nav { display: flex; flex-direction: column; gap: 9px; }
+.footer-grid nav h4 {
+  margin: 4px 0 6px;
+  font: 600 11px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.footer-grid nav a { color: var(--ink-soft); font-size: .93rem; }
+.footer-grid nav a:hover { color: var(--amber); }
+@media (max-width: 720px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; padding: 32px 20px 20px; }
+  .footer-brand { grid-column: 1 / -1; }
 }
 
 .footer-legal {

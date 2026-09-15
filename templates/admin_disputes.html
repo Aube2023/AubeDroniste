@@ -29,12 +29,18 @@
   </p>
   {% endif %}
 
-  <div class="row-between" style="margin-top: 18px;">
+  <div class="row-between" style="margin-top: 18px; flex-wrap: wrap; gap: 8px;">
     <a href="{{ url_for('booking_detail', booking_id=d.id) }}" class="ghost">Ouvrir le dossier →</a>
-    <form method="post" action="{{ url_for('admin_refund', booking_id=d.id) }}" style="display: flex; gap: 8px;">
-      {{ csrf_input() }}
-      <button class="ghost danger" type="submit" data-confirm="Confirmer le remboursement intégral ?">Rembourser intégralement</button>
-    </form>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <form method="post" action="{{ url_for('admin_release', booking_id=d.id) }}">
+        {{ csrf_input() }}
+        <button class="ghost" type="submit" data-confirm="Donner raison au pilote et lui virer sa part ?">Donner raison au pilote (virement)</button>
+      </form>
+      <form method="post" action="{{ url_for('admin_refund', booking_id=d.id) }}">
+        {{ csrf_input() }}
+        <button class="ghost danger" type="submit" data-confirm="Confirmer le remboursement intégral ?">Donner raison au client (remboursement)</button>
+      </form>
+    </div>
   </div>
 </div>
 {% else %}

@@ -851,7 +851,13 @@ def page_legal():
 
 @app.route("/cgu")
 def page_terms():
-    return render_template("legal_terms.html", seo=_legal_seo("footer.terms"))
+    return render_template(
+        "legal_terms.html", seo=_legal_seo("footer.terms"),
+        auto_release_days=config.AUTO_RELEASE_DAYS,
+        campaign_fee_pct=int(config.CAMPAIGN_FEE_PCT),
+        contribution_min=int(config.CONTRIBUTION_MIN),
+        contribution_max=int(config.CONTRIBUTION_MAX),
+    )
 
 
 # Pages legales : francais uniquement (une seule URL), description propre a
@@ -3793,6 +3799,18 @@ def admin_refund(booking_id):
         flash("Remboursement intégral effectué.", "success")
     else:
         flash("Refund échoué.", "error")
+    return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/admin/reservations/<int:booking_id>/liberer", methods=["POST"])
+@auth.admin_required
+def admin_release(booking_id):
+    """Litige tranche en faveur du pilote : sa part lui est viree, la mission
+    est cloturee. Meme chemin money-safe que la validation client."""
+    if services.resolve_dispute_for_pilot(booking_id, g.user["id"]):
+        flash("Litige tranché : le pilote a été payé, la mission est terminée.", "success")
+    else:
+        flash("Impossible de clôturer ce litige (statut, compte pilote ou virement refusé).", "error")
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 

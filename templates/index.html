@@ -1,36 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
 
-<section class="hero">
-  <div class="hero-text">
-    <span class="eyebrow">{{ t('home.eyebrow') }}</span>
+{# Hero : bandeau sombre pleine largeur, contenu centré, recherche en une ligne.
+   Sobre et lisible dans les deux thèmes ; aucun décor ailleurs sur le site. #}
+<section class="hero hero-band">
+  <div class="hero-inner">
+    <span class="hero-badge"><i></i>{{ t('home.eyebrow') }}</span>
     <h1>{{ t('home.h1_a') }}<br>{{ t('home.h1_b') }} <em>{{ t('home.h1_b_em') }}</em></h1>
     <p class="lead">{{ t('home.lead') }}</p>
-    <div class="cta-row">
-      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta cta-big">{{ t('home.cta_publish') }}</a>
-      <a href="{{ url_for('register') }}?role=pilot" class="ghost cta-big">{{ t('home.cta_pilot') }}</a>
+    <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}" aria-label="{{ t('home.search_title') }}">
+      <label class="hero-field grow">
+        <span>{{ t('home.search_near') }}</span>
+        <input name="near" placeholder="{{ t('home.search_near_ph') }}" autocomplete="postal-code" maxlength="120">
+      </label>
+      <label class="hero-field">
+        <span>{{ t('home.search_country') }}</span>
+        <select name="country">
+          <option value="">{{ t('home.search_country_any') }}</option>
+          <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
+        </select>
+      </label>
+      <label class="hero-field">
+        <span>{{ t('home.search_type') }}</span>
+        <select name="mission_type">
+          <option value="">{{ t('home.search_type_any') }}</option>
+          {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}">{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
+        </select>
+      </label>
+      <button class="cta" type="submit">{{ t('home.search_btn') }}</button>
+    </form>
+    <div class="hero-actions">
+      <button class="hero-link" type="button" data-action="near-me" data-url="{{ url_for('pilots_search') }}">{{ t('home.nearby.cta') }}</button>
+      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="hero-link">{{ t('home.cta_publish') }} →</a>
+      <a href="{{ url_for('register') }}?role=pilot" class="hero-link">{{ t('home.cta_pilot') }} →</a>
     </div>
   </div>
-  <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}">
-    <h2>{{ t('home.search_title') }}</h2>
-    <label>{{ t('home.search_near') }}
-      <input name="near" placeholder="{{ t('home.search_near_ph') }}" autocomplete="postal-code" maxlength="120">
-    </label>
-    <label>{{ t('home.search_country') }}
-      <select name="country">
-        <option value="">{{ t('home.search_country_any') }}</option>
-        <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup><optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
-      </select>
-    </label>
-    <label>{{ t('home.search_type') }}
-      <select name="mission_type">
-        <option value="">{{ t('home.search_type_any') }}</option>
-        {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}">{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
-      </select>
-    </label>
-    <button class="cta btn-block" type="submit">{{ t('home.search_btn') }}</button>
-    <button class="ghost btn-block" type="button" data-action="near-me" data-url="{{ url_for('pilots_search') }}" style="margin-top: 8px;">{{ t('home.nearby.cta') }}</button>
-  </form>
 </section>
 
 <div class="notam-strip">

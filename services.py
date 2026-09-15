@@ -3607,6 +3607,28 @@ def open_dispute(booking_id: int, by_user: int, reason: str = "") -> bool:
     return True
 
 
+def resolve_dispute_for_pilot(booking_id: int, admin_user: int) -> bool:
+    """Litige tranche en faveur du pilote : la reservation repasse en
+    `funded` puis suit exactement le chemin de la validation client
+    (confirm_completion : Transfer d'abord, cloture ensuite). Si le virement
+    echoue, elle reste `funded` (plus en litige) et sera rejouee par
+    l'auto-liberation."""
+    booking = get_booking(booking_id)
+    if not booking or booking["status"] != "disputed":
+        return False
+    cur = db.execute(
+        "UPDATE bookings SET status='funded' WHERE id=? AND status='disputed' AND payment_action IS NULL",
+        (booking_id,),
+    )
+    if cur.rowcount == 0:
+        return False
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) VALUES (?, 'dispute_resolved_pilot', ?, ?)",
+        (admin_user, f"booking:{booking_id}", json.dumps({"reason": booking.get("dispute_reason") or ""})),
+    )
+    return confirm_completion(booking_id, booking["client_user_id"])
+
+
 def refund_booking(booking_id: int, amount: Optional[float] = None,
                    admin_user: Optional[int] = None) -> bool:
     """Remboursement integral admin, serialise et fail-closed.
