@@ -4,31 +4,30 @@
 {% set n = missions|length %}
 {% set has_filters = params.near or params.country or params.mission_type or params.city or params.only_urgent %}
 
-<div class="search-head row-between" style="align-items: end; gap: 16px; flex-wrap: wrap;">
-  <div>
-    <h1>{{ 'Missions ouvertes' if fr else 'Open missions' }}</h1>
-    <p class="lead muted">
-      {% if n == 0 and not has_filters %}{{ t('search.missions_none') }}{% elif n == 1 %}{{ t('search.missions_one') }}{% else %}{{ t('search.missions_many', n=n) }}{% endif %}{% if params.near_label %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
-    </p>
-  </div>
-  <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('nav.publish') }}</a>
+<div class="search-head centered">
+  <h1>{{ 'Missions ouvertes' if fr else 'Open missions' }}</h1>
+  <p class="lead muted">{{ t('search.missions_intro') }}</p>
+  <p class="search-count">
+    {% if n == 0 and not has_filters %}{{ t('search.missions_none') }}{% elif n == 1 %}{{ t('search.missions_one') }}{% else %}{{ t('search.missions_many', n=n) }}{% endif %}{% if params.near_label %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
+    <a href="{{ url_for('mission_create') if current_user else url_for('register') }}">{{ t('nav.publish') }} →</a>
+  </p>
 </div>
 
 {# Une barre : lieu, rayon, type, bouton. Le reste replié sous « Plus de filtres ». #}
-<form method="get" class="search-form">
+<form method="get" class="search-form centered">
   <div class="search-bar">
     <label class="search-field grow">
-      <span>{{ t('home.search_near') }}</span>
-      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('home.search_near_ph') }}">
+      <span>{{ t('search.where') }}</span>
+      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('search.where_ph') }}">
     </label>
     <label class="search-field narrow">
-      <span>{{ t('search.radius') }}</span>
+      <span>{{ t('search.max_distance') }}</span>
       <select name="radius_km">
         {% for r in search_radius_choices %}<option value="{{ r }}" {% if params.radius_km == r %}selected{% endif %}>{{ r }} km</option>{% endfor %}
       </select>
     </label>
     <label class="search-field">
-      <span>{{ t('home.search_type') }}</span>
+      <span>{{ t('search.mission_type') }}</span>
       <select name="mission_type">
         <option value="">{{ t('home.search_type_any') }}</option>
         {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
@@ -45,7 +44,7 @@
     <label class="chip-check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> ⚡ {{ t('search.urgent_only') }}</label>
     <label class="chip-check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> ⌖ {{ t('search.near_only') }}</label>
     <details class="search-more" {% if params.country or params.city %}open{% endif %}>
-      <summary class="chip-check">{{ t('search.more') }}</summary>
+      <summary class="chip-check">{{ t('search.more_missions') }}</summary>
       <div class="grid-2" style="margin-top: 12px;">
         <label>{{ t('home.search_country') }}
           <select name="country">

@@ -2008,7 +2008,14 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
    ========================================================================= */
 
 /* --- pages de recherche : une barre, des options en puces, le reste replié --- */
+.search-head.centered { text-align: center; max-width: 760px; margin: 8px auto 20px; }
+.search-head.centered .lead { margin: 10px auto 0; max-width: 60ch; }
+.search-count { margin: 12px 0 0; font-size: .95rem; color: var(--ink); }
+.search-count a { margin-inline-start: 8px; font-weight: 600; }
 .search-form { margin: 14px 0 18px; }
+.search-form.centered { max-width: 980px; margin-inline: auto; }
+.search-form.centered .search-options { justify-content: center; }
+.search-form.centered .near-note { text-align: center; }
 .search-bar {
   display: flex; align-items: stretch; gap: 6px;
   padding: 6px; border-radius: 16px;

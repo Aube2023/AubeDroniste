@@ -3,10 +3,10 @@
 {% set fr = (lang == 'fr') %}
 
 {% set n = pilots|length %}
-<div class="search-head">
-  <span class="eyebrow">{{ 'Annuaire pilote' if fr else 'Pilot directory' }}</span>
+<div class="search-head centered">
   <h1>{{ 'Trouver un pilote' if fr else 'Find a pilot' }}</h1>
-  <p class="lead muted">
+  <p class="lead muted">{{ t('search.pilots_intro') }}</p>
+  <p class="search-count">
     {% if n == 0 %}{{ t('search.pilots_none') }}{% elif n == 1 %}{{ t('search.pilots_one') }}{% else %}{{ t('search.pilots_many', n=n) }}{% endif %}{% if params.near_label and n %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
     {% if params.country == 'États-Unis' %}<a href="{{ url_for('part107') }}">{{ 'Pilotes Part 107 →' if fr else 'Part 107 pilots →' }}</a>{% endif %}
   </p>
@@ -45,21 +45,21 @@
 
 {# only_available est coché par défaut : ce n'est pas un filtre « actif » #}
 {% set has_filters = params.near or params.text or params.country or params.city or params.mission_type or params.capability or params.authority or params.min_rating or params.only_verified or params.only_insured or params.near_only %}
-<form method="get" class="search-form">
+<form method="get" class="search-form centered">
   {% if params.kind %}<input type="hidden" name="kind" value="{{ params.kind }}">{% endif %}
   <div class="search-bar">
     <label class="search-field grow">
-      <span>{{ t('home.search_near') }}</span>
-      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('home.search_near_ph') }}">
+      <span>{{ t('search.where') }}</span>
+      <input name="near" value="{{ params.near }}" type="search" maxlength="120" autocomplete="postal-code" placeholder="{{ t('search.where_ph') }}">
     </label>
     <label class="search-field narrow">
-      <span>{{ t('search.radius') }}</span>
+      <span>{{ t('search.max_distance') }}</span>
       <select name="radius_km">
         {% for r in search_radius_choices %}<option value="{{ r }}" {% if params.radius_km == r %}selected{% endif %}>{{ r }} km</option>{% endfor %}
       </select>
     </label>
     <label class="search-field">
-      <span>{{ t('home.search_type') }}</span>
+      <span>{{ t('search.pilot_specialty') }}</span>
       <select name="mission_type">
         <option value="">{{ t('home.search_type_any') }}</option>
         {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if params.mission_type==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
@@ -78,7 +78,7 @@
     <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles' if fr else 'Available' }}</label>
     <label class="chip-check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> ⌖ {{ t('search.near_only') }}</label>
     <details class="search-more" {% if params.text or params.country or params.city or params.capability or params.authority or params.min_rating %}open{% endif %}>
-      <summary class="chip-check">{{ t('search.more') }}</summary>
+      <summary class="chip-check">{{ t('search.more_pilots') }}</summary>
       <div class="grid-3" style="margin-top: 12px;">
         <label>{{ 'Nom ou mot-clé' if fr else 'Name or keyword' }}
           <input name="q" value="{{ params.text }}" type="search" placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
