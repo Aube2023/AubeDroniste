@@ -17,7 +17,7 @@ qui n'ont pas le pkg installe).
 """
 import logging
 import time
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from config import (
     PLATFORM_FEE_PCT,
@@ -65,7 +65,7 @@ def _stripe():
     return s
 
 
-def _plain(obj):
+def _plain(obj) -> Any:
     """Copie en dict/list Python d'une reponse du SDK Stripe.
 
     Depuis stripe-python 15, `StripeObject` n'est plus un dict : plus de
@@ -751,6 +751,54 @@ def balance() -> dict:
             cur = (row.get("currency") or "").upper()
             out.setdefault(cur, {"available": 0.0, "pending": 0.0})
             out[cur][key] = round(int(row.get("amount") or 0) / 100.0, 2)
+    return out
+
+
+def ensure_stripe_configuration() -> dict:
+    """Met le compte Stripe en conformite avec ce que l'app attend, sans
+    intervention dans le dashboard (cron de nuit, idempotent) :
+      - calendrier de versement de la plateforme en MANUEL, sinon Stripe vide
+        le solde vers la banque, sequestre compris (l'app retire ensuite
+        elle-meme la commission, cf. services.auto_platform_payout) ;
+      - notre webhook de paiements ecoute tous les evenements attendus
+        (en ajouter ne change pas son secret).
+    Retourne {"payout_schedule": "manual"|"deja"|"refus: ...",
+              "webhook": "complete"|"deja"|"absent"|"refus: ..."}."""
+    out = {"payout_schedule": None, "webhook": None}
+    s = _stripe()
+    if s is None or STRIPE_FAKE_MODE:
+        return out
+    try:
+        acc = _plain(s.Account.retrieve()) or {}
+        sched = (((acc.get("settings") or {}).get("payouts") or {}).get("schedule") or {})
+        if sched.get("interval") == "manual":
+            out["payout_schedule"] = "deja"
+        else:
+            s.Account.modify(acc["id"], settings={"payouts": {"schedule": {"interval": "manual"}}})
+            log.info("calendrier de versement Stripe passe de « %s » a manuel", sched.get("interval"))
+            out["payout_schedule"] = "manual"
+    except Exception as exc:
+        log.error("calendrier de versement Stripe : %s", exc)
+        out["payout_schedule"] = f"refus: {exc}"
+    try:
+        url = f"{SITE_URL}/stripe/webhook"
+        hooks = (_plain(s.WebhookEndpoint.list(limit=20)) or {}).get("data") or []
+        ours = [w for w in hooks if w.get("url") == url]
+        if not ours:
+            out["webhook"] = "absent"
+        else:
+            w = ours[0]
+            events = list(w.get("enabled_events") or [])
+            missing = [e for e in WEBHOOK_EVENTS_EXPECTED if e not in events and "*" not in events]
+            if not missing:
+                out["webhook"] = "deja"
+            else:
+                s.WebhookEndpoint.modify(w["id"], enabled_events=events + missing)
+                log.info("webhook %s : evenements ajoutes %s", w["id"], missing)
+                out["webhook"] = "complete"
+    except Exception as exc:
+        log.error("webhook Stripe : %s", exc)
+        out["webhook"] = f"refus: {exc}"
     return out
 
 

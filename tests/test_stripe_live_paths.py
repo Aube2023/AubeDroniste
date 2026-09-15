@@ -261,3 +261,78 @@ def test_sequestre_et_retrait(client, auth_client, make_user, app_ctx, funded_bo
 def test_webhook_connect_exempt_de_csrf():
     from security import CSRF_EXEMPT_ROUTES
     assert {"stripe_webhook", "stripe_webhook_connect"} <= CSRF_EXEMPT_ROUTES
+
+
+def test_retrait_automatique_respecte_sequestre_et_calendrier(app_ctx, funded_booking, monkeypatch):
+    import config
+    import payments
+    import services
+    b = services.get_booking(funded_booking)
+    cur = b["currency"].upper()
+    reserve = services.escrow_reserve()[cur]
+    monkeypatch.setattr(config, "AUTO_PAYOUT_MIN", 20.0)
+    monkeypatch.setattr(config, "AUTO_PAYOUT_BUFFER", 50.0)
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+    monkeypatch.setattr(payments, "is_fake", lambda: False)
+    payouts = []
+    monkeypatch.setattr(payments, "create_platform_payout",
+                        lambda amount, currency, note="": payouts.append((amount, currency)) or "po_auto")
+    state = {"manual": False, "available": reserve + 50.0 + 120.0}
+    monkeypatch.setattr(payments, "diagnostics", lambda: {
+        "payout_schedule": {"interval": "manual" if state["manual"] else "daily", "manual": state["manual"]},
+        "balance": {cur: {"available": state["available"], "pending": 0.0}}})
+    # Calendrier Stripe pas manuel : on ne retire rien (Stripe vide deja tout)
+    assert services.auto_platform_payout() == [] and payouts == []
+    state["manual"] = True
+    # disponible - sequestre - marge 50 = 120 -> retire 120
+    assert services.auto_platform_payout() == [(120.0, cur, "po_auto")]
+    # Sous le minimum : rien
+    state["available"] = reserve + 50.0 + 5.0
+    payouts.clear()
+    assert services.auto_platform_payout() == [] and payouts == []
+    # Desactive par configuration : rien
+    state["available"] = reserve + 500.0
+    monkeypatch.setattr(config, "AUTO_PAYOUT_ENABLED", False)
+    assert services.auto_platform_payout() == []
+
+
+def test_configuration_stripe_imposee_par_l_app(monkeypatch):
+    """Calendrier de versement force en manuel, evenements manquants ajoutes
+    au webhook, sans toucher a un webhook qui n'est pas le notre."""
+    import payments
+    _live(monkeypatch, payments)
+    calls = []
+
+    class Account:
+        @staticmethod
+        def retrieve():
+            return _Obj(id="acct_plat", settings={"payouts": {"schedule": {"interval": "daily"}}})
+
+        @staticmethod
+        def modify(acc_id, **kw):
+            calls.append(("account", acc_id, kw))
+
+    class WebhookEndpoint:
+        @staticmethod
+        def list(limit=20):
+            return _Obj(data=[
+                {"id": "we_autre", "url": "https://ailleurs.example/hook", "enabled_events": ["charge.refunded"]},
+                {"id": "we_nous", "url": payments.SITE_URL + "/stripe/webhook",
+                 "enabled_events": ["checkout.session.completed"]},
+            ])
+
+        @staticmethod
+        def modify(wid, **kw):
+            calls.append(("webhook", wid, kw))
+
+    class _SDK:
+        pass
+    _SDK.Account = Account
+    _SDK.WebhookEndpoint = WebhookEndpoint
+    monkeypatch.setattr(payments, "_stripe", lambda: _SDK())
+    out = payments.ensure_stripe_configuration()
+    assert out == {"payout_schedule": "manual", "webhook": "complete"}
+    assert calls[0] == ("account", "acct_plat", {"settings": {"payouts": {"schedule": {"interval": "manual"}}}})
+    assert calls[1][1] == "we_nous"
+    assert set(calls[1][2]["enabled_events"]) == set(payments.WEBHOOK_EVENTS_EXPECTED)
+    assert not any(c[1] == "we_autre" for c in calls)

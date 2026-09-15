@@ -2285,31 +2285,10 @@ def admin_stripe():
     d = payments.diagnostics()
     reserve = services.escrow_reserve()
     return render_template("admin_stripe.html", d=d, reserve=reserve,
-                           withdrawable=_withdrawable(d.get("balance") or {}, reserve),
+                           withdrawable=services.withdrawable(d.get("balance") or {}, reserve),
+                           auto_payout={"enabled": config.AUTO_PAYOUT_ENABLED, "min": config.AUTO_PAYOUT_MIN,
+                                        "buffer": config.AUTO_PAYOUT_BUFFER},
                            platform_country=config.STRIPE_PLATFORM_COUNTRY, seo=_NOINDEX)
-
-
-# Taux prudents pour convertir le sequestre d'une autre devise dans la devise
-# de reglement avant un retrait : on retient plus que necessaire, jamais moins.
-_RESERVE_RATES_TO_CAD = {"CAD": 1.0, "EUR": 1.7, "USD": 1.5, "GBP": 2.0, "CHF": 1.8}
-
-
-def _withdrawable(balance: dict, reserve: dict) -> dict:
-    """Ce que la plateforme peut retirer sans toucher au sequestre, par devise
-    du solde : disponible - sequestre (les sequestres d'autres devises sont
-    convertis avec une marge). Jamais negatif."""
-    out = {}
-    for cur, b in balance.items():
-        held = 0.0
-        for rcur, amount in reserve.items():
-            if rcur == cur:
-                held += amount
-            elif cur == "CAD":
-                held += amount * _RESERVE_RATES_TO_CAD.get(rcur, 2.0)
-            else:
-                held += amount * 2.0
-        out[cur] = round(max(0.0, float(b.get("available") or 0) - held), 2)
-    return out
 
 
 @app.route("/admin/stripe/retirer", methods=["POST"])
@@ -2323,7 +2302,7 @@ def admin_stripe_payout():
     except ValueError:
         asked = 0.0
     d = payments.diagnostics()
-    cap = _withdrawable(d.get("balance") or {}, services.escrow_reserve()).get(cur, 0.0)
+    cap = services.withdrawable(d.get("balance") or {}, services.escrow_reserve()).get(cur, 0.0)
     amount = round(min(asked, cap), 2) if asked > 0 else cap
     if amount <= 0:
         flash("Rien à retirer : tout le solde disponible est sous séquestre.", "info")

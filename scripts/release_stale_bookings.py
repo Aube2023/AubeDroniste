@@ -72,6 +72,24 @@ def main():
             if not ok:
                 log.warning("auto-release échec pour booking #%s", booking_id)
 
+        # Reglages Stripe que l'app impose elle-meme (calendrier de versement
+        # manuel, evenements du webhook) : rien a faire dans le dashboard.
+        try:
+            import payments
+            conf = payments.ensure_stripe_configuration()
+            if any(conf.values()):
+                log.info("configuration Stripe : %s", conf)
+        except Exception as exc:
+            log.warning("configuration Stripe : %s", exc)
+
+        # Commission de la plateforme : ce qui n'est plus sous sequestre part
+        # vers la banque (calendrier Stripe manuel, retrait par l'app).
+        try:
+            for amount, cur, po in services.auto_platform_payout():
+                log.info("retrait automatique : %.2f %s (%s)", amount, cur, po)
+        except Exception as exc:
+            log.warning("retrait automatique : %s", exc)
+
         # Badge « vérifié » : retombe quand le dernier brevet vérifié expire.
         changed = services.refresh_all_user_verified()
         log.info("badges profil recalculés : %d changement(s)", changed)

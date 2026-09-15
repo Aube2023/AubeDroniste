@@ -3697,6 +3697,60 @@ def escrow_reserve() -> dict:
     return {k: round(v, 2) for k, v in out.items() if v}
 
 
+# Taux prudents pour convertir un sequestre d'une autre devise dans la devise
+# du solde avant un retrait : on retient plus que necessaire, jamais moins.
+_RESERVE_RATES_TO_CAD = {"CAD": 1.0, "EUR": 1.7, "USD": 1.5, "GBP": 2.0, "CHF": 1.8}
+
+
+def withdrawable(balance: dict, reserve: dict, buffer: float = 0.0) -> dict:
+    """Ce que la plateforme peut retirer sans toucher au sequestre, par devise
+    du solde : disponible - sequestre - marge. Les sequestres d'autres devises
+    sont convertis avec une marge. Jamais negatif."""
+    out = {}
+    for cur, b in (balance or {}).items():
+        held = float(buffer or 0)
+        for rcur, amount in (reserve or {}).items():
+            if rcur == cur:
+                held += amount
+            elif cur == "CAD":
+                held += amount * _RESERVE_RATES_TO_CAD.get(rcur, 2.0)
+            else:
+                held += amount * 2.0
+        out[cur] = round(max(0.0, float(b.get("available") or 0) - held), 2)
+    return out
+
+
+def auto_platform_payout() -> list:
+    """Cron de nuit : retire vers la banque de la plateforme, par devise, ce
+    qui n'est pas sous sequestre (cf. withdrawable, avec AUTO_PAYOUT_BUFFER)
+    des que ca atteint AUTO_PAYOUT_MIN. Chaque retrait est trace dans
+    audit_log. Ne fait rien si le calendrier Stripe n'est pas manuel : dans ce
+    cas Stripe vire deja tout de lui-meme (et le sequestre avec, a corriger
+    dans le dashboard). Retourne [(montant, devise, payout_id)]."""
+    from config import AUTO_PAYOUT_BUFFER, AUTO_PAYOUT_ENABLED, AUTO_PAYOUT_MIN
+    import payments
+    if not AUTO_PAYOUT_ENABLED or not payments.is_available() or payments.is_fake():
+        return []
+    d = payments.diagnostics()
+    sched = d.get("payout_schedule") or {}
+    if not sched.get("manual"):
+        log.warning("retrait automatique ignore : calendrier de versement Stripe « %s », "
+                    "pas manuel (le sequestre part a la banque)", sched.get("interval"))
+        return []
+    done = []
+    for cur, amount in withdrawable(d.get("balance") or {}, escrow_reserve(), AUTO_PAYOUT_BUFFER).items():
+        if amount < AUTO_PAYOUT_MIN:
+            continue
+        po = payments.create_platform_payout(amount, cur, note="Commission AubePilot (automatique)")
+        if po:
+            db.execute(
+                "INSERT INTO audit_log (user_id, action, target, payload) VALUES (NULL, 'stripe_payout', ?, ?)",
+                (po, json.dumps({"amount": amount, "currency": cur, "auto": True})),
+            )
+            done.append((amount, cur, po))
+    return done
+
+
 def mark_booking_fully_refunded(payment_intent_id: str) -> bool:
     """Reconcile un remboursement integral recu par webhook Stripe.
 

@@ -752,6 +752,16 @@ STRIPE_CONNECT_ENABLED = os.environ.get("STRIPE_CONNECT_ENABLED", "").strip().lo
 # Auto-libération si le client n'a pas validé après ce delai (jours)
 AUTO_RELEASE_DAYS = int(os.environ.get("AUBEPILOT_AUTO_RELEASE_DAYS", "7"))
 
+# Retrait automatique de la commission vers la banque de la plateforme (cron
+# de nuit). Le calendrier de versement Stripe doit etre MANUEL (sinon Stripe
+# vide tout le solde, sequestre compris) : c'est l'app qui retire ce qui lui
+# appartient = solde disponible - sequestre - marge. Rien en dessous du minimum.
+AUTO_PAYOUT_ENABLED = os.environ.get("AUBEPILOT_AUTO_PAYOUT", "1").strip().lower() in ("1", "true", "yes", "on")
+AUTO_PAYOUT_MIN = float(os.environ.get("AUBEPILOT_AUTO_PAYOUT_MIN", "20"))
+# Marge conservee chez Stripe : frais non rembourses lors d'un remboursement,
+# litige, arrondis de change. Evite un solde negatif debite sur la banque.
+AUTO_PAYOUT_BUFFER = float(os.environ.get("AUBEPILOT_AUTO_PAYOUT_BUFFER", "50"))
+
 # Filtre anti-bypass : regex bloquees dans la messagerie avant `funded`
 MESSAGE_BANNED_PATTERNS = [
     r"[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}",          # email

@@ -65,10 +65,13 @@
     Versement automatique <strong>{{ d.payout_schedule.interval }}</strong> (délai {{ d.payout_schedule.delay_days }} j) :
     Stripe vide le solde vers la banque, séquestre compris. Un virement au pilote validé après ce délai échoue
     faute de solde. À passer en <strong>manuel</strong> : dashboard → Paramètres → Virements → Calendrier → Manuel,
-    puis retirer la commission depuis cette page.
+    l'app retire ensuite la commission toute seule chaque nuit.
   </p></div>
   {% elif d.payout_schedule %}
-  <p class="muted small">Calendrier de versement manuel : l'argent reste chez Stripe jusqu'au retrait ci-dessous.</p>
+  <p class="muted small">Calendrier de versement manuel : l'argent des clients reste chez Stripe jusqu'à la clôture de leur
+    réservation.{% if auto_payout.enabled %} Chaque nuit, l'app retire vers la banque ce qui n'est pas sous séquestre
+    (marge conservée {{ '%.0f' % auto_payout.buffer }}, minimum {{ '%.0f' % auto_payout.min }}) ; le bouton ci-dessous
+    sert seulement à ne pas attendre.{% endif %}</p>
   {% endif %}
   <table class="table-simple" style="width: 100%; margin-top: 10px;">
     <thead><tr><th style="text-align:start;">Devise</th><th>Disponible</th><th>En attente</th><th>Sous séquestre</th><th>Retirable</th></tr></thead>
