@@ -331,6 +331,14 @@ _ADD_TABLES = [
         found      INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )""",
+    # Reglages que l'app pose elle-meme (ex. secret d'un webhook Stripe qu'elle
+    # a cree) : DATA_DIR est le seul endroit inscriptible en prod, l'env root
+    # ne l'est pas. Une variable d'environnement du meme nom a priorite.
+    """CREATE TABLE IF NOT EXISTS app_settings (
+        key        TEXT PRIMARY KEY,
+        value      TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""",
 ]
 
 
@@ -412,6 +420,20 @@ def execute(query: str, params: Iterable = (), commit: bool = True) -> sqlite3.C
             get_db().commit()
         return cur
     return _timed(query, params, _do)
+
+
+def get_setting(key: str) -> Optional[str]:
+    """Reglage pose par l'app (table app_settings), None s'il n'existe pas."""
+    row = fetchone("SELECT value FROM app_settings WHERE key=?", (key,))
+    return row["value"] if row else None
+
+
+def set_setting(key: str, value: str) -> None:
+    execute(
+        "INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, datetime('now')) "
+        "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+        (key, value),
+    )
 
 
 @contextmanager

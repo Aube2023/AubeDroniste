@@ -124,8 +124,8 @@ def test_contribution_de_collecte_passe_le_paiement_d_origine(monkeypatch):
     assert seen["pilot_amount"] == 46.0 and seen["booking_id"] == 5
 
 
-def test_webhook_connect_a_son_propre_secret(client, monkeypatch):
-    import config
+def test_webhook_connect_a_son_propre_secret(client, app_ctx, monkeypatch):
+    import db
     import payments
     monkeypatch.setattr(payments, "is_fake", lambda: False)
     monkeypatch.setattr(payments, "is_available", lambda: True)
@@ -136,13 +136,19 @@ def test_webhook_connect_a_son_propre_secret(client, monkeypatch):
         return {"type": "ping", "data": {"object": {}}}
     monkeypatch.setattr(payments, "parse_webhook", faux_parse)
 
-    monkeypatch.setattr(config, "STRIPE_WEBHOOK_SECRET", "whsec_plateforme")
-    monkeypatch.setattr(config, "STRIPE_CONNECT_WEBHOOK_SECRET", "")
+    monkeypatch.setattr(payments, "STRIPE_WEBHOOK_SECRET", "whsec_plateforme")
+    monkeypatch.setattr(payments, "STRIPE_CONNECT_WEBHOOK_SECRET", "")
+    db.execute("DELETE FROM app_settings WHERE key LIKE 'stripe_%'")
     assert client.post("/stripe/webhook", data=b"{}").status_code == 200
     assert client.post("/stripe/webhook/connect", data=b"{}").status_code == 404
-    monkeypatch.setattr(config, "STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_connect")
+    # Secret pose en base par l'app (webhook cree par elle) : suffit
+    db.set_setting("stripe_connect_webhook_secret", "whsec_connect_base")
     assert client.post("/stripe/webhook/connect", data=b"{}").status_code == 200
-    assert secrets == ["whsec_plateforme", "whsec_connect"]
+    # L'env prime sur la base
+    monkeypatch.setattr(payments, "STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_connect")
+    assert client.post("/stripe/webhook/connect", data=b"{}").status_code == 200
+    assert secrets == ["whsec_plateforme", "whsec_connect_base", "whsec_connect"]
+    db.execute("DELETE FROM app_settings WHERE key LIKE 'stripe_%'")
 
 
 def test_parse_webhook_refuse_sans_secret(monkeypatch):
@@ -296,11 +302,16 @@ def test_retrait_automatique_respecte_sequestre_et_calendrier(app_ctx, funded_bo
     assert services.auto_platform_payout() == []
 
 
-def test_configuration_stripe_imposee_par_l_app(monkeypatch):
-    """Calendrier de versement force en manuel, evenements manquants ajoutes
-    au webhook, sans toucher a un webhook qui n'est pas le notre."""
+def test_configuration_stripe_imposee_par_l_app(app_ctx, monkeypatch):
+    """Calendrier de versement force en manuel ; evenements manquants ajoutes
+    a notre webhook (secret connu) ; webhook Connect absent cree par l'app,
+    secret garde en base ; un webhook qui n'est pas le notre n'est pas touche."""
+    import db
     import payments
     _live(monkeypatch, payments)
+    monkeypatch.setattr(payments, "STRIPE_WEBHOOK_SECRET", "whsec_env")
+    monkeypatch.setattr(payments, "STRIPE_CONNECT_WEBHOOK_SECRET", "")
+    db.execute("DELETE FROM app_settings WHERE key LIKE 'stripe_%'")
     calls = []
 
     class Account:
@@ -325,14 +336,38 @@ def test_configuration_stripe_imposee_par_l_app(monkeypatch):
         def modify(wid, **kw):
             calls.append(("webhook", wid, kw))
 
+        @staticmethod
+        def create(**kw):
+            calls.append(("create", kw["url"], kw))
+            return _Obj(id="we_connect", secret="whsec_cree_par_app")
+
+        @staticmethod
+        def delete(wid):
+            calls.append(("delete", wid, {}))
+
     class _SDK:
         pass
     _SDK.Account = Account
     _SDK.WebhookEndpoint = WebhookEndpoint
     monkeypatch.setattr(payments, "_stripe", lambda: _SDK())
     out = payments.ensure_stripe_configuration()
-    assert out == {"payout_schedule": "manual", "webhook": "complete"}
+    assert out == {"payout_schedule": "manual", "webhook": "complete", "connect_webhook": "cree"}
     assert calls[0] == ("account", "acct_plat", {"settings": {"payouts": {"schedule": {"interval": "manual"}}}})
     assert calls[1][1] == "we_nous"
     assert set(calls[1][2]["enabled_events"]) == set(payments.WEBHOOK_EVENTS_EXPECTED)
-    assert not any(c[1] == "we_autre" for c in calls)
+    created = [c for c in calls if c[0] == "create"]
+    assert len(created) == 1 and created[0][1].endswith("/stripe/webhook/connect")
+    assert created[0][2]["connect"] is True and created[0][2]["enabled_events"] == ["account.updated"]
+    assert not any(c[1] == "we_autre" for c in calls) and not any(c[0] == "delete" for c in calls)
+    assert payments.connect_webhook_secret() == "whsec_cree_par_app"
+    # Second passage : plus rien a faire
+    calls.clear()
+    monkeypatch.setattr(WebhookEndpoint, "list", staticmethod(lambda limit=20: _Obj(data=[
+        {"id": "we_nous", "url": payments.SITE_URL + "/stripe/webhook",
+         "enabled_events": list(payments.WEBHOOK_EVENTS_EXPECTED)},
+        {"id": "we_connect", "url": payments.SITE_URL + "/stripe/webhook/connect",
+         "enabled_events": ["account.updated"]}])))
+    out = payments.ensure_stripe_configuration()
+    assert out["webhook"] == "deja" and out["connect_webhook"] == "deja"
+    assert not [c for c in calls if c[0] in ("create", "delete", "webhook")]
+    db.execute("DELETE FROM app_settings WHERE key LIKE 'stripe_%'")

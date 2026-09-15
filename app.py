@@ -3634,16 +3634,18 @@ def stripe_fake_checkout(booking_id):
 @app.route("/stripe/webhook", methods=["POST"])
 def stripe_webhook():
     """Evenements du compte plateforme (paiements, remboursements)."""
-    return _stripe_webhook(config.STRIPE_WEBHOOK_SECRET)
+    return _stripe_webhook(payments.webhook_secret())
 
 
 @app.route("/stripe/webhook/connect", methods=["POST"])
 def stripe_webhook_connect():
     """Evenements des comptes pilotes (account.updated) : Stripe ne les livre
-    qu'a un endpoint « Connect », qui a son propre secret de signature."""
-    if not config.STRIPE_CONNECT_WEBHOOK_SECRET:
+    qu'a un endpoint « Connect », qui a son propre secret de signature (env,
+    ou base si c'est l'app qui a cree le webhook)."""
+    secret = payments.connect_webhook_secret()
+    if not secret:
         abort(404)
-    return _stripe_webhook(config.STRIPE_CONNECT_WEBHOOK_SECRET)
+    return _stripe_webhook(secret)
 
 
 def _stripe_webhook(secret):

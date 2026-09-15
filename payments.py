@@ -517,6 +517,27 @@ def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
 # Webhooks
 # ---------------------------------------------------------------------------
 
+def _setting(key: str) -> str:
+    """Reglage pose par l'app en base (cf. ensure_stripe_configuration) ;
+    vide hors contexte applicatif ou si absent."""
+    try:
+        import db
+        return (db.get_setting(key) or "").strip()
+    except Exception:
+        return ""
+
+
+def webhook_secret() -> str:
+    """Secret du webhook de paiements : l'env d'abord, sinon celui du
+    webhook que l'app a cree elle-meme."""
+    return STRIPE_WEBHOOK_SECRET or _setting("stripe_webhook_secret")
+
+
+def connect_webhook_secret() -> str:
+    """Secret du webhook Connect (comptes pilotes) : env, sinon base."""
+    return STRIPE_CONNECT_WEBHOOK_SECRET or _setting("stripe_connect_webhook_secret")
+
+
 def parse_webhook(payload: bytes, signature: str, secret: Optional[str] = None):
     """Verifie la signature et retourne l'event Stripe sous forme de dict.
 
@@ -528,7 +549,7 @@ def parse_webhook(payload: bytes, signature: str, secret: Optional[str] = None):
     bookings comme `funded`.
     """
     if secret is None:
-        secret = STRIPE_WEBHOOK_SECRET
+        secret = webhook_secret()
     if STRIPE_FAKE_MODE:
         # Mode fake : on accepte le JSON brut (utile pour scripts/tests)
         import json
@@ -657,11 +678,11 @@ def diagnostics() -> dict:
     out = {
         "mode": banner_mode(),
         "connect_flag": STRIPE_CONNECT_ENABLED,
-        "webhook_secret": bool(STRIPE_WEBHOOK_SECRET),
+        "webhook_secret": bool(webhook_secret()),
         "publishable": bool(STRIPE_PUBLISHABLE_KEY),
         "webhook_url": f"{SITE_URL}/stripe/webhook",
         "connect_webhook_url": f"{SITE_URL}/stripe/webhook/connect",
-        "connect_webhook_secret": bool(STRIPE_CONNECT_WEBHOOK_SECRET),
+        "connect_webhook_secret": bool(connect_webhook_secret()),
         "expected_account": STRIPE_ACCOUNT_ID,
         "account_mismatch": False,
         "payout_schedule": None, "balance": None,
@@ -764,7 +785,7 @@ def ensure_stripe_configuration() -> dict:
         (en ajouter ne change pas son secret).
     Retourne {"payout_schedule": "manual"|"deja"|"refus: ...",
               "webhook": "complete"|"deja"|"absent"|"refus: ..."}."""
-    out: dict = {"payout_schedule": None, "webhook": None}
+    out: dict = {"payout_schedule": None, "webhook": None, "connect_webhook": None}
     s = _stripe()
     if s is None or STRIPE_FAKE_MODE:
         return out
@@ -787,25 +808,59 @@ def ensure_stripe_configuration() -> dict:
                     "calendrier -> manuel ; l'app retire ensuite la commission elle-meme.", exc)
         out["payout_schedule"] = f"refus: {exc}"
     try:
-        url = f"{SITE_URL}/stripe/webhook"
         hooks = (_plain(s.WebhookEndpoint.list(limit=20)) or {}).get("data") or []
-        ours = [w for w in hooks if w.get("url") == url]
-        if not ours:
-            out["webhook"] = "absent"
-        else:
-            w = ours[0]
-            events = list(w.get("enabled_events") or [])
-            missing = [e for e in WEBHOOK_EVENTS_EXPECTED if e not in events and "*" not in events]
-            if not missing:
-                out["webhook"] = "deja"
-            else:
-                s.WebhookEndpoint.modify(w["id"], enabled_events=events + missing)
-                log.info("webhook %s : evenements ajoutes %s", w["id"], missing)
-                out["webhook"] = "complete"
     except Exception as exc:
-        log.error("webhook Stripe : %s", exc)
-        out["webhook"] = f"refus: {exc}"
+        log.error("webhooks Stripe illisibles : %s", exc)
+        out["webhook"] = out["connect_webhook"] = f"refus: {exc}"
+        return out
+    out["webhook"] = _ensure_webhook(
+        s, hooks, url=f"{SITE_URL}/stripe/webhook", events=WEBHOOK_EVENTS_EXPECTED,
+        known_secret=webhook_secret(), setting_key="stripe_webhook_secret", connect=False)
+    out["connect_webhook"] = _ensure_webhook(
+        s, hooks, url=f"{SITE_URL}/stripe/webhook/connect", events=CONNECT_WEBHOOK_EVENTS_EXPECTED,
+        known_secret=connect_webhook_secret(), setting_key="stripe_connect_webhook_secret", connect=True)
     return out
+
+
+def _ensure_webhook(s, hooks: list, *, url: str, events: tuple, known_secret: str,
+                    setting_key: str, connect: bool) -> str:
+    """Un webhook Stripe vers `url`, avec tous les `events`, dont on connait
+    le secret. Complete les evenements manquants (le secret ne change pas).
+    Absent, ou present sans qu'on ait son secret (cree autrement, secret
+    perdu) : (re)cree par l'app, secret garde en base (app_settings). Une
+    entree d'env prime toujours sur la base. Retourne un mot d'etat."""
+    ours = [w for w in hooks if w.get("url") == url]
+    try:
+        if ours and known_secret:
+            w = ours[0]
+            have = list(w.get("enabled_events") or [])
+            missing = [e for e in events if e not in have and "*" not in have]
+            if not missing:
+                return "deja"
+            s.WebhookEndpoint.modify(w["id"], enabled_events=have + missing)
+            log.info("webhook %s : evenements ajoutes %s", w["id"], missing)
+            return "complete"
+        for w in ours:
+            # Present mais secret inconnu : inutilisable, on le remplace.
+            s.WebhookEndpoint.delete(w["id"])
+            log.info("webhook %s (%s) sans secret connu : supprime", w["id"], url)
+        kwargs = {"url": url, "enabled_events": list(events),
+                  "description": "AubePilot (créé par l'app)" + (" · comptes pilotes" if connect else "")}
+        if connect:
+            kwargs["connect"] = True
+        created = _plain(s.WebhookEndpoint.create(**kwargs)) or {}
+        secret = created.get("secret") or ""
+        if not secret.startswith("whsec_"):
+            log.error("webhook %s cree sans secret exploitable", created.get("id"))
+            return "refus: secret absent"
+        import db
+        db.set_setting(setting_key, secret)
+        log.info("webhook %s cree vers %s (%s), secret garde en base", created.get("id"), url,
+                 ", ".join(events))
+        return "cree"
+    except Exception as exc:
+        log.error("webhook %s : %s", url, exc)
+        return f"refus: {exc}"
 
 
 def create_platform_payout(amount: float, currency: str, note: str = "") -> Optional[str]:
