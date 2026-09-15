@@ -228,11 +228,12 @@
       {% endif %}
 
       {# Discussion client <-> ce pilote #}
-      {% set t = threads.get(b.pilot_user_id, []) %}
-      <details class="disclosure" {% if t %}open{% endif %}>
-        <summary>Discussion · {{ t|length }} message(s)</summary>
+      {# `fil`, pas `t` : `t` est la fonction de traduction, écrasée sinon pour tout le reste du gabarit #}
+      {% set fil = threads.get(b.pilot_user_id, []) %}
+      <details class="disclosure" {% if fil %}open{% endif %}>
+        <summary>Discussion · {{ fil|length }} message(s)</summary>
         <ul class="stack-list scroll">
-          {% for m in t %}
+          {% for m in fil %}
           <li>
             <div class="who">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ mask_name(b.pilot_name) }}{% endif %} · {{ m.created_at[:16] }}</div>
             <div class="body">{{ m.body }}</div>
@@ -325,11 +326,11 @@
       {% endif %}
 
       {# Discussion pilote <-> client #}
-      {% set t = threads.get(mission.client_user_id, []) %}
-      <details class="disclosure" {% if t %}open{% endif %}>
-        <summary>Discussion avec le client · {{ t|length }} message(s)</summary>
+      {% set fil = threads.get(mission.client_user_id, []) %}
+      <details class="disclosure" {% if fil %}open{% endif %}>
+        <summary>Discussion avec le client · {{ fil|length }} message(s)</summary>
         <ul class="stack-list scroll">
-          {% for m in t %}
+          {% for m in fil %}
           <li>
             <div class="who">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ mission.client_name }}{% endif %} · {{ m.created_at[:16] }}</div>
             <div class="body">{{ m.body }}</div>
