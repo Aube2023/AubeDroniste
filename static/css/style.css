@@ -1223,21 +1223,21 @@ img.avatar { object-fit: cover; }
 /* Inscription en étapes numérotées : un chiffre devant chaque intitulé,
    un filet entre les blocs, rien d'autre. */
 .auth-steps { counter-reset: etape; }
-.auth-steps .step { padding-bottom: 26px; margin-bottom: 26px; border-bottom: 1px solid var(--rule); }
-.auth-steps .step:last-of-type { border-bottom: 0; margin-bottom: 8px; }
-.auth-steps .step > legend {
+.auth-steps .auth-step { padding-bottom: 26px; margin-bottom: 26px; border-bottom: 1px solid var(--rule); }
+.auth-steps .auth-step:last-of-type { border-bottom: 0; margin-bottom: 8px; }
+.auth-steps .auth-step > legend {
   counter-increment: etape;
   font: 600 15px/1.2 var(--display); letter-spacing: 0; text-transform: none;
   color: var(--ink); margin-bottom: 14px;
 }
-.auth-steps .step > legend::before {
+.auth-steps .auth-step > legend::before {
   content: counter(etape);
   width: 26px; height: 26px; border-radius: 50%;
   display: inline-grid; place-items: center; flex: 0 0 auto;
   background: var(--amber); color: var(--cta-fg);
   font: 700 12px/1 var(--mono);
 }
-.auth-steps .step > legend::after { content: none; }
+.auth-steps .auth-step > legend::after { content: none; }
 
 /* Champ avec suffixe fixe (identifiant@aubemail.com) */
 .input-suffix { display: flex; align-items: stretch; margin-top: 7px; }

@@ -17,7 +17,7 @@
   <form method="post" class="auth-form auth-steps">
         {{ csrf_input() }}
 
-    <fieldset class="fieldset-block step">
+    <fieldset class="fieldset-block auth-step">
       <legend>{{ t('register.step_role') }}</legend>
       <div class="role-cards role-cards-3">
         {% set sel = request.args.get('role','client') %}
@@ -46,7 +46,7 @@
     </fieldset>
 
     {% set sel_kind = request.args.get('kind', 'pro') %}
-    <fieldset class="fieldset-block step" id="kind-block">
+    <fieldset class="fieldset-block auth-step" id="kind-block">
       <legend>{{ t('register.step_kind') }}</legend>
       <div class="role-cards role-cards-kinds">
         {% for code, lbl in profile_kinds %}
@@ -100,7 +100,7 @@
       })();
     </script>
 
-    <fieldset class="fieldset-block step">
+    <fieldset class="fieldset-block auth-step">
       <legend>{{ t('register.step_identity') }}</legend>
       <div class="grid-2">
         <label>{{ t('register.full_name') }} <span class="muted small">({{ t('register.or_school_name') }})</span>
@@ -137,7 +137,7 @@
       </label>
     </fieldset>
 
-    <fieldset class="fieldset-block step">
+    <fieldset class="fieldset-block auth-step">
       <legend>{{ t('register.step_base') }}</legend>
       <div class="grid-2">
         <label>{{ t('register.country') }}
