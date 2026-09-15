@@ -24,6 +24,7 @@ from config import (
     SITE_URL,
     STRIPE_ACCOUNT_ID,
     STRIPE_CONNECT_ENABLED,
+    STRIPE_CONNECT_WEBHOOK_SECRET,
     STRIPE_FAKE_MODE,
     STRIPE_LIVE_MODE,
     STRIPE_PAYMENTS_ENABLED,
@@ -265,6 +266,13 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
             "quantity": 1,
         }],
         metadata={"booking_id": str(booking_id)},
+        # Le paiement lui-meme porte le numero de reservation (lisible dans le
+        # dashboard) et le groupe de transfert que le virement au pilote reprend.
+        payment_intent_data={
+            "description": f"AubePilot · réservation #{booking_id} · {mission_title[:60]}",
+            "metadata": {"booking_id": str(booking_id)},
+            "transfer_group": f"booking_{booking_id}",
+        },
         success_url=success_url,
         cancel_url=cancel_url,
         idempotency_key=f"booking-{booking_id}-checkout",
@@ -300,6 +308,11 @@ def create_contribution_session(*, contribution_id: int, amount: float, currency
             "quantity": 1,
         }],
         metadata={"contribution_id": str(contribution_id)},
+        payment_intent_data={
+            "description": f"AubePilot · soutien #{contribution_id} · {pilot_name[:60]}",
+            "metadata": {"contribution_id": str(contribution_id)},
+            "transfer_group": f"contribution_{contribution_id}",
+        },
         success_url=f"{SITE_URL}{return_path}?soutien=merci",
         cancel_url=f"{SITE_URL}{return_path}?soutien=annule",
         idempotency_key=f"contribution-{contribution_id}-checkout",
@@ -360,18 +373,64 @@ def expire_checkout_session(session_id: str) -> bool:
 # Liberation des fonds (Transfer)
 # ---------------------------------------------------------------------------
 
+def charge_for_transfer(payment_intent_id: Optional[str]) -> Optional[dict]:
+    """Charge reglee derriere un PaymentIntent, pour y adosser un Transfer.
+
+    Retourne {"charge", "currency", "exchange_rate"} : la devise est celle
+    de la balance transaction (devise de reglement de la plateforme, ex. CAD
+    pour un paiement en EUR) et exchange_rate le taux applique par Stripe
+    (None si aucune conversion). None si introuvable ou en mode fake.
+    """
+    if not payment_intent_id or STRIPE_FAKE_MODE or payment_intent_id.startswith("pi_fake_"):
+        return None
+    s = _stripe()
+    if s is None:
+        return None
+    try:
+        pi = _plain(s.PaymentIntent.retrieve(
+            payment_intent_id, expand=["latest_charge.balance_transaction"])) or {}
+        charge = pi.get("latest_charge")
+        if isinstance(charge, str):
+            charge = _plain(s.Charge.retrieve(charge, expand=["balance_transaction"])) or {}
+        if not charge or charge.get("status") != "succeeded":
+            return None
+        bt = charge.get("balance_transaction")
+        if isinstance(bt, str):
+            bt = _plain(s.BalanceTransaction.retrieve(bt)) or {}
+        bt = bt or {}
+        return {
+            "charge": charge.get("id"),
+            "currency": (bt.get("currency") or charge.get("currency") or "").lower(),
+            "exchange_rate": bt.get("exchange_rate"),
+        }
+    except Exception as exc:
+        log.warning("charge_for_transfer(%s) -> %s", payment_intent_id, exc)
+        return None
+
+
 def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
-                     pilot_account_id: str, kind: str = "release") -> Optional[str]:
+                     pilot_account_id: str, kind: str = "release",
+                     source_payment_intent: Optional[str] = None) -> Optional[str]:
     """Transfert depuis le compte plateforme vers le compte pilote.
 
     Le `pilot_amount` est le brut DESTINE au pilote (i.e. agreed_price -
     platform_fee). Retourne l'ID du transfer Stripe ou un fake.
 
+    SOURCE_TRANSACTION : un Transfer ordinaire ne puise que dans le solde
+    *disponible* de la plateforme ; un paiement carte met 2 a 7 jours a le
+    devenir et le versement automatique vide ce solde chaque jour. Adosse a
+    la charge d'origine (`source_transaction`), le Transfer est accepte tout
+    de suite et Stripe l'execute quand les fonds arrivent. Contraintes :
+    devise = devise de reglement de la charge (on convertit au taux applique
+    par Stripe si le devis etait dans une autre devise), montant <= charge.
+    Sans PaymentIntent connu (ancien dossier), on tente le transfert simple.
+
     IDEMPOTENCY : `booking-{id}-{kind}` empeche un double-versement au
     pilote si le client clique 2x sur 'Valider la mission' ou si l'auto-
     release J+7 tape en parallele d'une validation manuelle. `kind` distingue
     la liberation normale ("release") du dedommagement d'annulation tardive
-    ("cancel-compensation") : montants differents, cles differentes.
+    ("cancel-compensation") et du soutien de collecte ("contribution") :
+    montants differents, cles differentes.
     """
     if STRIPE_FAKE_MODE:
         return f"tr_fake_{booking_id}_{kind}_{int(time.time())}"
@@ -380,17 +439,36 @@ def release_to_pilot(*, booking_id: int, pilot_amount: float, currency: str,
         log.error("release_to_pilot refuse: Stripe indisponible")
         return None
     amount_cents = int(round(float(pilot_amount) * 100))
+    group = f"contribution_{booking_id}" if kind == "contribution" else f"booking_{booking_id}"
+    kwargs = {
+        "amount": amount_cents,
+        "currency": currency.lower(),
+        "destination": pilot_account_id,
+        "transfer_group": group,
+        "metadata": {"booking_id": str(booking_id), "kind": kind},
+        "idempotency_key": f"booking-{booking_id}-{kind}",
+    }
+    src = charge_for_transfer(source_payment_intent)
+    if src and src.get("charge"):
+        kwargs["source_transaction"] = src["charge"]
+        if src["currency"] and src["currency"] != currency.lower():
+            rate = src.get("exchange_rate")
+            if not rate:
+                log.error("release_to_pilot(booking=%s) : devise %s reglee en %s sans taux, "
+                          "transfert refuse", booking_id, currency, src["currency"])
+                return None
+            kwargs["amount"] = int(round(amount_cents * float(rate)))
+            kwargs["currency"] = src["currency"]
+            kwargs["metadata"]["quoted"] = f"{amount_cents} {currency.lower()}"
+    else:
+        log.warning("release_to_pilot(booking=%s) : sans source_transaction "
+                    "(PaymentIntent %r) — depend du solde disponible", booking_id,
+                    source_payment_intent)
     try:
-        tr = s.Transfer.create(
-            amount=amount_cents,
-            currency=currency.lower(),
-            destination=pilot_account_id,
-            transfer_group=f"booking_{booking_id}",
-            metadata={"booking_id": str(booking_id)},
-            idempotency_key=f"booking-{booking_id}-{kind}",
-        )
-        log.info("transfer %s pour booking=%s (%d cents %s vers %s)",
-                 tr.id, booking_id, amount_cents, currency.upper(), pilot_account_id)
+        tr = s.Transfer.create(**kwargs)
+        log.info("transfer %s pour booking=%s (%d %s vers %s, source=%s)",
+                 tr.id, booking_id, kwargs["amount"], kwargs["currency"].upper(),
+                 pilot_account_id, kwargs.get("source_transaction"))
         return tr.id
     except Exception as exc:
         log.error("release_to_pilot(booking=%s) -> %s", booking_id, exc)
@@ -439,14 +517,18 @@ def refund_payment(payment_intent_id: str, amount: Optional[float] = None,
 # Webhooks
 # ---------------------------------------------------------------------------
 
-def parse_webhook(payload: bytes, signature: str):
+def parse_webhook(payload: bytes, signature: str, secret: Optional[str] = None):
     """Verifie la signature et retourne l'event Stripe sous forme de dict.
 
-    En mode FAKE (pas de cle Stripe) : on accepte le JSON brut. Sinon, on
-    EXIGE STRIPE_WEBHOOK_SECRET — sans secret, le webhook est REFUSE pour
-    eviter qu'un attaquant POST des events falsifies marquant des
+    `secret` : STRIPE_WEBHOOK_SECRET par defaut (evenements de la plateforme),
+    ou STRIPE_CONNECT_WEBHOOK_SECRET pour /stripe/webhook/connect (evenements
+    des comptes pilotes). En mode FAKE (pas de cle Stripe) : on accepte le
+    JSON brut. Sinon, on EXIGE le secret — sans secret, le webhook est REFUSE
+    pour eviter qu'un attaquant POST des events falsifies marquant des
     bookings comme `funded`.
     """
+    if secret is None:
+        secret = STRIPE_WEBHOOK_SECRET
     if STRIPE_FAKE_MODE:
         # Mode fake : on accepte le JSON brut (utile pour scripts/tests)
         import json
@@ -458,14 +540,14 @@ def parse_webhook(payload: bytes, signature: str):
     if s is None:
         log.error("REFUSE webhook : Stripe n'est pas configure ou le SDK manque")
         return None
-    if not STRIPE_WEBHOOK_SECRET:
+    if not secret:
         log.error(
-            "REFUSE webhook : STRIPE_WEBHOOK_SECRET vide en mode Stripe live/test. "
+            "REFUSE webhook : secret vide en mode Stripe live/test. "
             "Configure-le dans le dashboard Stripe puis dans /etc/aubepilot.env."
         )
         return None
     try:
-        event = s.Webhook.construct_event(payload, signature, STRIPE_WEBHOOK_SECRET)
+        event = s.Webhook.construct_event(payload, signature, secret)
     except Exception as exc:
         log.error("webhook signature invalid: %s", exc)
         return None
@@ -561,7 +643,10 @@ def split_amounts(total: float, fee_pct: Optional[float] = None) -> dict:
 # Diagnostic (page admin) : ou en est le compte, sans jamais montrer une cle
 # ---------------------------------------------------------------------------
 
-WEBHOOK_EVENTS_EXPECTED = ("checkout.session.completed", "charge.refunded", "account.updated")
+# Webhook plateforme (paiements) et webhook Connect (comptes pilotes) : deux
+# endpoints Stripe distincts, chacun avec son secret.
+WEBHOOK_EVENTS_EXPECTED = ("checkout.session.completed", "charge.refunded")
+CONNECT_WEBHOOK_EVENTS_EXPECTED = ("account.updated",)
 
 
 def diagnostics() -> dict:
@@ -575,6 +660,8 @@ def diagnostics() -> dict:
         "webhook_secret": bool(STRIPE_WEBHOOK_SECRET),
         "publishable": bool(STRIPE_PUBLISHABLE_KEY),
         "webhook_url": f"{SITE_URL}/stripe/webhook",
+        "connect_webhook_url": f"{SITE_URL}/stripe/webhook/connect",
+        "connect_webhook_secret": bool(STRIPE_CONNECT_WEBHOOK_SECRET),
         "expected_account": STRIPE_ACCOUNT_ID,
         "account_mismatch": False,
         "account": None, "connect": None, "connected": None, "webhooks": [], "errors": [],
@@ -619,11 +706,19 @@ def diagnostics() -> dict:
         hooks = _plain(s.WebhookEndpoint.list(limit=20)) or {}
         for w in hooks.get("data") or []:
             events = list(w.get("enabled_events") or [])
+            url = w.get("url")
+            expected = ()
+            if url == out["webhook_url"]:
+                expected = WEBHOOK_EVENTS_EXPECTED
+            elif url == out["connect_webhook_url"]:
+                expected = CONNECT_WEBHOOK_EVENTS_EXPECTED
             out["webhooks"].append({
-                "id": w.get("id"), "url": w.get("url"), "status": w.get("status"), "events": events,
-                "ours": w.get("url") == out["webhook_url"],
-                "missing": [e for e in WEBHOOK_EVENTS_EXPECTED if e not in events and "*" not in events],
+                "id": w.get("id"), "url": url, "status": w.get("status"), "events": events,
+                "ours": bool(expected),
+                "missing": [e for e in expected if e not in events and "*" not in events],
             })
+        out["connect_webhook_present"] = any(
+            w["url"] == out["connect_webhook_url"] for w in out["webhooks"])
     except Exception as exc:
         out["errors"].append(f"webhooks : {exc}")
     return out

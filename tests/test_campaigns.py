@@ -150,15 +150,15 @@ def test_webhook_contribution_incoherent_ignore(client, app_ctx, make_user, monk
     services.attach_contribution_session(cid, "cs_test_1")
     monkeypatch.setattr(payments, "is_fake", lambda: False)
     monkeypatch.setattr(payments, "is_available", lambda: True)
-    def faux_event(payload, sig):
+    def faux_event(payload, sig, secret=None):
         return {"type": "checkout.session.completed", "data": {"object": {
             "id": "cs_test_1", "payment_status": "paid", "amount_total": 999, "currency": "cad",
             "payment_intent": "pi_1", "metadata": {"contribution_id": str(cid)}}}}
     monkeypatch.setattr(payments, "parse_webhook", faux_event)
     client.post("/stripe/webhook", data=b"{}", headers={"Stripe-Signature": "x"})
     assert services.get_contribution(cid)["status"] == "pending"               # montant faux : ignore
-    def bon_event(payload, sig):
-        e = faux_event(payload, sig); e["data"]["object"]["amount_total"] = 10000; return e
+    def bon_event(payload, sig, secret=None):
+        e = faux_event(payload, sig, secret); e["data"]["object"]["amount_total"] = 10000; return e
     monkeypatch.setattr(payments, "parse_webhook", bon_event)
     client.post("/stripe/webhook", data=b"{}", headers={"Stripe-Signature": "x"})
     assert services.get_contribution(cid)["status"] in ("paid", "transferred")

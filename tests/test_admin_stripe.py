@@ -127,7 +127,8 @@ def test_diagnostic_lit_les_objets_du_sdk(monkeypatch):
     assert d["account_mismatch"] is True
     assert d["connect"] is True and d["connected"][0]["id"] == "acct_pilote"
     assert d["webhooks"][0]["ours"] is True
-    assert d["webhooks"][0]["missing"] == ["charge.refunded", "account.updated"]
+    assert d["webhooks"][0]["missing"] == ["charge.refunded"]
+    assert d["connect_webhook_present"] is False
 
     connected.clear()
     monkeypatch.setattr(payments, "STRIPE_ACCOUNT_ID", "acct_plat")

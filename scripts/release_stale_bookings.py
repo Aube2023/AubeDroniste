@@ -43,6 +43,14 @@ def main():
     with app.app_context():
         from flask import g
         g.db = db._connect()
+        # Comptes pilotes pas encore entierement actifs : relire leur etat
+        # chez Stripe (le webhook Connect peut manquer ou ne pas etre branche).
+        try:
+            n = services.sync_pending_pilot_stripe_status()
+            if n:
+                log.info("pilotes passes a « virements actifs » : %d", n)
+        except Exception as exc:
+            log.warning("resync comptes Stripe : %s", exc)
         # Contributions payees jamais versees (compte Connect arrive apres)
         try:
             n = services.transfer_pending_contributions()

@@ -13,9 +13,10 @@
 #      encaissement, virements) et refuse un autre compte que EXPECTED_ACCOUNT ;
 #   2. vérifie que Connect est ouvert sur ce compte (liste des comptes
 #      connectés lisible) ;
-#   3. supprime les webhooks existants vers notre URL et en crée un neuf avec
-#      les trois évènements attendus ; le secret de signature est récupéré à
-#      la création, jamais affiché ;
+#   3. supprime les webhooks existants vers nos URL et en crée deux neufs :
+#      plateforme (paiements, remboursements) et Connect (comptes pilotes :
+#      account.updated) ; les secrets sont récupérés à la création, jamais
+#      affichés ;
 #   4. écrit les variables dans l'env file (sauvegarde avant), dont
 #      STRIPE_CONNECT_ENABLED=1, STRIPE_ACCOUNT_ID et STRIPE_PLATFORM_COUNTRY ;
 #   5. redémarre le service et lance le healthcheck.
@@ -47,6 +48,7 @@ command -v python3 >/dev/null || { err "python3 manquant."; exit 1; }
 SITE_URL="$(grep -E '^SITE_URL=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' || true)"
 SITE_URL="${SITE_URL:-https://pilot.aubeetoilee.com}"
 WEBHOOK_URL="${SITE_URL%/}/stripe/webhook"
+CONNECT_WEBHOOK_URL="${SITE_URL%/}/stripe/webhook/connect"
 
 echo
 echo "  Stripe en mode LIVE — ${SITE_URL#https://}"
@@ -128,26 +130,36 @@ if [[ "$LIST" == __ERROR__* ]]; then
 fi
 ok "Connect répond (liste des comptes connectés lisible)."
 
-# -- 3. Webhook : supprimer les nôtres, en créer un neuf -----------------------
+# -- 3. Webhooks : supprimer les nôtres, en créer deux neufs -----------------
 OLD_IDS="$(api GET '/webhook_endpoints?limit=100' | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
 for w in d.get("data", []):
-    if w.get("url") == sys.argv[1]:
-        print(w["id"])' "$WEBHOOK_URL")"
+    if w.get("url") in sys.argv[1:]:
+        print(w["id"])' "$WEBHOOK_URL" "$CONNECT_WEBHOOK_URL")"
 for wid in $OLD_IDS; do
     api DELETE "/webhook_endpoints/$wid" >/dev/null && ok "Ancien webhook $wid supprimé."
 done
+# Plateforme : paiements et remboursements (évènements du compte lui-même).
 WH_JSON="$(api POST /webhook_endpoints "url=$WEBHOOK_URL" \
     "enabled_events[]=checkout.session.completed" \
     "enabled_events[]=charge.refunded" \
-    "enabled_events[]=account.updated" \
-    "description=AubePilot (créé par deploy/go-live-stripe.sh)")"
+    "description=AubePilot paiements (créé par deploy/go-live-stripe.sh)")"
 WH_ID="$(printf '%s' "$WH_JSON" | jget id)"
 if [[ "$WH_ID" == __ERROR__* || -z "$WH_ID" ]]; then err "Création du webhook refusée : ${WH_ID#__ERROR__ }"; exit 1; fi
 WH="$(printf '%s' "$WH_JSON" | jget secret)"
 if [[ "$WH" != whsec_* ]]; then err "Stripe n'a pas renvoyé le secret du webhook $WH_ID. Abandon."; exit 1; fi
-ok "Webhook $WH_ID créé vers $WEBHOOK_URL (3 évènements), secret récupéré."
+ok "Webhook $WH_ID créé vers $WEBHOOK_URL (paiements), secret récupéré."
+# Connect : évènements des comptes pilotes (activation des virements). Stripe
+# ne les livre qu'à un endpoint créé avec connect=true, secret distinct.
+CWH_JSON="$(api POST /webhook_endpoints "url=$CONNECT_WEBHOOK_URL" "connect=true" \
+    "enabled_events[]=account.updated" \
+    "description=AubePilot comptes pilotes (créé par deploy/go-live-stripe.sh)")"
+CWH_ID="$(printf '%s' "$CWH_JSON" | jget id)"
+if [[ "$CWH_ID" == __ERROR__* || -z "$CWH_ID" ]]; then err "Création du webhook Connect refusée : ${CWH_ID#__ERROR__ }"; exit 1; fi
+CWH="$(printf '%s' "$CWH_JSON" | jget secret)"
+if [[ "$CWH" != whsec_* ]]; then err "Stripe n'a pas renvoyé le secret du webhook Connect $CWH_ID. Abandon."; exit 1; fi
+ok "Webhook Connect $CWH_ID créé vers $CONNECT_WEBHOOK_URL (account.updated), secret récupéré."
 
 # -- 4. Env file -------------------------------------------------------------
 BACKUP="${ENV_FILE}.bak.$(date +%Y%m%d%H%M%S)"
@@ -171,6 +183,7 @@ set_var() {
 set_var "STRIPE_SECRET_KEY"      "$SK"
 set_var "STRIPE_PUBLISHABLE_KEY" "$PK"
 set_var "STRIPE_WEBHOOK_SECRET"  "$WH"
+set_var "STRIPE_CONNECT_WEBHOOK_SECRET" "$CWH"
 set_var "STRIPE_ACCOUNT_ID"      "$ACC_ID"
 set_var "STRIPE_PLATFORM_COUNTRY" "${ACC_COUNTRY^^}"
 set_var "AUBEPILOT_ALLOW_FAKE_PAYMENTS" "0"
@@ -193,7 +206,7 @@ fi
 
 echo
 ok "Stripe est branché en mode LIVE sur $ACC_ID (Connect actif)."
-echo "  Vérifier ${SITE_URL}/admin/stripe : compte « attendu », webhook « le nôtre », rien de manquant."
+echo "  Vérifier ${SITE_URL}/admin/stripe : compte « attendu », deux webhooks « le nôtre », rien de manquant."
 echo "  Rappels :"
 echo "   • chaque pilote fait son onboarding Connect depuis son espace ;"
 echo "   • un paiement test débitera une vraie carte ;"

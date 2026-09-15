@@ -1910,6 +1910,16 @@ def pilot_edit():
         return redirect(url_for("pilot_edit"))
 
     profile = services.get_pilot_profile(user["id"])
+    # Compte Stripe pas encore entierement actif : on relit son etat chez
+    # Stripe a chaque ouverture (un appel, jusqu'a ce que tout soit vert).
+    # Couvre le cas ou le webhook Connect n'est pas branche ou a ete manque.
+    if (config.STRIPE_CONNECT_ENABLED and profile and profile.get("stripe_account_id")
+            and not (profile.get("stripe_charges_enabled") and profile.get("stripe_payouts_enabled"))):
+        try:
+            if services.sync_pilot_stripe_status(user["id"]):
+                profile = services.get_pilot_profile(user["id"])
+        except Exception as exc:
+            log.warning("resync Stripe pilote %s : %s", user["id"], exc)
     return render_template(
         "pilot_edit.html",
         profile=profile,
@@ -3590,6 +3600,20 @@ def stripe_fake_checkout(booking_id):
 
 @app.route("/stripe/webhook", methods=["POST"])
 def stripe_webhook():
+    """Evenements du compte plateforme (paiements, remboursements)."""
+    return _stripe_webhook(config.STRIPE_WEBHOOK_SECRET)
+
+
+@app.route("/stripe/webhook/connect", methods=["POST"])
+def stripe_webhook_connect():
+    """Evenements des comptes pilotes (account.updated) : Stripe ne les livre
+    qu'a un endpoint « Connect », qui a son propre secret de signature."""
+    if not config.STRIPE_CONNECT_WEBHOOK_SECRET:
+        abort(404)
+    return _stripe_webhook(config.STRIPE_CONNECT_WEBHOOK_SECRET)
+
+
+def _stripe_webhook(secret):
     # En mode FAKE (demo sans cle), le financement passe par
     # /stripe/fake-checkout, jamais par ce webhook : on refuse tout POST ici
     # pour qu'un tiers ne puisse pas forger un evenement non signe marquant
@@ -3600,7 +3624,7 @@ def stripe_webhook():
         abort(404)
     payload = request.data
     signature = request.headers.get("Stripe-Signature", "")
-    event = payments.parse_webhook(payload, signature)
+    event = payments.parse_webhook(payload, signature, secret)
     if not event:
         return ("bad signature", 400)
 
@@ -3691,6 +3715,17 @@ def stripe_webhook():
 def booking_confirm(booking_id):
     if services.confirm_completion(booking_id, g.user["id"]):
         flash("Mission validée. Le pilote a été payé.", "success")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+    booking = services.get_booking(booking_id)
+    if (booking and booking["client_user_id"] == g.user["id"]
+            and booking["status"] in ("funded", "in_progress")):
+        # Droits et statut corrects : c'est le virement au pilote qui a
+        # echoue (Stripe indisponible, compte pilote incomplet). Rien n'est
+        # perdu, les fonds restent sous sequestre ; l'auto-liberation rejouera.
+        log.error("validation booking=%s : virement au pilote non effectue", booking_id)
+        flash("La mission n'a pas pu être clôturée : le virement au pilote a été refusé "
+              "par Stripe. Vos fonds restent sous séquestre, rien n'est perdu. "
+              "Réessayez dans quelques minutes ; nous avons été prévenus.", "error")
     else:
         flash("Impossible de valider la mission (statut ou droits).", "error")
     return redirect(url_for("booking_detail", booking_id=booking_id))

@@ -50,7 +50,7 @@
     <tr><td>Virements</td><td>{{ yn(d.account.payouts_enabled) }}</td></tr>
     <tr><td>Dossier complet</td><td>{{ yn(d.account.details_submitted) }}</td></tr>
     <tr><td>Clé publiable</td><td>{{ yn(d.publishable) }}</td></tr>
-    <tr><td>Secret de webhook</td><td>{{ yn(d.webhook_secret) }}</td></tr>
+    <tr><td>Secret de webhook</td><td>{{ yn(d.webhook_secret) }} <span class="muted small">paiements</span> · {{ yn(d.connect_webhook_secret) }} <span class="muted small">Connect</span></td></tr>
   </table>
   {% else %}
   <p class="muted">Aucune clé Stripe sur ce serveur (mode {{ d.mode }}).</p>
@@ -59,7 +59,10 @@
 
 <section class="card" style="margin-top: 18px;">
   <span class="eyebrow">Webhooks</span>
-  <p class="muted small">Attendu : <code>{{ d.webhook_url }}</code> avec {{ '`' }}{{ 'checkout.session.completed, charge.refunded, account.updated' }}{{ '`' }}.</p>
+  <p class="muted small">Attendus : <code>{{ d.webhook_url }}</code> avec <code>checkout.session.completed, charge.refunded</code>
+    (paiements), et <code>{{ d.connect_webhook_url }}</code> avec <code>account.updated</code>, créé en mode
+    « Connect » (comptes pilotes ; secret {{ yn(d.connect_webhook_secret) }} sur le serveur).
+    {% if d.account and not d.connect_webhook_present %}<span class="tag tag-cancelled">webhook Connect absent : l'activation des virements d'un pilote n'est vue qu'à la resynchronisation (ouverture de son espace, cron de nuit)</span>{% endif %}</p>
   {% if d.webhooks %}
   <table class="table-simple" style="width: 100%;">
     <thead><tr><th style="text-align:start;">URL</th><th>Statut</th><th style="text-align:start;">Évènements</th></tr></thead>
@@ -99,14 +102,14 @@
     <li>{{ yn(d.connect_flag and d.webhook_secret and not d.account_mismatch) }} <strong>Brancher les clés du bon compte</strong> : sur le serveur,
       <code>sudo bash /srv/aubepilot/deploy/go-live-stripe.sh</code>. Le script demande la clé secrète et la clé
       publiable (Développeurs → Clés API, mode réel), vérifie à l'API que le compte répond et que Connect est ouvert,
-      crée lui-même le webhook <code>{{ d.webhook_url }}</code> avec les trois évènements, écrit les variables
+      crée lui-même les deux webhooks (paiements et Connect), écrit les variables
       (dont <code>STRIPE_CONNECT_ENABLED=1</code> et <code>STRIPE_ACCOUNT_ID</code>) et redémarre. Aucune clé ne
       passe par un courriel ni un chat.</li>
     <li>Facultatif : Connect → Paramètres → <strong>Cross-border payouts</strong>, pour payer des pilotes hors {{ platform_country }}.</li>
     <li>Si une ancienne clé secrète a circulé : la <strong>révoquer</strong> dans le dashboard de l'ancien compte
       (Développeurs → Clés API), et y supprimer le webhook devenu inutile.</li>
     <li>Test réel à petit montant : un pilote fait son onboarding, un client réserve, valide la livraison, et le
-      virement apparaît sur le compte connecté. Cette page doit alors afficher le compte pilote et le webhook
+      virement apparaît sur le compte connecté. Cette page doit alors afficher le compte pilote et les deux webhooks
       « le nôtre » sans évènement manquant.</li>
   </ol>
 </section>

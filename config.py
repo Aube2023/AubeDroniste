@@ -723,6 +723,10 @@ STRIPE_ACCOUNT_ID      = os.environ.get("STRIPE_ACCOUNT_ID", "").strip()
 STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
+# Second webhook, « Connect » (evenements des comptes pilotes : account.updated),
+# livre sur /stripe/webhook/connect. Sans lui, l'app ne voit pas passer
+# l'activation des virements d'un pilote (rattrapee par la resynchronisation).
+STRIPE_CONNECT_WEBHOOK_SECRET = os.environ.get("STRIPE_CONNECT_WEBHOOK_SECRET", "").strip()
 STRIPE_LIVE_MODE       = STRIPE_SECRET_KEY.startswith("sk_live_")
 _ALLOW_FAKE_PAYMENTS_RAW = os.environ.get("AUBEPILOT_ALLOW_FAKE_PAYMENTS")
 if _ALLOW_FAKE_PAYMENTS_RAW is None:

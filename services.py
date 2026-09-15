@@ -1045,6 +1045,7 @@ def transfer_contribution(contribution_id: int) -> Optional[str]:
     transfer_id = payments.release_to_pilot(
         booking_id=contribution_id, pilot_amount=net, currency=c["currency"],
         pilot_account_id=pilot_acc, kind="contribution",
+        source_payment_intent=c.get("stripe_payment_intent_id"),
     )
     if not transfer_id:
         return None
@@ -2352,6 +2353,7 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
                     booking_id=booking_id, pilot_amount=calc["fee_amount"],
                     currency=booking.get("currency", "EUR"),
                     pilot_account_id=pilot_acc, kind="cancel-compensation",
+                    source_payment_intent=booking.get("stripe_payment_intent_id"),
                 )
             except Exception as exc:
                 log.warning("transfer dedommagement a echoue : %s", exc)
@@ -3363,6 +3365,39 @@ def update_pilot_stripe_status(user_id: int, charges_enabled: bool,
     )
 
 
+def sync_pilot_stripe_status(user_id: int) -> Optional[dict]:
+    """Relit chez Stripe l'etat du compte connecte d'un pilote et le recopie
+    en base. Complement du webhook Connect (account.updated) : utile quand
+    ce webhook n'est pas encore branche, ou pour rattraper un evenement
+    manque. Retourne le statut, None sans compte ou sans Stripe."""
+    acc = get_pilot_stripe_account(user_id)
+    if not acc:
+        return None
+    import payments
+    if not payments.is_available():
+        return None
+    st = payments.get_pilot_status(acc)
+    update_pilot_stripe_status(user_id, st["charges_enabled"], st["payouts_enabled"])
+    return st
+
+
+def sync_pending_pilot_stripe_status() -> int:
+    """Cron : resynchronise les pilotes dont le compte n'est pas encore
+    entierement actif (virements en attente de verification chez Stripe).
+    Retourne le nombre de comptes passes a « virements actifs »."""
+    rows = db.fetchall(
+        "SELECT user_id FROM pilot_profiles WHERE stripe_account_id IS NOT NULL "
+        "AND stripe_account_id != '' AND stripe_account_id NOT LIKE 'acct_fake_%' "
+        "AND NOT (stripe_charges_enabled=1 AND stripe_payouts_enabled=1)"
+    )
+    changed = 0
+    for r in rows:
+        st = sync_pilot_stripe_status(r["user_id"])
+        if st and st["payouts_enabled"]:
+            changed += 1
+    return changed
+
+
 def get_pilot_stripe_account(user_id: int) -> Optional[str]:
     row = db.fetchone(
         "SELECT stripe_account_id FROM pilot_profiles WHERE user_id=?",
@@ -3500,6 +3535,7 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
         pilot_amount=pilot_amount,
         currency=booking["currency"],
         pilot_account_id=pilot_acc,
+        source_payment_intent=booking.get("stripe_payment_intent_id"),
     )
     # MONEY-SAFE : si le Transfer Stripe echoue (transfer_id None), on NE
     # marque PAS le booking 'completed'. Il reste 'funded'/'in_progress' et
