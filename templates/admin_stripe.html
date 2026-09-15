@@ -64,8 +64,9 @@
   <div class="alert alert-warn"><p style="margin:0;">
     Versement automatique <strong>{{ d.payout_schedule.interval }}</strong> (délai {{ d.payout_schedule.delay_days }} j) :
     Stripe vide le solde vers la banque, séquestre compris. Un virement au pilote validé après ce délai échoue
-    faute de solde. À passer en <strong>manuel</strong> : dashboard → Paramètres → Virements → Calendrier → Manuel,
-    l'app retire ensuite la commission toute seule chaque nuit.
+    faute de solde. Stripe refuse ce réglage par API sur son propre compte : à passer en <strong>manuel</strong>
+    une fois, sur <a href="https://dashboard.stripe.com/settings/payouts" target="_blank" rel="noopener">dashboard.stripe.com/settings/payouts</a>
+    → Calendrier des virements → Manuel. L'app retire ensuite la commission toute seule chaque nuit.
   </p></div>
   {% elif d.payout_schedule %}
   <p class="muted small">Calendrier de versement manuel : l'argent des clients reste chez Stripe jusqu'à la clôture de leur

@@ -764,7 +764,7 @@ def ensure_stripe_configuration() -> dict:
         (en ajouter ne change pas son secret).
     Retourne {"payout_schedule": "manual"|"deja"|"refus: ...",
               "webhook": "complete"|"deja"|"absent"|"refus: ..."}."""
-    out = {"payout_schedule": None, "webhook": None}
+    out: dict = {"payout_schedule": None, "webhook": None}
     s = _stripe()
     if s is None or STRIPE_FAKE_MODE:
         return out
@@ -774,11 +774,17 @@ def ensure_stripe_configuration() -> dict:
         if sched.get("interval") == "manual":
             out["payout_schedule"] = "deja"
         else:
+            # Stripe refuse cette modification par API sur le compte de la
+            # plateforme (« You cannot use this method on your own account »,
+            # verifie le 2026-09-15) : elle ne se fait que dans le dashboard.
+            # On tente quand meme (si Stripe l'ouvre un jour) et on explique.
             s.Account.modify(acc["id"], settings={"payouts": {"schedule": {"interval": "manual"}}})
             log.info("calendrier de versement Stripe passe de « %s » a manuel", sched.get("interval"))
             out["payout_schedule"] = "manual"
     except Exception as exc:
-        log.error("calendrier de versement Stripe : %s", exc)
+        log.warning("calendrier de versement Stripe toujours automatique (%s). A regler une fois "
+                    "dans le dashboard : https://dashboard.stripe.com/settings/payouts -> "
+                    "calendrier -> manuel ; l'app retire ensuite la commission elle-meme.", exc)
         out["payout_schedule"] = f"refus: {exc}"
     try:
         url = f"{SITE_URL}/stripe/webhook"
