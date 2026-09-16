@@ -83,8 +83,8 @@
 "home.manifesto.h": "Um piloto não é um freelancer descartável.",
 "home.manifesto.p1": "Na AubePilot, sua licença, sua frota e suas horas de voo contam tanto quanto seu preço. As autoridades (DGAC, EASA, TC, FAA, ASECNA) ganham destaque; os amadores também, no lugar certo.",
 "home.manifesto.p2": "E só cobramos sobre missões entregues. Sem assinatura, sem pop-up.",
-"home.dep.eyebrow": "Painel de partidas",
-"home.dep.h": "Missões à procura de piloto.",
+"home.dep.eyebrow": "Missões abertas",
+"home.dep.h": "As últimas missões publicadas",
 "home.dep.all": "Ver todas as missões →",
 "home.why.eyebrow": "Por que a AubePilot",
 "home.why.h": "Mais que um diretório: a missão do início ao fim.",
@@ -613,7 +613,8 @@
 "messages.view_booking": "Ver a reserva",
 "messages.you": "Você",
 "messages.role_client": "cliente",
-"messages.role_pilot": "piloto"
+"messages.role_pilot": "piloto",
+"home.dep.lead": "Clientes têm uma necessidade e esperam um orçamento. Piloto, escolha uma missão perto de si e proponha o seu preço."
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

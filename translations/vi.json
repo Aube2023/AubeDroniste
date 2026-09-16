@@ -83,8 +83,8 @@
 "home.manifesto.h": "Phi công không phải là freelancer dùng xong rồi bỏ.",
 "home.manifesto.p1": "Trên AubePilot, giấy phép, đội máy bay và số giờ bay của bạn quan trọng không kém giá bạn đưa ra. Các cơ quan (DGAC, EASA, TC, FAA, ASECNA) được nêu bật; người chơi nghiệp dư cũng vậy, đúng vị trí của họ.",
 "home.manifesto.p2": "Và chúng tôi chỉ tính phí trên nhiệm vụ đã bàn giao. Không thuê bao, không cửa sổ bật lên.",
-"home.dep.eyebrow": "Bảng khởi hành",
-"home.dep.h": "Nhiệm vụ đang tìm phi công.",
+"home.dep.eyebrow": "Nhiệm vụ đang mở",
+"home.dep.h": "Các nhiệm vụ mới đăng",
 "home.dep.all": "Xem tất cả nhiệm vụ →",
 "home.why.eyebrow": "Tại sao chọn AubePilot",
 "home.why.h": "Hơn cả một danh bạ: trọn vẹn nhiệm vụ từ đầu đến cuối.",
@@ -613,7 +613,8 @@
 "messages.view_booking": "Xem đặt chỗ",
 "messages.you": "Bạn",
 "messages.role_client": "khách hàng",
-"messages.role_pilot": "phi công"
+"messages.role_pilot": "phi công",
+"home.dep.lead": "Khách hàng có nhu cầu và đang chờ báo giá. Phi công, chọn một nhiệm vụ gần bạn và đề xuất giá."
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

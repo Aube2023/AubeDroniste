@@ -83,8 +83,8 @@
 "home.manifesto.h": "الطيار ليس مستقلًا يُستهلك ويُرمى.",
 "home.manifesto.p1": "في AubePilot، رخصتك وأسطولك وساعات طيرانك تُحتسب بقدر سعرك. السلطات (DGAC، EASA، TC، FAA، ASECNA) تُبرَز؛ والهواة أيضًا، في مكانهم الصحيح.",
 "home.manifesto.p2": "ولا نحاسب إلا على المهام المسلَّمة. لا اشتراك، لا نوافذ منبثقة.",
-"home.dep.eyebrow": "لوحة المغادرة",
-"home.dep.h": "مهام تبحث عن طيار.",
+"home.dep.eyebrow": "مهام مفتوحة",
+"home.dep.h": "آخر المهام المنشورة",
 "home.dep.all": "عرض كل المهام ←",
 "home.why.eyebrow": "لماذا AubePilot",
 "home.why.h": "أكثر من دليل: المهمة من بدايتها إلى نهايتها.",
@@ -613,7 +613,8 @@
 "messages.view_booking": "عرض الحجز",
 "messages.you": "أنت",
 "messages.role_client": "عميل",
-"messages.role_pilot": "طيار"
+"messages.role_pilot": "طيار",
+"home.dep.lead": "لدى العملاء حاجة وينتظرون عرض سعر. أيها الطيار، اختر مهمة قريبة منك واقترح سعرك."
 },
 "seo": {
 "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",

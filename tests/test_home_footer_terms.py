@@ -68,3 +68,12 @@ def test_derniere_activite_par_tranche(app_ctx, make_user, auth_client, client):
     db.execute("UPDATE users SET last_seen_at=datetime('now', '-3 days') WHERE id=?", (u["id"],))
     html = client.get("/pilotes?q=zz-actif-unique").data.decode()
     assert "Actif cette semaine" in html
+
+
+def test_visionneuse_cachee_par_defaut():
+    """Regression : le voile plein écran du portfolio s'affichait dès le
+    chargement (display:flex prenait le pas sur l'attribut hidden)."""
+    css = open("static/css/style.css", encoding="utf-8").read()
+    assert ".lightbox[hidden] { display: none; }" in css
+    js = open("static/js/app.js", encoding="utf-8").read()
+    assert "box.hidden = true;" in js and "className = 'lightbox'" in js

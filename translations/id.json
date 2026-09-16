@@ -83,8 +83,8 @@
 "home.manifesto.h": "Pilot bukan pekerja lepas sekali pakai.",
 "home.manifesto.p1": "Di AubePilot, lisensi, armada, dan jam terbang Anda sama pentingnya dengan tarif Anda. Otoritas (DGAC, EASA, TC, FAA, ASECNA) ditonjolkan; penghobi juga, pada tempatnya.",
 "home.manifesto.p2": "Dan kami hanya menagih untuk misi yang diserahkan. Tanpa langganan, tanpa pop-up.",
-"home.dep.eyebrow": "Papan keberangkatan",
-"home.dep.h": "Misi yang mencari pilot.",
+"home.dep.eyebrow": "Misi terbuka",
+"home.dep.h": "Misi terbaru yang diposting",
 "home.dep.all": "Lihat semua misi →",
 "home.why.eyebrow": "Mengapa AubePilot",
 "home.why.h": "Lebih dari direktori: misi dari awal sampai akhir.",
@@ -613,7 +613,8 @@
 "messages.view_booking": "Lihat pemesanan",
 "messages.you": "Anda",
 "messages.role_client": "klien",
-"messages.role_pilot": "pilot"
+"messages.role_pilot": "pilot",
+"home.dep.lead": "Klien memiliki kebutuhan dan menunggu penawaran. Pilot, pilih misi di dekat Anda dan ajukan harga Anda."
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

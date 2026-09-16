@@ -83,8 +83,8 @@
 "home.manifesto.h": "Ein Pilot ist kein Wegwerf-Freelancer.",
 "home.manifesto.p1": "Auf AubePilot zählen Ihre Lizenz, Ihre Flotte und Ihre Flugstunden genauso viel wie Ihr Preis. Die Behörden (DGAC, EASA, TC, FAA, ASECNA) werden hervorgehoben; Hobbypiloten auch, an ihrem richtigen Platz.",
 "home.manifesto.p2": "Und wir berechnen nur gelieferte Aufträge. Kein Abo, keine Pop-ups.",
-"home.dep.eyebrow": "Abflugtafel",
-"home.dep.h": "Aufträge, die einen Piloten suchen.",
+"home.dep.eyebrow": "Offene Missionen",
+"home.dep.h": "Die zuletzt veröffentlichten Missionen",
 "home.dep.all": "Alle Aufträge ansehen →",
 "home.why.eyebrow": "Warum AubePilot",
 "home.why.h": "Mehr als ein Verzeichnis: der ganze Auftrag von Anfang bis Ende.",
@@ -613,7 +613,8 @@
 "messages.view_booking": "Buchung ansehen",
 "messages.you": "Sie",
 "messages.role_client": "Kunde",
-"messages.role_pilot": "Pilot"
+"messages.role_pilot": "Pilot",
+"home.dep.lead": "Kunden haben einen Bedarf und warten auf ein Angebot. Pilot, wählen Sie eine Mission in Ihrer Nähe und nennen Sie Ihren Preis."
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

@@ -228,11 +228,10 @@
 </section>
 
 <section class="section">
-  <div class="row-between" style="align-items: end; margin-bottom: 24px;">
-    <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">{{ t('home.dep.eyebrow') }}</span>
-      <h2>{{ t('home.dep.h') }}</h2>
-    </div>
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('home.dep.eyebrow') }}</span>
+    <h2>{{ t('home.dep.h') }}</h2>
+    <p class="muted">{{ t('home.dep.lead') }}</p>
     <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('home.dep.all') }}</a>
   </div>
   <div class="grid-cards">
