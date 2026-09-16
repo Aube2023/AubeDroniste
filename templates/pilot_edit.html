@@ -403,19 +403,35 @@
       </a>
     </p>
     {% for d in profile.drones %}
-    <div class="drone row-between">
-      <div>
-        <strong>{{ d.brand }} {{ d.model }}</strong>, {{ drone_label(d.category) }}
-        <div class="muted small">
-          {% if d.weight_g %}{{ d.weight_g }} g{% endif %}
-          {% if d.flight_time_min %} · {{ d.flight_time_min }} min{% endif %}
-          {% if d.capabilities %} · {{ d.capabilities|join(', ') }}{% endif %}
+    <div class="drone row-between" id="drone-{{ d.id }}" style="gap: 14px; align-items: center; flex-wrap: wrap;">
+      <div style="display: flex; gap: 14px; align-items: center; min-width: 0;">
+        {% if d.photo_path %}
+        <img src="{{ url_for('media_file', filename=d.photo_path[8:]) }}" alt="" style="width: 72px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--rule); flex: 0 0 auto;">
+        {% else %}
+        <span class="muted" style="width: 72px; height: 54px; border: 1px dashed var(--rule); border-radius: 8px; display: grid; place-items: center; font-size: 10px; flex: 0 0 auto;">{{ 'sans photo' if fr else 'no photo' }}</span>
+        {% endif %}
+        <div style="min-width: 0;">
+          <strong>{{ d.brand }} {{ d.model }}</strong>, {{ drone_label(d.category).split(' (')[0] }}
+          <div class="muted small">
+            {% if d.weight_g %}{{ d.weight_g }} g{% endif %}
+            {% if d.flight_time_min %} · {{ d.flight_time_min }} min{% endif %}
+            {% if d.capabilities %} · {% for cap in d.capabilities %}{{ cap_label(cap) }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}
+          </div>
         </div>
       </div>
-      <form method="post" action="{{ url_for('pilot_delete_drone', drone_id=d.id) }}">
-        {{ csrf_input() }}
-        <button class="ghost danger" type="submit">{{ 'supprimer' if fr else 'delete' }}</button>
-      </form>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <form method="post" action="{{ url_for('pilot_drone_photo', drone_id=d.id) }}" enctype="multipart/form-data" class="inline-form" style="display: flex; gap: 6px; align-items: center;">
+          {{ csrf_input() }}
+          <label class="ghost" style="cursor: pointer; margin: 0; padding: 8px 12px; font-size: 13px;">
+            {{ ('Changer la photo' if d.photo_path else 'Ajouter une photo') if fr else ('Change photo' if d.photo_path else 'Add a photo') }}
+            <input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp" hidden data-action="submit-on-change">
+          </label>
+        </form>
+        <form method="post" action="{{ url_for('pilot_delete_drone', drone_id=d.id) }}">
+          {{ csrf_input() }}
+          <button class="ghost danger" type="submit" style="padding: 8px 12px; font-size: 13px;">{{ 'supprimer' if fr else 'delete' }}</button>
+        </form>
+      </div>
     </div>
     {% else %}<p class="muted">{{ 'Aucun drone enregistré.' if fr else 'No drone registered.' }}</p>{% endfor %}
 
@@ -444,7 +460,7 @@
         <label>{{ 'Poids (g)' if fr else 'Weight (g)' }}<input name="weight_g" type="number"></label>
         <label>{{ 'Charge utile max (g)' if fr else 'Max payload (g)' }}<input name="max_payload_g" type="number"></label>
         <label>{{ 'Autonomie (min)' if fr else 'Flight time (min)' }}<input name="flight_time_min" type="number"></label>
-        <label>{{ 'Photo' if fr else 'Photo' }}<input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
+        <label>{{ 'Photo de l\'appareil' if fr else 'Photo of the aircraft' }} <span class="muted small">({{ 'png, jpg ou webp ; visible sur votre fiche' if fr else 'png, jpg or webp; shown on your page' }})</span><input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
       </div>
       <h4>{{ 'Capacités' if fr else 'Capabilities' }}</h4>
       <div class="spec-groups" style="margin-top: 8px;">

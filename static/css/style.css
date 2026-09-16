@@ -1591,17 +1591,34 @@ img.avatar { object-fit: cover; }
 /* Flotte */
 .fleet-grid {
   display: grid; gap: 14px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;               /* chaque carte garde sa hauteur */
   margin-top: 8px;
 }
 .fleet-card {
   background: var(--paper);
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 18px;
+  border-radius: 12px;
+  padding: 16px;
   position: relative;
-  display: grid; gap: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden;
 }
+.fleet-photo {
+  margin: -16px -16px 6px; aspect-ratio: 16 / 10;
+  background: var(--paper-3); display: grid; place-items: center;
+  border-bottom: 1px solid var(--rule);
+}
+.fleet-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fleet-photo-empty { aspect-ratio: 16 / 5; color: var(--ink-faint); }
+.fleet-photo-empty svg { width: 64px; height: 40px; }
+.fleet-notes { margin-top: 4px; }
+.fleet-notes > summary { font-weight: 600; }
+.fleet-spec-list {
+  margin: 8px 0 0; padding-inline-start: 18px;
+  font-size: .85rem; line-height: 1.5; color: var(--ink-soft);
+}
+.fleet-spec-list li { margin: 2px 0; }
 .fleet-card .cat {
   font: 500 10px/1 var(--mono); letter-spacing: .2em;
   text-transform: uppercase; color: var(--amber);

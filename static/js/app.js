@@ -289,3 +289,13 @@ if (navigator.share) {
     else if (e.key === 'ArrowRight') show(cur + 1);
   });
 })();
+
+
+// Champ fichier qui envoie son formulaire dès qu'une image est choisie
+// (photo d'un appareil : un clic, pas de bouton « Envoyer » en plus).
+document.addEventListener('change', function (e) {
+  var input = e.target;
+  if (!input || input.getAttribute('data-action') !== 'submit-on-change' || !input.files || !input.files.length) return;
+  var form = input.closest('form');
+  if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
+});

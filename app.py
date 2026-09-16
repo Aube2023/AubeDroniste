@@ -2523,20 +2523,30 @@ def pilot_certification_document(user_id, cert_id):
     return resp
 
 
+_DRONE_PHOTO_EXT = {"png", "jpg", "jpeg", "webp"}
+
+
+def _save_drone_photo(user_id: int) -> str:
+    """Enregistre la photo envoyee dans le champ `photo` (image seulement) et
+    retourne son chemin `uploads/...`, ou "" si rien d'exploitable."""
+    f = request.files.get("photo")
+    if not (f and f.filename):
+        return ""
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in _DRONE_PHOTO_EXT:
+        return ""
+    safe = f"u{user_id}_drone_{int(time.time())}_{secrets.token_hex(3)}.{ext}"
+    f.save(os.path.join(UPLOAD_DIR, safe))
+    return f"uploads/{safe}"
+
+
 @app.route("/espace/pilote/drone", methods=["POST"])
 @auth.login_required
 def pilot_add_drone():
     user = g.user
     if user["role"] not in ("pilot", "both"):
         abort(403)
-    photo_path = ""
-    f = request.files.get("photo")
-    if f and f.filename:
-        ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
-        if ext in ALLOWED_DOC_EXT:
-            safe = f"u{user['id']}_drone_{int(time.time())}.{ext}"
-            f.save(os.path.join(UPLOAD_DIR, safe))
-            photo_path = f"uploads/{safe}"
+    photo_path = _save_drone_photo(user["id"])
     services.add_drone(
         user["id"],
         category=request.form.get("category") or "loisir",
@@ -2552,6 +2562,20 @@ def pilot_add_drone():
     )
     flash("Drone ajoute.", "success")
     return redirect(url_for("pilot_edit"))
+
+
+@app.route("/espace/pilote/drone/<int:drone_id>/photo", methods=["POST"])
+@auth.login_required
+def pilot_drone_photo(drone_id):
+    """Ajoute ou remplace la photo d'un appareil deja declare."""
+    photo_path = _save_drone_photo(g.user["id"])
+    if not photo_path:
+        flash("Choisissez une image (png, jpg ou webp).", "error")
+    elif services.set_drone_photo(drone_id, g.user["id"], photo_path):
+        flash("Photo de l'appareil mise à jour.", "success")
+    else:
+        abort(403)
+    return redirect(url_for("pilot_edit") + "#flotte")
 
 
 @app.route("/espace/pilote/drone/<int:drone_id>/supprimer", methods=["POST"])

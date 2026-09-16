@@ -265,6 +265,13 @@
   <div class="fleet-grid">
     {% for d in pilot.drones %}
     <div class="fleet-card">
+      {% if d.photo_path %}
+      <div class="fleet-photo"><img src="{{ url_for('media_file', filename=d.photo_path[8:]) }}" alt="{{ d.brand }} {{ d.model }}" loading="lazy"></div>
+      {% else %}
+      <div class="fleet-photo fleet-photo-empty" aria-hidden="true">
+        <svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6"/><circle cx="54" cy="10" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="54" cy="30" r="6"/><rect x="24" y="14" width="16" height="12" rx="3"/><path d="M15 14l9 3M49 14l-9 3M15 26l9-3M49 26l-9-3"/></svg>
+      </div>
+      {% endif %}
       {# Catégorie sans ses exemples de modèles : « Inspection », pas « Inspection (M30T, M350…) » #}
       <span class="cat">{{ drone_label(d.category).split(' (')[0] }}</span>
       <span class="model">{{ (d.brand or '—') }} {{ d.model or '' }}</span>
@@ -281,9 +288,12 @@
       {% endif %}
       {% if d.notes %}
         {% if d.notes|length > 160 %}
-        <details class="disclosure" style="margin-top: 6px;">
+        <details class="disclosure fleet-notes">
           <summary class="small">{{ 'Fiche technique' if fr else 'Spec sheet' }}</summary>
-          <p class="muted small prewrap" style="margin: 6px 0 0;">{{ d.notes }}</p>
+          {# Un point-virgule, un retour a la ligne ou un tiret en tete = une ligne #}
+          <ul class="fleet-spec-list">
+            {% for line in d.notes.replace('\r', '').replace(';', '\n').split('\n') if line.strip(' -•\t') %}<li>{{ line.strip(' -•\t') }}</li>{% endfor %}
+          </ul>
         </details>
         {% else %}<p class="muted small prewrap" style="margin: 4px 0 0;">{{ d.notes }}</p>{% endif %}
       {% endif %}

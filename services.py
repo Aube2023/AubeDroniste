@@ -1323,6 +1323,15 @@ def list_drones(pilot_user_id: int) -> list:
     return out
 
 
+def set_drone_photo(drone_id: int, owner_user_id: int, photo_path: str) -> bool:
+    """Pose ou remplace la photo d'un appareil (proprietaire seulement)."""
+    cur = db.execute(
+        "UPDATE pilot_drones SET photo_path=? WHERE id=? AND pilot_user_id=?",
+        (photo_path or None, drone_id, owner_user_id),
+    )
+    return cur.rowcount > 0
+
+
 def delete_drone(drone_id: int, owner_user_id: int) -> bool:
     cur = db.execute(
         "DELETE FROM pilot_drones WHERE id=? AND pilot_user_id=?",
