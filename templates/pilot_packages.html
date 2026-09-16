@@ -38,7 +38,8 @@
 
     <div class="grid-3">
       <label>{{ 'Prix' if fr else 'Price' }}
-        <input name="price" type="number" step="0.01" min="1" required placeholder="1200">
+        <input name="price" type="number" step="0.01" min="0" required placeholder="1200">
+        <span class="field-hint">{{ '0 = sur devis (le prix se fixe dans le devis)' if fr else '0 = on quote (price set in the quote)' }}</span>
       </label>
       <label>{{ 'Devise' if fr else 'Currency' }}
         <select name="currency">
@@ -88,7 +89,8 @@
           {% if not p.is_active %} · {{ 'MASQUÉ' if fr else 'HIDDEN' }}{% endif %}
         </div>
       </div>
-      <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
+      {% if p.price %}<div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
+      {% else %}<div class="price big" style="font-size: 1.1rem;">{{ 'Sur devis' if fr else 'On quote' }}</div>{% endif %}
     </div>
 
     <p class="prewrap" style="margin-top: 12px;">{{ p.description }}</p>
@@ -124,7 +126,7 @@
       </div>
       <label>{{ 'Description' if fr else 'Description' }}<textarea name="description" rows="3">{{ p.description }}</textarea></label>
       <div class="grid-3">
-        <label>{{ 'Prix' if fr else 'Price' }}<input name="price" type="number" step="0.01" value="{{ p.price }}"></label>
+        <label>{{ 'Prix (0 = sur devis)' if fr else 'Price (0 = on quote)' }}<input name="price" type="number" step="0.01" min="0" value="{{ p.price|int if p.price == (p.price|int) else p.price }}"></label>
         <label>{{ 'Devise' if fr else 'Currency' }}
           <select name="currency">
             {% for c in currencies %}<option value="{{ c }}" {% if c==p.currency %}selected{% endif %}>{{ c }}</option>{% endfor %}

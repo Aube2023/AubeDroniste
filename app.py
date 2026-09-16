@@ -2044,10 +2044,12 @@ def pilot_packages():
     if request.method == "POST":
         title = (request.form.get("title") or "").strip()
         description = (request.form.get("description") or "").strip()
+        # Prix a 0 = « sur devis » : le forfait decrit la prestation, le prix
+        # se fixe dans le devis. Vide ou negatif : refuse.
         price = _to_float(request.form.get("price"))
-        if not title or len(description) < 20 or not price or price <= 0:
+        if not title or len(description) < 20 or price is None or price < 0:
             flash(
-                "Titre, description (>=20c) et prix sont requis.",
+                "Titre, description (>=20c) et prix (0 = sur devis) sont requis.",
                 "error",
             )
             return redirect(url_for("pilot_packages"))
@@ -2895,8 +2897,9 @@ def mission_create():
                     + (f"\n\nLivrables : {pkg['deliverables']}" if pkg.get("deliverables") else ""),
                 "mission_type": pkg.get("mission_type") or "autre",
                 "duration_hours": pkg.get("duration_hours") or "",
-                "budget_min": int(pkg["price"]),
-                "budget_max": int(pkg["price"]),
+                # Forfait « sur devis » (prix 0) : budget laisse vide.
+                "budget_min": int(pkg["price"]) if pkg["price"] else "",
+                "budget_max": int(pkg["price"]) if pkg["price"] else "",
                 "currency": pkg["currency"],
                 "requires_capabilities": (pkg.get("capabilities") or "").split(","),
             }

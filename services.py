@@ -578,6 +578,18 @@ def set_pilot_specialties(user_id: int, codes: Iterable[str]):
         )
 
 
+def add_pilot_specialty(user_id: int, code: Optional[str]) -> None:
+    """Un forfait publie dans une specialite vaut declaration de cette
+    specialite : le pilote apparait alors dans le filtre correspondant sans
+    avoir a la cocher aussi dans son profil."""
+    known = {k for k, _ in MISSION_TYPES}
+    if code in known:
+        db.execute(
+            "INSERT OR IGNORE INTO pilot_specialties (pilot_user_id, mission_type) VALUES (?, ?)",
+            (user_id, code),
+        )
+
+
 def set_pilot_territories(user_id: int, items: Iterable[dict]):
     db.execute("DELETE FROM pilot_territories WHERE pilot_user_id=?", (user_id,))
     for it in items:
@@ -2823,6 +2835,7 @@ def create_pilot_package(pilot_user_id: int, *, title: str, description: str,
          deliverables.strip()[:2000], capabilities.strip()[:500],
          1 if is_active else 0),
     )
+    add_pilot_specialty(pilot_user_id, mission_type)
     return cur.lastrowid or 0
 
 
@@ -2847,6 +2860,8 @@ def update_pilot_package(package_id: int, pilot_user_id: int, **fields) -> bool:
     sets.append("updated_at=datetime('now')")
     args.append(package_id)
     db.execute(f"UPDATE pilot_packages SET {', '.join(sets)} WHERE id=?", args)
+    if fields.get("mission_type"):
+        add_pilot_specialty(pilot_user_id, fields["mission_type"])
     return True
 
 

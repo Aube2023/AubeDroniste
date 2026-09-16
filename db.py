@@ -184,6 +184,11 @@ _POST_SQL = [
     "UPDATE users SET is_verified=1 WHERE is_verified=0 AND id IN ("
     "  SELECT pilot_user_id FROM pilot_certifications WHERE is_verified=1 "
     "  AND (expires_at IS NULL OR expires_at='' OR expires_at >= date('now')))",
+    # Un forfait publie vaut specialite (cf. services.add_pilot_specialty) :
+    # rattrape les pilotes qui n'ont coche aucune specialite.
+    """INSERT OR IGNORE INTO pilot_specialties (pilot_user_id, mission_type)
+       SELECT pilot_user_id, mission_type FROM pilot_packages
+       WHERE is_active = 1 AND mission_type IS NOT NULL AND mission_type != ''""",
 ]
 
 # Index additifs idempotents. schema.sql n'est execute QUE sur une base neuve

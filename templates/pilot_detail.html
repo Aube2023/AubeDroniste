@@ -264,7 +264,8 @@
   <div class="fleet-grid">
     {% for d in pilot.drones %}
     <div class="fleet-card">
-      <span class="cat">{{ drone_label(d.category) }}</span>
+      {# Catégorie sans ses exemples de modèles : « Inspection », pas « Inspection (M30T, M350…) » #}
+      <span class="cat">{{ drone_label(d.category).split(' (')[0] }}</span>
       <span class="model">{{ (d.brand or '—') }} {{ d.model or '' }}</span>
       <div class="specs">
         {% if d.weight_g %}<span><strong>{{ d.weight_g }}</strong>g</span>{% endif %}
@@ -277,7 +278,14 @@
         {% for cap in d.capabilities %}<span class="tag">{{ cap_label(cap) }}</span>{% endfor %}
       </div>
       {% endif %}
-      {% if d.notes %}<p class="muted small" style="margin: 4px 0 0;">{{ d.notes }}</p>{% endif %}
+      {% if d.notes %}
+        {% if d.notes|length > 160 %}
+        <details class="disclosure" style="margin-top: 6px;">
+          <summary class="small">{{ 'Fiche technique' if fr else 'Spec sheet' }}</summary>
+          <p class="muted small prewrap" style="margin: 6px 0 0;">{{ d.notes }}</p>
+        </details>
+        {% else %}<p class="muted small prewrap" style="margin: 4px 0 0;">{{ d.notes }}</p>{% endif %}
+      {% endif %}
     </div>
     {% else %}
     <p class="muted">{{ 'Flotte non déclarée.' if fr else 'No fleet declared.' }}</p>
@@ -398,7 +406,8 @@
       <p class="muted small" style="margin: 0;"><strong>{{ 'Inclus :' if fr else 'Includes:' }}</strong> {{ p.deliverables }}</p>
       {% endif %}
       <footer class="pkg-foot">
-        <div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
+        {% if p.price %}<div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
+        {% else %}<div class="price big" style="font-size: 1.1rem;">{{ 'Sur devis' if fr else 'On quote' }}</div>{% endif %}
         {% if current_user and current_user.id != pilot.id %}
           <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{% if is_school %}{{ 'S\'inscrire' if fr else 'Enrol' }}{% else %}{{ 'Réserver' if fr else 'Book' }}{% endif %}</a>
         {% elif not current_user %}

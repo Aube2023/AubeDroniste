@@ -64,3 +64,34 @@ def test_package_create_public_toggle_delete(make_user, auth_client, app_ctx):
         "SELECT COUNT(*) AS n FROM pilot_packages WHERE pilot_user_id=?",
         (u["id"],))
     assert row is not None and row["n"] == 0
+
+
+def test_forfait_sur_devis_et_specialite_deduite(make_user, auth_client, app_ctx):
+    """Prix 0 = « sur devis » : accepté à la création, affiché sans « 0 CAD »,
+    et la mission préremplie n'a pas de budget. Le type du forfait devient une
+    spécialité du pilote (visible sur sa fiche, filtrable)."""
+    import db
+    u = make_user("pkg_devis", role="pilot")
+    c = auth_client(u["id"])
+    r = c.post("/espace/pilote/forfaits", data={
+        "title": "Photogrammétrie de chantier",
+        "description": "Captation par drone RTK, remise des données brutes sans traitement.",
+        "price": "0", "currency": "CAD", "mission_type": "3d",
+    }, follow_redirects=True)
+    assert r.status_code == 200
+    pkg = db.fetchone("SELECT * FROM pilot_packages WHERE pilot_user_id=?", (u["id"],))
+    assert pkg is not None and pkg["price"] == 0
+    html = c.get(f"/pilotes/{u['id']}").get_data(as_text=True)
+    assert "Sur devis" in html and "0 <span class=\"cur\">" not in html
+    assert "Spécialités non renseignées" not in html
+    assert db.fetchone("SELECT 1 FROM pilot_specialties WHERE pilot_user_id=? AND mission_type='3d'",
+                       (u["id"],)) is not None
+    # Un client réserve : budget vide, pas « 0 »
+    client_u = make_user("pkg_devis_client", role="client")
+    html = auth_client(client_u["id"]).get(f"/missions/nouvelle?package={pkg['id']}&pilot={u['id']}").get_data(as_text=True)
+    assert 'name="budget_min" value="0"' not in html
+    # Prix négatif refusé
+    r = auth_client(u["id"]).post("/espace/pilote/forfaits", data={
+        "title": "Négatif", "description": "Description suffisamment longue pour passer.",
+        "price": "-5", "currency": "CAD", "mission_type": "photo"}, follow_redirects=True)
+    assert db.fetchone("SELECT COUNT(*) AS n FROM pilot_packages WHERE pilot_user_id=?", (u["id"],))["n"] == 1
