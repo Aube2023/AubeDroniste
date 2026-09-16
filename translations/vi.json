@@ -594,7 +594,12 @@
 "search.mission_type": "Loại nhiệm vụ",
 "search.pilot_specialty": "Chuyên môn phi công",
 "search.more_missions": "Thêm bộ lọc: quốc gia, thành phố",
-"search.more_pilots": "Thêm bộ lọc: tên, quốc gia, thành phố, drone, bằng, đánh giá"
+"search.more_pilots": "Thêm bộ lọc: tên, quốc gia, thành phố, drone, bằng, đánh giá",
+"trust.active_today": "Hoạt động hôm nay",
+"trust.active_week": "Hoạt động tuần này",
+"trust.active_month": "Hoạt động tháng này",
+"trust.active_older": "Hoạt động lần cuối hơn một tháng trước",
+"trust.active_title": "Lần đăng nhập cuối, theo khoảng: không bao giờ hiển thị giờ chính xác"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -3,14 +3,21 @@
 {% block title %}{{ 'Publier une mission' if fr else 'Post a job' }} · AubePilot{% endblock %}
 {% block content %}
 
-<section class="auth-split">
-  <form method="post" class="auth-form section-form">
+{# Une colonne centree, quatre etapes numerotees. Les champs et les options
+   sont exactement ceux d'avant : seule la presentation change. #}
+<section class="form-page">
+  <div class="search-head centered">
+    <h1>{{ 'Publier une mission' if fr else 'Post a job' }}</h1>
+    <p class="lead muted">{{ 'Décrivez votre besoin en quatre étapes. Les pilotes de votre secteur reçoivent une alerte et vous envoient leurs devis ; vous choisissez, puis vous payez sous séquestre.' if fr else 'Describe your need in four steps. Pilots in your area get an alert and send you their quotes; you choose, then pay into escrow.' }}</p>
+  </div>
+
+  <form method="post" class="auth-form auth-steps">
         {{ csrf_input() }}
     {% if target_pilot %}
-    <div class="card" style="border-left: 3px solid var(--amber, #c4633f); margin-bottom: 18px;">
+    <div class="notice notice-accent">
       <span class="eyebrow">{{ 'Demande adressée à un pilote' if fr else 'Request addressed to a pilot' }}</span>
-      <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ target_pilot.full_name }} {{ 'sera notifié de votre mission' if fr else 'will be notified of your job' }}</h3>
-      <p class="muted small" style="margin: 0;">
+      <strong>{{ target_pilot.full_name }} {{ 'sera notifié de votre mission' if fr else 'will be notified of your job' }}</strong>
+      <p class="muted small">
         {{ 'Vous publiez une mission ouverte à laquelle' if fr else 'You are posting an open job to which' }} <strong>{{ target_pilot.full_name }}</strong> {{ 'sera invité en priorité.' if fr else 'will be invited first.' }}
         {{ 'Elle reste visible des autres pilotes, ils peuvent aussi soumissionner.' if fr else 'It stays visible to other pilots, who can also bid on it.' }}
       </p>
@@ -18,21 +25,20 @@
     </div>
     {% endif %}
     {% if prefill_package %}
-    <div class="card" style="border-left: 3px solid var(--teal, #1a7f6b); margin-bottom: 18px;">
+    <div class="notice notice-teal">
       <span class="eyebrow">{{ "Réservation d'un forfait" if fr else 'Booking a package' }}</span>
-      <h3 style="margin: 6px 0 4px; font-size: 1.1rem;">{{ prefill_package.title }} · {{ prefill_package.price|int }} {{ prefill_package.currency }}</h3>
-      <p class="muted small" style="margin: 0; white-space: pre-line;">{{ prefill_package.description }}</p>
+      <strong>{{ prefill_package.title }} · {% if prefill_package.price %}{{ prefill_package.price|int }} {{ prefill_package.currency }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong>
+      <p class="muted small prewrap">{{ prefill_package.description }}</p>
       {% if prefill_package.deliverables %}
-      <p class="muted small" style="margin: 8px 0 0;"><strong>{{ 'Inclus :' if fr else 'Included:' }}</strong> {{ prefill_package.deliverables }}</p>
+      <p class="muted small"><strong>{{ 'Inclus :' if fr else 'Included:' }}</strong> {{ prefill_package.deliverables }}</p>
       {% endif %}
       <input type="hidden" name="from_package_id" value="{{ prefill_package.id }}">
     </div>
     {% endif %}
-    <h2>{{ 'Publier une mission' if fr else 'Post a job' }}</h2>
 
-    <section class="numbered-section">
-      <h3>{{ "L'essentiel" if fr else 'The essentials' }}</h3>
-      <p class="muted">{{ 'Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d\'un chalet dans les Laurentides ».' if fr else 'The title appears everywhere, be specific. Not "Drone video" but "Aerial footage of a cottage in the Laurentians".' }}</p>
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ "L'essentiel" if fr else 'The essentials' }}</legend>
+      <p class="muted small step-hint">{{ 'Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d\'un chalet dans les Laurentides ».' if fr else 'The title appears everywhere, be specific. Not "Drone video" but "Aerial footage of a cottage in the Laurentians".' }}</p>
       <label>{{ 'Titre de la mission' if fr else 'Job title' }}
         <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="{{ 'Captation aérienne d\'un mariage à Charlevoix' if fr else 'Aerial footage of a wedding in Charlevoix' }}">
       </label>
@@ -44,11 +50,11 @@
       <label>{{ 'Brief détaillé' if fr else 'Detailed brief' }}
         <textarea name="description" rows="6" required placeholder="{{ 'Contexte, livrables attendus, plages horaires, contraintes d\'accès, références visuelles…' if fr else 'Context, expected deliverables, time slots, access constraints, visual references…' }}">{{ form.get('description','') }}</textarea>
       </label>
-    </section>
+    </fieldset>
 
-    <section class="numbered-section">
-      <h3>{{ 'Localisation' if fr else 'Location' }}</h3>
-      <p class="muted">{{ 'Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.' if fr else 'Country and city are used for filtering and help pilots estimate their travel.' }}</p>
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ 'Localisation' if fr else 'Location' }}</legend>
+      <p class="muted small step-hint">{{ 'Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.' if fr else 'Country and city are used for filtering and help pilots estimate their travel.' }}</p>
       <div class="grid-2">
         <label>{{ 'Pays' if fr else 'Country' }}
           {% set _cur = form.get('country','') %}
@@ -60,8 +66,10 @@
           </select>
         </label>
         <label>{{ 'Ville' if fr else 'City' }}
-          <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal">
-          <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 {{ 'Ma position' if fr else 'My location' }}</button>
+          <span class="row-inline" style="margin-top: 7px; flex-wrap: nowrap;">
+            <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal" style="margin: 0;">
+            <button type="button" class="ghost" data-action="use-location" style="flex: 0 0 auto;">⌖ {{ 'Ma position' if fr else 'My location' }}</button>
+          </span>
         </label>
         <input type="hidden" name="lat" value="{{ form.get('lat','') }}">
         <input type="hidden" name="lng" value="{{ form.get('lng','') }}">
@@ -72,11 +80,11 @@
           <input name="address" value="{{ form.get('address','') }}" placeholder="Vieux-Port de Montréal">
         </label>
       </div>
-    </section>
+    </fieldset>
 
-    <section class="numbered-section">
-      <h3>{{ 'Budget & planning' if fr else 'Budget & schedule' }}</h3>
-      <p class="muted">{{ "Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer." if fr else 'A range works better than a single amount: let pilots make an offer.' }}</p>
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ 'Budget & planning' if fr else 'Budget & schedule' }}</legend>
+      <p class="muted small step-hint">{{ "Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer." if fr else 'A range works better than a single amount: let pilots make an offer.' }}</p>
       <div class="grid-3">
         <label>{{ 'Budget min' if fr else 'Min budget' }}
           <input name="budget_min" type="number" step="0.01" value="{{ form.get('budget_min','') }}" placeholder="600">
@@ -99,31 +107,36 @@
           <input name="end_date" type="datetime-local" value="{{ form.get('end_date','') }}">
         </label>
       </div>
-    </section>
+    </fieldset>
 
-    <section class="numbered-section">
-      <h3>{{ 'Exigences techniques' if fr else 'Technical requirements' }}</h3>
-      <p class="muted">{{ 'Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.' if fr else 'Check only what is non-negotiable. The rest becomes a sorting criterion for you.' }}</p>
-      <div class="grid-3">
-        <label class="check"><input type="checkbox" name="is_urgent" value="1"> {{ 'Mission urgente' if fr else 'Urgent job' }}</label>
-        <label class="check"><input type="checkbox" name="requires_insurance" value="1"> {{ 'RC pro requise' if fr else 'Liability insurance required' }}</label>
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ 'Exigences techniques' if fr else 'Technical requirements' }} <span class="muted small" style="font-weight: 400;">({{ 'facultatif' if fr else 'optional' }})</span></legend>
+      <p class="muted small step-hint">{{ 'Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.' if fr else 'Check only what is non-negotiable. The rest becomes a sorting criterion for you.' }}</p>
+      <div class="search-options" style="justify-content: flex-start; margin: 0 0 12px;">
+        <label class="chip-check"><input type="checkbox" name="is_urgent" value="1"> ⚡ {{ 'Mission urgente' if fr else 'Urgent job' }}</label>
+        <label class="chip-check"><input type="checkbox" name="requires_insurance" value="1"> {{ 'RC pro requise' if fr else 'Liability insurance required' }}</label>
       </div>
 
-      <h4 class="req-subtitle">{{ 'Capacités drone' if fr else 'Drone capabilities' }}</h4>
+      {% set _caps = form.get('requires_capabilities') or [] %}
+      <details class="disclosure req-fold" {% if _caps|select|list %}open{% endif %}>
+        <summary>{{ 'Capacités drone exigées' if fr else 'Required drone capabilities' }} <span class="muted small">· {{ 'caméra, capteurs, charge utile' if fr else 'camera, sensors, payload' }}</span></summary>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in drone_capability_groups %}
         <div class="spec-group">
           <div class="spec-group-title">{{ gname }}</div>
           <div class="chips">
             {% for cap in codes %}
-            <label class="chip-check"><input type="checkbox" name="requires_capabilities" value="{{ cap }}"> {{ cap_label(cap) }}</label>
+            <label class="chip-check"><input type="checkbox" name="requires_capabilities" value="{{ cap }}" {% if cap in _caps %}checked{% endif %}> {{ cap_label(cap) }}</label>
             {% endfor %}
           </div>
         </div>
         {% endfor %}
       </div>
 
-      <h4 class="req-subtitle">{{ 'Brevets exigés' if fr else 'Required licences' }}</h4>
+      </details>
+
+      <details class="disclosure req-fold">
+        <summary>{{ 'Brevets exigés' if fr else 'Required licences' }} <span class="muted small">· {{ "par autorité de l'aviation civile" if fr else 'by civil aviation authority' }}</span></summary>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in licence_authority_groups %}
         <div class="spec-group">
@@ -136,7 +149,8 @@
         </div>
         {% endfor %}
       </div>
-    </section>
+      </details>
+    </fieldset>
 
     <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">{{ 'Publier la mission' if fr else 'Post the job' }}</button>
     <div class="form-foot">

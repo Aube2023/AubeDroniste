@@ -594,7 +594,12 @@
 "search.mission_type": "Art der Mission",
 "search.pilot_specialty": "Fachgebiet des Piloten",
 "search.more_missions": "Weitere Filter: Land, Stadt",
-"search.more_pilots": "Weitere Filter: Name, Land, Stadt, Drohne, Lizenz, Bewertung"
+"search.more_pilots": "Weitere Filter: Name, Land, Stadt, Drohne, Lizenz, Bewertung",
+"trust.active_today": "Heute aktiv",
+"trust.active_week": "Diese Woche aktiv",
+"trust.active_month": "Diesen Monat aktiv",
+"trust.active_older": "Zuletzt vor über einem Monat aktiv",
+"trust.active_title": "Letzte Anmeldung, in Zeitspannen: die genaue Uhrzeit zeigen wir nie"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

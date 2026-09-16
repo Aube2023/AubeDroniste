@@ -578,6 +578,27 @@ def set_pilot_specialties(user_id: int, codes: Iterable[str]):
         )
 
 
+def activity_bucket(last_seen_at) -> Optional[str]:
+    """Derniere activite d'un compte, en tranche volontairement grossiere
+    (transparence pour le client, sans horodatage precis pour le pilote) :
+    'today' | 'week' | 'month' | 'older', None si inconnue."""
+    s = str(last_seen_at or "")[:19]
+    if len(s) < 10:
+        return None
+    try:
+        seen = datetime.strptime(s[:10], "%Y-%m-%d")
+    except ValueError:
+        return None
+    days = (datetime.utcnow() - seen).days
+    if days <= 0:
+        return "today"
+    if days <= 7:
+        return "week"
+    if days <= 31:
+        return "month"
+    return "older"
+
+
 def add_pilot_specialty(user_id: int, code: Optional[str]) -> None:
     """Un forfait publie dans une specialite vaut declaration de cette
     specialite : le pilote apparait alors dans le filtre correspondant sans
@@ -1336,7 +1357,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
     _text = (text or "").strip().lower()   # recherche libre (search box / ?q=)
     q = [
         "SELECT u.id, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
-        "       u.is_verified, u.avatar_path, u.bio, "
+        "       u.is_verified, u.avatar_path, u.bio, u.last_seen_at, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
         "       COALESCE(p.insurance_status, 'none') AS insurance_status, "

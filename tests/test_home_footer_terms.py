@@ -47,3 +47,24 @@ def test_litige_tranche_pour_le_pilote(app_ctx, funded_booking, make_user):
     assert after["status"] == "completed" and after["stripe_transfer_id"]
     # Un second passage ne fait rien (plus en litige)
     assert services.resolve_dispute_for_pilot(funded_booking, admin["id"]) is False
+
+
+def test_derniere_activite_par_tranche(app_ctx, make_user, auth_client, client):
+    """Transparence sans horodatage : « actif aujourd'hui / cette semaine /
+    ce mois-ci / il y a plus d'un mois », sur la fiche et sur la carte."""
+    import db
+    import services
+    assert services.activity_bucket(None) is None
+    assert services.activity_bucket("pas une date") is None
+    u = make_user("actif_pilote", role="pilot", country="Canada", city="Laval")
+    services.upsert_pilot_profile(u["id"], is_available=1, headline="Thermographie zz-actif-unique")
+    db.execute("UPDATE users SET last_seen_at=datetime('now') WHERE id=?", (u["id"],))
+    assert services.activity_bucket(db.fetchone("SELECT last_seen_at FROM users WHERE id=?", (u["id"],))["last_seen_at"]) == "today"
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert "Actif aujourd" in html and "trust.active_title" not in html
+    db.execute("UPDATE users SET last_seen_at=datetime('now', '-45 days') WHERE id=?", (u["id"],))
+    html = client.get(f"/pilotes/{u['id']}").data.decode()
+    assert "plus d'un mois" in html or "plus d&#39;un mois" in html
+    db.execute("UPDATE users SET last_seen_at=datetime('now', '-3 days') WHERE id=?", (u["id"],))
+    html = client.get("/pilotes?q=zz-actif-unique").data.decode()
+    assert "Actif cette semaine" in html

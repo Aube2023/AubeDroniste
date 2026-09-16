@@ -594,7 +594,12 @@
 "search.mission_type": "Tipo de missão",
 "search.pilot_specialty": "Especialidade do piloto",
 "search.more_missions": "Mais filtros: país, cidade",
-"search.more_pilots": "Mais filtros: nome, país, cidade, drone, licença, nota"
+"search.more_pilots": "Mais filtros: nome, país, cidade, drone, licença, nota",
+"trust.active_today": "Ativo hoje",
+"trust.active_week": "Ativo esta semana",
+"trust.active_month": "Ativo este mês",
+"trust.active_older": "Última atividade há mais de um mês",
+"trust.active_title": "Último acesso, por intervalos: nunca mostramos a hora exata"
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

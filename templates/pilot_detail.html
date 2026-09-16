@@ -26,6 +26,7 @@
       {% if trust %}
       <ul class="trust-row" aria-label="{{ 'Repères' if fr else 'Signals' }}">
         {% if trust.member_since %}<li>{{ t('trust.member_since', date=trust.member_since) }}</li>{% endif %}
+        {% if trust.active %}<li class="{{ 'on' if trust.active in ('today', 'week') else '' }}" title="{{ t('trust.active_title') }}">● {{ t('trust.active_' ~ trust.active) }}</li>{% endif %}
         {% if trust.response %}<li class="on" title="{{ t('trust.responds_title') }}">⚡ {% if trust.response.under_h <= 24 %}{{ t('trust.responds_h', n=trust.response.under_h) }}{% else %}{{ t('trust.responds_d', n=(trust.response.under_h // 24)) }}{% endif %}</li>{% endif %}
         {% if trust.completed %}<li class="on">✓ {{ t('trust.completed', n=trust.completed) }}</li>{% endif %}
       </ul>

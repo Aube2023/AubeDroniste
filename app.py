@@ -599,6 +599,7 @@ def _inject_helpers():
             lang=getattr(g, "lang", i18n.DEFAULT)),
         # Nom public d'une fiche : ecole en clair, personne masquee
         "public_name": services.public_name,
+        "activity_bucket": services.activity_bucket,
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
         "mission_groups": __import__("config").MISSION_TYPE_GROUPS,
@@ -1308,6 +1309,7 @@ def pilot_detail(user_id):
             "member_since": i18n.month_year(profile.get("created_at"), getattr(g, "lang", i18n.DEFAULT)),
             "response": services.pilot_response_time(user_id),
             "completed": services.pilot_completed_count(user_id),
+            "active": services.activity_bucket(profile.get("last_seen_at")),
         },
         campaign=services.active_campaign_for(user_id),
         campaign_contributions=(lambda c: services.list_contributions(c["id"], 12) if c else [])(services.active_campaign_for(user_id)),

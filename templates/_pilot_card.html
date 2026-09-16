@@ -18,7 +18,7 @@
       {% endif %}
       <div>
         <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</div>
-        <div class="loc">{{ country_name(p.country) }}{% if p.city %} · {{ p.city }}{% endif %}</div>
+        <div class="loc">{{ country_name(p.country) }}{% if p.city %} · {{ p.city }}{% endif %}{% set _act = activity_bucket(p.last_seen_at) %}{% if _act %} · <span class="{{ 'dot-ok' if _act in ('today', 'week') else 'muted' }}" title="{{ t('trust.active_title') }}">{{ t('trust.active_' ~ _act) }}</span>{% endif %}</div>
         {% if p.kind == 'school' and p.school_programs %}
         <div class="headline">{{ p.school_programs.replace('\r', '').split('\n')|reject('equalto', '')|join(' · ') }}</div>
         {% else %}

@@ -1239,6 +1239,25 @@ img.avatar { object-fit: cover; }
 }
 .auth-steps .auth-step > legend::after { content: none; }
 
+/* Page-formulaire centrée (publier une mission) : titre + phrase au-dessus,
+   étapes numérotées, encarts de contexte, listes longues repliées. */
+.form-page { max-width: 880px; margin: 8px auto 0; }
+.form-page .search-head.centered { margin-bottom: 22px; }
+.step-hint { margin: -6px 0 14px; max-width: 64ch; }
+.notice {
+  border: 1px solid var(--rule); border-radius: 12px;
+  padding: 14px 16px; margin: 0 0 18px;
+  background: var(--paper);
+}
+.notice .eyebrow { display: block; margin-bottom: 4px; }
+.notice strong { display: block; font-size: 1rem; }
+.notice p { margin: 6px 0 0; }
+.notice-accent { border-inline-start: 3px solid var(--amber); }
+.notice-teal { border-inline-start: 3px solid var(--teal); }
+.req-fold { margin-top: 10px; }
+.req-fold > summary { font-weight: 600; }
+.req-fold .spec-groups { padding-bottom: 6px; }
+
 /* Champ avec suffixe fixe (identifiant@aubemail.com) */
 .input-suffix { display: flex; align-items: stretch; margin-top: 7px; }
 .input-suffix input { margin: 0; border-start-end-radius: 0; border-end-end-radius: 0; min-width: 0; }
