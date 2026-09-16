@@ -58,7 +58,7 @@
 {% endif %}
 
 <section class="section" id="monde">
-  <div class="section-header">
+  <div class="section-header centered">
     <span class="eyebrow">{{ t('home.world.eyebrow') }}</span>
     <h2>{{ t('home.world.h') }}</h2>
     <p class="muted">{{ t('home.world.lead') }}</p>
@@ -84,7 +84,7 @@
 </section>
 
 <section class="section" id="comment-ca-marche">
-  <div class="section-header">
+  <div class="section-header centered">
     <span class="eyebrow">{{ t('home.steps.eyebrow') }}</span>
     <h2>{{ t('home.steps.h') }}</h2>
     <p class="muted">{{ t('home.steps.lead') }}</p>
@@ -98,7 +98,7 @@
 </section>
 
 <section class="section" id="pourquoi">
-  <div class="section-header">
+  <div class="section-header centered">
     <span class="eyebrow">{{ t('home.why.eyebrow') }}</span>
     <h2>{{ t('home.why.h') }}</h2>
     <p class="muted">{{ t('home.why.lead') }}</p>
@@ -183,7 +183,7 @@
 </section>
 
 <section class="section" id="rejoindre">
-  <div class="section-header">
+  <div class="section-header centered">
     <span class="eyebrow">{{ t('home.join.eyebrow') }}</span>
     <h2>{{ t('home.join.h') }}</h2>
     <p class="muted">{{ t('home.join.lead') }}</p>
@@ -214,7 +214,7 @@
       <span class="go">{{ t('home.join.cta') }} →</span>
     </a>
   </div>
-  <div class="cta-row" style="margin-top: 22px;">
+  <div class="cta-row" style="margin-top: 22px; justify-content: center;">
     <a href="#comment-ca-marche" class="ghost">{{ t('home.join.how') }}</a>
     <a href="{{ url_for('pilots_search', kind='school') }}" class="ghost">{{ 'Voir les écoles →' if lang == 'fr' else 'See the schools →' }}</a>
   </div>
