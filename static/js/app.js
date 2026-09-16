@@ -245,3 +245,47 @@ function fallbackCopy(text, done) {
 if (navigator.share) {
   document.querySelectorAll('.js-native-share').forEach(function (b) { b.hidden = false; });
 }
+
+// Visionneuse plein écran du portfolio : clic sur une photo -> grand format,
+// flèches ou boutons pour passer à la suivante, Échap ou clic hors image
+// pour fermer. Les vidéos gardent leur lecteur en place.
+(function () {
+  var frames = Array.prototype.slice.call(document.querySelectorAll('.media-figure .media-frame img'));
+  if (!frames.length) return;
+  var box = document.createElement('div');
+  box.className = 'lightbox';
+  box.hidden = true;
+  box.innerHTML = '<button type="button" class="lb-close" aria-label="Fermer">×</button>' +
+    '<button type="button" class="lb-prev" aria-label="Précédente">‹</button>' +
+    '<figure><img alt=""><figcaption></figcaption></figure>' +
+    '<button type="button" class="lb-next" aria-label="Suivante">›</button>';
+  document.body.appendChild(box);
+  var img = box.querySelector('img'), cap = box.querySelector('figcaption'), cur = -1;
+  function show(i) {
+    cur = (i + frames.length) % frames.length;
+    var src = frames[cur];
+    img.src = src.getAttribute('data-full') || src.src;
+    var fig = src.closest('.media-figure');
+    var title = fig && fig.querySelector('.media-title');
+    var desc = fig && fig.querySelector('.media-body p');
+    cap.textContent = [title && title.textContent, desc && desc.textContent].filter(Boolean).join(' · ');
+    box.hidden = false;
+    document.body.style.overflow = 'hidden';
+    box.querySelector('.lb-prev').hidden = box.querySelector('.lb-next').hidden = frames.length < 2;
+  }
+  function hide() { box.hidden = true; document.body.style.overflow = ''; }
+  frames.forEach(function (el, i) {
+    el.style.cursor = 'zoom-in';
+    el.addEventListener('click', function (e) { e.preventDefault(); show(i); });
+  });
+  box.querySelector('.lb-close').addEventListener('click', hide);
+  box.querySelector('.lb-prev').addEventListener('click', function () { show(cur - 1); });
+  box.querySelector('.lb-next').addEventListener('click', function () { show(cur + 1); });
+  box.addEventListener('click', function (e) { if (e.target === box) hide(); });
+  document.addEventListener('keydown', function (e) {
+    if (box.hidden) return;
+    if (e.key === 'Escape') hide();
+    else if (e.key === 'ArrowLeft') show(cur - 1);
+    else if (e.key === 'ArrowRight') show(cur + 1);
+  });
+})();

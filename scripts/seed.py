@@ -29,16 +29,16 @@ def seed():
 
     samples = [
         # username, full_name, role, country, city, lat, lng
-        ("amine.benali",   "Amine Benali",      "pilot", "Maroc",   "Casablanca",  33.5731, -7.5898),
-        ("sophie.tremblay","Sophie Tremblay",   "pilot", "Canada",  "Montreal",    45.5017, -73.5673),
-        ("yacine.haddad",  "Yacine Haddad",     "pilot", "Algerie", "Alger",       36.7538,  3.0588),
-        ("linh.dupont",    "Linh Dupont",       "pilot", "France",  "Lyon",        45.7640,  4.8357),
-        ("kofi.adjei",     "Kofi Adjei",        "pilot", "Cote d'Ivoire", "Abidjan", 5.3600, -4.0083),
-        ("ecole.drone.qc", "École Drone Québec", "pilot",  "Canada",  "Quebec",      46.8139, -71.2080),
-        ("lucas.fpv",      "Lucas Martin",      "pilot",  "France",  "Nantes",      47.2184, -1.5536),
-        ("client.alpha",   "Marie Dubois",      "client",   "France",  "Paris",       48.8566,  2.3522),
-        ("client.beta",    "Pierre Lavigne",    "client",   "Canada",  "Quebec",      46.8139, -71.2080),
-        ("client.gamma",   "Imane Cherif",      "client",   "Tunisie", "Tunis",       36.8065, 10.1815),
+        ("amine_benali",   "Amine Benali",      "pilot", "Maroc",   "Casablanca",  33.5731, -7.5898),
+        ("sophie_tremblay","Sophie Tremblay",   "pilot", "Canada",  "Montreal",    45.5017, -73.5673),
+        ("yacine_haddad",  "Yacine Haddad",     "pilot", "Algerie", "Alger",       36.7538,  3.0588),
+        ("linh_dupont",    "Linh Dupont",       "pilot", "France",  "Lyon",        45.7640,  4.8357),
+        ("kofi_adjei",     "Kofi Adjei",        "pilot", "Cote d'Ivoire", "Abidjan", 5.3600, -4.0083),
+        ("ecole_drone_qc", "École Drone Québec", "pilot",  "Canada",  "Quebec",      46.8139, -71.2080),
+        ("lucas_fpv",      "Lucas Martin",      "pilot",  "France",  "Nantes",      47.2184, -1.5536),
+        ("client_alpha",   "Marie Dubois",      "client",   "France",  "Paris",       48.8566,  2.3522),
+        ("client_beta",    "Pierre Lavigne",    "client",   "Canada",  "Quebec",      46.8139, -71.2080),
+        ("client_gamma",   "Imane Cherif",      "client",   "Tunisie", "Tunis",       36.8065, 10.1815),
     ]
 
     pwd = "demo"
@@ -77,16 +77,16 @@ def seed():
         # Types de profil de demo : une ecole (nom en clair + formations) et un
         # pilote recreatif, pour les onglets de l'annuaire.
         by_name = {u: uid for (uid, u, _r, _c) in needed}
-        if "ecole.drone.qc" in by_name:
+        if "ecole_drone_qc" in by_name:
             services.upsert_pilot_profile(
-                by_name["ecole.drone.qc"], kind="school", business_name="École Drone Québec",
+                by_name["ecole_drone_qc"], kind="school", business_name="École Drone Québec",
                 headline="Formation RPAS de base et avancée, en présentiel et à distance.",
                 school_programs="Opérations de base (Transports Canada)\n"
                                 "Opérations avancées (Transports Canada)\n"
                                 "Préparation à l'examen en vol\nFormation thermographie",
             )
-        if "lucas.fpv" in by_name:
-            services.upsert_pilot_profile(by_name["lucas.fpv"], kind="recreational",
+        if "lucas_fpv" in by_name:
+            services.upsert_pilot_profile(by_name["lucas_fpv"], kind="recreational",
                                           headline="FPV freestyle le week-end, cinewhoop en forêt.")
 
         # Quelques missions ouvertes

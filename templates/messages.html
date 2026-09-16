@@ -23,7 +23,7 @@
       <span class="inbox-body">
         <span class="inbox-top">
           <span class="who">{{ c.peer_name if c.peer_is_client else mask_name(c.peer_name) }} <span class="muted small">· {{ t('messages.role_client') if c.peer_is_client else t('messages.role_pilot') }}</span></span>
-          <span class="when">{{ c.last_at[:10] }}</span>
+          <span class="when" data-utc="{{ c.last_at }}" data-fmt="date">{{ c.last_at[:10] }}</span>
         </span>
         <span class="mission">{{ c.mission_title }}</span>
         <span class="preview">{% if c.last_mine %}{{ t('messages.you') }} : {% endif %}{{ c.last_body[:90] }}{% if c.last_body|length > 90 %}…{% endif %}</span>
@@ -60,10 +60,10 @@
     <div class="bubbles" id="bubbles" data-poll="{{ url_for('messages_poll', mission_id=conv.mission_id, peer_id=conv.peer_id) }}" data-last="{{ thread[-1].id if thread else 0 }}">
       {% set ns = namespace(day='') %}
       {% for m in thread %}
-        {% if m.created_at[:10] != ns.day %}{% set ns.day = m.created_at[:10] %}<div class="bubble-day"><span>{{ ns.day }}</span></div>{% endif %}
+        {% if m.created_at[:10] != ns.day %}{% set ns.day = m.created_at[:10] %}<div class="bubble-day"><span data-utc="{{ m.created_at }}" data-fmt="day">{{ ns.day }}</span></div>{% endif %}
         <div class="bubble {{ 'mine' if m.sender_user_id == current_user.id else '' }}" data-id="{{ m.id }}">
           <div class="bubble-body">{{ m.body }}</div>
-          <div class="bubble-time">{{ m.created_at[11:16] }}</div>
+          <div class="bubble-time" data-utc="{{ m.created_at }}" data-fmt="time">{{ m.created_at[11:16] }}</div>
         </div>
       {% else %}
         <p class="muted small" style="text-align: center; margin: 24px 0;">{{ t('messages.write_ph') }}</p>
@@ -83,6 +83,18 @@
 
 <script nonce="{{ csp_nonce }}">
 (function () {
+  // Les heures sont stockees en UTC : on les affiche a l'heure de l'appareil.
+  var lang = document.documentElement.lang || 'fr';
+  function local(el) {
+    var utc = el.getAttribute('data-utc'); if (!utc) return;
+    var d = new Date(utc.replace(' ', 'T') + (utc.length <= 19 ? 'Z' : ''));
+    if (isNaN(d)) return;
+    var fmt = el.getAttribute('data-fmt');
+    if (fmt === 'time') el.textContent = d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+    else if (fmt === 'day') el.textContent = d.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long' });
+    else el.textContent = d.toLocaleDateString(lang, { day: 'numeric', month: 'short' });
+  }
+  document.querySelectorAll('[data-utc]').forEach(local);
   var box = document.getElementById('bubbles');
   if (!box) return;
   // Toujours en bas a l'ouverture, comme une messagerie.
@@ -114,8 +126,9 @@
           var el = document.createElement('div');
           el.className = 'bubble' + (m.mine ? ' mine' : '');
           el.setAttribute('data-id', m.id);
-          el.innerHTML = '<div class="bubble-body">' + esc(m.body) + '</div><div class="bubble-time">' + esc((m.at || '').slice(11, 16)) + '</div>';
+          el.innerHTML = '<div class="bubble-body">' + esc(m.body) + '</div><div class="bubble-time" data-utc="' + esc(m.at || '') + '" data-fmt="time">' + esc((m.at || '').slice(11, 16)) + '</div>';
           box.appendChild(el);
+          local(el.querySelector('.bubble-time'));
           last = m.id;
         });
         if (atBottom) box.scrollTop = box.scrollHeight;

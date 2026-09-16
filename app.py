@@ -3324,8 +3324,11 @@ def messages_thread(mission_id, peer_id):
         "booking_status": booking["status"] if booking else None,
         "funded": services.thread_is_funded(mission_id, user["id"], peer_id),
     }
+    # Le fil d'abord (il marque les messages lus), la liste ensuite : la
+    # pastille de la conversation ouverte disparait tout de suite.
+    thread = services.thread(mission_id, user["id"], peer_id)
     return render_template("messages.html", conversations=services.list_conversations(user["id"]),
-                           conv=conv, thread=services.thread(mission_id, user["id"], peer_id), seo=_NOINDEX)
+                           conv=conv, thread=thread, seo=_NOINDEX)
 
 
 @app.route("/api/messages/<int:mission_id>/<int:peer_id>")

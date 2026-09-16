@@ -2464,3 +2464,26 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 .world-auths .ghost { margin-inline-start: auto; }
 .part107-head .cta-row { margin-top: 22px; }
 .part107-grid { margin: 8px 0 40px; }
+
+/* ============ Visionneuse plein écran (portfolio) ============ */
+.lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(8, 9, 14, .94);
+  display: flex; align-items: center; justify-content: center;
+}
+.lightbox figure { margin: 0; max-width: 94vw; max-height: 92vh; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lightbox img { max-width: 94vw; max-height: 84vh; object-fit: contain; border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.lightbox figcaption { color: #d5d7e2; font-size: .95rem; text-align: center; max-width: 80ch; }
+.lightbox button {
+  position: absolute; border: 0; background: rgba(255,255,255,.08); color: #fff;
+  width: 46px; height: 46px; border-radius: 50%; font-size: 28px; line-height: 1;
+  cursor: pointer; display: grid; place-items: center;
+}
+.lightbox button:hover { background: rgba(255,255,255,.18); }
+.lightbox .lb-close { top: 16px; inset-inline-end: 16px; }
+.lightbox .lb-prev { inset-inline-start: 16px; top: 50%; transform: translateY(-50%); }
+.lightbox .lb-next { inset-inline-end: 16px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 720px) {
+  .lightbox .lb-prev, .lightbox .lb-next { top: auto; bottom: 18px; transform: none; }
+  .lightbox img { max-height: 76vh; }
+}

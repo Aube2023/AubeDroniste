@@ -43,14 +43,14 @@ Ouvrir : <http://127.0.0.1:5034>
 
 | login | rôle | pays |
 |---|---|---|
-| `amine.benali` | pilote | Maroc |
-| `sophie.tremblay` | pilote | Canada |
-| `yacine.haddad` | pilote | Algérie |
-| `linh.dupont` | pilote | France |
-| `kofi.adjei` | pilote | Côte d'Ivoire |
-| `client.alpha` | client | France |
-| `client.beta` | client | Canada |
-| `client.gamma` | client | Tunisie |
+| `amine_benali` | pilote | Maroc |
+| `sophie_tremblay` | pilote | Canada |
+| `yacine_haddad` | pilote | Algérie |
+| `linh_dupont` | pilote | France |
+| `kofi_adjei` | pilote | Côte d'Ivoire |
+| `client_alpha` | client | France |
+| `client_beta` | client | Canada |
+| `client_gamma` | client | Tunisie |
 
 Mot de passe pour tous : `demo`.
 
