@@ -578,6 +578,9 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 .section { margin: 88px 0; }
 .section-header { margin-bottom: 32px; max-width: 60ch; }
 .section-header h2 { font-size: clamp(1.8rem, 3.4vw, 2.8rem); margin-bottom: .3em; }
+/* Variante centrée (carte de l'accueil) : titre, phrase et lien alignés au milieu */
+.section-header.centered { text-align: center; max-width: 68ch; margin-inline: auto; margin-bottom: 22px; }
+.section-header.centered .muted { margin: 8px auto 14px; }
 
 .steps {
   display: grid; gap: 24px;
