@@ -599,7 +599,21 @@
 "trust.active_week": "نشط هذا الأسبوع",
 "trust.active_month": "نشط هذا الشهر",
 "trust.active_older": "آخر نشاط قبل أكثر من شهر",
-"trust.active_title": "آخر تسجيل دخول، على فترات: لا نعرض الوقت الدقيق أبدًا"
+"trust.active_title": "آخر تسجيل دخول، على فترات: لا نعرض الوقت الدقيق أبدًا",
+"nav.messages": "الرسائل",
+"messages.title": "الرسائل",
+"messages.lead": "محادثاتك مع الطيارين والعملاء، مهمة بمهمة.",
+"messages.empty": "لا محادثات بعد. تبدأ المحادثة من مهمة: بمجرد أن يقدّم طيار عرضًا، يمكنه والعميل التراسل هنا.",
+"messages.pick": "اختر محادثة من اليسار.",
+"messages.write_ph": "اكتب رسالتك…",
+"messages.send": "إرسال",
+"messages.locked": "قبل الدفع، تُحجب رسائل البريد وأرقام الهاتف والشبكات الاجتماعية في المراسلة لحماية الطرفين. يُفتح كل شيء بمجرد دفع المهمة.",
+"messages.open": "فتح المحادثة",
+"messages.view_mission": "عرض المهمة",
+"messages.view_booking": "عرض الحجز",
+"messages.you": "أنت",
+"messages.role_client": "عميل",
+"messages.role_pilot": "طيار"
 },
 "seo": {
 "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",

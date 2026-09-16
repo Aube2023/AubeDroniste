@@ -231,7 +231,7 @@
       {# `fil`, pas `t` : `t` est la fonction de traduction, écrasée sinon pour tout le reste du gabarit #}
       {% set fil = threads.get(b.pilot_user_id, []) %}
       <details class="disclosure" {% if fil %}open{% endif %}>
-        <summary>Discussion · {{ fil|length }} message(s)</summary>
+        <summary>Discussion · {{ fil|length }} message(s){% if fil %} · <a href="{{ url_for('messages_thread', mission_id=mission.id, peer_id=b.pilot_user_id) }}">{{ t('messages.open') }} →</a>{% endif %}</summary>
         <ul class="stack-list scroll">
           {% for m in fil %}
           <li>
@@ -328,7 +328,7 @@
       {# Discussion pilote <-> client #}
       {% set fil = threads.get(mission.client_user_id, []) %}
       <details class="disclosure" {% if fil %}open{% endif %}>
-        <summary>Discussion avec le client · {{ fil|length }} message(s)</summary>
+        <summary>Discussion avec le client · {{ fil|length }} message(s){% if fil %} · <a href="{{ url_for('messages_thread', mission_id=mission.id, peer_id=mission.client_user_id) }}">{{ t('messages.open') }} →</a>{% endif %}</summary>
         <ul class="stack-list scroll">
           {% for m in fil %}
           <li>

@@ -599,7 +599,21 @@
 "trust.active_week": "Diese Woche aktiv",
 "trust.active_month": "Diesen Monat aktiv",
 "trust.active_older": "Zuletzt vor über einem Monat aktiv",
-"trust.active_title": "Letzte Anmeldung, in Zeitspannen: die genaue Uhrzeit zeigen wir nie"
+"trust.active_title": "Letzte Anmeldung, in Zeitspannen: die genaue Uhrzeit zeigen wir nie",
+"nav.messages": "Nachrichten",
+"messages.title": "Nachrichten",
+"messages.lead": "Ihre Unterhaltungen mit Piloten und Kunden, Mission für Mission.",
+"messages.empty": "Noch keine Unterhaltung. Ein Thread beginnt bei einer Mission: sobald ein Pilot ein Angebot abgibt, können Kunde und Pilot sich hier schreiben.",
+"messages.pick": "Wählen Sie links eine Unterhaltung.",
+"messages.write_ph": "Schreiben Sie Ihre Nachricht…",
+"messages.send": "Senden",
+"messages.locked": "Vor der Zahlung sind E-Mails, Telefonnummern und soziale Netzwerke in Nachrichten gesperrt, um beide Seiten zu schützen. Alles wird freigegeben, sobald die Mission bezahlt ist.",
+"messages.open": "Unterhaltung öffnen",
+"messages.view_mission": "Mission ansehen",
+"messages.view_booking": "Buchung ansehen",
+"messages.you": "Sie",
+"messages.role_client": "Kunde",
+"messages.role_pilot": "Pilot"
 },
 "seo": {
 "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

@@ -599,7 +599,21 @@
 "trust.active_week": "Hoạt động tuần này",
 "trust.active_month": "Hoạt động tháng này",
 "trust.active_older": "Hoạt động lần cuối hơn một tháng trước",
-"trust.active_title": "Lần đăng nhập cuối, theo khoảng: không bao giờ hiển thị giờ chính xác"
+"trust.active_title": "Lần đăng nhập cuối, theo khoảng: không bao giờ hiển thị giờ chính xác",
+"nav.messages": "Tin nhắn",
+"messages.title": "Hộp thư",
+"messages.lead": "Các cuộc trò chuyện của bạn với phi công và khách hàng, theo từng nhiệm vụ.",
+"messages.empty": "Chưa có cuộc trò chuyện nào. Một chủ đề bắt đầu từ nhiệm vụ: ngay khi phi công gửi báo giá, khách hàng và phi công có thể nhắn cho nhau tại đây.",
+"messages.pick": "Chọn một cuộc trò chuyện ở bên trái.",
+"messages.write_ph": "Viết tin nhắn của bạn…",
+"messages.send": "Gửi",
+"messages.locked": "Trước khi thanh toán, email, số điện thoại và mạng xã hội bị chặn trong tin nhắn để bảo vệ cả hai bên. Mọi thứ được mở ngay khi nhiệm vụ được thanh toán.",
+"messages.open": "Mở cuộc trò chuyện",
+"messages.view_mission": "Xem nhiệm vụ",
+"messages.view_booking": "Xem đặt chỗ",
+"messages.you": "Bạn",
+"messages.role_client": "khách hàng",
+"messages.role_pilot": "phi công"
 },
 "seo": {
 "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

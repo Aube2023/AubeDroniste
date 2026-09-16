@@ -12,7 +12,7 @@
       · {{ current_user.email }}
       · <strong>{% if current_user.role == 'both' %}{{ 'client et pilote' if fr else 'client and pilot' }}{% elif current_user.role == 'pilot' %}{{ 'pilote' if fr else 'pilot' }}{% else %}{{ 'client' if fr else 'client' }}{% endif %}</strong>
       {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
-      {% if unread %} · <strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %}{% endif %}
+      {% if unread %} · <a href="{{ url_for('messages_inbox') }}"><strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %} →</a>{% endif %}
     </div>
   </div>
   <div class="cockpit-actions">

@@ -345,7 +345,10 @@
 {# ============ Messagerie ============ #}
 
 <section class="card">
-  <h2 style="font-size: 1.3rem;">Messagerie de mission</h2>
+  <div class="row-between" style="align-items: baseline; flex-wrap: wrap; gap: 8px;">
+    <h2 style="font-size: 1.3rem; margin: 0;">Messagerie de mission</h2>
+    <a class="ghost" href="{{ url_for('messages_thread', mission_id=booking.mission_id, peer_id=peer_id) }}">{{ t('messages.open') }} →</a>
+  </div>
   {% if not funded %}
   <p class="muted small">
     🔒 <strong>Avant paiement</strong> : les coordonnées externes (email, téléphone, réseaux sociaux) sont bloquées dans la messagerie pour protéger les deux parties. Cette restriction est levée dès que le client a payé.

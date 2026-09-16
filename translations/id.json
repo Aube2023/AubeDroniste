@@ -599,7 +599,21 @@
 "trust.active_week": "Aktif minggu ini",
 "trust.active_month": "Aktif bulan ini",
 "trust.active_older": "Terakhir aktif lebih dari sebulan lalu",
-"trust.active_title": "Masuk terakhir, dalam rentang: kami tidak pernah menampilkan waktu pastinya"
+"trust.active_title": "Masuk terakhir, dalam rentang: kami tidak pernah menampilkan waktu pastinya",
+"nav.messages": "Pesan",
+"messages.title": "Kotak pesan",
+"messages.lead": "Percakapan Anda dengan pilot dan klien, misi demi misi.",
+"messages.empty": "Belum ada percakapan. Percakapan dimulai dari misi: begitu pilot mengirim penawaran, klien dan pilot dapat saling menulis di sini.",
+"messages.pick": "Pilih percakapan di sebelah kiri.",
+"messages.write_ph": "Tulis pesan Anda…",
+"messages.send": "Kirim",
+"messages.locked": "Sebelum pembayaran, email, telepon, dan media sosial diblokir dalam pesan untuk melindungi kedua pihak. Semuanya terbuka begitu misi dibayar.",
+"messages.open": "Buka percakapan",
+"messages.view_mission": "Lihat misi",
+"messages.view_booking": "Lihat pemesanan",
+"messages.you": "Anda",
+"messages.role_client": "klien",
+"messages.role_pilot": "pilot"
 },
 "seo": {
 "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

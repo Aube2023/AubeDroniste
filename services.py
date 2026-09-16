@@ -2807,6 +2807,77 @@ def thread(mission_id: int, user_id: int, peer_id: int) -> list:
     return [dict(r) for r in rows]
 
 
+def list_conversations(user_id: int) -> list:
+    """Boite de reception : une ligne par (mission, interlocuteur), la plus
+    recente d'abord, avec le dernier message, le nombre de non-lus, le titre
+    de la mission, le nom de l'autre partie et son role dans la mission.
+    Ne liste que les fils deja commences : un fil s'ouvre depuis la page de
+    la mission (devis) ou de la reservation."""
+    rows = db.fetchall(
+        "SELECT m.mission_id, "
+        "       CASE WHEN m.sender_user_id=? THEN m.recipient_user_id ELSE m.sender_user_id END AS peer_id, "
+        "       MAX(m.id) AS last_id, MAX(m.created_at) AS last_at, "
+        "       SUM(CASE WHEN m.recipient_user_id=? AND m.read_at IS NULL THEN 1 ELSE 0 END) AS unread "
+        "FROM messages m WHERE m.sender_user_id=? OR m.recipient_user_id=? "
+        "GROUP BY m.mission_id, peer_id ORDER BY last_at DESC LIMIT 200",
+        (user_id, user_id, user_id, user_id),
+    )
+    out = []
+    for r in rows:
+        last = db.fetchone("SELECT body, sender_user_id, created_at FROM messages WHERE id=?", (r["last_id"],))
+        peer = db.fetchone("SELECT id, full_name, username, avatar_path, role FROM users WHERE id=?", (r["peer_id"],))
+        mission = db.fetchone("SELECT id, title, status, client_user_id FROM missions WHERE id=?", (r["mission_id"],))
+        if not (last and peer and mission):
+            continue
+        booking = db.fetchone(
+            "SELECT id, status FROM bookings WHERE mission_id=? AND client_user_id IN (?, ?) "
+            "AND pilot_user_id IN (?, ?) ORDER BY id DESC LIMIT 1",
+            (r["mission_id"], user_id, r["peer_id"], user_id, r["peer_id"]),
+        )
+        out.append({
+            "mission_id": r["mission_id"], "mission_title": mission["title"],
+            "mission_status": mission["status"],
+            "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
+            "peer_avatar": peer["avatar_path"],
+            "peer_is_client": mission["client_user_id"] == peer["id"],
+            "last_body": last["body"], "last_at": last["created_at"],
+            "last_mine": last["sender_user_id"] == user_id,
+            "unread": int(r["unread"] or 0),
+            "booking_id": booking["id"] if booking else None,
+            "booking_status": booking["status"] if booking else None,
+        })
+    return out
+
+
+def thread_after(mission_id: int, user_id: int, peer_id: int, after_id: int) -> list:
+    """Messages du fil plus recents que `after_id` (rafraichissement sans
+    rechargement), marques lus au passage."""
+    rows = db.fetchall(
+        "SELECT * FROM messages WHERE mission_id=? AND id>? "
+        "AND ((sender_user_id=? AND recipient_user_id=?) OR (sender_user_id=? AND recipient_user_id=?)) "
+        "ORDER BY id ASC",
+        (mission_id, after_id, user_id, peer_id, peer_id, user_id),
+    )
+    if rows:
+        db.execute(
+            "UPDATE messages SET read_at=datetime('now') WHERE mission_id=? AND recipient_user_id=? "
+            "AND sender_user_id=? AND read_at IS NULL",
+            (mission_id, user_id, peer_id),
+        )
+    return [dict(r) for r in rows]
+
+
+def thread_is_funded(mission_id: int, user_id: int, peer_id: int) -> bool:
+    """Vrai si une reservation payee lie ces deux personnes sur cette
+    mission : le filtre anti-contournement de la messagerie est alors leve."""
+    row = db.fetchone(
+        "SELECT status FROM bookings WHERE mission_id=? AND client_user_id IN (?, ?) "
+        "AND pilot_user_id IN (?, ?) ORDER BY id DESC LIMIT 1",
+        (mission_id, user_id, peer_id, user_id, peer_id),
+    )
+    return bool(row and row["status"] in ("funded", "in_progress", "completed", "disputed"))
+
+
 def unread_count(user_id: int) -> int:
     row = db.fetchone(
         "SELECT COUNT(*) AS n FROM messages WHERE recipient_user_id=? AND read_at IS NULL",

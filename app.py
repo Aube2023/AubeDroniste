@@ -384,6 +384,7 @@ def _inject_globals():
     return {
         "current_user": getattr(g, "user", None),
         "in_app": bool(getattr(g, "in_app", False)),
+        "unread_messages": (services.unread_count(g.user["id"]) if getattr(g, "user", None) else 0),
         "site_visits": _visits_display(),
         "mission_types": MISSION_TYPES,
         "drone_categories": DRONE_CATEGORIES,
@@ -3288,6 +3289,60 @@ def booking_deliverable_push(booking_id, deliv_id, service):
             "error",
         )
     return redirect(url_for("booking_detail", booking_id=booking_id))
+
+
+@app.route("/messages")
+@auth.login_required
+def messages_inbox():
+    """Boite de reception : toutes les conversations du compte."""
+    return render_template("messages.html", conversations=services.list_conversations(g.user["id"]),
+                           conv=None, thread=[], seo=_NOINDEX)
+
+
+@app.route("/messages/<int:mission_id>/<int:peer_id>")
+@auth.login_required
+def messages_thread(mission_id, peer_id):
+    """Une conversation (mission x interlocuteur), en bulles, avec la liste a
+    cote sur grand ecran. Ouverte aussi depuis la mission ou la reservation."""
+    user = g.user
+    if peer_id == user["id"] or not services.can_message(mission_id, user["id"], peer_id):
+        abort(403)
+    peer = db.fetchone("SELECT id, full_name, username, avatar_path FROM users WHERE id=?", (peer_id,))
+    mission = services.get_mission(mission_id)
+    if not peer or not mission:
+        abort(404)
+    booking = db.fetchone(
+        "SELECT id, status FROM bookings WHERE mission_id=? AND client_user_id IN (?, ?) "
+        "AND pilot_user_id IN (?, ?) ORDER BY id DESC LIMIT 1",
+        (mission_id, user["id"], peer_id, user["id"], peer_id),
+    )
+    conv = {
+        "mission_id": mission_id, "mission_title": mission["title"], "mission_status": mission["status"],
+        "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
+        "peer_avatar": peer["avatar_path"], "peer_is_client": mission["client_user_id"] == peer["id"],
+        "booking_id": booking["id"] if booking else None,
+        "booking_status": booking["status"] if booking else None,
+        "funded": services.thread_is_funded(mission_id, user["id"], peer_id),
+    }
+    return render_template("messages.html", conversations=services.list_conversations(user["id"]),
+                           conv=conv, thread=services.thread(mission_id, user["id"], peer_id), seo=_NOINDEX)
+
+
+@app.route("/api/messages/<int:mission_id>/<int:peer_id>")
+@auth.login_required
+@security.rate_limit(per_minute=60, per_hour=1500)
+def messages_poll(mission_id, peer_id):
+    """Nouveaux messages depuis `after` (identifiant), pour rafraichir une
+    conversation ouverte sans recharger la page."""
+    user = g.user
+    if peer_id == user["id"] or not services.can_message(mission_id, user["id"], peer_id):
+        abort(403)
+    after = _to_int(request.args.get("after")) or 0
+    rows = services.thread_after(mission_id, user["id"], peer_id, after)
+    return jsonify({"messages": [
+        {"id": m["id"], "mine": m["sender_user_id"] == user["id"], "body": m["body"], "at": m["created_at"]}
+        for m in rows
+    ], "unread": services.unread_count(user["id"])})
 
 
 @app.route("/missions/<int:mission_id>/messages", methods=["POST"])

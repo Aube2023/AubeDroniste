@@ -599,7 +599,21 @@
 "trust.active_week": "Ativo esta semana",
 "trust.active_month": "Ativo este mês",
 "trust.active_older": "Última atividade há mais de um mês",
-"trust.active_title": "Último acesso, por intervalos: nunca mostramos a hora exata"
+"trust.active_title": "Último acesso, por intervalos: nunca mostramos a hora exata",
+"nav.messages": "Mensagens",
+"messages.title": "Mensagens",
+"messages.lead": "As suas conversas com pilotos e clientes, missão a missão.",
+"messages.empty": "Ainda sem conversas. Um fio começa a partir de uma missão: assim que um piloto envia um orçamento, cliente e piloto podem escrever-se aqui.",
+"messages.pick": "Escolha uma conversa à esquerda.",
+"messages.write_ph": "Escreva a sua mensagem…",
+"messages.send": "Enviar",
+"messages.locked": "Antes do pagamento, e-mails, telefones e redes sociais ficam bloqueados nas mensagens para proteger ambas as partes. Tudo se desbloqueia assim que a missão é paga.",
+"messages.open": "Abrir a conversa",
+"messages.view_mission": "Ver a missão",
+"messages.view_booking": "Ver a reserva",
+"messages.you": "Você",
+"messages.role_client": "cliente",
+"messages.role_pilot": "piloto"
 },
 "seo": {
 "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",
