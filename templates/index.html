@@ -115,11 +115,9 @@
 </section>
 
 <section class="section">
-  <div class="row-between" style="align-items: end; margin-bottom: 24px;">
-    <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">{{ t('home.featured.eyebrow') }}</span>
-      <h2>{{ t('home.featured.h') }}</h2>
-    </div>
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('home.featured.eyebrow') }}</span>
+    <h2>{{ t('home.featured.h') }}</h2>
     <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.featured.all') }}</a>
   </div>
   <div class="grid-cards">
@@ -266,14 +264,12 @@
 </section>
 
 <section class="section" id="faq">
-  <div class="row-between" style="align-items: end; margin-bottom: 18px;">
-    <div class="section-header" style="margin: 0;">
-      <span class="eyebrow">{{ t('home.faq.eyebrow') }}</span>
-      <h2>{{ t('home.faq.h') }}</h2>
-    </div>
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('home.faq.eyebrow') }}</span>
+    <h2>{{ t('home.faq.h') }}</h2>
     <a href="{{ url_for('faq') }}" class="ghost">{{ t('home.faq.all') }}</a>
   </div>
-  <div class="faq-list">
+  <div class="faq-list faq-list-centered">
     {% for e in faq_entries %}
     <details class="faq-item" {% if loop.first %}open{% endif %}>
       <summary>{{ e.question }}</summary>
@@ -283,7 +279,7 @@
   </div>
 </section>
 
-<section class="contact-block" id="contact">
+<section class="contact-block contact-block-centered" id="contact">
   <div>
     <span class="eyebrow">{{ t('home.contact.eyebrow') }}</span>
     <h2>{{ t('home.contact.h') }}</h2>
