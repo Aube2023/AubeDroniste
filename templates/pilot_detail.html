@@ -18,7 +18,7 @@
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
-      <span class="callsign">F-{{ '%04d' % pilot.id }}{{ (display_name|first)|upper }} · CDB</span>
+      <span class="callsign">{{ 'Profil' if fr else 'Profile' }} nº {{ pilot.id }}</span>
       <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
@@ -106,9 +106,9 @@
     </div>
     <div>
       <span class="v" style="color: {% if pilot.is_available %}var(--teal){% else %}var(--ink-dim){% endif %};">
-        {% if pilot.is_available %}{{ 'EN VOL' if fr else 'IN FLIGHT' }}{% else %}{{ 'AU SOL' if fr else 'GROUNDED' }}{% endif %}
+        {% if pilot.is_available %}{{ 'DISPONIBLE' if fr else 'AVAILABLE' }}{% else %}{{ 'INDISPONIBLE' if fr else 'UNAVAILABLE' }}{% endif %}
       </span>
-      <span class="k">{{ 'Statut' if fr else 'Status' }}</span>
+      <span class="k">{{ 'Disponibilité' if fr else 'Availability' }}</span>
     </div>
     {% endif %}
   </div>

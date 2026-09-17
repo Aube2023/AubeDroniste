@@ -737,13 +737,6 @@ img.avatar { object-fit: cover; }
   position: relative;
   margin-bottom: 24px;
 }
-.pilot-header::before {
-  content: "FICHE PILOTE — F-AUBE"; position: absolute;
-  top: -10px; inset-inline-start: 24px;
-  background: var(--paper); color: var(--amber);
-  font: 700 10px/1 var(--mono); letter-spacing: .22em;
-  padding: 3px 8px; border: 1px solid var(--rule);
-}
 .pilot-header h1 { font-size: clamp(2rem, 4vw, 3rem); }
 
 .cert {
@@ -1782,15 +1775,6 @@ img.avatar { object-fit: cover; }
 
 .hero-text {
   position: relative;
-}
-.hero-text::after {
-  content: "F-AUBE · 33° 35′ 22″ N · 7° 36′ 26″ W";
-  display: block;
-  margin-top: 24px;
-  font: 500 11px/1 var(--mono);
-  letter-spacing: .2em;
-  color: var(--ink-faint);
-  text-transform: uppercase;
 }
 
 /* ============ Paiement booking ============ */

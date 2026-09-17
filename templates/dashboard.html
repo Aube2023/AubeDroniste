@@ -1,15 +1,14 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}Cockpit · AubePilot{% endblock %}
+{% block title %}{{ 'Mon espace' if fr else 'My space' }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="cockpit-banner">
   <div>
-    <span class="eyebrow">{{ 'Espace pilote' if fr else 'Pilot space' }}</span>
+    <span class="eyebrow">{{ 'Mon espace' if fr else 'My space' }}</span>
     <h1>{{ 'Bonjour' if fr else 'Hello' }}, {{ current_user.full_name.split(' ')[0] }}.</h1>
     <div class="meta">
-      <strong>F-{{ '%04d' % current_user.id }}{{ (current_user.full_name|first)|upper }}</strong>
-      · {{ current_user.email }}
+      {{ current_user.email }}
       · <strong>{% if current_user.role == 'both' %}{{ 'client et pilote' if fr else 'client and pilot' }}{% elif current_user.role == 'pilot' %}{{ 'pilote' if fr else 'pilot' }}{% else %}{{ 'client' if fr else 'client' }}{% endif %}</strong>
       {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
       {% if unread %} · <a href="{{ url_for('messages_inbox') }}"><strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %} →</a>{% endif %}
@@ -36,7 +35,7 @@
     <div class="mini-profile" style="margin-top: 12px;">
       {% if profile_views %}<div class="row"><span>{{ 'Vues de fiche · 30 j' if fr else 'Page views · 30 d' }}</span><strong>{{ profile_views.d30 }}{% if profile_views.d7 %} <span class="muted">({{ profile_views.d7 }} / 7 j)</span>{% endif %}</strong></div>{% endif %}
       <div class="row"><span>{{ 'Note' if fr else 'Rating' }}</span><strong>{% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★ · {{ my_pilot_profile.rating.count }}{% else %}{{ 'aucun avis' if fr else 'no reviews' }}{% endif %}</strong></div>
-      <div class="row"><span>{{ 'Disponibilité' if fr else 'Availability' }}</span><strong>{% if my_pilot_profile.is_available %}{{ 'En vol' if fr else 'Flying' }}{% else %}{{ 'Au sol' if fr else 'Grounded' }}{% endif %}</strong></div>
+      <div class="row"><span>{{ 'Disponibilité' if fr else 'Availability' }}</span><strong>{% if my_pilot_profile.is_available %}{{ 'Disponible' if fr else 'Available' }}{% else %}{{ 'Indisponible' if fr else 'Unavailable' }}{% endif %}</strong></div>
       <div class="row"><span>{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong></div>
       <div class="row"><span>{{ 'Rayon' if fr else 'Radius' }}</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
       <div class="row"><span>{{ 'Brevets' if fr else 'Licences' }}</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
@@ -181,9 +180,9 @@
 
 {% if not (is_client and my_missions) and not (is_pilot and my_bids) and not my_bookings %}
 <section class="card" style="text-align: center; padding: 64px 32px;">
-  <span class="eyebrow" style="justify-content: center;">{{ 'Bienvenue à bord' if fr else 'Welcome aboard' }}</span>
-  <h2 style="margin: 12px 0;">{{ "Votre cockpit est vide pour l'instant." if fr else 'Your cockpit is empty for now.' }}</h2>
-  <p class="muted lead" style="margin: 0 auto 24px;">{{ 'Publiez une mission ou complétez votre profil pilote pour entrer dans la rotation.' if fr else 'Post a job or complete your pilot profile to enter the rotation.' }}</p>
+  <span class="eyebrow" style="justify-content: center;">{{ 'Bienvenue' if fr else 'Welcome' }}</span>
+  <h2 style="margin: 12px 0;">{{ "Rien à afficher pour l'instant." if fr else 'Nothing to show yet.' }}</h2>
+  <p class="muted lead" style="margin: 0 auto 24px;">{{ 'Publiez une mission ou complétez votre profil pilote : tout ce qui vous concerne apparaîtra ici.' if fr else 'Post a job or complete your pilot profile: everything about you will show up here.' }}</p>
   <div class="cta-row" style="justify-content: center;">
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
     <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}{{ 'Compléter mon profil' if fr else 'Complete my profile' }}{% else %}{{ 'Devenir pilote' if fr else 'Become a pilot' }}{% endif %}</a>
