@@ -371,6 +371,12 @@
   {% endif %}
 </section>
 
+{% if not (current_user and current_user.id == mission.client_user_id) %}
+<div class="report-row">
+  {% with report_type='mission', report_id=mission.id %}{% include "_report_form.html" %}{% endwith %}
+</div>
+{% endif %}
+
 {% set share_url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
 {% set share_text = seo.title or mission.title %}
 {% include "_share.html" %}

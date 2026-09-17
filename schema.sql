@@ -515,3 +515,28 @@ CREATE TABLE IF NOT EXISTS campaign_contributions (
 CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status);
 CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status);
 CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id);
+
+-- Blocages entre utilisateurs : la personne bloquee ne peut plus ecrire au
+-- bloqueur ni deposer de devis sur ses missions (exigence Google Play UGC).
+CREATE TABLE IF NOT EXISTS user_blocks (
+    blocker_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (blocker_user_id, blocked_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON user_blocks(blocked_user_id);
+
+-- Signalements (profil, mission, conversation) examines par l'admin.
+CREATE TABLE IF NOT EXISTS reports (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_type      TEXT NOT NULL,           -- user | mission | thread
+    target_id        INTEGER NOT NULL,        -- id du profil, de la mission, ou de la mission du fil
+    target_user_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,  -- personne visee
+    reason           TEXT NOT NULL,           -- spam | scam | harassment | inappropriate | fake | other
+    details          TEXT,
+    status           TEXT NOT NULL DEFAULT 'open',   -- open | handled | dismissed
+    handled_at       TEXT,
+    created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at);

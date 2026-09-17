@@ -1,0 +1,13 @@
+AUBEPILOT, SIGNALEMENT #{{ report_id }}
+===============================================
+
+Cible : {{ label }}
+Motif : {{ reason }}
+Signalé par : {{ reporter.username }} (#{{ reporter.id }}){% if target_user_id %} · personne visée : #{{ target_user_id }}{% endif %}
+------------------------------------------------------------
+
+{{ details or "(sans précision)" }}
+
+------------------------------------------------------------
+Examiner : {{ admin_url }}
+AubePilot · {{ year }} · pilot.aubeetoilee.com

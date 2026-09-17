@@ -52,8 +52,28 @@
       <div class="thread-links">
         {% if conv.booking_id %}<a class="ghost" href="{{ url_for('booking_detail', booking_id=conv.booking_id) }}">{{ t('messages.view_booking') }}</a>{% endif %}
         <a class="ghost" href="{{ url_for('mission_detail', mission_id=conv.mission_id) }}">{{ t('messages.view_mission') }}</a>
+        {% if conv.blocked_by_me %}
+        <form method="post" action="{{ url_for('unblock_user', user_id=conv.peer_id) }}" class="inline">
+          {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+          <button class="ghost" type="submit">{{ t('block.unblock') }}</button>
+        </form>
+        {% else %}
+        {% endif %}
       </div>
     </header>
+    <div class="thread-tools">
+      {% with report_type='thread', report_id=conv.mission_id, report_peer=conv.peer_id %}{% include "_report_form.html" %}{% endwith %}
+      {% if not conv.blocked_by_me %}
+      <details class="report-box">
+        <summary>{{ t('block.action') }}</summary>
+        <form method="post" action="{{ url_for('block_user', user_id=conv.peer_id) }}" class="report-form">
+          {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+          <p class="small" style="margin: 0;">{{ t('block.confirm') }}</p>
+          <button class="ghost" type="submit">{{ t('block.action') }}</button>
+        </form>
+      </details>
+      {% endif %}
+    </div>
     {% if not conv.funded %}
     <p class="thread-lock muted small">🔒 {{ t('messages.locked') }}</p>
     {% endif %}
@@ -69,12 +89,19 @@
         <p class="muted small" style="text-align: center; margin: 24px 0;">{{ t('messages.write_ph') }}</p>
       {% endfor %}
     </div>
+    {% if conv.blocked_by_me %}
+    <p class="thread-lock muted small">{{ t('block.you_blocked') }}</p>
+    {% elif conv.blocked_me %}
+    <p class="thread-lock muted small">{{ t('block.closed') }}</p>
+    {% else %}
     <form method="post" action="{{ url_for('mission_message', mission_id=conv.mission_id) }}" class="composer" id="composer">
       {{ csrf_input() }}
       <input type="hidden" name="peer_id" value="{{ conv.peer_id }}">
       <textarea name="body" rows="1" required maxlength="4000" placeholder="{{ t('messages.write_ph') }}" autocomplete="off"></textarea>
       <button class="cta" type="submit">{{ t('messages.send') }}</button>
     </form>
+    <p class="thread-moderation muted small">{{ t('messages.moderation') }}</p>
+    {% endif %}
     {% else %}
     <div class="thread-empty muted">{{ t('messages.pick') }}</div>
     {% endif %}

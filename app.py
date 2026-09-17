@@ -448,6 +448,8 @@ def _inject_globals():
         "cancellation_service_fee_cap": int(CANCELLATION_SERVICE_FEE_CAP),
         "late_cancellation_hours": LATE_CANCELLATION_HOURS,
         "late_cancellation_fee_pct": int(LATE_CANCELLATION_FEE_PCT),
+        # Blocage : le gabarit sait si l'utilisateur courant a bloque untel
+        "has_blocked": (lambda uid: bool(g.user) and services.has_blocked(g.user["id"], uid)),
         # CSRF
         "csrf_token": security.csrf_token,
         "csrf_input": security.csrf_input,
@@ -1720,6 +1722,8 @@ def dashboard():
                              if user.get("is_admin") else 0),
         admin_pending_insurances=(services.count_insurances_pending()
                                   if user.get("is_admin") else 0),
+        admin_open_reports=(services.count_reports_open()
+                            if user.get("is_admin") else 0),
         portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
         vis=services.pilot_visibility(user["id"]) if is_pilot else None,
         profile_views=services.profile_view_counts(user["id"]) if is_pilot else None,
@@ -1741,6 +1745,7 @@ def _settings_context():
         "password_managed_elsewhere": auth.password_managed_by_aubemail(user["username"]),
         "sessions": services.list_sessions(uid, auth.current_sid()),
         "deletion_blockers": services.account_deletion_blockers(uid),
+        "blocked_users": services.list_blocked_users(uid),
     }
 
 
@@ -2972,6 +2977,10 @@ def bid_place(mission_id):
     if g.user["role"] not in ("pilot", "both"):
         flash("Seuls les pilotes peuvent soumissionner.", "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
+    _m = db.fetchone("SELECT client_user_id FROM missions WHERE id=?", (mission_id,))
+    if _m and services.is_blocked_between(g.user["id"], _m["client_user_id"]):
+        flash(i18n.t("block.bid_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
+        return redirect(url_for("mission_detail", mission_id=mission_id))
     price = _to_float(request.form.get("price"))
     if not price or price <= 0:
         flash("Tarif invalide.", "error")
@@ -3324,6 +3333,105 @@ def booking_deliverable_push(booking_id, deliv_id, service):
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 
+# ---------------------------------------------------------------------------
+# Bloquer une personne, signaler un contenu (exigence Google Play pour le
+# contenu genere par les utilisateurs), et leur examen par l'admin.
+# ---------------------------------------------------------------------------
+
+def _back(fallback_endpoint: str = "dashboard", **kw):
+    return redirect(security.safe_next(request.form.get("next") or request.referrer,
+                                       fallback=url_for(fallback_endpoint, **kw)))
+
+
+@app.route("/bloquer/<int:user_id>", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=20, per_hour=200)
+def block_user(user_id):
+    if services.block_user(g.user["id"], user_id):
+        flash(i18n.t("block.done", getattr(g, "lang", i18n.DEFAULT)), "success")
+    return _back()
+
+
+@app.route("/debloquer/<int:user_id>", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=20, per_hour=200)
+def unblock_user(user_id):
+    services.unblock_user(g.user["id"], user_id)
+    flash(i18n.t("block.undone", getattr(g, "lang", i18n.DEFAULT)), "success")
+    return _back("settings")
+
+
+@app.route("/signaler", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=6, per_hour=40)
+def report_content():
+    """Signalement d'un profil, d'une mission ou d'une conversation : trace
+    en base + courriel a l'equipe, qui tranche depuis /admin/signalements."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    target_type = (request.form.get("target_type") or "").strip()
+    target_id = _to_int(request.form.get("target_id"))
+    reason = (request.form.get("reason") or "").strip()
+    details = (request.form.get("details") or "").strip()[:2000]
+    if target_type not in services.REPORT_TARGETS or not target_id or reason not in services.REPORT_REASONS:
+        abort(400)
+    # Personne visee : le profil lui-meme, l'auteur de la mission, ou
+    # l'interlocuteur du fil (passe par le formulaire, verifie ci-dessous).
+    target_user_id = None
+    label = ""
+    if target_type == "user":
+        row = db.fetchone("SELECT id, username FROM users WHERE id=? AND deleted_at IS NULL", (target_id,))
+        if not row:
+            abort(404)
+        target_user_id, label = row["id"], f"profil @{row['username']}"
+    elif target_type == "mission":
+        m = db.fetchone("SELECT id, title, client_user_id FROM missions WHERE id=?", (target_id,))
+        if not m:
+            abort(404)
+        target_user_id, label = m["client_user_id"], f"mission #{m['id']} « {m['title']} »"
+    else:  # thread : target_id = mission, peer_id = interlocuteur
+        peer_id = _to_int(request.form.get("peer_id"))
+        if not peer_id or not services.can_message(target_id, g.user["id"], peer_id):
+            abort(403)
+        target_user_id, label = peer_id, f"conversation mission #{target_id}"
+    if target_user_id == g.user["id"]:
+        abort(400)
+    rid = services.create_report(reporter_id=g.user["id"], target_type=target_type, target_id=target_id,
+                                 target_user_id=target_user_id, reason=reason, details=details)
+    if rid is None:
+        flash(i18n.t("report.already", lang), "error")
+        return _back()
+    try:
+        mailer.send(
+            to=config.CONTACT_EMAIL,
+            subject=f"[Signalement #{rid}] {reason} — {label}",
+            template="report_new",
+            context={"report_id": rid, "reason": reason, "label": label, "details": details,
+                     "reporter": g.user, "target_user_id": target_user_id,
+                     "admin_url": url_for("admin_reports", _external=True)},
+        )
+    except Exception as exc:  # le courriel ne doit jamais bloquer le signalement
+        log.warning("courriel de signalement #%s non envoye : %s", rid, exc)
+    flash(i18n.t("report.sent", lang), "success")
+    return _back()
+
+
+@app.route("/admin/signalements")
+@auth.admin_required
+def admin_reports():
+    status = request.args.get("statut") or "open"
+    if status not in ("open", "handled", "dismissed"):
+        status = "open"
+    return render_template("admin_reports.html", reports=services.list_reports(status),
+                           status=status, open_count=services.count_reports_open())
+
+
+@app.route("/admin/signalements/<int:report_id>/statut", methods=["POST"])
+@auth.admin_required
+def admin_report_status(report_id):
+    services.set_report_status(report_id, request.form.get("status") or "handled")
+    return redirect(url_for("admin_reports"))
+
+
 @app.route("/messages")
 @auth.login_required
 def messages_inbox():
@@ -3356,6 +3464,8 @@ def messages_thread(mission_id, peer_id):
         "booking_id": booking["id"] if booking else None,
         "booking_status": booking["status"] if booking else None,
         "funded": services.thread_is_funded(mission_id, user["id"], peer_id),
+        "blocked_by_me": services.has_blocked(user["id"], peer_id),
+        "blocked_me": services.has_blocked(peer_id, user["id"]),
     }
     # Le fil d'abord (il marque les messages lus), la liste ensuite : la
     # pastille de la conversation ouverte disparait tout de suite.
@@ -3392,6 +3502,9 @@ def mission_message(mission_id):
         # depose un devis dessus peuvent echanger (anti-spam / anti-tiers).
         if not services.can_message(mission_id, g.user["id"], peer):
             abort(403)
+        if services.is_blocked_between(g.user["id"], peer):
+            flash(i18n.t("block.closed", getattr(g, "lang", i18n.DEFAULT)), "error")
+            return redirect(request.referrer or url_for("messages_inbox"))
         # Filtre anti-bypass : avant que la mission ne soit fundee, on bloque
         # les coordonnees externes (email, tel, whatsapp, etc).
         booking = db.fetchone(

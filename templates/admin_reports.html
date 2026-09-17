@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Signalements, AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Modération</span>
+  <h1>Signalements.</h1>
+  <p class="lead muted">{{ open_count }} signalement(s) à traiter.</p>
+  <p class="cta-row" style="gap: 8px; flex-wrap: wrap;">
+    <a class="ghost {{ 'on' if status == 'open' else '' }}" href="{{ url_for('admin_reports', statut='open') }}">À traiter</a>
+    <a class="ghost {{ 'on' if status == 'handled' else '' }}" href="{{ url_for('admin_reports', statut='handled') }}">Traités</a>
+    <a class="ghost {{ 'on' if status == 'dismissed' else '' }}" href="{{ url_for('admin_reports', statut='dismissed') }}">Classés sans suite</a>
+  </p>
+</div>
+
+{% set reasons = {'spam': 'Spam ou publicité', 'scam': 'Arnaque ou fraude', 'harassment': 'Harcèlement ou insultes',
+                  'inappropriate': 'Contenu inapproprié', 'fake': 'Faux profil ou usurpation', 'other': 'Autre'} %}
+{% for r in reports %}
+<div class="card">
+  <div class="row-between" style="align-items: start; gap: 12px; flex-wrap: wrap;">
+    <div>
+      <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">{{ reasons.get(r.reason, r.reason) }}</h2>
+      <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
+        #{{ r.id }} · {{ r.created_at[:16] }} ·
+        {% if r.target_type == 'user' %}profil{% elif r.target_type == 'mission' %}mission #{{ r.target_id }}{% else %}conversation, mission #{{ r.target_id }}{% endif %}
+      </div>
+    </div>
+    <span class="tag">{{ r.status }}</span>
+  </div>
+
+  <p style="margin: 12px 0 4px;">
+    Signalé par <a href="{{ url_for('pilot_detail', user_id=r.reporter_user_id) }}">{{ r.reporter_name or r.reporter_username }}</a> (@{{ r.reporter_username }})
+    {% if r.target_user_id %}
+    · visé : <a href="{{ url_for('pilot_detail', user_id=r.target_user_id) }}">{{ r.target_name or r.target_username }}</a> (@{{ r.target_username }})
+    {% endif %}
+  </p>
+  {% if r.details %}
+  <p class="serif-italic" style="background: var(--paper-3); padding: 14px 18px; border-left: 3px solid var(--signal); margin: 12px 0;">« {{ r.details }} »</p>
+  {% endif %}
+
+  <div class="row-between" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      {% if r.target_type == 'mission' or r.target_type == 'thread' %}
+      <a href="{{ url_for('mission_detail', mission_id=r.target_id) }}" class="ghost">Ouvrir la mission →</a>
+      {% endif %}
+      {% if r.target_type == 'thread' %}
+      <a href="{{ url_for('messages_thread', mission_id=r.target_id, peer_id=r.target_user_id) }}" class="ghost" title="Visible seulement si vous êtes partie au fil">Fil (si partie) →</a>
+      {% endif %}
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      {% if r.status != 'handled' %}
+      <form method="post" action="{{ url_for('admin_report_status', report_id=r.id) }}">
+        {{ csrf_input() }}<input type="hidden" name="status" value="handled">
+        <button class="ghost" type="submit">Marquer traité</button>
+      </form>
+      {% endif %}
+      {% if r.status != 'dismissed' %}
+      <form method="post" action="{{ url_for('admin_report_status', report_id=r.id) }}">
+        {{ csrf_input() }}<input type="hidden" name="status" value="dismissed">
+        <button class="ghost" type="submit">Sans suite</button>
+      </form>
+      {% endif %}
+      {% if r.status != 'open' %}
+      <form method="post" action="{{ url_for('admin_report_status', report_id=r.id) }}">
+        {{ csrf_input() }}<input type="hidden" name="status" value="open">
+        <button class="ghost" type="submit">Rouvrir</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% else %}
+<p class="muted">Rien dans cette liste.</p>
+{% endfor %}
+
+{% endblock %}

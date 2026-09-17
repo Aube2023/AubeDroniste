@@ -3448,6 +3448,109 @@ ALL_BOOKING_STATUS = BOOKING_STATUS
 _BANNED_RX = [re.compile(p, re.IGNORECASE) for p in MESSAGE_BANNED_PATTERNS]
 
 
+# ---------------------------------------------------------------------------
+# Blocages et signalements (exigence Google Play pour le contenu utilisateur :
+# pouvoir bloquer une personne et signaler un contenu depuis l'appli).
+# ---------------------------------------------------------------------------
+
+REPORT_REASONS = ("spam", "scam", "harassment", "inappropriate", "fake", "other")
+REPORT_TARGETS = ("user", "mission", "thread")
+
+
+def block_user(blocker_id: int, blocked_id: int) -> bool:
+    """Bloque `blocked_id` pour `blocker_id`. False si identique ou inconnu."""
+    if not blocked_id or blocker_id == blocked_id:
+        return False
+    if not db.fetchone("SELECT 1 FROM users WHERE id=? AND deleted_at IS NULL", (blocked_id,)):
+        return False
+    db.execute(
+        "INSERT OR IGNORE INTO user_blocks (blocker_user_id, blocked_user_id) VALUES (?, ?)",
+        (blocker_id, blocked_id),
+    )
+    return True
+
+
+def unblock_user(blocker_id: int, blocked_id: int) -> None:
+    db.execute("DELETE FROM user_blocks WHERE blocker_user_id=? AND blocked_user_id=?",
+               (blocker_id, blocked_id))
+
+
+def has_blocked(blocker_id: int, blocked_id: int) -> bool:
+    """`blocker_id` a-t-il bloque `blocked_id` (dans ce sens seulement) ?"""
+    if not blocker_id or not blocked_id:
+        return False
+    return bool(db.fetchone(
+        "SELECT 1 FROM user_blocks WHERE blocker_user_id=? AND blocked_user_id=?",
+        (blocker_id, blocked_id),
+    ))
+
+
+def is_blocked_between(a: int, b: int) -> bool:
+    """Vrai si l'un des deux a bloque l'autre : plus de messages ni de devis."""
+    return bool(db.fetchone(
+        "SELECT 1 FROM user_blocks WHERE (blocker_user_id=? AND blocked_user_id=?) "
+        "OR (blocker_user_id=? AND blocked_user_id=?)",
+        (a, b, b, a),
+    ))
+
+
+def list_blocked_users(blocker_id: int) -> list:
+    rows = db.fetchall(
+        "SELECT u.id, u.full_name, u.username, u.role, b.created_at "
+        "FROM user_blocks b JOIN users u ON u.id = b.blocked_user_id "
+        "WHERE b.blocker_user_id=? ORDER BY b.created_at DESC",
+        (blocker_id,),
+    )
+    return [dict(r) for r in rows]
+
+
+def create_report(*, reporter_id: int, target_type: str, target_id: int,
+                  target_user_id: Optional[int], reason: str, details: str = "") -> Optional[int]:
+    """Enregistre un signalement. None si le meme auteur a deja signale la
+    meme cible depuis 24 h (on evite les doublons, pas les recidives)."""
+    if target_type not in REPORT_TARGETS or reason not in REPORT_REASONS:
+        return None
+    dup = db.fetchone(
+        "SELECT id FROM reports WHERE reporter_user_id=? AND target_type=? AND target_id=? "
+        "AND created_at > datetime('now', '-1 day')",
+        (reporter_id, target_type, target_id),
+    )
+    if dup:
+        return None
+    cur = db.execute(
+        "INSERT INTO reports (reporter_user_id, target_type, target_id, target_user_id, reason, details) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (reporter_id, target_type, target_id, target_user_id, reason, (details or "").strip()[:2000] or None),
+    )
+    return cur.lastrowid
+
+
+def list_reports(status: str = "open", limit: int = 200) -> list:
+    rows = db.fetchall(
+        "SELECT r.*, rep.username AS reporter_username, rep.full_name AS reporter_name, "
+        "tgt.username AS target_username, tgt.full_name AS target_name "
+        "FROM reports r JOIN users rep ON rep.id = r.reporter_user_id "
+        "LEFT JOIN users tgt ON tgt.id = r.target_user_id "
+        "WHERE r.status=? ORDER BY r.created_at DESC LIMIT ?",
+        (status, limit),
+    )
+    return [dict(r) for r in rows]
+
+
+def count_reports_open() -> int:
+    row = db.fetchone("SELECT COUNT(*) AS n FROM reports WHERE status='open'")
+    return int(row["n"]) if row else 0
+
+
+def set_report_status(report_id: int, status: str) -> None:
+    if status not in ("open", "handled", "dismissed"):
+        return
+    db.execute(
+        "UPDATE reports SET status=?, handled_at=CASE WHEN ?='open' THEN NULL ELSE datetime('now') END WHERE id=?",
+        (status, status, report_id),
+    )
+
+
 def message_passes_filter(body: str, booking_funded: bool) -> tuple:
     """Si la mission n'est pas encore fundee, on bloque les coordonnees externes.
 

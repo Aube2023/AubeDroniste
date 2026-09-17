@@ -150,6 +150,26 @@
 </section>
 
 {# ================= Données ================= #}
+<section class="card" style="margin-top: 24px;">
+  <span class="eyebrow">{{ t('block.list_title') }}</span>
+  <p class="muted small" style="margin: 6px 0 12px;">{{ t('block.list_hint') }}</p>
+  {% if blocked_users %}
+  <ul class="blocked-list">
+    {% for b in blocked_users %}
+    <li>
+      <span>{{ b.full_name or b.username }} <span class="muted small">· @{{ b.username }}</span></span>
+      <form method="post" action="{{ url_for('unblock_user', user_id=b.id) }}" class="inline">
+        {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+        <button class="ghost small" type="submit">{{ t('block.unblock') }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ t('block.list_empty') }}</p>
+  {% endif %}
+</section>
+
 <section class="card" style="margin-top: 24px; border-left: 3px solid var(--signal);">
   <span class="eyebrow">{{ 'Vos données · Loi 25 / RGPD' if fr else 'Your data · Law 25 / GDPR' }}</span>
   <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ 'Exporter ou supprimer' if fr else 'Export or delete' }}</h2>

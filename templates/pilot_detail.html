@@ -474,6 +474,29 @@
   {% endfor %}
 </section>
 
+{% if not (current_user and current_user.id == pilot.id) %}
+<div class="report-row">
+  {% with report_type='user', report_id=pilot.id %}{% include "_report_form.html" %}{% endwith %}
+  {% if current_user %}
+    {% if has_blocked(pilot.id) %}
+    <form method="post" action="{{ url_for('unblock_user', user_id=pilot.id) }}" class="inline">
+      {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+      <button class="ghost small" type="submit">{{ t('block.unblock') }}</button>
+    </form>
+    {% else %}
+    <details class="report-box">
+      <summary>{{ t('block.action') }}</summary>
+      <form method="post" action="{{ url_for('block_user', user_id=pilot.id) }}" class="report-form">
+        {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+        <p class="small" style="margin: 0;">{{ t('block.confirm') }}</p>
+        <button class="ghost" type="submit">{{ t('block.action') }}</button>
+      </form>
+    </details>
+    {% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
 {% set share_url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
 {% set share_text = seo.title or pilot.full_name %}
 {% set share_hint = t('share.own_hint') if (current_user and current_user.id == pilot.id) else t('share.pilot_hint') %}

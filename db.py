@@ -199,6 +199,8 @@ _POST_SQL = [
 # par mission, messagerie, classement de l'accueil.
 _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_bid_mission_price ON bids(mission_id, price)",
+    "CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON user_blocks(blocked_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_booking_bid ON bookings(bid_id)",
     "CREATE INDEX IF NOT EXISTS idx_review_target_rating ON reviews(target_user_id, rating)",
     "CREATE INDEX IF NOT EXISTS idx_msg_sender ON messages(sender_user_id)",
@@ -344,6 +346,25 @@ _ADD_TABLES = [
         value      TEXT NOT NULL,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )""",
+    # Blocages et signalements entre utilisateurs (Google Play, contenu UGC).
+    """CREATE TABLE IF NOT EXISTS user_blocks (
+    blocker_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (blocker_user_id, blocked_user_id)
+)""",
+    """CREATE TABLE IF NOT EXISTS reports (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_type      TEXT NOT NULL,
+    target_id        INTEGER NOT NULL,
+    target_user_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reason           TEXT NOT NULL,
+    details          TEXT,
+    status           TEXT NOT NULL DEFAULT 'open',
+    handled_at       TEXT,
+    created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+)""",
 ]
 
 

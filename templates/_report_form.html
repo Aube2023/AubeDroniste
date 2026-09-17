@@ -1,0 +1,27 @@
+{#
+  Signaler un contenu. À inclure avec :
+  {% with report_type='user'|'mission'|'thread', report_id=<id>, report_peer=<id du fil, facultatif> %}
+#}
+<details class="report-box">
+  <summary>{{ t('report.action') }}</summary>
+  {% if current_user %}
+  <form method="post" action="{{ url_for('report_content') }}" class="report-form">
+    {{ csrf_input() }}
+    <input type="hidden" name="target_type" value="{{ report_type }}">
+    <input type="hidden" name="target_id" value="{{ report_id }}">
+    {% if report_peer %}<input type="hidden" name="peer_id" value="{{ report_peer }}">{% endif %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <label class="small">{{ t('report.reason') }}
+      <select name="reason" required>
+        {% for r in ('spam', 'scam', 'harassment', 'inappropriate', 'fake', 'other') %}
+        <option value="{{ r }}">{{ t('report.r_' ~ r) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <textarea name="details" rows="2" maxlength="2000" placeholder="{{ t('report.details_ph') }}"></textarea>
+    <button class="ghost" type="submit">{{ t('report.submit') }}</button>
+  </form>
+  {% else %}
+  <p class="muted small"><a href="{{ url_for('login', next=request.path) }}">{{ t('report.login') }}</a></p>
+  {% endif %}
+</details>
