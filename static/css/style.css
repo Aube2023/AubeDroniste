@@ -33,6 +33,9 @@
   /* Spéciaux */
   --cta-fg:       #ffffff;          /* texte des boutons accent */
   --topbar-bg:    rgba(248,249,253,0.82);
+  --brand-pin:    #082744;          /* marque : épingle navy, ruban, point ciel */
+  --brand-ribbon: #0b4e7b;
+  --brand-dot:    #2f9bdb;
   --tag-bg:       transparent;
 
   /* Police — display géométrique (feel "mobilité") + corps neutre */
@@ -66,6 +69,9 @@
   --cta-fg:       #0a0a0c;
   --topbar-bg:    rgba(10,10,12,0.80);
   --tag-bg:       rgba(255,255,255,0.02);
+  --brand-pin:    #ffffff;
+  --brand-ribbon: #9ed3f5;
+  --brand-dot:    #2f9bdb;
 }
 
 /* =========================================================================
@@ -227,6 +233,7 @@ p { margin: 0 0 1em; }
   width: 36px; height: 36px;
   display: grid; place-items: center;
 }
+.brand .glyph svg { width: 36px; height: 36px; display: block; }
 .brand b { color: var(--amber); font-weight: 700; }
 .brand small {
   display: block; font: 500 10px/1 var(--mono);
@@ -2050,7 +2057,7 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
   .zone-pill .zone-label { display: none; }
   .theme-toggle .label-dark, .theme-toggle .label-light { display: none; }
   .brand { font-size: 1.05rem; gap: 9px; }
-  .brand .glyph, .brand .glyph img { width: 30px; height: 30px; }
+  .brand .glyph, .brand .glyph img, .brand .glyph svg { width: 30px; height: 30px; }
 
   .mobile-tabs {
     display: flex;

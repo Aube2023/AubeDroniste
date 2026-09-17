@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Aube Pilot",
-  "short_name": "Aube Pilot",
+  "name": "AubePilot",
+  "short_name": "AubePilot",
   "description": "Louez un pilote de drone certifié : prises de vue aériennes, inspections, événements. Devis gratuits, paiement sécurisé.",
   "lang": "fr",
   "dir": "ltr",
@@ -9,8 +9,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0a0a0c",
-  "theme_color": "#0a0a0c",
+  "background_color": "#082744",
+  "theme_color": "#082744",
   "categories": ["business", "photo", "productivity"],
   "icons": [
     { "src": "/static/brand/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

@@ -25,7 +25,7 @@
   <meta name="theme-color" content="#0a0a0c">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Aube Pilot">
+  <meta name="apple-mobile-web-app-title" content="AubePilot">
 
   <meta property="og:site_name" content="AubePilot">
   <meta property="og:title" content="{{ _title }}">
@@ -77,11 +77,26 @@
 </head>
 <body>
 <a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <!-- Marque AubePilot : épingle, ruban, point (source : static/brand/logo-mark.svg) -->
+  <symbol id="ap-mark" viewBox="0 0 256 256">
+    <defs>
+      <path id="ap-pin" d="M24.7 147.9A81 81 0 1 1 155.3 147.9L95.2 229.8A6.5 6.5 0 0 1 84.8 229.8ZM56 100a34 34 0 1 0 68 0a34 34 0 1 0-68 0Z"/>
+      <path id="ap-k" d="M14.3 204.8C17.6 202.4 27.6 195.1 33.8 190.7C39.9 186.3 47.3 181 51.4 178.3C55.5 175.6 54.4 177.1 58.5 174.3C62.6 171.6 68.8 167.9 76.1 162C83.5 156.1 93.8 146.5 102.6 139C111.4 131.6 121.7 122.8 129.1 117.4C136.5 112 140.9 109.9 146.8 106.8C152.6 103.7 158.5 101.1 164.4 98.9C170.3 96.7 175.6 94.7 182.1 93.6C188.5 92.4 199.7 92.1 203.3 91.8"/>
+      <clipPath id="ap-below"><path d="M14.3 204.8C17.6 202.4 27.6 195.1 33.8 190.7C39.9 186.3 47.3 181 51.4 178.3C55.5 175.6 54.4 177.1 58.5 174.3C62.6 171.6 68.8 167.9 76.1 162C83.5 156.1 93.8 146.5 102.6 139C111.4 131.6 121.7 122.8 129.1 117.4C136.5 112 140.9 109.9 146.8 106.8C152.6 103.7 158.5 101.1 164.4 98.9C170.3 96.7 175.6 94.7 182.1 93.6C188.5 92.4 199.7 92.1 203.3 91.8L203.3 300L14.3 300Z"/></clipPath>
+      <mask id="ap-gap"><rect width="256" height="256" fill="#fff"/><use href="#ap-k" fill="none" stroke="#000" stroke-width="40" stroke-linecap="round"/></mask>
+    </defs>
+    <use href="#ap-pin" fill="var(--brand-pin)" mask="url(#ap-gap)"/>
+    <use href="#ap-pin" fill="var(--brand-pin)" clip-path="url(#ap-below)"/>
+    <path d="M76.1 162C80.6 158.2 93.8 146.5 102.6 139C111.4 131.6 121.7 122.8 129.1 117.4C136.5 112 140.9 109.9 146.8 106.8C152.6 103.7 158.5 101.1 164.4 98.9C170.3 96.7 175.6 94.7 182.1 93.6C188.5 92.4 199.7 92.1 203.3 91.8C199.7 93.9 188.5 100.3 182.1 104.2C175.6 108 170.3 111.2 164.4 114.8C158.5 118.3 152.6 121.7 146.8 125.4C140.9 129 135 132.9 129.1 136.4C123.2 139.9 116.6 144 111.4 146.5C106.3 149.1 103.4 149.6 98.2 151.8C93.1 154 83.5 158.5 80.6 159.8Z" fill="var(--brand-ribbon)"/>
+    <circle cx="231" cy="90" r="17" fill="var(--brand-dot)"/>
+  </symbol>
+</svg>
 <header class="topbar">
   <a href="{{ url_for('index') }}" class="brand">
-    <span class="glyph"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="Aube Pilot" width="36" height="36"></span>
+    <span class="glyph"><svg width="36" height="36" aria-hidden="true"><use href="#ap-mark"/></svg></span>
     <span>
-      <b>Aube</b> Pilot
+      <b>Aube</b>Pilot
       <small>{{ t('nav.brand_sub') }}</small>
     </span>
   </a>
@@ -171,8 +186,8 @@
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="{{ url_for('index') }}" class="brand">
-        <span class="glyph"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="36" height="36"></span>
-        <span><b>Aube</b> Pilot</span>
+        <span class="glyph"><svg width="36" height="36" aria-hidden="true"><use href="#ap-mark"/></svg></span>
+        <span><b>Aube</b>Pilot</span>
       </a>
       <p>{{ t('footer.pitch') }}</p>
       <a href="mailto:support@aubemail.com" class="footer-mail">support@aubemail.com</a>
@@ -207,7 +222,7 @@
   </nav>
   <div class="footer-line">
     <div>
-      <strong>Aube Pilot</strong> · {{ t('footer.tagline') }}
+      <strong>AubePilot</strong> · {{ t('footer.tagline') }}
     </div>
     <div class="dim">{{ now().year }}, {{ t('footer.cities') }}</div>
     <div class="dim">🚁 {{ '{:,}'.format(site_visits).replace(',', ' ') }} {{ t('footer.visits') }}</div>
