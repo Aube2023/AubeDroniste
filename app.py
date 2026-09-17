@@ -768,6 +768,15 @@ def service_worker():
     return resp
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """Favicon a la racine : demande par defaut des navigateurs et des outils
+    qui ignorent les balises <link> (lecteurs RSS, messageries, moteurs)."""
+    resp = send_from_directory(os.path.join(app.static_folder or "static", "brand"), "favicon.ico")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
 @app.route("/offline")
 def offline():
     """Page de secours affichee par le service worker sans reseau."""
