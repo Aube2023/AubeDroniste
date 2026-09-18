@@ -1,90 +1,90 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Mon espace' if fr else 'My space' }} · AubePilot{% endblock %}
+{% block title %}{{ t('tpl.mon_espace') }} · AubePilot{% endblock %}
 {% block content %}
 
 <section class="cockpit-banner">
   <div>
-    <span class="eyebrow">{{ 'Mon espace' if fr else 'My space' }}</span>
-    <h1>{{ 'Bonjour' if fr else 'Hello' }}, {{ current_user.full_name.split(' ')[0] }}.</h1>
+    <span class="eyebrow">{{ t('tpl.mon_espace') }}</span>
+    <h1>{{ t('tpl.bonjour') }}, {{ current_user.full_name.split(' ')[0] }}.</h1>
     <div class="meta">
       {{ current_user.email }}
-      · <strong>{% if current_user.role == 'both' %}{{ 'client et pilote' if fr else 'client and pilot' }}{% elif current_user.role == 'pilot' %}{{ 'pilote' if fr else 'pilot' }}{% else %}{{ 'client' if fr else 'client' }}{% endif %}</strong>
+      · <strong>{% if current_user.role == 'both' %}{{ t('tpl.client_et_pilote') }}{% elif current_user.role == 'pilot' %}{{ t('tpl.pilote') }}{% else %}{{ t('tpl.client') }}{% endif %}</strong>
       {% if current_user.country %} · {{ current_user.country }}{% if current_user.city %}, {{ current_user.city }}{% endif %}{% endif %}
-      {% if unread %} · <a href="{{ url_for('messages_inbox') }}"><strong>{{ unread }}</strong> {% if fr %}message{{ 's' if unread > 1 else '' }} non lu{{ 's' if unread > 1 else '' }}{% else %}unread message{{ 's' if unread > 1 else '' }}{% endif %} →</a>{% endif %}
+      {% if unread %} · <a href="{{ url_for('messages_inbox') }}"><strong>{{ unread }}</strong> {{ t('tpl.unread_many') if unread > 1 else t('tpl.unread_one') }} →</a>{% endif %}
     </div>
   </div>
   <div class="cockpit-actions">
-    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
-    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>
-    <a class="ghost" href="{{ url_for('pilot_campaign') }}">{{ 'Ma collecte' if fr else 'My fundraiser' }}</a>{% endif %}
-    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ 'Devenir pilote' if fr else 'Become a pilot' }}</a>{% endif %}
-    <a class="ghost" href="{{ url_for('settings') }}">{{ 'Paramètres' if fr else 'Settings' }}</a>
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ t('tpl.publier_une_mission') }}</a>{% endif %}
+    {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ t('tpl.mon_profil_pilote') }}</a>
+    <a class="ghost" href="{{ url_for('pilot_campaign') }}">{{ t('tpl.ma_collecte') }}</a>{% endif %}
+    {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ t('tpl.devenir_pilote') }}</a>{% endif %}
+    <a class="ghost" href="{{ url_for('settings') }}">{{ t('tpl.parametres') }}</a>
   </div>
 </section>
 
 <div class="cockpit-grid">
   {% if is_pilot and my_pilot_profile %}
   <div class="cockpit-tile">
-    <span class="label">{{ 'Profil pilote' if fr else 'Pilot profile' }}</span>
-    <h2>{{ my_pilot_profile.headline or ("Compléter mon accroche →" if fr else "Complete my tagline →") }}</h2>
+    <span class="label">{{ t('tpl.profil_pilote') }}</span>
+    <h2>{{ my_pilot_profile.headline or t('tpl.complete_tagline') }}</h2>
     {# Le gros chiffre d'une tuile doit appeler une action. Une note « — »
        faute d'avis n'en appelait aucune ; la completude de la fiche, si. #}
     <span class="num-big">{{ vis.score }}<span class="unit">%</span></span>
-    <div class="muted small mono tile-qualifier">{{ 'de fiche complète' if fr else 'profile complete' }}</div>
+    <div class="muted small mono tile-qualifier">{{ t('tpl.de_fiche_complete') }}</div>
     <div class="mini-profile" style="margin-top: 12px;">
-      {% if profile_views %}<div class="row"><span>{{ 'Vues de fiche · 30 j' if fr else 'Page views · 30 d' }}</span><strong>{{ profile_views.d30 }}{% if profile_views.d7 %} <span class="muted">({{ profile_views.d7 }} / 7 j)</span>{% endif %}</strong></div>{% endif %}
-      <div class="row"><span>{{ 'Note' if fr else 'Rating' }}</span><strong>{% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★ · {{ my_pilot_profile.rating.count }}{% else %}{{ 'aucun avis' if fr else 'no reviews' }}{% endif %}</strong></div>
-      <div class="row"><span>{{ 'Disponibilité' if fr else 'Availability' }}</span><strong>{% if my_pilot_profile.is_available %}{{ 'Disponible' if fr else 'Available' }}{% else %}{{ 'Indisponible' if fr else 'Unavailable' }}{% endif %}</strong></div>
-      <div class="row"><span>{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong></div>
-      <div class="row"><span>{{ 'Rayon' if fr else 'Radius' }}</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
-      <div class="row"><span>{{ 'Brevets' if fr else 'Licences' }}</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
-      <div class="row"><span>{{ 'Aéronefs' if fr else 'Aircraft' }}</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
+      {% if profile_views %}<div class="row"><span>{{ t('tpl.vues_de_fiche_30_j') }}</span><strong>{{ profile_views.d30 }}{% if profile_views.d7 %} <span class="muted">({{ profile_views.d7 }} / 7 j)</span>{% endif %}</strong></div>{% endif %}
+      <div class="row"><span>{{ t('tpl.note') }}</span><strong>{% if my_pilot_profile.rating.count %}{{ '%.1f' % my_pilot_profile.rating.avg }} ★ · {{ my_pilot_profile.rating.count }}{% else %}{{ t('tpl.aucun_avis') }}{% endif %}</strong></div>
+      <div class="row"><span>{{ t('tpl.disponibilite') }}</span><strong>{% if my_pilot_profile.is_available %}{{ t('tpl.disponible') }}{% else %}{{ t('tpl.indisponible') }}{% endif %}</strong></div>
+      <div class="row"><span>{{ t('tpl.tarif_horaire') }}</span><strong>{% if my_pilot_profile.hourly_rate %}{{ my_pilot_profile.hourly_rate|int }} {{ my_pilot_profile.p_currency }}/h{% else %}{{ t('tpl.sur_devis') }}{% endif %}</strong></div>
+      <div class="row"><span>{{ t('tpl.rayon') }}</span><strong>{{ my_pilot_profile.travel_radius_km }} km</strong></div>
+      <div class="row"><span>{{ t('tpl.brevets') }}</span><strong>{{ my_pilot_profile.certifications|length }}</strong></div>
+      <div class="row"><span>{{ t('tpl.aeronefs') }}</span><strong>{{ my_pilot_profile.drones|length }}</strong></div>
     </div>
     <div class="footnote">
-      <a href="{{ url_for('pilot_edit') }}">{{ 'Compléter →' if fr else 'Complete →' }}</a>
+      <a href="{{ url_for('pilot_edit') }}">{{ t('tpl.completer') }}</a>
       &nbsp;·&nbsp;
-      <a href="{{ url_for('pilot_portfolio') }}">{{ 'Mes réalisations' if fr else 'My work' }} ({{ portfolio_count }}) →</a>
+      <a href="{{ url_for('pilot_portfolio') }}">{{ t('tpl.mes_realisations') }} ({{ portfolio_count }}) →</a>
       &nbsp;·&nbsp;
-      <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">{{ 'Gestion de flotte AubeCrew ↗' if fr else 'AubeCrew fleet management ↗' }}</a>
+      <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">{{ t('tpl.gestion_de_flotte_aubecrew') }}</a>
     </div>
   </div>
   {% endif %}
 
   {% if is_client %}
   <div class="cockpit-tile">
-    <span class="label">{{ 'Mes missions publiées' if fr else 'My posted jobs' }}</span>
+    <span class="label">{{ t('tpl.mes_missions_publiees') }}</span>
     {% set ouvertes = my_missions|selectattr('status','equalto','open')|list|length %}
     {% set assigned = my_missions|selectattr('status','equalto','assigned')|list|length %}
     {% set done = my_missions|selectattr('status','equalto','done')|list|length %}
     <span class="num-big">{{ ouvertes }}</span>
-    <div class="muted small mono tile-qualifier">{{ 'en attente de pilote' if fr else 'awaiting a pilot' }}</div>
+    <div class="muted small mono tile-qualifier">{{ t('tpl.en_attente_de_pilote') }}</div>
     <div class="footnote">
-      {% if fr %}{{ my_missions|length }} au total · {{ assigned }} attribuée{{ 's' if assigned > 1 else '' }} · {{ done }} livrée{{ 's' if done > 1 else '' }}{% else %}{{ my_missions|length }} in total · {{ assigned }} assigned · {{ done }} delivered{% endif %}
+      {{ t('tpl.missions_summary', n=my_missions|length, a=assigned, d=done) }}
     </div>
   </div>
   {% endif %}
 
   {% if is_pilot %}
   <div class="cockpit-tile">
-    <span class="label">{{ 'Mes offres' if fr else 'My bids' }}</span>
+    <span class="label">{{ t('tpl.mes_offres') }}</span>
     {% set acc = my_bids|selectattr('my_bid_status','equalto','accepted')|list|length %}
     <span class="num-big">{{ my_bids|selectattr('my_bid_status','equalto','pending')|list|length }}</span>
-    <div class="muted small mono tile-qualifier">{{ 'en attente de réponse' if fr else 'awaiting a reply' }}</div>
+    <div class="muted small mono tile-qualifier">{{ t('tpl.en_attente_de_reponse') }}</div>
     <div class="footnote">
-      {% if fr %}{{ my_bids|length }} envoyée{{ 's' if my_bids|length > 1 else '' }} · {{ acc }} acceptée{{ 's' if acc > 1 else '' }}{% else %}{{ my_bids|length }} sent · {{ acc }} accepted{% endif %}
+      {{ t('tpl.bids_summary', n=my_bids|length, a=acc) }}
     </div>
   </div>
   {% endif %}
 
   <div class="cockpit-tile">
-    <span class="label">{{ 'Mes réservations' if fr else 'My bookings' }}</span>
+    <span class="label">{{ t('tpl.mes_reservations') }}</span>
     {% set actives = my_bookings|selectattr('status','equalto','scheduled')|list|length + my_bookings|selectattr('status','equalto','in_progress')|list|length %}
     {% set finies = my_bookings|selectattr('status','equalto','completed')|list|length %}
     <span class="num-big">{{ actives }}</span>
-    <div class="muted small mono tile-qualifier">{{ 'en cours' if fr else 'in progress' }}</div>
+    <div class="muted small mono tile-qualifier">{{ t('tpl.en_cours') }}</div>
     <div class="footnote">
-      {% if fr %}{{ my_bookings|length }} au total · {{ finies }} terminée{{ 's' if finies > 1 else '' }}{% else %}{{ my_bookings|length }} in total · {{ finies }} completed{% endif %}
+      {{ t('tpl.bookings_summary', n=my_bookings|length, d=finies) }}
     </div>
   </div>
 </div>
@@ -92,8 +92,8 @@
 {% if is_client and my_missions %}
 <section class="section" style="margin: 48px 0 32px;">
   <div class="row-between" style="align-items: end;">
-    <div><span class="eyebrow">{{ 'Mes missions' if fr else 'My jobs' }}</span><h2>{{ 'Tableau personnel' if fr else 'Personal board' }}</h2></div>
-    <a href="{{ url_for('mission_create') }}" class="ghost">+ {{ 'Publier une nouvelle mission' if fr else 'Post a new job' }}</a>
+    <div><span class="eyebrow">{{ t('tpl.mes_missions') }}</span><h2>{{ t('tpl.tableau_personnel') }}</h2></div>
+    <a href="{{ url_for('mission_create') }}" class="ghost">+ {{ t('tpl.publier_une_nouvelle_mission') }}</a>
   </div>
   <div class="grid-cards">
     {% for m in my_missions %}
@@ -105,7 +105,7 @@
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
       <div class="footer">
-        <span><strong>{{ m.bid_count }}</strong> {{ 'offre' if fr else 'bid' }}{{ 's' if m.bid_count > 1 else '' }}</span>
+        <span>{{ t('tpl.n_offres', n=m.bid_count) }}</span>
         <span>{{ m.created_at[:10] }}</span>
       </div>
     </a>
@@ -116,19 +116,19 @@
 
 {% if my_requests %}
 <section class="section" style="margin: 48px 0 32px;">
-  <span class="eyebrow">{{ 'Demandes reçues' if fr else 'Requests received' }}</span>
-  <h2>{{ 'Des clients vous ont choisi' if fr else 'Clients picked you' }}</h2>
+  <span class="eyebrow">{{ t('tpl.demandes_recues') }}</span>
+  <h2>{{ t('tpl.des_clients_vous_ont_choisi') }}</h2>
   <div class="grid-cards">
     {% for m in my_requests %}
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        <span class="tag tag-open">{{ 'à répondre' if fr else 'awaiting your quote' }}</span>
+        <span class="tag tag-open">{{ t('tpl.a_repondre') }}</span>
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
       <div class="footer">
-        <span class="price">{% if m.budget_min or m.budget_max %}{{ (m.budget_max or m.budget_min)|int }} {{ m.currency }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
+        <span class="price">{% if m.budget_min or m.budget_max %}{{ (m.budget_max or m.budget_min)|int }} {{ m.currency }}{% else %}{{ t('tpl.sur_devis') }}{% endif %}</span>
         <span>{{ m.created_at[:10] }}</span>
       </div>
     </a>
@@ -139,14 +139,14 @@
 
 {% if is_pilot and my_bids %}
 <section class="section" style="margin: 48px 0 32px;">
-  <span class="eyebrow">{{ 'Mes offres' if fr else 'My bids' }}</span>
-  <h2>{{ 'Soumissions actives' if fr else 'Active bids' }}</h2>
+  <span class="eyebrow">{{ t('tpl.mes_offres') }}</span>
+  <h2>{{ t('tpl.soumissions_actives') }}</h2>
   <div class="grid-cards">
     {% for m in my_bids %}
     <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
       <div class="header">
         <span class="tag">{{ mission_label(m.mission_type) }}</span>
-        <span class="tag tag-{{ m.my_bid_status }}">{{ 'offre' if fr else 'bid' }} {{ status_label(m.my_bid_status) }}</span>
+        <span class="tag tag-{{ m.my_bid_status }}">{{ t('tpl.offre') }} {{ status_label(m.my_bid_status) }}</span>
       </div>
       <h3>{{ m.title }}</h3>
       <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
@@ -162,8 +162,8 @@
 
 {% if my_bookings %}
 <section class="section" style="margin: 48px 0 32px;">
-  <span class="eyebrow">{{ 'Mes réservations' if fr else 'My bookings' }}</span>
-  <h2>{{ 'Carnet de bord' if fr else 'Flight log' }}</h2>
+  <span class="eyebrow">{{ t('tpl.mes_reservations') }}</span>
+  <h2>{{ t('tpl.carnet_de_bord') }}</h2>
   <div class="grid-cards">
     {% for b in my_bookings %}
     <a class="mission-card" href="{{ url_for('booking_detail', booking_id=b.id) }}">
@@ -173,11 +173,11 @@
       </div>
       <h3>{{ b.mission_title }}</h3>
       <div class="coords">
-        {% if current_user.id == b.client_user_id %}{{ 'avec' if fr else 'with' }} {{ b.pilot_name }}{% else %}{{ 'pour' if fr else 'for' }} {{ b.client_name }}{% endif %}
+        {% if current_user.id == b.client_user_id %}{{ t('tpl.avec') }} {{ b.pilot_name }}{% else %}{{ t('tpl.pour') }} {{ b.client_name }}{% endif %}
       </div>
       <div class="footer">
         <span class="price">{{ b.agreed_price|int }} {{ b.currency }}</span>
-        <span>{{ 'réservation' if fr else 'booking' }} #{{ b.id }}</span>
+        <span>{{ t('tpl.reservation') }} #{{ b.id }}</span>
       </div>
     </a>
     {% endfor %}
@@ -187,29 +187,29 @@
 
 {% if current_user.is_admin %}
 <section class="card" style="margin-top: 32px; border-left: 3px solid var(--signal);">
-  <span class="eyebrow">{{ 'Admin · Back-office' if fr else 'Admin · Back office' }}</span>
-  <h2 style="margin: 6px 0 14px;">{{ 'Console de moderation.' if fr else 'Moderation console.' }}</h2>
+  <span class="eyebrow">{{ t('tpl.admin_back_office') }}</span>
+  <h2 style="margin: 6px 0 14px;">{{ t('tpl.console_de_moderation') }}</h2>
   <div class="cta-row" style="flex-wrap: wrap; gap: 12px;">
-    <a class="ghost" href="{{ url_for('admin_certifications') }}">{{ 'Brevets à vérifier' if fr else 'Licences to verify' }}{% if admin_pending_certs %} · <strong>{{ admin_pending_certs }} {{ 'en attente' if fr else 'pending' }}</strong>{% endif %} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_name_changes') }}">{{ 'Demandes de changement de nom' if fr else 'Name change requests' }} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_disputes') }}">{{ 'Litiges en cours' if fr else 'Open disputes' }} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_reports') }}">{{ 'Signalements' if fr else 'Reports' }}{% if admin_open_reports %} · <strong>{{ admin_open_reports }} {{ 'à traiter' if fr else 'to process' }}</strong>{% endif %} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_messages') }}">{{ 'Messages reçus' if fr else 'Received messages' }}{% if admin_new_messages %} · <strong>{{ admin_new_messages }} {{ 'à traiter' if fr else 'to process' }}</strong>{% endif %} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_insurances') }}">{{ 'Assurances à vérifier' if fr else 'Insurance to verify' }}{% if admin_pending_insurances %} · <strong>{{ admin_pending_insurances }} {{ 'en attente' if fr else 'pending' }}</strong>{% endif %} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_visits') }}">{{ 'Provenance des visiteurs' if fr else 'Where visitors come from' }} &rarr;</a>
-    <a class="ghost" href="{{ url_for('admin_stripe') }}">{{ 'État de Stripe' if fr else 'Stripe status' }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_certifications') }}">{{ t('tpl.brevets_a_verifier') }}{% if admin_pending_certs %} · <strong>{{ admin_pending_certs }} {{ t('tpl.en_attente') }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_name_changes') }}">{{ t('tpl.demandes_de_changement_de_nom') }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_disputes') }}">{{ t('tpl.litiges_en_cours') }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_reports') }}">{{ t('tpl.signalements') }}{% if admin_open_reports %} · <strong>{{ admin_open_reports }} {{ t('tpl.a_traiter') }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_messages') }}">{{ t('tpl.messages_recus') }}{% if admin_new_messages %} · <strong>{{ admin_new_messages }} {{ t('tpl.a_traiter') }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_insurances') }}">{{ t('tpl.assurances_a_verifier') }}{% if admin_pending_insurances %} · <strong>{{ admin_pending_insurances }} {{ t('tpl.en_attente') }}</strong>{% endif %} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_visits') }}">{{ t('tpl.provenance_des_visiteurs') }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_stripe') }}">{{ t('tpl.etat_de_stripe') }} &rarr;</a>
   </div>
 </section>
 {% endif %}
 
 {% if not (is_client and my_missions) and not (is_pilot and my_bids) and not my_bookings %}
 <section class="card" style="text-align: center; padding: 64px 32px;">
-  <span class="eyebrow" style="justify-content: center;">{{ 'Bienvenue' if fr else 'Welcome' }}</span>
-  <h2 style="margin: 12px 0;">{{ "Rien à afficher pour l'instant." if fr else 'Nothing to show yet.' }}</h2>
-  <p class="muted lead" style="margin: 0 auto 24px;">{{ 'Publiez une mission ou complétez votre profil pilote : tout ce qui vous concerne apparaîtra ici.' if fr else 'Post a job or complete your pilot profile: everything about you will show up here.' }}</p>
+  <span class="eyebrow" style="justify-content: center;">{{ t('tpl.bienvenue') }}</span>
+  <h2 style="margin: 12px 0;">{{ t('tpl.rien_a_afficher_pour_l_instant') }}</h2>
+  <p class="muted lead" style="margin: 0 auto 24px;">{{ t('tpl.publiez_une_mission_ou_completez_votre') }}</p>
   <div class="cta-row" style="justify-content: center;">
-    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ 'Publier une mission' if fr else 'Post a job' }}</a>{% endif %}
-    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}{{ 'Compléter mon profil' if fr else 'Complete my profile' }}{% else %}{{ 'Devenir pilote' if fr else 'Become a pilot' }}{% endif %}</a>
+    {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ t('tpl.publier_une_mission') }}</a>{% endif %}
+    <a class="ghost" href="{{ url_for('pilot_edit') }}">{% if is_pilot %}{{ t('tpl.completer_mon_profil') }}{% else %}{{ t('tpl.devenir_pilote') }}{% endif %}</a>
   </div>
 </section>
 {% endif %}

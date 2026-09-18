@@ -4,31 +4,31 @@
 
 {% set n = pilots|length %}
 <div class="search-head centered">
-  <h1>{{ 'Trouver un pilote' if fr else 'Find a pilot' }}</h1>
+  <h1>{{ t('tpl.trouver_un_pilote') }}</h1>
   <p class="lead muted">{{ t('search.pilots_intro') }}</p>
   <p class="search-count">
     {% if n == 0 %}{{ t('search.pilots_none') }}{% elif n == 1 %}{{ t('search.pilots_one') }}{% else %}{{ t('search.pilots_many', n=n) }}{% endif %}{% if params.near_label and n %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
-    {% if params.country == 'États-Unis' %}<a href="{{ url_for('part107') }}">{{ 'Pilotes Part 107 →' if fr else 'Part 107 pilots →' }}</a>{% endif %}
+    {% if params.country == 'États-Unis' %}<a href="{{ url_for('part107') }}">{{ t('tpl.pilotes_part_107') }}</a>{% endif %}
   </p>
 </div>
 
 {% set base_args = request.args.to_dict() %}
 {% set _ = base_args.pop('kind', None) %}
-<nav class="dir-tabs" aria-label="{{ 'Type de profil' if fr else 'Profile type' }}">
-  <a href="{{ url_for('pilots_search', **base_args) }}" class="{{ 'on' if not params.kind else '' }}">{{ 'Tous' if fr else 'All' }} <span class="n">{{ kind_counts.all }}</span></a>
-  <a href="{{ url_for('pilots_search', kind='pro', **base_args) }}" class="{{ 'on' if params.kind == 'pro' else '' }}">{{ 'Pilotes pro' if fr else 'Pro pilots' }} <span class="n">{{ kind_counts.pro }}</span></a>
-  <a href="{{ url_for('pilots_search', kind='recreational', **base_args) }}" class="{{ 'on' if params.kind == 'recreational' else '' }}">{{ 'Pilotes récréatifs' if fr else 'Recreational pilots' }} <span class="n">{{ kind_counts.recreational }}</span></a>
-  <a href="{{ url_for('pilots_search', kind='company', **base_args) }}" class="{{ 'on' if params.kind == 'company' else '' }}">{{ 'Entreprises' if fr else 'Companies' }} <span class="n">{{ kind_counts.company }}</span></a>
-  <a href="{{ url_for('pilots_search', kind='school', **base_args) }}" class="{{ 'on' if params.kind == 'school' else '' }}">{{ 'Écoles' if fr else 'Schools' }} <span class="n">{{ kind_counts.school }}</span></a>
-  <a href="{{ url_for('pilots_search', kind='shop', **base_args) }}" class="{{ 'on' if params.kind == 'shop' else '' }}">{{ 'Boutiques' if fr else 'Shops' }} <span class="n">{{ kind_counts.shop }}</span></a>
-  <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" data-action="open-details" data-target="specialites">{{ 'Spécialités' if fr else 'Specialties' }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
+<nav class="dir-tabs" aria-label="{{ t('tpl.type_de_profil') }}">
+  <a href="{{ url_for('pilots_search', **base_args) }}" class="{{ 'on' if not params.kind else '' }}">{{ t('tpl.tous') }} <span class="n">{{ kind_counts.all }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='pro', **base_args) }}" class="{{ 'on' if params.kind == 'pro' else '' }}">{{ t('tpl.pilotes_pro') }} <span class="n">{{ kind_counts.pro }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='recreational', **base_args) }}" class="{{ 'on' if params.kind == 'recreational' else '' }}">{{ t('tpl.pilotes_recreatifs') }} <span class="n">{{ kind_counts.recreational }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='company', **base_args) }}" class="{{ 'on' if params.kind == 'company' else '' }}">{{ t('tpl.entreprises') }} <span class="n">{{ kind_counts.company }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='school', **base_args) }}" class="{{ 'on' if params.kind == 'school' else '' }}">{{ t('tpl.ecoles') }} <span class="n">{{ kind_counts.school }}</span></a>
+  <a href="{{ url_for('pilots_search', kind='shop', **base_args) }}" class="{{ 'on' if params.kind == 'shop' else '' }}">{{ t('tpl.boutiques') }} <span class="n">{{ kind_counts.shop }}</span></a>
+  <a href="#specialites" class="{{ 'on' if params.mission_type else '' }}" data-action="open-details" data-target="specialites">{{ t('tpl.specialites') }}{% if params.mission_type %} · {{ mission_label(params.mission_type) }}{% endif %}</a>
 </nav>
 <details class="disclosure spec-chips" id="specialites" {% if params.mission_type %}open{% endif %}>
-  <summary>{{ 'Choisir une spécialité' if fr else 'Pick a specialty' }}</summary>
+  <summary>{{ t('tpl.choisir_une_specialite') }}</summary>
   {% set spec_args = request.args.to_dict() %}{% set _ = spec_args.pop('mission_type', None) %}
   <div class="spec-groups" style="margin-top: 10px;">
     <div class="chips">
-      <a class="chip-check {{ 'on' if not params.mission_type else '' }}" href="{{ url_for('pilots_search', **spec_args) }}">{{ 'Toutes' if fr else 'All' }}</a>
+      <a class="chip-check {{ 'on' if not params.mission_type else '' }}" href="{{ url_for('pilots_search', **spec_args) }}">{{ t('tpl.toutes') }}</a>
     </div>
     {% for gname, codes in mission_groups %}
     <div class="spec-group">
@@ -68,20 +68,20 @@
     <button class="cta" type="submit">{{ t('search.btn') }}</button>
   </div>
   {% if params.near_label %}
-    <p class="near-note">⌖ {{ 'Autour de' if fr else 'Around' }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ 'tri par distance, les pilotes plus loin restent visibles' if fr else 'sorted by distance, farther pilots stay visible' }}{% endif %}</p>
+    <p class="near-note">⌖ {{ t('tpl.autour_de') }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ t('tpl.tri_par_distance_les_pilotes_plus') }}{% endif %}</p>
   {% elif params.near_error %}
-    <p class="near-note err">{{ 'Lieu introuvable : essayez « code postal + pays » ou une ville.' if fr else 'Place not found: try “postal code + country” or a city.' }}</p>
+    <p class="near-note err">{{ t('tpl.lieu_introuvable_essayez_code_postal_pays') }}</p>
   {% endif %}
   <div class="search-options">
-    <label class="chip-check"><input type="checkbox" name="only_verified" value="1" {% if params.only_verified %}checked{% endif %}> ✓ {{ 'Brevet vérifié' if fr else 'Verified licence' }}</label>
-    <label class="chip-check"><input type="checkbox" name="only_insured" value="1" {% if params.only_insured %}checked{% endif %}> {{ 'Assurance vérifiée' if fr else 'Verified insurance' }}</label>
-    <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ 'Disponibles' if fr else 'Available' }}</label>
+    <label class="chip-check"><input type="checkbox" name="only_verified" value="1" {% if params.only_verified %}checked{% endif %}> ✓ {{ t('tpl.brevet_verifie') }}</label>
+    <label class="chip-check"><input type="checkbox" name="only_insured" value="1" {% if params.only_insured %}checked{% endif %}> {{ t('tpl.assurance_verifiee_2') }}</label>
+    <label class="chip-check"><input type="checkbox" name="only_available" value="1" {% if params.only_available %}checked{% endif %}> {{ t('tpl.disponibles') }}</label>
     <label class="chip-check"><input type="checkbox" name="near_only" value="1" {% if params.near_only %}checked{% endif %}> ⌖ {{ t('search.near_only') }}</label>
     <details class="search-more" {% if params.text or params.country or params.city or params.capability or params.authority or params.min_rating %}open{% endif %}>
       <summary class="chip-check">{{ t('search.more_pilots') }}</summary>
       <div class="grid-3" style="margin-top: 12px;">
-        <label>{{ 'Nom ou mot-clé' if fr else 'Name or keyword' }}
-          <input name="q" value="{{ params.text }}" type="search" placeholder="{{ 'Nom, ville, spécialité…' if fr else 'Name, city, specialty…' }}">
+        <label>{{ t('tpl.nom_ou_mot_cle') }}
+          <input name="q" value="{{ params.text }}" type="search" placeholder="{{ t('tpl.nom_ville_specialite') }}">
         </label>
         <label>{{ t('home.search_country') }}
           <select name="country">
@@ -90,19 +90,19 @@
           </select>
         </label>
         <label>{{ t('register.city') }}<input name="city" value="{{ params.city }}" placeholder="{{ t('register.city_ph') }}"></label>
-        <label>{{ 'Capacité drone' if fr else 'Drone capability' }}
+        <label>{{ t('tpl.capacite_drone') }}
           <select name="capability">
-            <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
+            <option value="">{{ t('tpl.toutes_2') }}</option>
             {% for gname, codes in drone_capability_groups %}<optgroup label="{{ gname }}">{% for cap in codes %}<option value="{{ cap }}" {% if params.capability==cap %}selected{% endif %}>{{ cap_label(cap) }}</option>{% endfor %}</optgroup>{% endfor %}
           </select>
         </label>
-        <label>{{ 'Autorité de certification' if fr else 'Certification authority' }}
+        <label>{{ t('tpl.autorite_de_certification') }}
           <select name="authority">
-            <option value="">{{ '— toutes —' if fr else '— all —' }}</option>
+            <option value="">{{ t('tpl.toutes_2') }}</option>
             {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}" {% if params.authority==code %}selected{% endif %}>{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
           </select>
         </label>
-        <label>{{ 'Note minimale' if fr else 'Min. rating' }}
+        <label>{{ t('tpl.note_minimale') }}
           <input name="min_rating" type="number" min="0" max="5" step="0.1" value="{{ params.min_rating or '' }}">
         </label>
       </div>
@@ -119,10 +119,10 @@
   {% else %}
     <div class="empty-state">
       <strong>{{ t('search.pilots_none') }}</strong>
-      <p>{{ 'Élargissez votre recherche : agrandissez le rayon, retirez un filtre (pays, spécialité, brevet vérifié) ou décochez « Limiter au rayon ».' if fr else 'Broaden your search: widen the radius, remove a filter (country, specialty, verified licence) or uncheck “Within radius only”.' }}</p>
+      <p>{{ t('tpl.elargissez_votre_recherche_agrandissez_le_ra') }}</p>
       <div class="actions-row">
         <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('search.reset') }}</a>
-        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ 'Publier une mission et recevoir des devis' if fr else 'Post a mission and get quotes' }}</a>
+        <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('tpl.publier_une_mission_et_recevoir_des') }}</a>
       </div>
     </div>
   {% endfor %}

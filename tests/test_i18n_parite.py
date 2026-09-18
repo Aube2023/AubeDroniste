@@ -55,3 +55,12 @@ def test_filipino_annonce_en_fil_par_le_navigateur(client):
     assert 'href="/tl/"' in html
     html = client.get("/", headers={"Accept-Language": "zh-CN,zh;q=0.9"}).get_data(as_text=True)
     assert 'href="/zh/"' in html
+
+
+def test_plus_de_textes_en_dur_fr_sinon_anglais():
+    # Les gabarits passaient par « 'texte' if fr else 'text' » : les 30 autres
+    # langues voyaient l'anglais. Tout passe par t('tpl.…') depuis 2026-09-18.
+    import pathlib
+    restes = [p.name for p in pathlib.Path("templates").rglob("*.html")
+              if any(m in p.read_text(encoding="utf-8") for m in ("if fr else", "{% if fr %}", "if lang == 'fr' else"))]
+    assert restes == []

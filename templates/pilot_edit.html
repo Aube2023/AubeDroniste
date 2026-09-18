@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Mon profil pilote' if fr else 'My pilot profile' }} · AubePilot{% endblock %}
+{% block title %}{{ t('tpl.mon_profil_pilote') }} · AubePilot{% endblock %}
 {% block content %}
 
 {# Ce qui manque pour etre trouve, avant les formulaires : un pilote qui
@@ -13,22 +13,22 @@
 {% include "_share.html" %}
 
 <div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap;">
-  <h1 style="margin: 0;">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</h1>
+  <h1 style="margin: 0;">{{ t('tpl.mon_profil_pilote') }}</h1>
   <div class="actions-row">
-    <a href="{{ url_for('pilot_packages') }}" class="ghost">{{ 'Gérer mes forfaits →' if fr else 'Manage my packages →' }}</a>
-    <a href="{{ url_for('pilot_portfolio') }}" class="ghost">{{ 'Mon portfolio →' if fr else 'My portfolio →' }}</a>
-    <a href="{{ url_for('pilot_campaign') }}" class="ghost">{{ 'Ma collecte →' if fr else 'My fundraiser →' }}</a>
+    <a href="{{ url_for('pilot_packages') }}" class="ghost">{{ t('tpl.gerer_mes_forfaits') }}</a>
+    <a href="{{ url_for('pilot_portfolio') }}" class="ghost">{{ t('tpl.mon_portfolio') }}</a>
+    <a href="{{ url_for('pilot_campaign') }}" class="ghost">{{ t('tpl.ma_collecte_2') }}</a>
   </div>
 </div>
 
 {# ===== Photo de profil ===== #}
 <section class="card">
-  <span class="eyebrow">{{ 'Photo de profil' if fr else 'Profile photo' }}</span>
+  <span class="eyebrow">{{ t('tpl.photo_de_profil') }}</span>
   <div class="avatar-uploader">
     {% if profile.avatar_path %}
       <img class="js-self-avatar avatar-frame" data-username="{{ current_user.username }}"
            src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
-           alt="{{ 'Avatar de' if fr else 'Avatar for' }} {{ current_user.full_name }}">
+           alt="{{ t('tpl.avatar_de') }} {{ current_user.full_name }}">
     {% else %}
       <div class="js-self-avatar avatar-frame placeholder" data-username="{{ current_user.username }}">
         {{ current_user.full_name[:1] }}
@@ -36,22 +36,22 @@
     {% endif %}
     <div class="uploader-body">
       <p style="margin: 0 0 8px;">
-        {{ 'Ta photo est' if fr else 'Your photo is' }} <strong>{{ 'unifiée avec ton compte Aube' if fr else 'unified across your Aube account' }}</strong>{{ ' : la même sur AubeMail, AubePilot et tout le reste de la suite. Tu la changes à un seul endroit.' if fr else ', the same on AubeMail, AubePilot and the rest of the suite. You change it in one place.' }}
+        {{ t('tpl.ta_photo_est') }} <strong>{{ t('tpl.unifiee_avec_ton_compte_aube') }}</strong>{{ t('tpl.la_meme_sur_aubemail_aubepilot_et') }}
       </p>
-      <a class="cta" href="{{ aubemail_url }}" target="_blank" rel="noopener">{{ 'Gérer ma photo sur AubeMail →' if fr else 'Manage my photo on AubeMail →' }}</a>
+      <a class="cta" href="{{ aubemail_url }}" target="_blank" rel="noopener">{{ t('tpl.gerer_ma_photo_sur_aubemail') }}</a>
       <details style="margin-top: 12px;">
-        <summary class="muted" style="cursor: pointer;">{{ 'Pas de compte AubeMail ? Utiliser une photo locale' if fr else 'No AubeMail account? Use a local photo' }}</summary>
+        <summary class="muted" style="cursor: pointer;">{{ t('tpl.pas_de_compte_aubemail_utiliser_une') }}</summary>
         <form method="post" action="{{ url_for('pilot_upload_avatar') }}" enctype="multipart/form-data" class="inline-form">
               {{ csrf_input() }}
-          <label>{{ 'Photo locale (JPG/PNG/WebP, max 5 Mo)' if fr else 'Local photo (JPG/PNG/WebP, max 5 MB)' }}
+          <label>{{ t('tpl.photo_locale_jpg_png_webp_max') }}
             <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required>
           </label>
-          <button class="ghost" type="submit">{{ 'Téléverser' if fr else 'Upload' }}</button>
+          <button class="ghost" type="submit">{{ t('tpl.televerser') }}</button>
         </form>
         {% if profile.avatar_path %}
-        <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" data-confirm="{{ 'Retirer la photo locale ?' if fr else 'Remove the local photo?' }}">
+        <form method="post" action="{{ url_for('pilot_delete_avatar') }}" style="margin-top: 8px;" data-confirm="{{ t('tpl.retirer_la_photo_locale') }}">
               {{ csrf_input() }}
-          <button class="ghost danger" type="submit">{{ 'Retirer la photo locale' if fr else 'Remove local photo' }}</button>
+          <button class="ghost danger" type="submit">{{ t('tpl.retirer_la_photo_locale_2') }}</button>
         </form>
         {% endif %}
       </details>
@@ -62,12 +62,11 @@
 {# ===== Realisations : la galerie publique du pilote ===== #}
 <section class="card">
   <div class="row-between" style="align-items: baseline; gap: 12px; flex-wrap: wrap;">
-    <span class="eyebrow">{{ 'Mes réalisations' if fr else 'My work' }}</span>
-    <span class="muted mono small">{{ portfolio|length }} {{ 'photo(s) et vidéo(s)' if fr else 'photo(s) and video(s)' }}</span>
+    <span class="eyebrow">{{ t('tpl.mes_realisations') }}</span>
+    <span class="muted mono small">{{ portfolio|length }} {{ t('tpl.photo_s_et_video_s') }}</span>
   </div>
   <p class="muted" style="margin: 8px 0 12px;">
-    {{ "Vos photos et vidéos de missions passées, visibles sur votre page publique. C'est ce qu'un client regarde avant tout le reste."
-       if fr else 'Your photos and videos from past jobs, shown on your public page. It is what a client looks at before anything else.' }}
+    {{ t('tpl.vos_photos_et_videos_de_missions') }}
   </p>
   {% if portfolio %}
   <div class="chips" style="gap: 8px; margin-bottom: 12px;">
@@ -76,14 +75,14 @@
       <img src="{{ url_for('media_file', filename=it.stored_filename) }}" alt=""
            loading="lazy" style="width: 76px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--rule);">
       {% else %}
-      <span class="tag">🎬 {{ it.title or ('Vidéo' if fr else 'Video') }}</span>
+      <span class="tag">🎬 {{ it.title or t('tpl.video') }}</span>
       {% endif %}
     {% endfor %}
     {% if portfolio|length > 6 %}<span class="tag">+{{ portfolio|length - 6 }}</span>{% endif %}
   </div>
   {% endif %}
   <a href="{{ url_for('pilot_portfolio') }}" class="cta">
-    {% if portfolio %}{{ 'Gérer mes réalisations →' if fr else 'Manage my work →' }}{% else %}{{ 'Ajouter mes premières photos →' if fr else 'Add my first photos →' }}{% endif %}
+    {% if portfolio %}{{ t('tpl.gerer_mes_realisations') }}{% else %}{{ t('tpl.ajouter_mes_premieres_photos') }}{% endif %}
   </a>
 </section>
 
@@ -91,87 +90,86 @@
 {% if stripe_connect_enabled %}
 {% set stripe_ready = profile.stripe_charges_enabled and profile.stripe_payouts_enabled %}
 <section class="card" style="border-left: 3px solid {% if stripe_ready %}var(--teal){% else %}var(--amber){% endif %};">
-  <span class="eyebrow">{{ 'Encaissement' if fr else 'Payments' }}</span>
+  <span class="eyebrow">{{ t('tpl.encaissement') }}</span>
   <h2 style="font-size: 1.4rem; margin: 0 0 6px;">
     {% if stripe_ready %}
-      ✓ {{ 'Stripe Connect activé' if fr else 'Stripe Connect activated' }}
+      ✓ {{ t('tpl.stripe_connect_active') }}
     {% else %}
-      {{ 'Activer mon encaissement Stripe' if fr else 'Activate my Stripe payments' }}
+      {{ t('tpl.activer_mon_encaissement_stripe') }}
     {% endif %}
   </h2>
   {% if stripe_ready %}
     <p class="muted">
-      {{ 'Vos paiements sont opérationnels. À chaque mission terminée, votre part (' ~ pilot_share_pct ~ ' % du devis, davantage pour un client fidèle) est virée sur votre compte bancaire dans les jours qui suivent. Compte Stripe :' if fr else 'Your payments are up and running. On every completed job, your share (' ~ pilot_share_pct ~ '% of the quote, more for a repeat client) is transferred to your bank account within a few days. Stripe account:' }} <code class="mono small">{{ profile.stripe_account_id }}</code>
+      {{ t('tpl.payouts_live', pct=pilot_share_pct) }} <code class="mono small">{{ profile.stripe_account_id }}</code>
     </p>
-    <a href="{{ url_for('stripe_onboard') }}" class="ghost">{{ 'Mettre à jour mes infos Stripe' if fr else 'Update my Stripe info' }}</a>
+    <a href="{{ url_for('stripe_onboard') }}" class="ghost">{{ t('tpl.mettre_a_jour_mes_infos_stripe') }}</a>
   {% elif profile.stripe_account_id and profile.stripe_charges_enabled %}
     {# Compte cree et virements AubePilot possibles, mais Stripe attend une verification #}
     <p class="muted">
-      {{ "Votre compte reçoit déjà les virements d'AubePilot, mais Stripe attend encore une vérification (pièce d'identité, selfie ou justificatif d'adresse) avant de verser sur votre compte bancaire. L'argent est conservé sur votre solde Stripe en attendant. Reprenez l'onboarding pour fournir ce qui manque ; cette page se met à jour dès que Stripe a validé." if fr else 'Your account already receives AubePilot transfers, but Stripe still needs a verification (ID document, selfie or proof of address) before paying out to your bank account. The money is kept on your Stripe balance meanwhile. Resume onboarding to provide what is missing; this page updates as soon as Stripe has validated it.' }}
+      {{ t('tpl.votre_compte_recoit_deja_les_virements') }}
     </p>
   {% else %}
     <p class="muted">
-      {{ "Pour pouvoir" if fr else 'To be able to' }} <strong>{{ 'accepter une mission payée' if fr else 'accept a paid job' }}</strong>{{ ", vous devez activer votre compte Stripe Connect : pièce d'identité, compte bancaire, statut fiscal. Stripe valide en 24-48 h ; aucune information bancaire ne transite par AubePilot." if fr else ', you need to activate your Stripe Connect account: ID document, bank account, tax status. Stripe validates within 24-48 hours; no banking information passes through AubePilot.' }}
+      {{ t('tpl.pour_pouvoir') }} <strong>{{ t('tpl.accepter_une_mission_payee') }}</strong>{{ t('tpl.vous_devez_activer_votre_compte_stripe') }}
     </p>
   {% endif %}
   {% if not stripe_ready %}
     {% if stripe_mode == 'FAKE' %}
     <p class="small mono" style="color: var(--amber); text-transform: uppercase; letter-spacing: .12em;">
-      {{ "Mode démo · onboarding simulé (Stripe n'est pas configuré côté serveur)" if fr else 'Demo mode · simulated onboarding (Stripe is not configured server-side)' }}
+      {{ t('tpl.mode_demo_onboarding_simule_stripe_n') }}
     </p>
     {% endif %}
     <a href="{{ url_for('stripe_onboard') }}" class="cta">
-      {% if profile.stripe_account_id %}{{ "Reprendre l'onboarding →" if fr else 'Resume onboarding →' }}{% else %}{{ 'Activer mon compte Stripe →' if fr else 'Activate my Stripe account →' }}{% endif %}
+      {% if profile.stripe_account_id %}{{ t('tpl.reprendre_l_onboarding') }}{% else %}{{ t('tpl.activer_mon_compte_stripe') }}{% endif %}
     </a>
   {% endif %}
 </section>
 {% else %}
 <section class="card" style="border-left: 3px solid var(--teal);">
-  <span class="eyebrow">{{ 'Encaissement' if fr else 'Payments' }}</span>
-  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">{{ "Le paiement en ligne n'est pas encore ouvert" if fr else 'Online payment is not open yet' }}</h2>
+  <span class="eyebrow">{{ t('tpl.encaissement') }}</span>
+  <h2 style="font-size: 1.4rem; margin: 0 0 6px;">{{ t('tpl.le_paiement_en_ligne_n_est') }}</h2>
   <p class="muted">
-    {{ "Les versements automatiques vers votre compte bancaire ne sont pas encore actifs sur AubePilot. En attendant, le règlement se convient directement avec le client (virement, Interac, chèque). Vous n'avez rien à configurer : nous vous préviendrons quand l'encaissement par la plateforme sera disponible."
-       if fr else 'Automatic payouts to your bank account are not active on AubePilot yet. In the meantime, payment is arranged directly with the client (bank transfer, Interac, cheque). There is nothing to set up: we will let you know when platform payments become available.' }}
+    {{ t('tpl.les_versements_automatiques_vers_votre_compt') }}
   </p>
 </section>
 {% endif %}
 
 <form method="post" class="card">
         {{ csrf_input() }}
-  <h2>{{ 'Identité & zone' if fr else 'Identity & area' }}</h2>
+  <h2>{{ t('tpl.identite_zone') }}</h2>
   <div class="grid-2">
-    <label>{{ 'Type de profil' if fr else 'Profile type' }}
+    <label>{{ t('tpl.type_de_profil') }}
       <select name="kind" id="kind-select">
         {% for code, lbl in profile_kinds %}<option value="{{ code }}" {% if (profile.kind or 'pro') == code %}selected{% endif %}>{{ kind_label(code) }}</option>{% endfor %}
       </select>
-      <small class="muted" style="display:block; margin-top:4px;">{{ "Onglet de l'annuaire où vous apparaissez : pro, récréatif ou école." if fr else 'Directory tab where you appear: pro, recreational or school.' }}</small>
+      <small class="muted" style="display:block; margin-top:4px;">{{ t('tpl.onglet_de_l_annuaire_ou_vous') }}</small>
     </label>
-    <label id="school-programs" {% if (profile.kind or 'pro') not in ('school', 'shop') %}style="display:none;"{% endif %}><span data-kl="school"{% if profile.kind == 'shop' %} hidden{% endif %}>{{ 'Formations proposées (une par ligne)' if fr else 'Courses offered (one per line)' }}</span><span data-kl="shop"{% if profile.kind != 'shop' %} hidden{% endif %}>{{ 'Produits & services (une par ligne)' if fr else 'Products & services (one per line)' }}</span>
+    <label id="school-programs" {% if (profile.kind or 'pro') not in ('school', 'shop') %}style="display:none;"{% endif %}><span data-kl="school"{% if profile.kind == 'shop' %} hidden{% endif %}>{{ t('tpl.formations_proposees_une_par_ligne') }}</span><span data-kl="shop"{% if profile.kind != 'shop' %} hidden{% endif %}>{{ t('tpl.produits_services_une_par_ligne') }}</span>
       <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A1/A3 · A2 (EASA)">{{ profile.school_programs or '' }}</textarea>
-      <small class="muted" style="display:block; margin-top:4px;">{{ "Affichées sur votre fiche publique. Le nom de l'école = « Marque / raison sociale » ci-dessous." if fr else 'Shown on your public listing. The school name is the "Business name" field below.' }}</small>
+      <small class="muted" style="display:block; margin-top:4px;">{{ t('tpl.affichees_sur_votre_fiche_publique_le') }}</small>
     </label>
-    <label>{{ 'Nom complet' if fr else 'Full name' }}
+    <label>{{ t('tpl.nom_complet') }}
       <input value="{{ current_user.full_name }}" disabled>
       {% if identity_locked %}
         <small class="muted" style="display:block; margin-top:4px;">
-          {{ "Verrouillé après l'upload d'un brevet." if fr else 'Locked after a licence upload.' }}
+          {{ t('tpl.verrouille_apres_l_upload_d_un') }}
           {% if pending_name_change %}
-            {{ "Une demande de changement est en cours d'examen par l'admin." if fr else 'A change request is under review by the admin.' }}
+            {{ t('tpl.une_demande_de_changement_est_en') }}
           {% else %}
-            <a href="{{ url_for('request_name_change') }}">{{ 'Demander un changement' if fr else 'Request a change' }}</a>
-            {{ '(justificatif officiel requis).' if fr else '(official document required).' }}
+            <a href="{{ url_for('request_name_change') }}">{{ t('tpl.demander_un_changement') }}</a>
+            {{ t('tpl.justificatif_officiel_requis') }}
           {% endif %}
         </small>
       {% else %}
         <small class="muted" style="display:block; margin-top:4px;">
-          {{ "Sera verrouillé dès l'upload d'un premier brevet. Toute modification ultérieure devra passer par une demande validée par l'admin." if fr else 'Will be locked as soon as a first licence is uploaded. Any later change will require a request approved by the admin.' }}
+          {{ t('tpl.sera_verrouille_des_l_upload_d') }}
         </small>
       {% endif %}
     </label>
-    <label>{{ 'Téléphone' if fr else 'Phone' }}
+    <label>{{ t('tpl.telephone') }}
       {% with phone_value = profile.phone or '' %}{% include "_phone_field.html" %}{% endwith %}
     </label>
-    <label>{{ 'Pays' if fr else 'Country' }}
+    <label>{{ t('tpl.pays') }}
       {% set _cur = profile.country or '' %}
       <select name="country">
         <option value="">—</option>
@@ -180,48 +178,47 @@
         <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
       </select>
     </label>
-    <label>{{ 'Ville' if fr else 'City' }}<input name="city" value="{{ profile.city or '' }}"></label>
+    <label>{{ t('tpl.ville') }}<input name="city" value="{{ profile.city or '' }}"></label>
     <input type="hidden" name="lat" value="{{ profile.lat or '' }}">
     <input type="hidden" name="lng" value="{{ profile.lng or '' }}">
-    <label>{{ 'Position GPS' if fr else 'GPS location' }} <span class="muted">({{ 'visibilité « autour de moi » + alertes mission' if fr else '"near me" visibility + job alerts' }})</span>
-      <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 {{ 'Utiliser ma position actuelle' if fr else 'Use my current location' }}</button>
+    <label>{{ t('tpl.position_gps') }} <span class="muted">({{ t('tpl.visibilite_autour_de_moi_alertes_mission') }})</span>
+      <button type="button" class="ghost" data-action="use-location" style="margin-top:6px">📍 {{ t('tpl.utiliser_ma_position_actuelle') }}</button>
     </label>
   </div>
 
-  <h2>{{ 'Présentation' if fr else 'Presentation' }}</h2>
-  <label>{{ 'Marque / société (raison sociale)' if fr else 'Business name' }}<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="{{ 'ex. SkyVision Drone, ou votre nom' if fr else 'e.g. SkyVision Drone, or your name' }}"></label>
-  <p class="form-hint">{{ 'Affichée en en-tête de vos devis PDF (avec votre logo/photo). Laissez vide pour utiliser votre nom complet.' if fr else 'Shown at the top of your PDF quotes (with your logo/photo). Leave empty to use your full name.' }}</p>
-  <label>{{ 'Courriel de compagnie (public)' if fr else 'Company email (public)' }}<input name="business_email" type="email" value="{{ profile.business_email or '' }}" maxlength="160" placeholder="{{ 'ex. contact@skyvisiondrone.ca' if fr else 'e.g. contact@skyvisiondrone.ca' }}"></label>
-  <p class="form-hint">{{ 'Affiché sur votre fiche publique pour que les clients vous contactent directement. Laissez vide pour ne rien afficher.' if fr else 'Shown on your public listing so clients can contact you directly. Leave empty to hide it.' }}</p>
-  <label>{{ 'Accroche courte' if fr else 'Short tagline' }}<input name="headline" value="{{ profile.headline or '' }}" maxlength="120" placeholder="{{ 'ex. Prises de vue aériennes & inspections' if fr else 'e.g. Aerial footage & inspections' }}"></label>
-  <label>{{ 'Bio' if fr else 'Bio' }}<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
+  <h2>{{ t('tpl.presentation') }}</h2>
+  <label>{{ t('tpl.marque_societe_raison_sociale') }}<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="{{ t('tpl.ex_skyvision_drone_ou_votre_nom') }}"></label>
+  <p class="form-hint">{{ t('tpl.affichee_en_en_tete_de_vos') }}</p>
+  <label>{{ t('tpl.courriel_de_compagnie_public') }}<input name="business_email" type="email" value="{{ profile.business_email or '' }}" maxlength="160" placeholder="{{ t('tpl.ex_contact_skyvisiondrone_ca') }}"></label>
+  <p class="form-hint">{{ t('tpl.affiche_sur_votre_fiche_publique_pour') }}</p>
+  <label>{{ t('tpl.accroche_courte') }}<input name="headline" value="{{ profile.headline or '' }}" maxlength="120" placeholder="{{ t('tpl.ex_prises_de_vue_aeriennes_inspections') }}"></label>
+  <label>{{ t('tpl.bio') }}<textarea name="bio" rows="4">{{ profile.bio or '' }}</textarea></label>
 
-  <h2>{{ 'Tarifs & disponibilité' if fr else 'Rates & availability' }}</h2>
+  <h2>{{ t('tpl.tarifs_disponibilite') }}</h2>
   <div class="grid-3">
-    <label>{{ "Années d'expérience" if fr else 'Years of experience' }}<input name="years_experience" type="number" min="0" value="{{ profile.years_experience or 0 }}"></label>
-    <label>{{ 'Tarif horaire' if fr else 'Hourly rate' }}<input name="hourly_rate" type="number" step="0.01" value="{{ profile.hourly_rate or '' }}"></label>
-    <label>{{ 'Tarif journée' if fr else 'Daily rate' }}<input name="daily_rate" type="number" step="0.01" value="{{ profile.daily_rate or '' }}"></label>
-    <label>{{ 'Devise' if fr else 'Currency' }}
+    <label>{{ t('tpl.annees_d_experience') }}<input name="years_experience" type="number" min="0" value="{{ profile.years_experience or 0 }}"></label>
+    <label>{{ t('tpl.tarif_horaire') }}<input name="hourly_rate" type="number" step="0.01" value="{{ profile.hourly_rate or '' }}"></label>
+    <label>{{ t('tpl.tarif_journee') }}<input name="daily_rate" type="number" step="0.01" value="{{ profile.daily_rate or '' }}"></label>
+    <label>{{ t('tpl.devise') }}
       <select name="currency">
         {% for c in currencies %}<option value="{{ c }}" {% if profile.p_currency==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
       </select>
     </label>
-    <label>{{ 'Rayon de déplacement (km)' if fr else 'Travel radius (km)' }}<input name="travel_radius_km" type="number" min="0" value="{{ profile.travel_radius_km or 50 }}"></label>
-    <label>{{ 'Langues' if fr else 'Languages' }}<input name="languages" value="{{ profile.languages or '' }}" placeholder="fr,ar,en"></label>
+    <label>{{ t('tpl.rayon_de_deplacement_km') }}<input name="travel_radius_km" type="number" min="0" value="{{ profile.travel_radius_km or 50 }}"></label>
+    <label>{{ t('tpl.langues') }}<input name="languages" value="{{ profile.languages or '' }}" placeholder="fr,ar,en"></label>
   </div>
   <div class="grid-3">
-    <label class="check"><input type="checkbox" name="is_available" value="1" {% if profile.is_available %}checked{% endif %}> {{ 'Disponible' if fr else 'Available' }}</label>
-    <label class="check"><input type="checkbox" name="accepts_remote" value="1" {% if profile.accepts_remote %}checked{% endif %}> {{ 'Missions hors zone' if fr else 'Jobs outside my area' }}</label>
-    <label class="check"><input type="checkbox" name="accepts_urgent" value="1" {% if profile.accepts_urgent %}checked{% endif %}> {{ 'Missions urgentes' if fr else 'Urgent jobs' }}</label>
+    <label class="check"><input type="checkbox" name="is_available" value="1" {% if profile.is_available %}checked{% endif %}> {{ t('tpl.disponible') }}</label>
+    <label class="check"><input type="checkbox" name="accepts_remote" value="1" {% if profile.accepts_remote %}checked{% endif %}> {{ t('tpl.missions_hors_zone') }}</label>
+    <label class="check"><input type="checkbox" name="accepts_urgent" value="1" {% if profile.accepts_urgent %}checked{% endif %}> {{ t('tpl.missions_urgentes') }}</label>
   </div>
 
-  <h2 id="assurance">{{ 'Assurance RC pro' if fr else 'Liability insurance' }}</h2>
+  <h2 id="assurance">{{ t('tpl.assurance_rc_pro') }}</h2>
   <div class="grid-3">
-    <label class="check"><input type="checkbox" name="insurance" value="1" {% if profile.insurance %}checked{% endif %}> {{ 'Je suis assuré' if fr else 'I am insured' }}</label>
+    <label class="check"><input type="checkbox" name="insurance" value="1" {% if profile.insurance %}checked{% endif %}> {{ t('tpl.je_suis_assure') }}</label>
   </div>
   <p class="muted small" style="margin-top: 6px;">
-    {{ "Cette case est une déclaration. Le badge « RC pro » visible par les clients ne s'affiche qu'après contrôle de votre attestation, comme pour vos brevets."
-       if fr else "This box is a declaration. The « Insured » badge clients see only appears once your certificate has been checked, like your licences." }}
+    {{ t('tpl.cette_case_est_une_declaration_le') }}
   </p>
 
 <h2 id="livrables">{{ t('deliverables.title') }}</h2>
@@ -245,134 +242,133 @@
      laisse vide disparait : pas de bouton « supprimer » a maintenir. #}
   {% for l in (profile.links or []) + [none, none] %}
   <div class="grid-2" style="gap: 10px; margin-bottom: 6px;">
-    <label>{{ 'Type' if fr else 'Kind' }}
+    <label>{{ t('tpl.type_2') }}
       <select name="link_kind">
         {% for code, label in pilot_link_kinds %}<option value="{{ code }}" {% if l and l.kind == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
     </label>
-    <label>{{ 'Adresse' if fr else 'Address' }}
+    <label>{{ t('tpl.adresse') }}
       <input name="link_url" value="{{ l.url if l else '' }}" maxlength="300" placeholder="https://…">
     </label>
   </div>
   {% endfor %}
 
-  <h2>{{ 'Territoires opérés (en plus du pays principal)' if fr else 'Territories covered (in addition to your main country)' }}</h2>
-  <p class="muted small">{{ "Les lignes vides seront ignorées à l'enregistrement." if fr else 'Empty rows will be ignored when saving.' }}</p>
+  <h2>{{ t('tpl.territoires_operes_en_plus_du_pays') }}</h2>
+  <p class="muted small">{{ t('tpl.les_lignes_vides_seront_ignorees_a') }}</p>
   <div id="territories">
     {% for t in profile.territories %}
     <div class="row-territory">
-      <input name="territory_country" placeholder="{{ 'Pays' if fr else 'Country' }}" value="{{ t.country }}">
-      <input name="territory_region" placeholder="{{ 'Région (optionnel)' if fr else 'Region (optional)' }}" value="{{ t.region or '' }}">
-      <button type="button" class="ghost danger row-remove" title="{{ 'Retirer' if fr else 'Remove' }}">✕</button>
+      <input name="territory_country" placeholder="{{ t('tpl.pays') }}" value="{{ t.country }}">
+      <input name="territory_region" placeholder="{{ t('tpl.region_optionnel') }}" value="{{ t.region or '' }}">
+      <button type="button" class="ghost danger row-remove" title="{{ t('tpl.retirer') }}">✕</button>
     </div>
     {% endfor %}
     <div class="row-territory">
-      <input name="territory_country" placeholder="{{ 'Pays' if fr else 'Country' }}">
-      <input name="territory_region" placeholder="{{ 'Région (optionnel)' if fr else 'Region (optional)' }}">
-      <button type="button" class="ghost danger row-remove" title="{{ 'Retirer' if fr else 'Remove' }}">✕</button>
+      <input name="territory_country" placeholder="{{ t('tpl.pays') }}">
+      <input name="territory_region" placeholder="{{ t('tpl.region_optionnel') }}">
+      <button type="button" class="ghost danger row-remove" title="{{ t('tpl.retirer') }}">✕</button>
     </div>
   </div>
-  <button type="button" class="ghost" id="add-territory">+ {{ 'Ajouter un territoire' if fr else 'Add a territory' }}</button>
+  <button type="button" class="ghost" id="add-territory">+ {{ t('tpl.ajouter_un_territoire') }}</button>
 
-  <label>{{ 'URL portfolio' if fr else 'Portfolio URL' }}<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
+  <label>{{ t('tpl.url_portfolio') }}<input name="portfolio_url" type="url" value="{{ profile.portfolio_url or '' }}" placeholder="https://…"></label>
 
   <div class="save-bar">
     <span class="muted small">
-      {{ 'Cliquez sur' if fr else 'Click' }} <strong>{{ 'Enregistrer le profil' if fr else 'Save profile' }}</strong> {{ 'pour sauvegarder vos modifications.' if fr else 'to save your changes.' }}
-      {{ 'Le bloc' if fr else 'The' }} <em>{{ 'Ajouter une formation' if fr else 'Add a licence' }}</em> {{ 'ci-dessous est indépendant.' if fr else 'block below is independent.' }}
+      {{ t('tpl.cliquez_sur') }} <strong>{{ t('tpl.enregistrer_le_profil') }}</strong> {{ t('tpl.pour_sauvegarder_vos_modifications') }}
+      {{ t('tpl.le_bloc') }} <em>{{ t('tpl.ajouter_une_formation') }}</em> {{ t('tpl.ci_dessous_est_independant') }}
     </span>
-    <button class="cta" type="submit">{{ 'Enregistrer le profil' if fr else 'Save profile' }}</button>
+    <button class="cta" type="submit">{{ t('tpl.enregistrer_le_profil') }}</button>
   </div>
 </form>
 
 <section class="grid-2">
   <div class="card">
-    <h2>{{ 'Mes formations / licences' if fr else 'My licences' }}</h2>
+    <h2>{{ t('tpl.mes_formations_licences') }}</h2>
     {% for c in profile.certifications %}
     <div class="cert row-between">
       <div>
         <strong>{{ c.title }}</strong>, {{ auth_label(c.authority) }}
-        {% if c.is_expired %}<span class="tag tag-cancelled">{{ 'expiré' if fr else 'expired' }}</span>
-        {% elif c.is_verified %}<span class="tag tag-ok">{{ 'vérifié' if fr else 'verified' }}</span>
-        {% elif c.review_status == 'rejected' %}<span class="tag tag-urgent">{{ 'justificatif refusé' if fr else 'document rejected' }}</span>
-        {% elif c.document_path %}<span class="tag tag-open">{{ 'en cours de vérification' if fr else 'under review' }}</span>
-        {% else %}<span class="tag">{{ 'déclaratif — ajoutez le justificatif pour être vérifié' if fr else 'self-declared, add a document to get verified' }}</span>{% endif %}
+        {% if c.is_expired %}<span class="tag tag-cancelled">{{ t('tpl.expire_2') }}</span>
+        {% elif c.is_verified %}<span class="tag tag-ok">{{ t('tpl.verifie') }}</span>
+        {% elif c.review_status == 'rejected' %}<span class="tag tag-urgent">{{ t('tpl.justificatif_refuse') }}</span>
+        {% elif c.document_path %}<span class="tag tag-open">{{ t('tpl.en_cours_de_verification') }}</span>
+        {% else %}<span class="tag">{{ t('tpl.declaratif_ajoutez_le_justificatif_pour_etre') }}</span>{% endif %}
         <div class="muted small">{{ c.reference or '' }}{% if c.issued_at %} · {{ c.issued_at }}{% endif %}{% if c.expires_at %} → {{ c.expires_at }}{% endif %}</div>
         {% if c.review_status == 'rejected' and c.review_note %}
-        <div class="small" style="color: var(--signal); margin-top: 4px;">{{ 'Motif :' if fr else 'Reason:' }} {{ c.review_note }} {{ 'supprimez cette ligne et ajoutez un justificatif lisible.' if fr else 'delete this row and add a legible document.' }}</div>
+        <div class="small" style="color: var(--signal); margin-top: 4px;">{{ t('tpl.motif') }} {{ c.review_note }} {{ t('tpl.supprimez_cette_ligne_et_ajoutez_un') }}</div>
         {% endif %}
       </div>
       <form method="post" action="{{ url_for('pilot_delete_certification', cert_id=c.id) }}">
         {{ csrf_input() }}
-        <button class="ghost danger" type="submit">{{ 'supprimer' if fr else 'delete' }}</button>
+        <button class="ghost danger" type="submit">{{ t('tpl.supprimer') }}</button>
       </form>
     </div>
-    {% else %}<p class="muted">{{ 'Aucune.' if fr else 'None yet.' }}</p>{% endfor %}
+    {% else %}<p class="muted">{{ t('tpl.aucune') }}</p>{% endfor %}
 
     {# ---- Attestation RC pro : depot + etat du controle ---- #}
     {% set ins = insurance_state %}
-    <h3 style="margin-top: 28px;">{{ "Attestation d'assurance" if fr else 'Insurance certificate' }}</h3>
+    <h3 style="margin-top: 28px;">{{ t('tpl.attestation_d_assurance') }}</h3>
     {% if ins.status == 'verified' and not ins.is_expired %}
-      <p><span class="tag tag-ok">{{ 'Vérifiée' if fr else 'Verified' }}</span>
-        {% if profile.insurance_expires_at %} · {{ "valide jusqu'au" if fr else 'valid until' }} {{ profile.insurance_expires_at }}{% endif %}</p>
+      <p><span class="tag tag-ok">{{ t('tpl.verifiee') }}</span>
+        {% if profile.insurance_expires_at %} · {{ t('tpl.valide_jusqu_au') }} {{ profile.insurance_expires_at }}{% endif %}</p>
     {% elif ins.status == 'verified' and ins.is_expired %}
-      <p><span class="tag tag-urgent">{{ 'Échue' if fr else 'Expired' }}</span>
-        {{ "Déposez une attestation à jour pour retrouver le badge." if fr else 'Upload a current certificate to get the badge back.' }}</p>
+      <p><span class="tag tag-urgent">{{ t('tpl.echue') }}</span>
+        {{ t('tpl.deposez_une_attestation_a_jour_pour') }}</p>
     {% elif ins.status == 'pending' %}
-      <p><span class="tag tag-open">{{ 'En vérification' if fr else 'Under review' }}</span>
-        {{ 'Nous contrôlons votre attestation.' if fr else 'We are checking your certificate.' }}</p>
+      <p><span class="tag tag-open">{{ t('tpl.en_verification') }}</span>
+        {{ t('tpl.nous_controlons_votre_attestation') }}</p>
     {% elif ins.status == 'rejected' %}
-      <p><span class="tag tag-urgent">{{ 'Refusée' if fr else 'Rejected' }}</span>
+      <p><span class="tag tag-urgent">{{ t('tpl.refusee') }}</span>
         {% if profile.insurance_note %}<br><span class="small">{{ profile.insurance_note }}</span>{% endif %}</p>
     {% else %}
-      <p class="muted">{{ 'Aucune attestation déposée.' if fr else 'No certificate uploaded yet.' }}</p>
+      <p class="muted">{{ t('tpl.aucune_attestation_deposee') }}</p>
     {% endif %}
 
     <form method="post" action="{{ url_for('pilot_insurance') }}" enctype="multipart/form-data">
       {{ csrf_input() }}
       <div class="grid-3">
-        <label>{{ 'Compagnie' if fr else 'Company' }}<input name="insurance_company" value="{{ profile.insurance_company or '' }}" maxlength="120"></label>
-        <label>{{ 'N° police' if fr else 'Policy no.' }}<input name="insurance_policy" value="{{ profile.insurance_policy or '' }}" maxlength="80"></label>
-        <label>{{ "Valide jusqu'au" if fr else 'Valid until' }}<input type="date" name="insurance_expires_at" value="{{ profile.insurance_expires_at or '' }}"></label>
+        <label>{{ t('tpl.compagnie') }}<input name="insurance_company" value="{{ profile.insurance_company or '' }}" maxlength="120"></label>
+        <label>{{ t('tpl.n_police') }}<input name="insurance_policy" value="{{ profile.insurance_policy or '' }}" maxlength="80"></label>
+        <label>{{ t('tpl.valide_jusqu_au_2') }}<input type="date" name="insurance_expires_at" value="{{ profile.insurance_expires_at or '' }}"></label>
       </div>
-      <label>{{ 'Attestation (PDF, PNG ou JPG)' if fr else 'Certificate (PDF, PNG or JPG)' }}
+      <label>{{ t('tpl.attestation_pdf_png_ou_jpg') }}
         <input type="file" name="document" accept=".pdf,.png,.jpg,.jpeg,.webp">
       </label>
       <p class="muted small">
-        {{ "Visible uniquement par notre équipe et par un client qui a déjà payé une mission avec vous. Toute nouvelle attestation repasse en vérification."
-           if fr else 'Visible only to our team and to a client who has already paid for a job with you. Any new certificate goes back under review.' }}
+        {{ t('tpl.visible_uniquement_par_notre_equipe_et') }}
       </p>
-      <button class="cta" type="submit">{{ "Envoyer l'attestation" if fr else 'Send certificate' }}</button>
+      <button class="cta" type="submit">{{ t('tpl.envoyer_l_attestation') }}</button>
     </form>
 
     <form method="post" action="{{ url_for('pilot_add_certification') }}" enctype="multipart/form-data">
         {{ csrf_input() }}
-      <h3>{{ 'Ajouter une formation' if fr else 'Add a licence' }}</h3>
+      <h3>{{ t('tpl.ajouter_une_formation') }}</h3>
       <div class="grid-2">
-        <label>{{ 'Autorité' if fr else 'Authority' }}
+        <label>{{ t('tpl.autorite') }}
           <select name="authority" id="cert-authority">
             {% for gname, codes in licence_authority_groups %}<optgroup label="{{ gname }}">{% for code in codes %}<option value="{{ code }}">{{ auth_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
           </select>
         </label>
-        <label>{{ 'Intitulé du brevet' if fr else 'Licence name' }}
+        <label>{{ t('tpl.intitule_du_brevet') }}
           <input name="title" id="cert-title" required list="cert-title-suggest"
-                 placeholder="{{ 'Ex. Opérations de base, STS-01, Part 107…' if fr else 'e.g. Basic operations, STS-01, Part 107…' }}">
+                 placeholder="{{ t('tpl.ex_operations_de_base_sts_01') }}">
           <datalist id="cert-title-suggest"></datalist>
           <small class="muted" style="display: block; margin-top: 4px;">
-            {{ 'Choisissez un brevet suggéré ou saisissez le vôtre.' if fr else 'Pick a suggested licence or enter your own.' }}
+            {{ t('tpl.choisissez_un_brevet_suggere_ou_saisissez') }}
           </small>
         </label>
-        <label>{{ 'Référence / N°' if fr else 'Reference / no.' }}<input name="reference" placeholder="{{ 'Ex. DGAC-2024-08821' if fr else 'e.g. DGAC-2024-08821' }}"></label>
-        <label>{{ 'Délivrée le' if fr else 'Issued on' }}<input name="issued_at" type="date"></label>
-        <label>{{ 'Expire le' if fr else 'Expires on' }}<input name="expires_at" type="date"></label>
-        <label>{{ 'Justificatif (PDF/JPG)' if fr else 'Document (PDF/JPG)' }}
+        <label>{{ t('tpl.reference_n') }}<input name="reference" placeholder="{{ t('tpl.ex_dgac_2024_08821') }}"></label>
+        <label>{{ t('tpl.delivree_le') }}<input name="issued_at" type="date"></label>
+        <label>{{ t('tpl.expire_le') }}<input name="expires_at" type="date"></label>
+        <label>{{ t('tpl.justificatif_pdf_jpg') }}
           <input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp">
           <small class="muted" style="display: block; margin-top: 4px;">
-            {{ "Scan du brevet, visible uniquement par l'admin Aube pour vérification." if fr else 'Scan of the licence, visible only to the Aube admin for verification.' }}
+            {{ t('tpl.scan_du_brevet_visible_uniquement_par') }}
           </small>
         </label>
       </div>
-      <button class="cta" type="submit">{{ 'Ajouter' if fr else 'Add' }}</button>
+      <button class="cta" type="submit">{{ t('tpl.ajouter') }}</button>
     </form>
     <script nonce="{{ csp_nonce }}">
       const CERT_TITLES = {{ licence_titles_by_authority | tojson }};
@@ -395,11 +391,11 @@
   </div>
 
   <div class="card">
-    <h2>{{ 'Mes drones' if fr else 'My drones' }}</h2>
+    <h2>{{ t('tpl.mes_drones') }}</h2>
     <p class="muted small" style="margin: -6px 0 14px;">
-      {{ "Vous avez plusieurs aéronefs, des cycles d'entretien, des heures de vol à tracer ?" if fr else 'You have several aircraft, maintenance cycles, flight hours to track?' }}
+      {{ t('tpl.vous_avez_plusieurs_aeronefs_des_cycles') }}
       <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">
-        {{ 'Gérez votre flotte sur AubeCrew →' if fr else 'Manage your fleet on AubeCrew →' }}
+        {{ t('tpl.gerez_votre_flotte_sur_aubecrew') }}
       </a>
     </p>
     {% for d in profile.drones %}
@@ -408,7 +404,7 @@
         {% if d.photo_path %}
         <img src="{{ url_for('media_file', filename=d.photo_path[8:]) }}" alt="" style="width: 72px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--rule); flex: 0 0 auto;">
         {% else %}
-        <span class="muted" style="width: 72px; height: 54px; border: 1px dashed var(--rule); border-radius: 8px; display: grid; place-items: center; font-size: 10px; flex: 0 0 auto;">{{ 'sans photo' if fr else 'no photo' }}</span>
+        <span class="muted" style="width: 72px; height: 54px; border: 1px dashed var(--rule); border-radius: 8px; display: grid; place-items: center; font-size: 10px; flex: 0 0 auto;">{{ t('tpl.sans_photo') }}</span>
         {% endif %}
         <div style="min-width: 0;">
           <strong>{{ d.brand }} {{ d.model }}</strong>, {{ drone_label(d.category).split(' (')[0] }}
@@ -423,46 +419,46 @@
         <form method="post" action="{{ url_for('pilot_drone_photo', drone_id=d.id) }}" enctype="multipart/form-data" class="inline-form" style="display: flex; gap: 6px; align-items: center;">
           {{ csrf_input() }}
           <label class="ghost" style="cursor: pointer; margin: 0; padding: 8px 12px; font-size: 13px;">
-            {{ ('Changer la photo' if d.photo_path else 'Ajouter une photo') if fr else ('Change photo' if d.photo_path else 'Add a photo') }}
+            {{ t('tpl.change_photo') if d.photo_path else t('tpl.add_photo') }}
             <input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp" hidden data-action="submit-on-change">
           </label>
         </form>
         <form method="post" action="{{ url_for('pilot_delete_drone', drone_id=d.id) }}">
           {{ csrf_input() }}
-          <button class="ghost danger" type="submit" style="padding: 8px 12px; font-size: 13px;">{{ 'supprimer' if fr else 'delete' }}</button>
+          <button class="ghost danger" type="submit" style="padding: 8px 12px; font-size: 13px;">{{ t('tpl.supprimer') }}</button>
         </form>
       </div>
     </div>
-    {% else %}<p class="muted">{{ 'Aucun drone enregistré.' if fr else 'No drone registered.' }}</p>{% endfor %}
+    {% else %}<p class="muted">{{ t('tpl.aucun_drone_enregistre') }}</p>{% endfor %}
 
     <form method="post" action="{{ url_for('pilot_add_drone') }}" enctype="multipart/form-data" id="drone-form">
         {{ csrf_input() }}
-      <h3>{{ 'Ajouter un drone' if fr else 'Add a drone' }}</h3>
+      <h3>{{ t('tpl.ajouter_un_drone') }}</h3>
       <div class="grid-2">
-        <label>{{ 'Catégorie' if fr else 'Category' }}
+        <label>{{ t('tpl.categorie') }}
           <select name="category">
             {% for code, lbl in drone_categories %}<option value="{{ code }}">{{ lbl }}</option>{% endfor %}
           </select>
         </label>
-        <label>{{ 'Marque' if fr else 'Brand' }}
+        <label>{{ t('tpl.marque') }}
           <input name="brand" id="drone-brand" list="drone-brands"
                  placeholder="DJI, Autel, Parrot, Skydio, custom…" autocomplete="off">
           <datalist id="drone-brands">
             {% for b in drone_brands %}<option value="{{ b }}">{% endfor %}
           </datalist>
         </label>
-        <label>{{ 'Modèle' if fr else 'Model' }}
+        <label>{{ t('tpl.modele') }}
           <input name="model" id="drone-model" list="drone-models"
-                 placeholder="{{ 'Ex. Mavic 3 Pro' if fr else 'e.g. Mavic 3 Pro' }}" autocomplete="off">
+                 placeholder="{{ t('tpl.ex_mavic_3_pro') }}" autocomplete="off">
           <datalist id="drone-models"></datalist>
         </label>
-        <label>{{ 'N° série' if fr else 'Serial no.' }}<input name="serial_number"></label>
-        <label>{{ 'Poids (g)' if fr else 'Weight (g)' }}<input name="weight_g" type="number"></label>
-        <label>{{ 'Charge utile max (g)' if fr else 'Max payload (g)' }}<input name="max_payload_g" type="number"></label>
-        <label>{{ 'Autonomie (min)' if fr else 'Flight time (min)' }}<input name="flight_time_min" type="number"></label>
-        <label>{{ 'Photo de l\'appareil' if fr else 'Photo of the aircraft' }} <span class="muted small">({{ 'png, jpg ou webp ; visible sur votre fiche' if fr else 'png, jpg or webp; shown on your page' }})</span><input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
+        <label>{{ t('tpl.n_serie') }}<input name="serial_number"></label>
+        <label>{{ t('tpl.poids_g') }}<input name="weight_g" type="number"></label>
+        <label>{{ t('tpl.charge_utile_max_g') }}<input name="max_payload_g" type="number"></label>
+        <label>{{ t('tpl.autonomie_min') }}<input name="flight_time_min" type="number"></label>
+        <label>{{ t('tpl.photo_de_l_appareil') }} <span class="muted small">({{ t('tpl.png_jpg_ou_webp_visible_sur') }})</span><input name="photo" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
       </div>
-      <h4>{{ 'Capacités' if fr else 'Capabilities' }}</h4>
+      <h4>{{ t('tpl.capacites') }}</h4>
       <div class="spec-groups" style="margin-top: 8px;">
         {% for gname, codes in drone_capability_groups %}
         <div class="spec-group">
@@ -477,17 +473,17 @@
       </div>
 
       <div id="custom-banner" class="alert alert-info" hidden>
-        <strong>{{ 'Drone custom détecté.' if fr else 'Custom drone detected.' }}</strong>
-        {{ "Cette marque ou ce modèle ne figure pas au catalogue connu. Décrivez-le précisément ci-dessous : type de chassis (X / H / Y6), carte de vol (Pixhawk, Cube, BetaFlight…), moteurs, hélices, masse, autonomie réelle, capteurs embarqués, usage prévu." if fr else 'This brand or model is not in the known catalogue. Describe it precisely below: frame type (X / H / Y6), flight controller (Pixhawk, Cube, BetaFlight…), motors, propellers, weight, real flight time, onboard sensors, intended use.' }}
+        <strong>{{ t('tpl.drone_custom_detecte') }}</strong>
+        {{ t('tpl.cette_marque_ou_ce_modele_ne') }}
       </div>
 
       <label>
-        <span id="notes-label">{{ 'Notes / spécificités' if fr else 'Notes / specifics' }}</span>
+        <span id="notes-label">{{ t('tpl.notes_specificites') }}</span>
         <textarea name="notes" id="drone-notes" rows="3"
-                  placeholder="{{ 'Ex. build FPV 5 pouces Pixhawk Cube Orange, charge utile L2 lidar…' if fr else 'e.g. 5-inch FPV build, Pixhawk Cube Orange, L2 lidar payload…' }}"></textarea>
+                  placeholder="{{ t('tpl.ex_build_fpv_5_pouces_pixhawk') }}"></textarea>
       </label>
 
-      <button class="cta" type="submit">{{ 'Ajouter le drone' if fr else 'Add the drone' }}</button>
+      <button class="cta" type="submit">{{ t('tpl.ajouter_le_drone') }}</button>
     </form>
   </div>
 </section>

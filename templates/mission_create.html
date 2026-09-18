@@ -1,69 +1,69 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Publier une mission' if fr else 'Post a job' }} · AubePilot{% endblock %}
+{% block title %}{{ t('tpl.publier_une_mission') }} · AubePilot{% endblock %}
 {% block content %}
 
 {# Une colonne centree, quatre etapes numerotees. Les champs et les options
    sont exactement ceux d'avant : seule la presentation change. #}
 <section class="form-page">
   <div class="search-head centered">
-    <h1>{{ 'Publier une mission' if fr else 'Post a job' }}</h1>
-    <p class="lead muted">{{ 'Décrivez votre besoin en quatre étapes. Les pilotes de votre secteur reçoivent une alerte et vous envoient leurs devis ; vous choisissez, puis vous payez sous séquestre.' if fr else 'Describe your need in four steps. Pilots in your area get an alert and send you their quotes; you choose, then pay into escrow.' }}</p>
+    <h1>{{ t('tpl.publier_une_mission') }}</h1>
+    <p class="lead muted">{{ t('tpl.decrivez_votre_besoin_en_quatre_etapes') }}</p>
   </div>
 
   <form method="post" class="auth-form auth-steps">
         {{ csrf_input() }}
     {% if target_pilot %}
     <div class="notice notice-accent">
-      <span class="eyebrow">{{ 'Demande adressée à un pilote' if fr else 'Request addressed to a pilot' }}</span>
-      <strong>{{ target_pilot.full_name }} {{ 'recevra votre demande par courriel' if fr else 'will receive your request by email' }}</strong>
+      <span class="eyebrow">{{ t('tpl.demande_adressee_a_un_pilote') }}</span>
+      <strong>{{ target_pilot.full_name }} {{ t('tpl.recevra_votre_demande_par_courriel') }}</strong>
       <p class="muted small">
-        {{ 'Décrivez votre besoin ci-dessous :' if fr else 'Describe your need below:' }} <strong>{{ target_pilot.full_name }}</strong> {{ 'vous répondra par un devis, que vous acceptez ou non.' if fr else 'will answer with a quote, which you may accept or decline.' }}
+        {{ t('tpl.decrivez_votre_besoin_ci_dessous') }} <strong>{{ target_pilot.full_name }}</strong> {{ t('tpl.vous_repondra_par_un_devis_que') }}
       </p>
       <input type="hidden" name="targeted_pilot_id" value="{{ target_pilot.id }}">
       <div class="choice-list" style="margin-top: 10px;">
         <label class="check"><input type="radio" name="visibility" value="private"{% if form.get('visibility', 'private') != 'open' %} checked{% endif %}>
-          {{ 'Réservé à ' ~ target_pilot.full_name ~ ' seulement (recommandé)' if fr else 'For ' ~ target_pilot.full_name ~ ' only (recommended)' }}
-          <span class="muted small">{{ '· invisible des autres pilotes' if fr else '· hidden from other pilots' }}</span></label>
+          {{ t('tpl.reserved_to_only', name=target_pilot.full_name) }}
+          <span class="muted small">{{ t('tpl.invisible_des_autres_pilotes') }}</span></label>
         <label class="check"><input type="radio" name="visibility" value="open"{% if form.get('visibility') == 'open' %} checked{% endif %}>
-          {{ 'Ouvrir aussi aux autres pilotes du secteur' if fr else 'Also open it to other pilots in the area' }}
-          <span class="muted small">{{ '· vous recevrez plusieurs devis à comparer' if fr else '· you will get several quotes to compare' }}</span></label>
+          {{ t('tpl.ouvrir_aussi_aux_autres_pilotes_du') }}
+          <span class="muted small">{{ t('tpl.vous_recevrez_plusieurs_devis_a_comparer') }}</span></label>
       </div>
     </div>
     {% endif %}
     {% if prefill_package %}
     <div class="notice notice-teal">
-      <span class="eyebrow">{{ "Réservation d'un forfait" if fr else 'Booking a package' }}</span>
-      <strong>{{ prefill_package.title }} · {% if prefill_package.price %}{{ prefill_package.price|int }} {{ prefill_package.currency }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</strong>
+      <span class="eyebrow">{{ t('tpl.reservation_d_un_forfait') }}</span>
+      <strong>{{ prefill_package.title }} · {% if prefill_package.price %}{{ prefill_package.price|int }} {{ prefill_package.currency }}{% else %}{{ t('tpl.sur_devis') }}{% endif %}</strong>
       <p class="muted small prewrap">{{ prefill_package.description }}</p>
       {% if prefill_package.deliverables %}
-      <p class="muted small"><strong>{{ 'Inclus :' if fr else 'Included:' }}</strong> {{ prefill_package.deliverables }}</p>
+      <p class="muted small"><strong>{{ t('tpl.inclus') }}</strong> {{ prefill_package.deliverables }}</p>
       {% endif %}
       <input type="hidden" name="from_package_id" value="{{ prefill_package.id }}">
     </div>
     {% endif %}
 
     <fieldset class="fieldset-block auth-step">
-      <legend>{{ "L'essentiel" if fr else 'The essentials' }}</legend>
-      <p class="muted small step-hint">{{ 'Le titre apparaît partout, soyez concret. Pas « Drone vidéo » mais « Captation aérienne d\'un chalet dans les Laurentides ».' if fr else 'The title appears everywhere, be specific. Not "Drone video" but "Aerial footage of a cottage in the Laurentians".' }}</p>
-      <label>{{ 'Titre de la mission' if fr else 'Job title' }}
-        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="{{ 'Captation aérienne d\'un mariage à Charlevoix' if fr else 'Aerial footage of a wedding in Charlevoix' }}">
+      <legend>{{ t('tpl.l_essentiel') }}</legend>
+      <p class="muted small step-hint">{{ t('tpl.le_titre_apparait_partout_soyez_concret') }}</p>
+      <label>{{ t('tpl.titre_de_la_mission') }}
+        <input name="title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="{{ t('tpl.captation_aerienne_d_un_mariage_a') }}">
       </label>
-      <label>{{ 'Type' if fr else 'Type' }}
+      <label>{{ t('tpl.type') }}
         <select name="mission_type" required>
           {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}" {% if form.get('mission_type')==code %}selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
         </select>
       </label>
-      <label>{{ 'Brief détaillé' if fr else 'Detailed brief' }}
-        <textarea name="description" rows="6" required placeholder="{{ 'Contexte, livrables attendus, plages horaires, contraintes d\'accès, références visuelles…' if fr else 'Context, expected deliverables, time slots, access constraints, visual references…' }}">{{ form.get('description','') }}</textarea>
+      <label>{{ t('tpl.brief_detaille') }}
+        <textarea name="description" rows="6" required placeholder="{{ t('tpl.contexte_livrables_attendus_plages_horaires_') }}">{{ form.get('description','') }}</textarea>
       </label>
     </fieldset>
 
     <fieldset class="fieldset-block auth-step">
-      <legend>{{ 'Localisation' if fr else 'Location' }}</legend>
-      <p class="muted small step-hint">{{ 'Le pays et la ville servent au filtrage et aident les pilotes à estimer leur déplacement.' if fr else 'Country and city are used for filtering and help pilots estimate their travel.' }}</p>
+      <legend>{{ t('tpl.localisation') }}</legend>
+      <p class="muted small step-hint">{{ t('tpl.le_pays_et_la_ville_servent') }}</p>
       <div class="grid-2">
-        <label>{{ 'Pays' if fr else 'Country' }}
+        <label>{{ t('tpl.pays') }}
           {% set _cur = form.get('country','') %}
           <select name="country" required>
             <option value="">—</option>
@@ -72,61 +72,61 @@
             <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
           </select>
         </label>
-        <label>{{ 'Ville' if fr else 'City' }}
+        <label>{{ t('tpl.ville') }}
           <span class="row-inline" style="margin-top: 7px; flex-wrap: nowrap;">
             <input name="city" value="{{ form.get('city','') }}" placeholder="Montréal" style="margin: 0;">
-            <button type="button" class="ghost" data-action="use-location" style="flex: 0 0 auto;">⌖ {{ 'Ma position' if fr else 'My location' }}</button>
+            <button type="button" class="ghost" data-action="use-location" style="flex: 0 0 auto;">⌖ {{ t('tpl.ma_position') }}</button>
           </span>
         </label>
         <input type="hidden" name="lat" value="{{ form.get('lat','') }}">
         <input type="hidden" name="lng" value="{{ form.get('lng','') }}">
-        <label>{{ 'Région ou département' if fr else 'Region or state' }}
+        <label>{{ t('tpl.region_ou_departement') }}
           <input name="region" value="{{ form.get('region','') }}" placeholder="Québec">
         </label>
-        <label>{{ 'Adresse / point de RDV' if fr else 'Address / meeting point' }}
+        <label>{{ t('tpl.adresse_point_de_rdv') }}
           <input name="address" value="{{ form.get('address','') }}" placeholder="Vieux-Port de Montréal">
         </label>
       </div>
     </fieldset>
 
     <fieldset class="fieldset-block auth-step">
-      <legend>{{ 'Budget & planning' if fr else 'Budget & schedule' }}</legend>
-      <p class="muted small step-hint">{{ "Une fourchette est plus efficace qu'un montant unique : laissez les pilotes proposer." if fr else 'A range works better than a single amount: let pilots make an offer.' }}</p>
+      <legend>{{ t('tpl.budget_planning') }}</legend>
+      <p class="muted small step-hint">{{ t('tpl.une_fourchette_est_plus_efficace_qu') }}</p>
       <div class="grid-3">
-        <label>{{ 'Budget min' if fr else 'Min budget' }}
+        <label>{{ t('tpl.budget_min') }}
           <input name="budget_min" type="number" step="0.01" value="{{ form.get('budget_min','') }}" placeholder="600">
         </label>
-        <label>{{ 'Budget max' if fr else 'Max budget' }}
+        <label>{{ t('tpl.budget_max') }}
           <input name="budget_max" type="number" step="0.01" value="{{ form.get('budget_max','') }}" placeholder="1100">
         </label>
-        <label>{{ 'Devise' if fr else 'Currency' }}
+        <label>{{ t('tpl.devise') }}
           <select name="currency">
             {% for c in currencies %}<option value="{{ c }}" {% if form.get('currency')==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
           </select>
         </label>
-        <label>{{ 'Durée estimée (h)' if fr else 'Estimated duration (h)' }}
+        <label>{{ t('tpl.duree_estimee_h') }}
           <input name="duration_hours" type="number" step="0.5" value="{{ form.get('duration_hours','') }}" placeholder="3">
         </label>
-        <label>{{ 'Date / heure de début' if fr else 'Start date / time' }}
+        <label>{{ t('tpl.date_heure_de_debut') }}
           <input name="start_date" type="datetime-local" value="{{ form.get('start_date','') }}">
         </label>
-        <label>{{ 'Date / heure de fin' if fr else 'End date / time' }}
+        <label>{{ t('tpl.date_heure_de_fin') }}
           <input name="end_date" type="datetime-local" value="{{ form.get('end_date','') }}">
         </label>
       </div>
     </fieldset>
 
     <fieldset class="fieldset-block auth-step">
-      <legend>{{ 'Exigences techniques' if fr else 'Technical requirements' }} <span class="muted small" style="font-weight: 400;">({{ 'facultatif' if fr else 'optional' }})</span></legend>
-      <p class="muted small step-hint">{{ 'Cochez uniquement ce qui est non négociable. Le reste deviendra un critère de tri pour vous.' if fr else 'Check only what is non-negotiable. The rest becomes a sorting criterion for you.' }}</p>
+      <legend>{{ t('tpl.exigences_techniques') }} <span class="muted small" style="font-weight: 400;">({{ t('tpl.facultatif') }})</span></legend>
+      <p class="muted small step-hint">{{ t('tpl.cochez_uniquement_ce_qui_est_non') }}</p>
       <div class="search-options" style="justify-content: flex-start; margin: 0 0 12px;">
-        <label class="chip-check"><input type="checkbox" name="is_urgent" value="1"> ⚡ {{ 'Mission urgente' if fr else 'Urgent job' }}</label>
-        <label class="chip-check"><input type="checkbox" name="requires_insurance" value="1"> {{ 'RC pro requise' if fr else 'Liability insurance required' }}</label>
+        <label class="chip-check"><input type="checkbox" name="is_urgent" value="1"> ⚡ {{ t('tpl.mission_urgente') }}</label>
+        <label class="chip-check"><input type="checkbox" name="requires_insurance" value="1"> {{ t('tpl.rc_pro_requise') }}</label>
       </div>
 
       {% set _caps = form.get('requires_capabilities') or [] %}
       <details class="disclosure req-fold" {% if _caps|select|list %}open{% endif %}>
-        <summary>{{ 'Capacités drone exigées' if fr else 'Required drone capabilities' }} <span class="muted small">· {{ 'caméra, capteurs, charge utile' if fr else 'camera, sensors, payload' }}</span></summary>
+        <summary>{{ t('tpl.capacites_drone_exigees') }} <span class="muted small">· {{ t('tpl.camera_capteurs_charge_utile') }}</span></summary>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in drone_capability_groups %}
         <div class="spec-group">
@@ -143,7 +143,7 @@
       </details>
 
       <details class="disclosure req-fold">
-        <summary>{{ 'Brevets exigés' if fr else 'Required licences' }} <span class="muted small">· {{ "par autorité de l'aviation civile" if fr else 'by civil aviation authority' }}</span></summary>
+        <summary>{{ t('tpl.brevets_exiges') }} <span class="muted small">· {{ t('tpl.par_autorite_de_l_aviation_civile') }}</span></summary>
       <div class="spec-groups" style="margin-top: 10px;">
         {% for gname, codes in licence_authority_groups %}
         <div class="spec-group">
@@ -159,9 +159,9 @@
       </details>
     </fieldset>
 
-    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">{{ 'Publier la mission' if fr else 'Post the job' }}</button>
+    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center; margin-top: 12px;">{{ t('tpl.publier_la_mission') }}</button>
     <div class="form-foot">
-      <span class="small muted">{{ "Vous pourrez modifier ou annuler tant qu'aucune offre n'est acceptée." if fr else 'You can edit or cancel as long as no bid has been accepted.' }}</span>
+      <span class="small muted">{{ t('tpl.vous_pourrez_modifier_ou_annuler_tant') }}</span>
     </div>
   </form>
 </section>

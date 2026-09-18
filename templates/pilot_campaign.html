@@ -1,41 +1,40 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Ma collecte' if fr else 'My fundraiser' }} · AubePilot{% endblock %}
+{% block title %}{{ t('tpl.ma_collecte') }} · AubePilot{% endblock %}
 {% block content %}
 
 <div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
   <div>
     <span class="eyebrow">{{ t('campaign.eyebrow') }}</span>
-    <h1>{{ 'Ma collecte' if fr else 'My fundraiser' }}</h1>
+    <h1>{{ t('tpl.ma_collecte') }}</h1>
     <p class="muted" style="max-width: 62ch;">
-      {{ "Un drone, un capteur, une formation : dites ce que vous voulez financer et pourquoi. Chaque contribution vous est versée dès qu'elle est payée, moins " ~ fee_pct|int ~ " % tout compris pour la plateforme (frais bancaires inclus). Pas de tout-ou-rien : ce qui est donné vous reste, objectif atteint ou non."
-         if fr else "A drone, a sensor, a course: say what you want to fund and why. Each contribution is paid out to you as soon as it clears, minus " ~ fee_pct|int ~ "% all-in for the platform (payment fees included). No all-or-nothing: what is given stays yours, goal reached or not." }}
+      {{ t('tpl.campaign_intro', pct=fee_pct|int) }}
     </p>
   </div>
-  <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ 'Profil pilote' if fr else 'Pilot profile' }}</a>
+  <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ t('tpl.profil_pilote') }}</a>
 </div>
 
 {% if not can_open and not campaign %}
 <div class="alert alert-info">
-  <span class="eyebrow">{{ 'Pas encore disponible pour vous' if fr else 'Not available for you yet' }}</span>
+  <span class="eyebrow">{{ t('tpl.pas_encore_disponible_pour_vous') }}</span>
   <p style="margin: 6px 0 0;">
-    {{ "Une collecte demande un brevet vérifié : c'est la garantie donnée à ceux qui donnent. Téléversez votre justificatif depuis votre profil." if fr else 'A fundraiser requires a verified licence: that is the guarantee given to those who give. Upload your proof from your profile.' }}
-    <a href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote →' if fr else 'My pilot profile →' }}</a>
+    {{ t('tpl.une_collecte_demande_un_brevet_verifie') }}
+    <a href="{{ url_for('pilot_edit') }}">{{ t('tpl.mon_profil_pilote_2') }}</a>
   </p>
 </div>
 {% endif %}
 
 {% if can_open or campaign %}
 <div class="alert {{ 'alert-ok' if contributions_open else 'alert-info' }}">
-  <span class="eyebrow">{{ 'Contributions en ligne' if fr else 'Online contributions' }} · {{ ('ouvertes' if contributions_open else 'pas encore') if fr else ('open' if contributions_open else 'not yet') }}</span>
+  <span class="eyebrow">{{ t('tpl.contributions_en_ligne') }} · {{ t('tpl.contrib_open') if contributions_open else t('tpl.contrib_not_yet') }}</span>
   <p style="margin: 6px 0 0;">
     {% if contributions_open %}
-      {{ "Vos soutiens peuvent contribuer par carte depuis votre fiche ; chaque contribution vous est versée dès son paiement." if fr else 'Supporters can contribute by card from your page; each contribution is paid out to you as soon as it clears.' }}
+      {{ t('tpl.vos_soutiens_peuvent_contribuer_par_carte') }}
     {% elif not connect_enabled %}
-      {{ "Votre collecte est visible et partageable dès maintenant. Le paiement par carte n'est pas encore ouvert sur la plateforme : il s'activera pour vous automatiquement, rien à faire de votre côté." if fr else 'Your fundraiser is visible and shareable right now. Card payment is not open on the platform yet: it will switch on for you automatically, nothing to do on your side.' }}
+      {{ t('tpl.votre_collecte_est_visible_et_partageable') }}
     {% else %}
-      {{ "Votre collecte est visible et partageable dès maintenant. Pour recevoir les contributions par carte, activez vos versements Stripe depuis votre profil pilote." if fr else 'Your fundraiser is visible and shareable right now. To receive card contributions, activate your Stripe payouts from your pilot profile.' }}
-      <a href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote →' if fr else 'My pilot profile →' }}</a>
+      {{ t('tpl.votre_collecte_est_visible_et_partageable_2') }}
+      <a href="{{ url_for('pilot_edit') }}">{{ t('tpl.mon_profil_pilote_2') }}</a>
     {% endif %}
   </p>
 </div>
@@ -44,8 +43,8 @@
 {% if campaign %}
 <section class="card">
   <div class="row-between" style="flex-wrap: wrap; gap: 8px;">
-    <span class="eyebrow">{{ 'En cours' if fr else 'Active' }}</span>
-    <a href="{{ url_for('pilot_detail', user_id=current_user.id) }}#soutenir" class="ghost">{{ 'Voir sur ma fiche →' if fr else 'See on my page →' }}</a>
+    <span class="eyebrow">{{ t('tpl.en_cours_2') }}</span>
+    <a href="{{ url_for('pilot_detail', user_id=current_user.id) }}#soutenir" class="ghost">{{ t('tpl.voir_sur_ma_fiche') }}</a>
   </div>
   <div class="campaign-bar"><span style="width: {{ campaign.progress_pct }}%;"></span></div>
   <div class="row-between" style="flex-wrap: wrap; gap: 8px; margin-top: 8px;">
@@ -59,9 +58,9 @@
     {% endfor %}
   </ul>
   {% endif %}
-  <form method="post" style="margin-top: 16px;" data-confirm="{{ 'Clôturer la collecte ? Les contributions déjà versées vous restent acquises.' if fr else 'Close the fundraiser? Contributions already paid out stay yours.' }}">
+  <form method="post" style="margin-top: 16px;" data-confirm="{{ t('tpl.cloturer_la_collecte_les_contributions_deja') }}">
     {{ csrf_input() }}<input type="hidden" name="action" value="close">
-    <button type="submit" class="ghost danger">{{ 'Clôturer la collecte' if fr else 'Close the fundraiser' }}</button>
+    <button type="submit" class="ghost danger">{{ t('tpl.cloturer_la_collecte') }}</button>
   </form>
 </section>
 {% endif %}
@@ -69,21 +68,21 @@
 {% if can_open or campaign %}
 <form method="post" class="card">
   {{ csrf_input() }}
-  <h2>{{ (('Modifier ma collecte' if campaign else 'Ouvrir une collecte') if fr else ('Edit my fundraiser' if campaign else 'Open a fundraiser')) }}</h2>
-  <label>{{ 'Titre' if fr else 'Title' }} <span class="muted small">({{ t('common.required') }})</span>
-    <input name="title" maxlength="120" required value="{{ campaign.title if campaign else '' }}" placeholder="{{ 'Un drone thermique pour les inspections de toiture' if fr else 'A thermal drone for roof inspections' }}">
+  <h2>{{ t('tpl.campaign_edit') if campaign else t('tpl.campaign_open') }}</h2>
+  <label>{{ t('tpl.titre') }} <span class="muted small">({{ t('common.required') }})</span>
+    <input name="title" maxlength="120" required value="{{ campaign.title if campaign else '' }}" placeholder="{{ t('tpl.un_drone_thermique_pour_les_inspections') }}">
   </label>
-  <label>{{ 'Ce que la collecte finance' if fr else 'What the fundraiser pays for' }} <span class="muted small">({{ t('common.required') }})</span>
+  <label>{{ t('tpl.ce_que_la_collecte_finance') }} <span class="muted small">({{ t('common.required') }})</span>
     <input name="equipment" maxlength="160" required value="{{ campaign.equipment if campaign else '' }}" placeholder="{{ 'DJI Mavic 3 Thermal + batteries' }}">
   </label>
-  <label>{{ 'Pourquoi, et pour quelles missions' if fr else 'Why, and for which jobs' }} <span class="muted small">({{ t('common.required') }} · {{ '80 caractères minimum' if fr else '80 characters minimum' }})</span>
-    <textarea name="reason" rows="6" maxlength="3000" required placeholder="{{ "Ce que ce matériel changera dans votre travail, à qui il servira, ce que vous ne pouvez pas faire aujourd'hui sans lui." if fr else 'What this gear will change in your work, who it will serve, what you cannot do today without it.' }}">{{ campaign.reason if campaign else '' }}</textarea>
+  <label>{{ t('tpl.pourquoi_et_pour_quelles_missions') }} <span class="muted small">({{ t('common.required') }} · {{ t('tpl.80_caracteres_minimum') }})</span>
+    <textarea name="reason" rows="6" maxlength="3000" required placeholder="{{ t('tpl.ce_que_ce_materiel_changera_dans') }}">{{ campaign.reason if campaign else '' }}</textarea>
   </label>
-  <label>{{ 'Objectif' if fr else 'Goal' }} ({{ campaign.currency if campaign else (profile.p_currency or 'CAD') }}, {{ goal_min }}–{{ goal_max }})
+  <label>{{ t('tpl.objectif') }} ({{ campaign.currency if campaign else (profile.p_currency or 'CAD') }}, {{ goal_min }}–{{ goal_max }})
     <input name="goal_amount" type="number" min="{{ goal_min }}" max="{{ goal_max }}" step="1" required value="{{ campaign.goal_amount|int if campaign else '' }}">
   </label>
   <p class="muted small">{{ t('campaign.pilot_terms', fee=fee_pct|int) }}</p>
-  <button type="submit" class="cta">{{ ('Enregistrer' if campaign else 'Ouvrir la collecte') if fr else ('Save' if campaign else 'Open the fundraiser') }}</button>
+  <button type="submit" class="cta">{{ t('tpl.save') if campaign else t('tpl.campaign_open_btn') }}</button>
 </form>
 {% endif %}
 

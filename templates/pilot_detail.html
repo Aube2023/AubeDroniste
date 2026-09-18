@@ -13,18 +13,18 @@
   <div class="flightbook-band">
     {% if pilot.avatar_path %}
     <img class="avatar big" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
-         alt="{{ 'Photo de' if fr else 'Photo of' }} {{ display_name }}">
+         alt="{{ t('tpl.photo_de') }} {{ display_name }}">
     {% else %}
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
-      <span class="callsign">{{ 'Profil' if fr else 'Profile' }} nº {{ pilot.pilot_no or pilot.id }}</span>
-      <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</h1>
+      <span class="callsign">{{ t('tpl.profil') }} nº {{ pilot.pilot_no or pilot.id }}</span>
+      <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ t('tpl.verifie') }}</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
       {% if trust %}
-      <ul class="trust-row" aria-label="{{ 'Repères' if fr else 'Signals' }}">
+      <ul class="trust-row" aria-label="{{ t('tpl.reperes') }}">
         {% if trust.member_since %}<li>{{ t('trust.member_since', date=trust.member_since) }}</li>{% endif %}
         {% if trust.active %}<li class="{{ 'on' if trust.active in ('today', 'week') else '' }}" title="{{ t('trust.active_title') }}">● {{ t('trust.active_' ~ trust.active) }}</li>{% endif %}
         {% if trust.response %}<li class="on" title="{{ t('trust.responds_title') }}">⚡ {% if trust.response.under_h <= 24 %}{{ t('trust.responds_h', n=trust.response.under_h) }}{% else %}{{ t('trust.responds_d', n=(trust.response.under_h // 24)) }}{% endif %}</li>{% endif %}
@@ -33,12 +33,12 @@
       {% endif %}
       {% if not reveal_identity and not is_org %}
       <p class="muted small mono" style="margin-top: 6px;">
-        {{ 'Identité complète révélée après acceptation et paiement d\'une mission.' if fr else 'Full identity revealed once a mission is accepted and paid.' }}
+        {{ t('tpl.identite_complete_revelee_apres_acceptation_') }}
       </p>
       {% endif %}
       {% if (is_school or is_shop) and pilot.school_programs %}
       <div style="margin-top: 14px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_shop %}{{ 'Produits & services' if fr else 'Products & services' }}{% else %}{{ 'Formations proposées' if fr else 'Courses offered' }}{% endif %}</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_shop %}{{ t('tpl.produits_services') }}{% else %}{{ t('tpl.formations_proposees') }}{% endif %}</span>
         <ul class="badges" style="margin: 0;">
           {% for line in pilot.school_programs.replace('\r', '').split('\n') if line.strip() %}<li>{{ line.strip() }}</li>{% endfor %}
         </ul>
@@ -46,19 +46,19 @@
       {% endif %}
       {% if is_org and pilot.portfolio_url %}
       <div style="margin-top: 12px;">
-        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {% if is_school %}{{ 'Site web de l\'école' if fr else 'School website' }}{% elif is_shop %}{{ 'Site web de la boutique' if fr else 'Shop website' }}{% else %}{{ 'Site web de l\'entreprise' if fr else 'Company website' }}{% endif %} ↗</a>
+        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {% if is_school %}{{ t('tpl.site_web_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.site_web_de_la_boutique') }}{% else %}{{ t('tpl.site_web_de_l_entreprise') }}{% endif %} ↗</a>
       </div>
       {% endif %}
       {% if is_org and (pilot.business_email or pilot.phone) %}
       <div style="margin-top: 12px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_school %}{{ 'Coordonnées de l\'école' if fr else 'School contact' }}{% elif is_shop %}{{ 'Coordonnées de la boutique' if fr else 'Shop contact' }}{% else %}{{ 'Coordonnées de l\'entreprise' if fr else 'Company contact' }}{% endif %}</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_school %}{{ t('tpl.coordonnees_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.coordonnees_de_la_boutique') }}{% else %}{{ t('tpl.coordonnees_de_l_entreprise') }}{% endif %}</span>
         {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="ghost" style="display:block; margin-bottom:4px;">✉️ {{ pilot.business_email }}</a>{% endif %}
         {% if pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="ghost">📞 {{ pilot.phone }}</a>{% endif %}
       </div>
       {% endif %}
       {% if not is_org and pilot.business_email %}
       <div style="margin-top: 12px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{{ 'Contact professionnel' if fr else 'Business contact' }}</span>
+        <span class="eyebrow" style="margin-bottom: 6px;">{{ t('tpl.contact_professionnel') }}</span>
         <a href="mailto:{{ pilot.business_email }}" class="ghost">✉️ {{ pilot.business_email }}</a>
       </div>
       {% endif %}
@@ -70,13 +70,13 @@
       {% if not current_user or current_user.id != pilot.id %}
       <div class="actions-row" style="margin-top: 18px;">
         {% if is_shop %}
-          {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="cta">{{ 'Contacter la boutique' if fr else 'Contact this shop' }}</a>
-          {% elif pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="cta">{{ 'Appeler la boutique' if fr else 'Call this shop' }}</a>
-          {% elif pilot.portfolio_url %}<a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="cta">{{ 'Visiter le site' if fr else 'Visit the website' }}</a>{% endif %}
+          {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="cta">{{ t('tpl.contacter_la_boutique') }}</a>
+          {% elif pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="cta">{{ t('tpl.appeler_la_boutique') }}</a>
+          {% elif pilot.portfolio_url %}<a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="cta">{{ t('tpl.visiter_le_site') }}</a>{% endif %}
         {% else %}
-        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ 'Contacter cette école' if fr else 'Contact this school' }}{% elif pilot.kind == 'company' %}{{ 'Contacter cette entreprise' if fr else 'Contact this company' }}{% else %}{{ 'Contacter ce pilote' if fr else 'Contact this pilot' }}{% endif %}</a>
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ t('tpl.contacter_cette_ecole') }}{% elif pilot.kind == 'company' %}{{ t('tpl.contacter_cette_entreprise') }}{% else %}{{ t('tpl.contacter_ce_pilote') }}{% endif %}</a>
         {% endif %}
-        <a href="{{ url_for('missions_search') }}" class="ghost">{{ 'Voir les missions ouvertes' if fr else 'See open missions' }}</a>
+        <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('tpl.voir_les_missions_ouvertes') }}</a>
       </div>
       {% endif %}
     </div>
@@ -84,31 +84,31 @@
   <div class="stat-rail">
     <div>
       <span class="v">{% if pilot.rating.count %}{{ '%.1f' % pilot.rating.avg }}<span style="color: var(--amber);"> ★</span>{% else %}—{% endif %}</span>
-      <span class="k">{{ 'Note' if fr else 'Rating' }} · {{ pilot.rating.count }} {{ 'avis' if fr else 'reviews' }}</span>
+      <span class="k">{{ t('tpl.note') }} · {{ pilot.rating.count }} {{ t('tpl.avis') }}</span>
     </div>
     <div>
-      <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ 'ans' if fr else 'yrs' }}</span></span>
-      <span class="k">{{ 'Expérience' if fr else 'Experience' }}</span>
+      <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ t('tpl.ans') }}</span></span>
+      <span class="k">{{ t('tpl.experience') }}</span>
     </div>
     {% if is_school or is_shop %}
     <div>
       <span class="v">{{ pilot.school_programs.replace('\r','').split('\n')|map('trim')|select|list|length if pilot.school_programs else 0 }}</span>
-      <span class="k">{% if is_shop %}{{ 'Produits' if fr else 'Products' }}{% else %}{{ 'Formations' if fr else 'Courses' }}{% endif %}</span>
+      <span class="k">{% if is_shop %}{{ t('tpl.produits') }}{% else %}{{ t('tpl.formations_2') }}{% endif %}</span>
     </div>
     {% else %}
     <div>
       <span class="v">{% if pilot.hourly_rate %}{{ pilot.hourly_rate|int }}{% else %}—{% endif %}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ pilot.p_currency or '' }}/h</span></span>
-      <span class="k">{{ 'Tarif horaire' if fr else 'Hourly rate' }}</span>
+      <span class="k">{{ t('tpl.tarif_horaire') }}</span>
     </div>
     <div>
       <span class="v">{{ pilot.travel_radius_km or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> km</span></span>
-      <span class="k">{{ 'Rayon' if fr else 'Radius' }}</span>
+      <span class="k">{{ t('tpl.rayon') }}</span>
     </div>
     <div>
       <span class="v" style="color: {% if pilot.is_available %}var(--teal){% else %}var(--ink-dim){% endif %};">
-        {% if pilot.is_available %}{{ 'DISPONIBLE' if fr else 'AVAILABLE' }}{% else %}{{ 'INDISPONIBLE' if fr else 'UNAVAILABLE' }}{% endif %}
+        {% if pilot.is_available %}{{ t('tpl.disponible_2') }}{% else %}{{ t('tpl.indisponible_2') }}{% endif %}
       </span>
-      <span class="k">{{ 'Disponibilité' if fr else 'Availability' }}</span>
+      <span class="k">{{ t('tpl.disponibilite') }}</span>
     </div>
     {% endif %}
   </div>
@@ -116,14 +116,14 @@
 
 {% if pilot.bio %}
 <div class="card">
-  <span class="eyebrow">{{ 'Note du pilote' if fr else 'Pilot\'s note' }}</span>
+  <span class="eyebrow">{{ t('tpl.note_du_pilote') }}</span>
   <p style="font-family: var(--serif); font-size: 1.15rem; line-height: 1.65; color: var(--ink-soft); margin: 0;">{{ pilot.bio }}</p>
 </div>
 {% endif %}
 
 <div class="{% if not is_school and not is_shop %}grid-2{% endif %}">
   <div class="card">
-    <span class="eyebrow">{% if is_school %}{{ 'À propos de l\'école' if fr else 'About the school' }}{% elif is_shop %}{{ 'À propos de la boutique' if fr else 'About the shop' }}{% else %}{{ 'Spécialités opérationnelles' if fr else 'Operational specialties' }}{% endif %}</span>
+    <span class="eyebrow">{% if is_school %}{{ t('tpl.a_propos_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.a_propos_de_la_boutique') }}{% else %}{{ t('tpl.specialites_operationnelles') }}{% endif %}</span>
     {% if not is_school and not is_shop %}
     {% if pilot.specialties %}
       {% for gname, codes in mission_groups %}
@@ -138,7 +138,7 @@
         {% endif %}
       {% endfor %}
     {% else %}
-      <p class="muted" style="margin: 16px 0;">{{ 'Spécialités non renseignées.' if fr else 'No specialties listed.' }}</p>
+      <p class="muted" style="margin: 16px 0;">{{ t('tpl.specialites_non_renseignees') }}</p>
     {% endif %}
 
     {% if pilot.deliverables %}
@@ -149,7 +149,7 @@
     {% endif %}
     {% endif %}
 
-    <h3 style="margin-top: 24px;">{{ 'Territoires opérés' if fr else 'Territories covered' }}</h3>
+    <h3 style="margin-top: 24px;">{{ t('tpl.territoires_operes') }}</h3>
     <ul class="chips" style="margin: 6px 0;">
       {% for t in pilot.territories %}
         <li class="tag">{{ t.country }}{% if t.region %} · {{ t.region }}{% endif %}</li>
@@ -159,27 +159,27 @@
     </ul>
 
     {% if pilot.languages %}
-    <h3 style="margin-top: 24px;">{{ 'Langues parlées' if fr else 'Languages spoken' }}</h3>
+    <h3 style="margin-top: 24px;">{{ t('tpl.langues_parlees') }}</h3>
     <div class="muted mono" style="text-transform: uppercase; letter-spacing: .12em; font-size: 13px;">
       {{ pilot.languages.replace(',', ' · ') }}
     </div>
     {% endif %}
 
     {% if pilot.insurance or insurance.status != 'none' %}
-    <h3 style="margin-top: 24px;">{{ 'Couverture RC pro' if fr else 'Liability insurance' }}</h3>
+    <h3 style="margin-top: 24px;">{{ t('tpl.couverture_rc_pro') }}</h3>
     <div class="muted small">
       {% if insurance.is_valid %}
-        <span class="tag tag-ok">✓ {{ 'Assurance vérifiée' if fr else 'Insurance verified' }}</span>
-        {% if pilot.insurance_expires_at %}<span class="mono" style="font-size: 11px;"> · {{ "jusqu'au" if fr else 'until' }} {{ pilot.insurance_expires_at }}</span>{% endif %}
+        <span class="tag tag-ok">✓ {{ t('tpl.assurance_verifiee') }}</span>
+        {% if pilot.insurance_expires_at %}<span class="mono" style="font-size: 11px;"> · {{ t('tpl.jusqu_au') }} {{ pilot.insurance_expires_at }}</span>{% endif %}
       {% else %}
         {# Declaree mais pas controlee (ou echue) : on le dit, plutot que de
            laisser croire a une garantie que nous n'avons pas verifiee. #}
-        <span class="tag">{{ 'Assurance déclarée, non vérifiée' if fr else 'Insurance declared, not verified' }}</span>
+        <span class="tag">{{ t('tpl.assurance_declaree_non_verifiee') }}</span>
       {% endif %}
       {% if pilot.insurance_company %}<br><span class="mono" style="text-transform: uppercase; letter-spacing: .1em; font-size: 11px;">{{ pilot.insurance_company }}</span>{% endif %}
-      {% if pilot.insurance_policy and can_view_credentials %}<span class="mono" style="font-size: 11px;"> · {{ 'n°' if fr else 'no.' }} {{ pilot.insurance_policy }}</span>{% endif %}
+      {% if pilot.insurance_policy and can_view_credentials %}<span class="mono" style="font-size: 11px;"> · {{ t('tpl.n') }} {{ pilot.insurance_policy }}</span>{% endif %}
       {% if insurance.has_document and can_view_credentials %}
-      <br><a href="{{ url_for('pilot_insurance_document', user_id=pilot.id) }}" target="_blank" rel="noopener noreferrer">{{ "Voir l'attestation →" if fr else 'View certificate →' }}</a>
+      <br><a href="{{ url_for('pilot_insurance_document', user_id=pilot.id) }}" target="_blank" rel="noopener noreferrer">{{ t('tpl.voir_l_attestation') }}</a>
       {% endif %}
     </div>
     {% endif %}
@@ -203,18 +203,18 @@
     {% endif %}
 
     {% if pilot.portfolio_url and not is_org %}
-    <h3 style="margin-top: 24px;">{{ 'Portfolio externe' if fr else 'External portfolio' }}</h3>
+    <h3 style="margin-top: 24px;">{{ t('tpl.portfolio_externe') }}</h3>
     {% if reveal_identity %}
       <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">{{ pilot.portfolio_url }} ↗</a>
     {% else %}
-      <p class="muted small">{{ 'Lien révélé après paiement d\'une première mission avec ce pilote.' if fr else 'Link revealed after paying for a first mission with this pilot.' }}</p>
+      <p class="muted small">{{ t('tpl.lien_revele_apres_paiement_d_une') }}</p>
     {% endif %}
     {% endif %}
   </div>
 
   {% if not is_school and not is_shop %}
   <div class="card">
-    <span class="eyebrow">{{ 'Brevets & qualifications' if fr else 'Licences & qualifications' }}</span>
+    <span class="eyebrow">{{ t('tpl.brevets_qualifications') }}</span>
     <div class="patches" style="margin-top: 12px;">
       {% for c in pilot.certifications %}
       <div class="patch">
@@ -223,28 +223,28 @@
           <span class="title">{{ c.title }}</span>
           <span class="meta">
             {{ auth_label(c.authority) }}
-            {% if c.reference %} · {{ 'n°' if fr else 'no.' }} {{ c.reference }}{% endif %}
-            {% if c.issued_at %} · {{ 'délivré' if fr else 'issued' }} {{ c.issued_at }}{% endif %}
-            {% if c.expires_at %} → {{ 'expire' if fr else 'expires' }} {{ c.expires_at }}{% endif %}
+            {% if c.reference %} · {{ t('tpl.n') }} {{ c.reference }}{% endif %}
+            {% if c.issued_at %} · {{ t('tpl.delivre') }} {{ c.issued_at }}{% endif %}
+            {% if c.expires_at %} → {{ t('tpl.expire') }} {{ c.expires_at }}{% endif %}
           </span>
           {% if c.document_path %}
             {% if can_view_credentials %}
               <a class="small" href="{{ url_for('pilot_certification_document', user_id=pilot.id, cert_id=c.id) }}"
                  target="_blank" rel="noopener noreferrer"
                  style="display:inline-block; margin-top:6px;">
-                {{ 'Voir le justificatif (PDF) →' if fr else 'View the document (PDF) →' }}
+                {{ t('tpl.voir_le_justificatif_pdf') }}
               </a>
             {% else %}
               <span class="muted small" style="display:block; margin-top:6px;">
-                {{ 'Justificatif PDF disponible après ouverture d\'une demande de mission avec ce pilote.' if fr else 'PDF document available after opening a mission request with this pilot.' }}
+                {{ t('tpl.justificatif_pdf_disponible_apres_ouverture_') }}
               </span>
             {% endif %}
           {% endif %}
         </div>
-        {% if c.is_expired %}<span class="tag tag-cancelled">{{ 'expiré' if fr else 'expired' }}</span>{% elif c.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}
+        {% if c.is_expired %}<span class="tag tag-cancelled">{{ t('tpl.expire_2') }}</span>{% elif c.is_verified %}<span class="badge verified">{{ t('tpl.verifie') }}</span>{% endif %}
       </div>
       {% else %}
-        <p class="muted">{{ 'Aucun brevet déclaré pour le moment.' if fr else 'No licence declared yet.' }}</p>
+        <p class="muted">{{ t('tpl.aucun_brevet_declare_pour_le_moment') }}</p>
       {% endfor %}
     </div>
   </div>
@@ -255,11 +255,11 @@
 <section class="card">
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
-      <span class="eyebrow">{{ 'Flotte personnelle' if fr else 'Personal fleet' }}</span>
-      <h2 class="card-title" style="margin: 0;">{{ 'Aéronefs déclarés' if fr else 'Declared aircraft' }}</h2>
+      <span class="eyebrow">{{ t('tpl.flotte_personnelle') }}</span>
+      <h2 class="card-title" style="margin: 0;">{{ t('tpl.aeronefs_declares') }}</h2>
     </div>
     <span class="muted mono" style="font-size: 12px; text-transform: uppercase; letter-spacing: .12em;">
-      {{ pilot.drones|length }} {{ 'appareil' if fr else 'aircraft' }}{{ 's' if fr and pilot.drones|length > 1 else '' }}
+      {{ t('tpl.n_appareils', n=pilot.drones|length) }}
     </span>
   </div>
   <div class="fleet-grid">
@@ -277,8 +277,8 @@
       <span class="model">{{ (d.brand or '—') }} {{ d.model or '' }}</span>
       <div class="specs">
         {% if d.weight_g %}<span><strong>{{ d.weight_g }}</strong>g</span>{% endif %}
-        {% if d.flight_time_min %}<span><strong>{{ d.flight_time_min }}</strong>{{ 'min vol' if fr else 'min flight' }}</span>{% endif %}
-        {% if d.max_payload_g %}<span><strong>{{ d.max_payload_g }}</strong>{{ 'g charge' if fr else 'g payload' }}</span>{% endif %}
+        {% if d.flight_time_min %}<span><strong>{{ d.flight_time_min }}</strong>{{ t('tpl.min_vol') }}</span>{% endif %}
+        {% if d.max_payload_g %}<span><strong>{{ d.max_payload_g }}</strong>{{ t('tpl.g_charge') }}</span>{% endif %}
         {% if d.serial_number %}<span>S/N <strong>{{ d.serial_number[:8] }}</strong></span>{% endif %}
       </div>
       {% if d.capabilities %}
@@ -289,7 +289,7 @@
       {% if d.notes %}
         {% if d.notes|length > 160 %}
         <details class="disclosure fleet-notes">
-          <summary class="small">{{ 'Fiche technique' if fr else 'Spec sheet' }}</summary>
+          <summary class="small">{{ t('tpl.fiche_technique') }}</summary>
           {# Un point-virgule, un retour a la ligne ou un tiret en tete = une ligne #}
           <ul class="fleet-spec-list">
             {% for line in d.notes.replace('\r', '').replace(';', '\n').split('\n') if line.strip(' -•\t') %}<li>{{ line.strip(' -•\t') }}</li>{% endfor %}
@@ -299,7 +299,7 @@
       {% endif %}
     </div>
     {% else %}
-    <p class="muted">{{ 'Flotte non déclarée.' if fr else 'No fleet declared.' }}</p>
+    <p class="muted">{{ t('tpl.flotte_non_declaree') }}</p>
     {% endfor %}
   </div>
 </section>
@@ -308,7 +308,7 @@
 {% if portfolio %}
 <section class="card">
   <span class="eyebrow">Showreel</span>
-  <h2 class="card-title">{{ 'Portfolio' if fr else 'Portfolio' }} · {{ portfolio|length }} {{ 'réalisation(s)' if fr else 'item(s)' }}</h2>
+  <h2 class="card-title">{{ t('tpl.portfolio') }} · {{ portfolio|length }} {{ t('tpl.realisation_s') }}</h2>
   <div class="media-grid">
     {% for it in portfolio %}
     <figure class="media-figure">
@@ -319,7 +319,7 @@
           </video>
         {% else %}
           <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or ('Réalisation' if fr else 'Work') }}" loading="lazy">
+               alt="{{ it.title or t('tpl.work') }}" loading="lazy">
         {% endif %}
       </div>
       {% if it.title or it.description %}
@@ -396,10 +396,10 @@
 
 {% if packages and not is_shop %}
 <section class="card">
-  <span class="eyebrow">{% if is_school %}{{ 'Nos formations' if fr else 'Our courses' }}{% else %}{{ 'Catalogue' if fr else 'Catalogue' }}{% endif %}</span>
-  <h2 class="card-title" style="margin-bottom: 6px;">{% if is_school %}{{ 'Formations & tarifs' if fr else 'Courses & pricing' }}{% else %}{{ 'Forfaits proposés' if fr else 'Packages offered' }}{% endif %}</h2>
+  <span class="eyebrow">{% if is_school %}{{ t('tpl.nos_formations') }}{% else %}{{ t('tpl.catalogue') }}{% endif %}</span>
+  <h2 class="card-title" style="margin-bottom: 6px;">{% if is_school %}{{ t('tpl.formations_tarifs') }}{% else %}{{ t('tpl.forfaits_proposes') }}{% endif %}</h2>
   <p class="muted small" style="margin: 0 0 18px;">
-    {% if is_school %}{{ 'Inscrivez-vous à une formation : une demande est créée et l\'école est invitée en priorité à confirmer les modalités.' if fr else 'Enrol in a course: a request is created and the school is invited first to confirm the details.' }}{% else %}{{ 'Réservez un forfait : la mission est créée avec le périmètre du pilote, et il est invité en priorité à confirmer le devis.' if fr else 'Book a package: the mission is created with the pilot\'s scope, and they are invited first to confirm the quote.' }}{% endif %}
+    {% if is_school %}{{ t('tpl.inscrivez_vous_a_une_formation_une') }}{% else %}{{ t('tpl.reservez_un_forfait_la_mission_est') }}{% endif %}
   </p>
 
   <div class="pkg-grid">
@@ -408,21 +408,21 @@
       <header>
         <h3>{{ p.title }}</h3>
         <div class="pkg-meta">
-          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{% if is_school %}{{ 'Formation' if fr else 'Course' }}{% else %}{{ 'Forfait général' if fr else 'General package' }}{% endif %}{% endif %}
+          {% if p.mission_type %}{{ mission_label(p.mission_type) }}{% else %}{% if is_school %}{{ t('tpl.formation') }}{% else %}{{ t('tpl.forfait_general') }}{% endif %}{% endif %}
           {% if p.duration_hours %} · {{ p.duration_hours }} h{% endif %}
         </div>
       </header>
       <p class="prewrap" style="margin: 0; font-size: .95rem;">{{ p.description }}</p>
       {% if p.deliverables %}
-      <p class="muted small" style="margin: 0;"><strong>{{ 'Inclus :' if fr else 'Includes:' }}</strong> {{ p.deliverables }}</p>
+      <p class="muted small" style="margin: 0;"><strong>{{ t('tpl.inclus_2') }}</strong> {{ p.deliverables }}</p>
       {% endif %}
       <footer class="pkg-foot">
         {% if p.price %}<div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
-        {% else %}<div class="price big" style="font-size: 1.1rem;">{{ 'Sur devis' if fr else 'On quote' }}</div>{% endif %}
+        {% else %}<div class="price big" style="font-size: 1.1rem;">{{ t('tpl.sur_devis_2') }}</div>{% endif %}
         {% if current_user and current_user.id != pilot.id %}
-          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{% if is_school %}{{ 'S\'inscrire' if fr else 'Enrol' }}{% else %}{{ 'Réserver' if fr else 'Book' }}{% endif %}</a>
+          <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{% if is_school %}{{ t('tpl.s_inscrire') }}{% else %}{{ t('tpl.reserver') }}{% endif %}</a>
         {% elif not current_user %}
-          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{% if is_school %}{{ 'Se connecter pour s\'inscrire' if fr else 'Sign in to enrol' }}{% else %}{{ 'Se connecter pour réserver' if fr else 'Sign in to book' }}{% endif %}</a>
+          <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{% if is_school %}{{ t('tpl.se_connecter_pour_s_inscrire') }}{% else %}{{ t('tpl.se_connecter_pour_reserver') }}{% endif %}</a>
         {% endif %}
       </footer>
     </article>
@@ -432,18 +432,18 @@
 {% endif %}
 
 <section class="card" id="avis">
-  <span class="eyebrow">{{ 'Retours d\'expérience' if fr else 'Feedback' }}</span>
-  <h2 class="card-title">{{ 'Avis des clients' if fr else 'Client reviews' }}</h2>
+  <span class="eyebrow">{{ t('tpl.retours_d_experience') }}</span>
+  <h2 class="card-title">{{ t('tpl.avis_des_clients') }}</h2>
 
   {% if my_review_booking %}
   <form method="post" action="{{ url_for('pilot_review', user_id=pilot.id) }}"
         class="card" style="background: var(--paper-3); margin: 0 0 22px;">
     {{ csrf_input() }}
-    <strong>{% if my_review_booking.my_rating %}{{ 'Modifier votre avis' if fr else 'Edit your review' }}{% else %}{{ 'Laisser un avis' if fr else 'Leave a review' }}{% endif %}</strong>
+    <strong>{% if my_review_booking.my_rating %}{{ t('tpl.modifier_votre_avis') }}{% else %}{{ t('tpl.laisser_un_avis') }}{% endif %}</strong>
     <p class="muted small" style="margin: 4px 0 14px;">
-      {{ 'Vous avez réalisé une mission avec ce pilote — partagez votre retour.' if fr else 'You completed a mission with this pilot — share your feedback.' }}
+      {{ t('tpl.vous_avez_realise_une_mission_avec') }}
     </p>
-    <label>{{ 'Note' if fr else 'Rating' }}
+    <label>{{ t('tpl.note') }}
       <select name="rating">
         {% for n in [5, 4, 3, 2, 1] %}
         <option value="{{ n }}" {% if (my_review_booking.my_rating or 5) == n %}selected{% endif %}>
@@ -452,12 +452,12 @@
         {% endfor %}
       </select>
     </label>
-    <label>{{ 'Commentaire' if fr else 'Comment' }}
+    <label>{{ t('tpl.commentaire') }}
       <textarea name="comment" rows="3" maxlength="1000"
-                placeholder="{{ 'Ponctualité, qualité des images, professionnalisme…' if fr else 'Punctuality, image quality, professionalism…' }}">{{ my_review_booking.my_comment or '' }}</textarea>
+                placeholder="{{ t('tpl.ponctualite_qualite_des_images_professionnal') }}">{{ my_review_booking.my_comment or '' }}</textarea>
     </label>
     <div style="margin-top: 14px;">
-      <button class="cta" type="submit">{% if my_review_booking.my_rating %}{{ 'Mettre à jour' if fr else 'Update' }}{% else %}{{ 'Publier mon avis' if fr else 'Publish my review' }}{% endif %}</button>
+      <button class="cta" type="submit">{% if my_review_booking.my_rating %}{{ t('tpl.mettre_a_jour') }}{% else %}{{ t('tpl.publier_mon_avis') }}{% endif %}</button>
     </div>
   </form>
   {% endif %}
@@ -465,12 +465,12 @@
   {% for r in reviews %}
   <div class="review-quote">
     <div class="stars">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
-    <q>{{ r.comment or ('(pas de commentaire écrit)' if fr else '(no written comment)') }}</q>
+    <q>{{ r.comment or t('tpl.no_written_comment') }}</q>
     <cite>{{ mask_name(r.author_name) }} · {{ r.created_at[:10] }}</cite>
   </div>
   {% else %}
   <div class="stars" style="font-size: 1.5rem; margin-bottom: 8px;">{% for _ in range(5) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
-  <p class="muted">{% if is_school %}{{ 'Pas encore d\'avis. Soyez le premier à recommander cette école.' if fr else 'No reviews yet. Be the first to recommend this school.' }}{% else %}{{ 'Pas encore d\'avis. Soyez le premier à recommander ce pilote.' if fr else 'No reviews yet. Be the first to recommend this pilot.' }}{% endif %}</p>
+  <p class="muted">{% if is_school %}{{ t('tpl.pas_encore_d_avis_soyez_le') }}{% else %}{{ t('tpl.pas_encore_d_avis_soyez_le_2') }}{% endif %}</p>
   {% endfor %}
 </section>
 

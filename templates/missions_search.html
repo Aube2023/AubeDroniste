@@ -5,7 +5,7 @@
 {% set has_filters = params.near or params.country or params.mission_type or params.city or params.only_urgent %}
 
 <div class="search-head centered">
-  <h1>{{ 'Missions ouvertes' if fr else 'Open missions' }}</h1>
+  <h1>{{ t('tpl.missions_ouvertes') }}</h1>
   <p class="lead muted">{{ t('search.missions_intro') }}</p>
   <p class="search-count">
     {% if n == 0 and not has_filters %}{{ t('search.missions_none') }}{% elif n == 1 %}{{ t('search.missions_one') }}{% else %}{{ t('search.missions_many', n=n) }}{% endif %}{% if params.near_label %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
@@ -36,9 +36,9 @@
     <button class="cta" type="submit">{{ t('search.btn') }}</button>
   </div>
   {% if params.near_label %}
-    <p class="near-note">⌖ {{ 'Autour de' if fr else 'Around' }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ 'tri par distance, les missions plus loin restent visibles' if fr else 'sorted by distance, farther missions stay visible' }}{% endif %}</p>
+    <p class="near-note">⌖ {{ t('tpl.autour_de') }} {{ params.near_label }} · {{ params.radius_km }} km{% if not params.near_only %} · {{ t('tpl.tri_par_distance_les_missions_plus') }}{% endif %}</p>
   {% elif params.near_error %}
-    <p class="near-note err">{{ 'Lieu introuvable : essayez « code postal + pays » ou une ville.' if fr else 'Place not found: try “postal code + country” or a city.' }}</p>
+    <p class="near-note err">{{ t('tpl.lieu_introuvable_essayez_code_postal_pays') }}</p>
   {% endif %}
   <div class="search-options">
     <label class="chip-check"><input type="checkbox" name="only_urgent" value="1" {% if params.only_urgent %}checked{% endif %}> ⚡ {{ t('search.urgent_only') }}</label>
@@ -76,7 +76,7 @@
     <div class="excerpt">{{ m.description[:140] }}{% if m.description|length > 140 %}…{% endif %}</div>
     <div class="footer">
       <span class="budget">
-        {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}
+        {% if m.budget_min and m.budget_max %}{{ m.budget_min|int }}–{{ m.budget_max|int }}{% elif m.budget_max or m.budget_min %}{{ (m.budget_max or m.budget_min)|int }}{% else %}{{ t('tpl.sur_devis') }}{% endif %}
         {{ m.currency if m.budget_min or m.budget_max else '' }}
       </span>
       <span>{{ m.created_at[:10] }}</span>
@@ -85,14 +85,14 @@
   {% else %}
     <div class="empty-state">
       {% if has_filters or params.near_only %}
-      <strong>{{ 'Aucune mission ne correspond.' if fr else 'No mission matches.' }}</strong>
-      <p>{{ 'Essayez d’agrandir le rayon, de retirer un filtre ou de décocher « Urgent uniquement ».' if fr else 'Try widening the radius, removing a filter or unchecking “Urgent only”.' }}</p>
+      <strong>{{ t('tpl.aucune_mission_ne_correspond') }}</strong>
+      <p>{{ t('tpl.essayez_dagrandir_le_rayon_de_retirer') }}</p>
       <div class="actions-row">
         <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('search.reset') }}</a>
       </div>
       {% else %}
       <strong>{{ t('search.missions_none') }}</strong>
-      <p>{{ 'Vous avez un besoin ? Publiez-le : les pilotes de votre secteur reçoivent une alerte et vous envoient leurs devis.' if fr else 'Need a pilot? Post your mission: pilots in your area get an alert and send you their quotes.' }}</p>
+      <p>{{ t('tpl.vous_avez_un_besoin_publiez_le') }}</p>
       <div class="actions-row">
         <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('nav.publish') }}</a>
         <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('nav.pilots') }} →</a>

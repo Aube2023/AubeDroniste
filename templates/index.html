@@ -148,8 +148,8 @@
     </a>
     {% else %}
     <div class="empty-state">
-      <strong>{{ 'Aucun pilote pour le moment.' if lang == 'fr' else 'No pilots yet.' }}</strong>
-      <p>{{ 'Soyez le premier pilote certifié référencé sur la plateforme.' if lang == 'fr' else 'Be the first certified pilot listed on the platform.' }}</p>
+      <strong>{{ t('tpl.aucun_pilote_pour_le_moment') }}</strong>
+      <p>{{ t('tpl.soyez_le_premier_pilote_certifie_reference') }}</p>
       <div class="actions-row">
         <a href="{{ url_for('register') }}?role=pilot" class="cta">{{ t('home.cta_pilot') }}</a>
       </div>
@@ -171,8 +171,8 @@
     <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
       <div class="country-name">{{ c.country }}</div>
       <div class="country-stats">
-        <strong>{{ c.pilots }}</strong> {{ 'pilote' if lang == 'fr' else 'pilot' }}{{ 's' if c.pilots > 1 else '' }} ·
-        <strong>{{ c.missions }}</strong> {{ 'mission' if lang == 'fr' else 'mission' }}{{ 's' if c.missions > 1 else '' }}
+        {{ t('tpl.n_pilotes', n=c.pilots) }} ·
+        {{ t('tpl.n_missions', n=c.missions) }}
       </div>
       <span class="arrow">→</span>
     </a>
@@ -214,7 +214,7 @@
   </div>
   <div class="cta-row" style="margin-top: 22px; justify-content: center;">
     <a href="#comment-ca-marche" class="ghost">{{ t('home.join.how') }}</a>
-    <a href="{{ url_for('pilots_search', kind='school') }}" class="ghost">{{ 'Voir les écoles →' if lang == 'fr' else 'See the schools →' }}</a>
+    <a href="{{ url_for('pilots_search', kind='school') }}" class="ghost">{{ t('tpl.voir_les_ecoles') }}</a>
   </div>
 </section>
 
@@ -253,8 +253,8 @@
     </a>
     {% else %}
     <div class="empty-state">
-      <strong>{{ 'Aucune mission ouverte.' if lang == 'fr' else 'No open missions.' }}</strong>
-      <p>{{ 'Publiez la première mission et recevez des devis de pilotes certifiés.' if lang == 'fr' else 'Post the first mission and receive quotes from certified pilots.' }}</p>
+      <strong>{{ t('tpl.aucune_mission_ouverte') }}</strong>
+      <p>{{ t('tpl.publiez_la_premiere_mission_et_recevez') }}</p>
       <div class="actions-row">
         <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('home.cta_publish') }}</a>
       </div>

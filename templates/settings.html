@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% set fr = (lang == 'fr') %}
-{% block title %}{{ 'Paramètres' if fr else 'Settings' }} · AubePilot{% endblock %}
+{% block title %}{{ t('tpl.parametres') }} · AubePilot{% endblock %}
 {% block content %}
 
 <div style="margin-bottom: 24px;">
-  <span class="eyebrow">{{ 'Mon compte · Paramètres' if fr else 'My account · Settings' }}</span>
-  <h1>{{ 'Paramètres du profil.' if fr else 'Profile settings.' }}</h1>
+  <span class="eyebrow">{{ t('tpl.mon_compte_parametres') }}</span>
+  <h1>{{ t('tpl.parametres_du_profil') }}</h1>
   <p class="lead muted">
-    {{ "Identité, base d'opération, langue, notifications, sécurité et vos données." if fr else 'Identity, home base, language, notifications, security and your data.' }}
-    {% if is_pilot %}{{ 'Les tarifs, spécialités, brevets et drones se règlent dans' if fr else 'Rates, specialties, licences and drones are managed in' }} <a href="{{ url_for('pilot_edit') }}">{{ 'Mon profil pilote' if fr else 'My pilot profile' }}</a>.{% endif %}
+    {{ t('tpl.identite_base_d_operation_langue_notificatio') }}
+    {% if is_pilot %}{{ t('tpl.les_tarifs_specialites_brevets_et_drones') }} <a href="{{ url_for('pilot_edit') }}">{{ t('tpl.mon_profil_pilote') }}</a>.{% endif %}
   </p>
 </div>
 
@@ -17,27 +17,27 @@
   {# ================= Identité & base ================= #}
   <form method="post" action="{{ url_for('settings_account') }}" class="card">
     {{ csrf_input() }}
-    <span class="eyebrow">{{ 'Identité & base' if fr else 'Identity & base' }}</span>
-    <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ "Qui vous êtes, d'où vous opérez" if fr else 'Who you are, where you operate from' }}</h2>
+    <span class="eyebrow">{{ t('tpl.identite_base') }}</span>
+    <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.qui_vous_etes_d_ou_vous') }}</h2>
 
-    <label>{{ 'Nom complet' if fr else 'Full name' }}
+    <label>{{ t('tpl.nom_complet') }}
       <input name="full_name" value="{{ user.full_name }}" maxlength="120" {% if name_locked %}disabled{% endif %}>
       {% if name_locked %}
       <small class="muted" style="display: block; margin-top: 4px;">
-        {{ 'Verrouillé : un justificatif de brevet a été téléversé sous ce nom.' if fr else 'Locked: a licence document was uploaded under this name.' }}
-        <a href="{{ url_for('request_name_change') }}">{{ 'Demander un changement de nom →' if fr else 'Request a name change →' }}</a>
+        {{ t('tpl.verrouille_un_justificatif_de_brevet_a') }}
+        <a href="{{ url_for('request_name_change') }}">{{ t('tpl.demander_un_changement_de_nom') }}</a>
       </small>
       {% endif %}
     </label>
-    <label>{{ 'Identifiant / courriel de connexion' if fr else 'Username / login email' }}
+    <label>{{ t('tpl.identifiant_courriel_de_connexion') }}
       <input value="{{ user.username }} · {{ user.email }}" disabled>
-      <small class="muted" style="display: block; margin-top: 4px;">{{ "Ne se modifie pas : c'est votre identité dans l'écosystème Aube." if fr else 'Cannot be changed: this is your identity across the Aube ecosystem.' }}</small>
+      <small class="muted" style="display: block; margin-top: 4px;">{{ t('tpl.ne_se_modifie_pas_c_est') }}</small>
     </label>
-    <label>{{ 'Téléphone' if fr else 'Phone' }} <span class="muted small">({{ "jamais public, révélé au partenaire d'une mission payée" if fr else 'never public, revealed to the partner of a paid job' }})</span>
+    <label>{{ t('tpl.telephone') }} <span class="muted small">({{ t('tpl.jamais_public_revele_au_partenaire_d') }})</span>
       {% with phone_value = user.phone or '' %}{% include "_phone_field.html" %}{% endwith %}
     </label>
     <div class="grid-2">
-      <label>{{ 'Pays' if fr else 'Country' }}
+      <label>{{ t('tpl.pays') }}
         {% set _cur = user.country or '' %}
         <select name="country">
           <option value="">—</option>
@@ -46,18 +46,18 @@
           <optgroup label="{{ t('country.all') }}">{% for c in countries if c not in featured_countries %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</optgroup>
         </select>
       </label>
-      <label>{{ 'Ville' if fr else 'City' }}
+      <label>{{ t('tpl.ville') }}
         <input name="city" value="{{ user.city or '' }}" maxlength="120">
       </label>
     </div>
     <div class="geo-row">
-      <label>{{ 'Latitude' if fr else 'Latitude' }}<input name="lat" type="number" step="any" value="{{ user.lat if user.lat is not none else '' }}"></label>
-      <label>{{ 'Longitude' if fr else 'Longitude' }}<input name="lng" type="number" step="any" value="{{ user.lng if user.lng is not none else '' }}"></label>
-      <button type="button" class="ghost" data-action="use-location">⌖ {{ 'Ma position' if fr else 'My location' }}</button>
+      <label>{{ t('tpl.latitude') }}<input name="lat" type="number" step="any" value="{{ user.lat if user.lat is not none else '' }}"></label>
+      <label>{{ t('tpl.longitude') }}<input name="lng" type="number" step="any" value="{{ user.lng if user.lng is not none else '' }}"></label>
+      <button type="button" class="ghost" data-action="use-location">⌖ {{ t('tpl.ma_position') }}</button>
     </div>
-    <p class="muted small">{{ 'Votre position sert au tri par distance et aux alertes dans votre rayon ; sur la carte elle est floutée d\'environ 10 km.' if fr else 'Your location is used for distance sorting and radius alerts; on the map it is blurred by about 10 km.' }}</p>
+    <p class="muted small">{{ t('tpl.votre_position_sert_au_tri_par') }}</p>
 
-    <label>{{ 'Langue préférée' if fr else 'Preferred language' }}
+    <label>{{ t('tpl.langue_preferee') }}
       <select name="lang">
         {% for code in supported_langs %}
         <option value="{{ code }}" {% if (user.lang or lang) == code %}selected{% endif %}>{{ lang_flag(code) }} {{ lang_name(code) }}</option>
@@ -65,11 +65,11 @@
       </select>
     </label>
 
-    <span class="eyebrow" style="margin-top: 8px;">{{ "Couleurs de l'interface" if fr else 'Interface colours' }}</span>
+    <span class="eyebrow" style="margin-top: 8px;">{{ t('tpl.couleurs_de_l_interface') }}</span>
     <p class="muted small" style="margin: 4px 0 8px;">
-      {{ "Choisissez la teinte des boutons, liens et repères. Elle vous suit sur tous vos appareils une fois enregistrée ; le mode clair ou sombre se règle avec le bouton Nuit / Aube en haut de page." if fr else 'Pick the tint of buttons, links and highlights. It follows you on every device once saved; light or dark mode is the Night / Dawn button at the top of the page.' }}
+      {{ t('tpl.choisissez_la_teinte_des_boutons_liens') }}
     </p>
-    <div class="accent-picker" role="radiogroup" aria-label="{{ 'Palette' if fr else 'Palette' }}">
+    <div class="accent-picker" role="radiogroup" aria-label="{{ t('tpl.palette') }}">
       {% set _cur_accent = user.accent or 'aube' %}
       {% set _accent_names = {
         'aube':     ('Aube',     'Dawn',     '#4257b2', '#7a5fc4'),
@@ -84,43 +84,43 @@
       <label>
         <input type="radio" name="accent" value="{{ code }}" data-action="pick-accent" {% if _cur_accent == code %}checked{% endif %}>
         <span class="swatch" style="--sw-1: {{ _n[2] }}; --sw-2: {{ _n[3] }};" aria-hidden="true"></span>
-        <span>{{ _n[0] if fr else _n[1] }}</span>
+        <span>{{ t('tpl.accent_' ~ code) }}</span>
       </label>
       {% endfor %}
     </div>
-    <button class="cta" type="submit">{{ 'Enregistrer' if fr else 'Save' }}</button>
+    <button class="cta" type="submit">{{ t('tpl.enregistrer') }}</button>
   </form>
 
   <div style="display: grid; gap: 24px;">
     {# ================= Notifications ================= #}
     <form method="post" action="{{ url_for('settings_notifications') }}" class="card">
       {{ csrf_input() }}
-      <span class="eyebrow">{{ 'Notifications par courriel' if fr else 'Email notifications' }}</span>
-      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ "Ce qu'on vous envoie" if fr else 'What we send you' }}</h2>
+      <span class="eyebrow">{{ t('tpl.notifications_par_courriel') }}</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.ce_qu_on_vous_envoie') }}</h2>
       {% if is_client %}
-      <label class="check"><input type="checkbox" name="notify_bids" value="1" {% if user.notify_bids %}checked{% endif %}> {{ 'Nouveau devis ou devis révisé sur mes missions' if fr else 'New or revised quote on my jobs' }}</label>
+      <label class="check"><input type="checkbox" name="notify_bids" value="1" {% if user.notify_bids %}checked{% endif %}> {{ t('tpl.nouveau_devis_ou_devis_revise_sur') }}</label>
       {% endif %}
-      <label class="check"><input type="checkbox" name="notify_messages" value="1" {% if user.notify_messages %}checked{% endif %}> {{ 'Nouveau message dans une mission' if fr else 'New message on a job' }}</label>
+      <label class="check"><input type="checkbox" name="notify_messages" value="1" {% if user.notify_messages %}checked{% endif %}> {{ t('tpl.nouveau_message_dans_une_mission') }}</label>
       {% if is_pilot %}
-      <label class="check"><input type="checkbox" name="notify_alerts" value="1" {% if user.notify_alerts %}checked{% endif %}> {{ "Missions publiées dans mon rayon d'intervention" if fr else 'Jobs posted within my service radius' }}</label>
+      <label class="check"><input type="checkbox" name="notify_alerts" value="1" {% if user.notify_alerts %}checked{% endif %}> {{ t('tpl.missions_publiees_dans_mon_rayon_d') }}</label>
       {% endif %}
-      <label class="check"><input type="checkbox" name="notify_news" value="1" {% if user.notify_news %}checked{% endif %}> {{ 'Nouveautés de la plateforme (rare, jamais de publicité)' if fr else 'Platform updates (rare, never advertising)' }}</label>
-      <p class="muted small" style="margin-top: 10px;">{{ "Les courriels liés à l'argent (devis accepté, paiement, virement, litige, annulation) sont toujours envoyés." if fr else 'Money-related emails (accepted quote, payment, transfer, dispute, cancellation) are always sent.' }}</p>
-      <button class="cta" type="submit">{{ 'Enregistrer' if fr else 'Save' }}</button>
+      <label class="check"><input type="checkbox" name="notify_news" value="1" {% if user.notify_news %}checked{% endif %}> {{ t('tpl.nouveautes_de_la_plateforme_rare_jamais') }}</label>
+      <p class="muted small" style="margin-top: 10px;">{{ t('tpl.les_courriels_lies_a_l_argent') }}</p>
+      <button class="cta" type="submit">{{ t('tpl.enregistrer') }}</button>
     </form>
 
     {# ================= Mot de passe ================= #}
     <form method="post" action="{{ url_for('settings_password') }}" class="card" autocomplete="off">
       {{ csrf_input() }}
-      <span class="eyebrow">{{ 'Sécurité' if fr else 'Security' }}</span>
-      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ 'Mot de passe' if fr else 'Password' }}</h2>
+      <span class="eyebrow">{{ t('tpl.securite') }}</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.mot_de_passe') }}</h2>
       {% if password_managed_elsewhere %}
-      <p class="muted">{{ 'Votre mot de passe est celui de votre compte' if fr else 'Your password is the one on your' }} <strong>AubeMail</strong> {{ "(identité centrale Aube) : modifiez-le sur" if fr else 'account (Aube\'s central identity): change it on' }} <a href="{{ aubemail_url }}" target="_blank" rel="noopener">AubeMail</a>{{ ", il s'applique ici automatiquement." if fr else ', it applies here automatically.' }}</p>
+      <p class="muted">{{ t('tpl.votre_mot_de_passe_est_celui') }} <strong>AubeMail</strong> {{ t('tpl.identite_centrale_aube_modifiez_le_sur') }} <a href="{{ aubemail_url }}" target="_blank" rel="noopener">AubeMail</a>{{ t('tpl.il_s_applique_ici_automatiquement') }}</p>
       {% else %}
-      <label>{{ 'Mot de passe actuel' if fr else 'Current password' }}<input name="current" type="password" required autocomplete="current-password"></label>
-      <label>{{ 'Nouveau mot de passe' if fr else 'New password' }} <span class="muted small">({{ '8 caractères minimum' if fr else '8 characters minimum' }})</span><input name="new" type="password" required minlength="8" autocomplete="new-password"></label>
-      <label>{{ 'Confirmer' if fr else 'Confirm' }}<input name="confirm" type="password" required minlength="8" autocomplete="new-password"></label>
-      <button class="cta" type="submit">{{ 'Changer le mot de passe' if fr else 'Change password' }}</button>
+      <label>{{ t('tpl.mot_de_passe_actuel') }}<input name="current" type="password" required autocomplete="current-password"></label>
+      <label>{{ t('tpl.nouveau_mot_de_passe') }} <span class="muted small">({{ t('tpl.8_caracteres_minimum') }})</span><input name="new" type="password" required minlength="8" autocomplete="new-password"></label>
+      <label>{{ t('tpl.confirmer') }}<input name="confirm" type="password" required minlength="8" autocomplete="new-password"></label>
+      <button class="cta" type="submit">{{ t('tpl.changer_le_mot_de_passe') }}</button>
       {% endif %}
     </form>
   </div>
@@ -130,20 +130,20 @@
 <section class="card" style="margin-top: 24px;">
   <div class="row-between" style="align-items: end; flex-wrap: wrap; gap: 12px;">
     <div>
-      <span class="eyebrow">{{ 'Sécurité' if fr else 'Security' }}</span>
-      <h2 style="font-size: 1.25rem; margin: 4px 0 6px;">{{ 'Appareils connectés' if fr else 'Connected devices' }}</h2>
-      <p class="muted small" style="margin: 0;">{{ sessions|length }} {{ 'session(s) active(s). Les sessions se prolongent tant que vous revenez, et expirent après 30 jours d\'inactivité.' if fr else 'active session(s). Sessions renew as long as you keep coming back, and expire after 30 days of inactivity.' }}</p>
+      <span class="eyebrow">{{ t('tpl.securite') }}</span>
+      <h2 style="font-size: 1.25rem; margin: 4px 0 6px;">{{ t('tpl.appareils_connectes') }}</h2>
+      <p class="muted small" style="margin: 0;">{{ sessions|length }} {{ t('tpl.session_s_active_s_les_sessions') }}</p>
     </div>
     <form method="post" action="{{ url_for('settings_sessions_revoke') }}">
       {{ csrf_input() }}
-      <button class="ghost danger" type="submit" data-confirm="{{ 'Déconnecter tous les autres appareils ?' if fr else 'Sign out all other devices?' }}">{{ 'Déconnecter les autres appareils' if fr else 'Sign out other devices' }}</button>
+      <button class="ghost danger" type="submit" data-confirm="{{ t('tpl.deconnecter_tous_les_autres_appareils') }}">{{ t('tpl.deconnecter_les_autres_appareils') }}</button>
     </form>
   </div>
   <ul class="stack-list">
     {% for s in sessions %}
     <li>
-      <div class="who">{{ s.created_at[:16] }} · {{ s.ip or '—' }}{% if s.is_current %} · <strong style="color: var(--teal);">{{ 'cet appareil' if fr else 'this device' }}</strong>{% endif %}</div>
-      <div class="body small muted">{{ s.user_agent or ('navigateur inconnu' if fr else 'unknown browser') }} · {{ 'expire le' if fr else 'expires on' }} {{ s.expires_at[:10] }}</div>
+      <div class="who">{{ s.created_at[:16] }} · {{ s.ip or '—' }}{% if s.is_current %} · <strong style="color: var(--teal);">{{ t('tpl.cet_appareil') }}</strong>{% endif %}</div>
+      <div class="body small muted">{{ s.user_agent or t('tpl.unknown_browser') }} · {{ t('tpl.expire_le_2') }} {{ s.expires_at[:10] }}</div>
     </li>
     {% endfor %}
   </ul>
@@ -171,25 +171,25 @@
 </section>
 
 <section class="card" style="margin-top: 24px; border-left: 3px solid var(--signal);">
-  <span class="eyebrow">{{ 'Vos données · Loi 25 / RGPD' if fr else 'Your data · Law 25 / GDPR' }}</span>
-  <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ 'Exporter ou supprimer' if fr else 'Export or delete' }}</h2>
+  <span class="eyebrow">{{ t('tpl.vos_donnees_loi_25_rgpd') }}</span>
+  <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.exporter_ou_supprimer') }}</h2>
   <div class="grid-2" style="gap: 24px; align-items: start;">
     <div>
-      <p class="muted small">{{ 'Téléchargez tout ce que la plateforme détient sur vous (compte, profil, missions, devis, réservations, avis, messages) au format JSON.' if fr else 'Download everything the platform holds about you (account, profile, jobs, quotes, bookings, reviews, messages) as JSON.' }}</p>
-      <a class="ghost" href="{{ url_for('settings_export') }}">{{ 'Télécharger mes données (JSON)' if fr else 'Download my data (JSON)' }}</a>
+      <p class="muted small">{{ t('tpl.telechargez_tout_ce_que_la_plateforme') }}</p>
+      <a class="ghost" href="{{ url_for('settings_export') }}">{{ t('tpl.telecharger_mes_donnees_json') }}</a>
     </div>
-    <form method="post" action="{{ url_for('settings_delete') }}" data-confirm="{{ 'Supprimer définitivement votre compte ?' if fr else 'Permanently delete your account?' }}">
+    <form method="post" action="{{ url_for('settings_delete') }}" data-confirm="{{ t('tpl.supprimer_definitivement_votre_compte') }}">
       {{ csrf_input() }}
       <p class="muted small">
-        {{ "Vos données personnelles sont effacées et votre compte devient inutilisable. Les missions, devis et avis passés restent visibles de l'autre partie sous « Compte supprimé » (obligations comptables)." if fr else 'Your personal data is erased and your account becomes unusable. Past jobs, quotes and reviews remain visible to the other party under "Deleted account" (accounting obligations).' }}
-        {% if deletion_blockers %}<br><strong style="color: var(--signal);">{% if fr %}Impossible pour l'instant :{% else %}Not possible right now:{% endif %}</strong> {{ deletion_blockers|join(' ; ') }}.{% endif %}
+        {{ t('tpl.vos_donnees_personnelles_sont_effacees_et') }}
+        {% if deletion_blockers %}<br><strong style="color: var(--signal);">{{ t('tpl.not_possible_now') }}</strong> {{ deletion_blockers|join(' ; ') }}.{% endif %}
       </p>
       {% if not deletion_blockers %}
-      <label class="small">{{ 'Tapez' if fr else 'Type' }} <strong>SUPPRIMER</strong> {{ 'pour confirmer' if fr else 'to confirm' }}<input name="confirm_word" required pattern="SUPPRIMER" autocomplete="off"></label>
+      <label class="small">{{ t('tpl.tapez') }} <strong>SUPPRIMER</strong> {{ t('tpl.pour_confirmer') }}<input name="confirm_word" required pattern="SUPPRIMER" autocomplete="off"></label>
       {% if not password_managed_elsewhere %}
-      <label class="small">{{ 'Mot de passe actuel' if fr else 'Current password' }}<input name="password" type="password" required autocomplete="current-password"></label>
+      <label class="small">{{ t('tpl.mot_de_passe_actuel') }}<input name="password" type="password" required autocomplete="current-password"></label>
       {% endif %}
-      <button class="ghost danger" type="submit">{{ 'Supprimer mon compte' if fr else 'Delete my account' }}</button>
+      <button class="ghost danger" type="submit">{{ t('tpl.supprimer_mon_compte') }}</button>
       {% endif %}
     </form>
   </div>

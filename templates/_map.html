@@ -95,17 +95,17 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
 }
 </style>
 <div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
-  <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ 'Carte interactive des pilotes et missions' if lang == 'fr' else 'Interactive map of pilots and missions' }}"></div>
+  <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ t('tpl.carte_interactive_des_pilotes_et_missions') }}"></div>
   <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
-    <span><span class="map-legend-icon" data-kind="pro" style="background:#3b82f6;"></span>{{ 'Pilotes pro' if lang == 'fr' else 'Pro pilots' }}</span>
-    <span><span class="map-legend-icon" data-kind="recreational" style="background:#14b8a6;"></span>{{ 'Pilotes récréatifs' if lang == 'fr' else 'Recreational pilots' }}</span>
-    <span><span class="map-legend-icon" data-kind="school" style="background:#22c55e;"></span>{{ 'Écoles' if lang == 'fr' else 'Schools' }}</span>
-    <span><span class="map-legend-icon" data-kind="company" style="background:#6366f1;"></span>{{ 'Entreprises' if lang == 'fr' else 'Companies' }}</span>
-    <span><span class="map-legend-icon" data-kind="shop" style="background:#ec4899;"></span>{{ 'Boutiques' if lang == 'fr' else 'Shops' }}</span>
-    <span><span class="map-legend-icon" data-kind="mission" style="background:#f59e0b;"></span>{{ 'Missions ouvertes' if lang == 'fr' else 'Open missions' }}</span>
-    {% if _center %}<span><span class="map-legend-icon" data-kind="area" style="background:#7a5fc4;"></span>{{ 'Zone recherchée' if lang == 'fr' else 'Search area' }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
+    <span><span class="map-legend-icon" data-kind="pro" style="background:#3b82f6;"></span>{{ t('tpl.pilotes_pro') }}</span>
+    <span><span class="map-legend-icon" data-kind="recreational" style="background:#14b8a6;"></span>{{ t('tpl.pilotes_recreatifs') }}</span>
+    <span><span class="map-legend-icon" data-kind="school" style="background:#22c55e;"></span>{{ t('tpl.ecoles') }}</span>
+    <span><span class="map-legend-icon" data-kind="company" style="background:#6366f1;"></span>{{ t('tpl.entreprises') }}</span>
+    <span><span class="map-legend-icon" data-kind="shop" style="background:#ec4899;"></span>{{ t('tpl.boutiques') }}</span>
+    <span><span class="map-legend-icon" data-kind="mission" style="background:#f59e0b;"></span>{{ t('tpl.missions_ouvertes') }}</span>
+    {% if _center %}<span><span class="map-legend-icon" data-kind="area" style="background:#7a5fc4;"></span>{{ t('tpl.zone_recherchee') }}{% if _center.radius_km %} · {{ _center.radius_km }} km{% endif %}</span>{% endif %}
     <span class="muted" id="map-count"></span>
-    <button type="button" class="ghost" id="map-fit" style="margin-left:auto;padding:6px 10px;font-size:.8rem;">{{ 'Tout afficher' if lang == 'fr' else 'Show all' }}</button>
+    <button type="button" class="ghost" id="map-fit" style="margin-left:auto;padding:6px 10px;font-size:.8rem;">{{ t('tpl.tout_afficher') }}</button>
   </div>
 </div>
 {# SRI : le CDN ne peut pas nous servir autre chose que cette version exacte. #}

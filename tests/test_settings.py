@@ -124,7 +124,7 @@ def test_delete_account_blocked_then_anonymized(client, auth_client, funded_book
     import services
     c = auth_client(client_user["id"])
     html = c.get("/espace/parametres").data.decode()
-    assert "Impossible pour l'instant" in html
+    assert "Impossible pour l'instant" in html or "Impossible pour l&#39;instant" in html
     r = c.post("/espace/parametres/supprimer", data={"confirm_word": "SUPPRIMER", "password": client_user["_password"]})
     with client.application.app_context():
         assert db.fetchone("SELECT deleted_at FROM users WHERE id=?", (client_user["id"],))["deleted_at"] is None

@@ -1881,6 +1881,17 @@ _T = {
 # parite (tests/test_i18n_parite.py) le signale.
 # ---------------------------------------------------------------------------
 
+# Textes sortis des gabarits le 2026-09-18 (anciens « 'fr' if fr else 'en' ») :
+# translations/_templates.json = {cle: {fr, en, es, ru, hi, uk, tr, ur, bn}}.
+# Les langues externes recoivent ces cles dans la section "ui" de leur JSON.
+_TEMPLATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations", "_templates.json")
+try:
+    with open(_TEMPLATES_FILE, encoding="utf-8") as _f:
+        for _key, _entry in json.load(_f).items():
+            _T[_key] = dict(_entry)
+except (OSError, ValueError):
+    pass
+
 EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl",
                "am", "ne", "th", "ta", "he", "ha", "nl", "el", "ro")
 _TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")
