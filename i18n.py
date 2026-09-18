@@ -28,7 +28,8 @@ _FMT_DEFAULTS = {"fee": int(PLATFORM_FEE_PCT), "pilot_share": int(PILOT_SHARE_PC
 # monde arabe, Bresil, Allemagne, Vietnam, Indonesie) sont dans
 # translations/<code>.json et fusionnees a l'import (voir _load_extra).
 SUPPORTED = ("fr", "en", "es", "ru", "hi", "uk", "tr", "ur", "bn", "ar", "pt", "de", "vi", "id",
-             "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl")
+             "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl",
+             "am", "ne", "th", "ta", "he", "ha", "nl", "el", "ro")
 DEFAULT = "fr"
 COOKIE = "aube_lang"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 an
@@ -61,6 +62,15 @@ LANGUAGE_META = {
     "fa": ("فارسی",       "🇮🇷"),
     "ko": ("한국어",       "🇰🇷"),
     "pl": ("Polski",     "🇵🇱"),
+    "am": ("አማርኛ",       "🇪🇹"),
+    "ne": ("नेपाली",       "🇳🇵"),
+    "th": ("ไทย",         "🇹🇭"),
+    "ta": ("தமிழ்",        "🇮🇳"),
+    "he": ("עברית",       "🇮🇱"),
+    "ha": ("Hausa",      "🇳🇬"),
+    "nl": ("Nederlands", "🇳🇱"),
+    "el": ("Ελληνικά",   "🇬🇷"),
+    "ro": ("Română",     "🇷🇴"),
 }
 
 # Palettes d'accent de l'interface : le nom est celui d'un ciel, la couleur
@@ -96,7 +106,7 @@ def month_year(date_str, lang: str = DEFAULT) -> str:
 
 
 # Langues ecrites de droite a gauche : <html dir="rtl"> + surcharges CSS.
-RTL = ("ur", "ar", "fa")
+RTL = ("ur", "ar", "fa", "he")
 
 # Locale Open Graph (og:locale) par langue.
 LOCALES = {
@@ -1871,7 +1881,8 @@ _T = {
 # parite (tests/test_i18n_parite.py) le signale.
 # ---------------------------------------------------------------------------
 
-EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl")
+EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl",
+               "am", "ne", "th", "ta", "he", "ha", "nl", "el", "ro")
 _TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")
 
 

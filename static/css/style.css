@@ -1229,7 +1229,7 @@ img.avatar { object-fit: cover; }
 .lang-menu .lang-flag { font-size: 15px; line-height: 1; }
 .lang-menu .lang-caret { font-size: 9px; color: var(--ink-dim); transition: transform .15s; }
 .lang-menu[open] .lang-caret { transform: rotate(180deg); }
-/* 22 langues : deux colonnes sur grand écran (11 lignes, tout visible sans
+/* 31 langues : trois colonnes sur grand écran (11 lignes, tout visible sans
    défiler) ; sur téléphone une colonne bornée à l'écran, qui défile, avec un
    bord bas net et une ombre pour que la fin de liste soit évidente. */
 .lang-menu-list {
@@ -1241,8 +1241,8 @@ img.avatar { object-fit: cover; }
   border-radius: 10px;
   box-shadow: 0 12px 34px rgba(0,0,0,.18);
   z-index: 60;
-  display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 2px 8px;
-  max-height: min(70vh, 560px); overflow-y: auto; overscroll-behavior: contain;
+  display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 2px 8px;
+  max-height: min(80vh, 640px); overflow-y: auto; overscroll-behavior: contain;
   animation: langpop .14s ease;
 }
 @media (max-width: 600px) {
@@ -2427,6 +2427,15 @@ html[lang="bn"] textarea {
   letter-spacing: normal;
 }
 html[lang="bn"] body { line-height: 1.72; }
+/* Amharique, tamoul, thaï : même règle (police dédiée, pas de chasse négative). */
+html[lang="am"] body, html[lang="am"] h1, html[lang="am"] h2, html[lang="am"] h3, html[lang="am"] .lead, html[lang="am"] .eyebrow,
+html[lang="am"] button, html[lang="am"] input, html[lang="am"] select, html[lang="am"] textarea { font-family: 'Noto Sans Ethiopic', var(--sans); letter-spacing: normal; }
+html[lang="ta"] body, html[lang="ta"] h1, html[lang="ta"] h2, html[lang="ta"] h3, html[lang="ta"] .lead, html[lang="ta"] .eyebrow,
+html[lang="ta"] button, html[lang="ta"] input, html[lang="ta"] select, html[lang="ta"] textarea { font-family: 'Noto Sans Tamil', var(--sans); letter-spacing: normal; }
+html[lang="th"] body, html[lang="th"] h1, html[lang="th"] h2, html[lang="th"] h3, html[lang="th"] .lead, html[lang="th"] .eyebrow,
+html[lang="th"] button, html[lang="th"] input, html[lang="th"] select, html[lang="th"] textarea { font-family: 'Noto Sans Thai', var(--sans); letter-spacing: normal; }
+html[lang="am"] body, html[lang="ta"] body, html[lang="th"] body { line-height: 1.72; }
+html[lang="am"] h1, html[lang="ta"] h1, html[lang="th"] h1 { line-height: 1.2; }
 html[lang="bn"] h1 { line-height: 1.2; }
 html[lang="bn"] .eyebrow { font-size: 12.5px; }
 

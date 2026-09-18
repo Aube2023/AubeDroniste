@@ -280,18 +280,21 @@ _UPDATES = [
                "pages.",
          "en": "Country lists now show in your language, in its alphabetical order, on every page.",
          "es": "Las listas de países aparecen en su idioma y en su orden alfabético, en todas las páginas."},
-        {"fr": "Le site se lit en 22 langues, chaque page avec sa propre adresse : français, anglais, "
-               "espagnol, portugais, allemand, italien, polonais, arabe, persan, russe, ukrainien, turc, "
-               "hindi, ourdou, bengali, chinois, japonais, coréen, vietnamien, indonésien, filipino "
-               "et swahili.",
-         "en": "The site now reads in 22 languages, each page with its own address: French, English, "
-               "Spanish, Portuguese, German, Italian, Polish, Arabic, Persian, Russian, Ukrainian, "
-               "Turkish, Hindi, Urdu, Bengali, Chinese, Japanese, Korean, Vietnamese, Indonesian, "
-               "Filipino and Swahili.",
-         "es": "El sitio se lee en 22 idiomas, cada página con su propia dirección: francés, inglés, "
-               "español, portugués, alemán, italiano, polaco, árabe, persa, ruso, ucraniano, turco, "
-               "hindi, urdu, bengalí, chino, japonés, coreano, vietnamita, indonesio, filipino "
-               "y suajili."},
+        {"fr": "Le site se lit en 31 langues, chaque page avec sa propre adresse : français, anglais, "
+               "espagnol, portugais, allemand, néerlandais, italien, roumain, grec, polonais, arabe, "
+               "hébreu, persan, russe, ukrainien, turc, hindi, népalais, tamoul, ourdou, bengali, "
+               "thaï, chinois, japonais, coréen, vietnamien, indonésien, filipino, swahili, "
+               "amharique et haoussa.",
+         "en": "The site now reads in 31 languages, each page with its own address: French, English, "
+               "Spanish, Portuguese, German, Dutch, Italian, Romanian, Greek, Polish, Arabic, Hebrew, "
+               "Persian, Russian, Ukrainian, Turkish, Hindi, Nepali, Tamil, Urdu, Bengali, Thai, "
+               "Chinese, Japanese, Korean, Vietnamese, Indonesian, Filipino, Swahili, Amharic "
+               "and Hausa.",
+         "es": "El sitio se lee en 31 idiomas, cada página con su propia dirección: francés, inglés, "
+               "español, portugués, alemán, neerlandés, italiano, rumano, griego, polaco, árabe, "
+               "hebreo, persa, ruso, ucraniano, turco, hindi, nepalí, tamil, urdu, bengalí, "
+               "tailandés, chino, japonés, coreano, vietnamita, indonesio, filipino, suajili, "
+               "amárico y hausa."},
         {"fr": "Carte : météo en direct avec verdict de vol, radar de précipitations, trafic aérien "
                "autour de la zone et vue satellite.",
          "en": "Map: live weather with a fly / no-fly verdict, precipitation radar, live air traffic "
@@ -463,7 +466,7 @@ _PART107 = {
              "90210, 10001, 73301: a ZIP code, an address or a city, and pilots appear from nearest to "
              "farthest, on the map and in the list."),
             ("One platform, worldwide",
-             "Quotes, missions, messaging, reviews and portfolio, in 22 languages. A pilot in Texas and a "
+             "Quotes, missions, messaging, reviews and portfolio, in 31 languages. A pilot in Texas and a "
              "client in Québec work the same way."),
         ],
         "pilots_h": "Part 107 pilots listed",
@@ -489,7 +492,7 @@ _PART107 = {
              "90210, 10001, 73301 : un code ZIP, une adresse ou une ville, et les pilotes s'affichent du plus "
              "proche au plus loin, sur la carte et dans la liste."),
             ("Une seule plateforme, mondiale",
-             "Devis, missions, messagerie, avis et portfolio, en 22 langues. Un pilote au Texas et un client au "
+             "Devis, missions, messagerie, avis et portfolio, en 31 langues. Un pilote au Texas et un client au "
              "Québec travaillent de la même façon."),
         ],
         "pilots_h": "Pilotes Part 107 inscrits",
@@ -515,7 +518,7 @@ _PART107 = {
              "90210, 10001, 73301: un código ZIP, una dirección o una ciudad, y los pilotos aparecen del más "
              "cercano al más lejano, en el mapa y en la lista."),
             ("Una sola plataforma, mundial",
-             "Presupuestos, misiones, mensajería, reseñas y portafolio, en 22 idiomas. Un piloto en Texas y un "
+             "Presupuestos, misiones, mensajería, reseñas y portafolio, en 31 idiomas. Un piloto en Texas y un "
              "cliente en Quebec trabajan de la misma manera."),
         ],
         "pilots_h": "Pilotos Part 107 inscritos",

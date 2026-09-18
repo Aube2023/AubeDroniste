@@ -7,7 +7,7 @@ import content
 
 def test_page_en_trois_langues(client):
     fr = client.get("/nouveautes").data.decode()
-    assert "Ce qui a changé pour vous." in fr and "Septembre 2026" in fr and "22 langues" in fr
+    assert "Ce qui a changé pour vous." in fr and "Septembre 2026" in fr and "31 langues" in fr
     assert 'hreflang="en"' in fr and 'href="https://pilot.aubeetoilee.com/en/nouveautes"' in fr
     assert 'hreflang="ru"' not in fr                   # la page n'existe pas en russe
     en = client.get("/en/nouveautes").data.decode()
