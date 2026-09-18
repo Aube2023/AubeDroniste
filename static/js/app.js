@@ -246,11 +246,11 @@ if (navigator.share) {
   document.querySelectorAll('.js-native-share').forEach(function (b) { b.hidden = false; });
 }
 
-// Visionneuse plein écran du portfolio : clic sur une photo -> grand format,
-// flèches ou boutons pour passer à la suivante, Échap ou clic hors image
-// pour fermer. Les vidéos gardent leur lecteur en place.
-(function () {
-  var frames = Array.prototype.slice.call(document.querySelectorAll('.media-figure .media-frame img'));
+// Visionneuse plein écran : clic sur une photo du portfolio ou sur la photo
+// de profil (rognée en rond sur la fiche) -> grand format entier, flèches ou
+// boutons pour passer à la suivante, Échap ou clic hors image pour fermer.
+// Les vidéos gardent leur lecteur en place.
+function makeViewer(frames, caption) {
   if (!frames.length) return;
   var box = document.createElement('div');
   box.className = 'lightbox';
@@ -265,10 +265,7 @@ if (navigator.share) {
     cur = (i + frames.length) % frames.length;
     var src = frames[cur];
     img.src = src.getAttribute('data-full') || src.src;
-    var fig = src.closest('.media-figure');
-    var title = fig && fig.querySelector('.media-title');
-    var desc = fig && fig.querySelector('.media-body p');
-    cap.textContent = [title && title.textContent, desc && desc.textContent].filter(Boolean).join(' · ');
+    cap.textContent = caption(src);
     box.hidden = false;
     document.body.style.overflow = 'hidden';
     box.querySelector('.lb-prev').hidden = box.querySelector('.lb-next').hidden = frames.length < 2;
@@ -277,6 +274,7 @@ if (navigator.share) {
   frames.forEach(function (el, i) {
     el.style.cursor = 'zoom-in';
     el.addEventListener('click', function (e) { e.preventDefault(); show(i); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(i); } });
   });
   box.querySelector('.lb-close').addEventListener('click', hide);
   box.querySelector('.lb-prev').addEventListener('click', function () { show(cur - 1); });
@@ -288,7 +286,16 @@ if (navigator.share) {
     else if (e.key === 'ArrowLeft') show(cur - 1);
     else if (e.key === 'ArrowRight') show(cur + 1);
   });
-})();
+}
+makeViewer(Array.prototype.slice.call(document.querySelectorAll('.media-figure .media-frame img')), function (src) {
+  var fig = src.closest('.media-figure');
+  var title = fig && fig.querySelector('.media-title');
+  var desc = fig && fig.querySelector('.media-body p');
+  return [title && title.textContent, desc && desc.textContent].filter(Boolean).join(' · ');
+});
+makeViewer(Array.prototype.slice.call(document.querySelectorAll('img[data-zoom]')), function (src) {
+  return src.getAttribute('alt') || '';
+});
 
 
 // Champ fichier qui envoie son formulaire dès qu'une image est choisie

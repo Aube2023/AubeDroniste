@@ -693,6 +693,10 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   overflow: hidden;
 }
 .avatar.big { width: 96px; height: 96px; font-size: 44px; }
+/* Photo de profil cliquable (visionneuse plein écran) : un liseré au survol
+   et au focus signale qu'elle s'ouvre en grand. */
+.avatar-zoom { cursor: zoom-in; transition: box-shadow .15s, transform .15s; }
+.avatar-zoom:hover, .avatar-zoom:focus-visible { box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--amber); transform: scale(1.03); outline: none; }
 img.avatar { object-fit: cover; }
 
 /* ============ Cartes mission (BRIEFING) ============ */
@@ -2554,6 +2558,8 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
   cursor: pointer; display: grid; place-items: center;
 }
 .lightbox button:hover { background: rgba(255,255,255,.18); }
+/* Même rappel que pour la boîte : `display: grid` battrait l'attribut hidden. */
+.lightbox button[hidden] { display: none; }
 .lightbox .lb-close { top: 16px; inset-inline-end: 16px; }
 .lightbox .lb-prev { inset-inline-start: 16px; top: 50%; transform: translateY(-50%); }
 .lightbox .lb-next { inset-inline-end: 16px; top: 50%; transform: translateY(-50%); }

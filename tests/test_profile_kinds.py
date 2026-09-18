@@ -181,3 +181,15 @@ def test_map_markers_expose_photo_and_number(client, make_user):
     assert by_id[u["id"]]["avatar"] == "/media/avatar_%d.jpg" % u["id"]
     assert by_id[v["id"]]["avatar"] is None
     assert by_id[u["id"]]["no"] and by_id[v["id"]]["no"] == by_id[u["id"]]["no"] + 1
+
+
+def test_photo_de_profil_cliquable_en_grand(client, make_user):
+    """La photo de la fiche s'ouvre dans la visionneuse (attribut data-zoom)."""
+    import db, services
+    u = make_user("zoom_pilot", role="pilot", country="Canada")
+    with client.application.app_context():
+        services.upsert_pilot_profile(u["id"], is_available=1)
+        db.execute("UPDATE users SET avatar_path=? WHERE id=?", ("uploads/avatar_u%d.jpg" % u["id"], u["id"]))
+    html = client.get(f"/pilotes/{u['id']}").get_data(as_text=True)
+    assert 'class="avatar big avatar-zoom"' in html and "data-zoom" in html
+    assert "makeViewer" in client.get("/static/js/app.js").get_data(as_text=True)

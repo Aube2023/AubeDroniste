@@ -12,8 +12,8 @@
 <section class="flightbook-hero">
   <div class="flightbook-band">
     {% if pilot.avatar_path %}
-    <img class="avatar big" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
-         alt="{{ t('tpl.photo_de') }} {{ display_name }}">
+    <img class="avatar big avatar-zoom" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
+         alt="{{ t('tpl.photo_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
     {% else %}
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
