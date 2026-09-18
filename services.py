@@ -400,7 +400,7 @@ def visits_totals(days: int = 30) -> dict:
 
 def get_pilot_profile(user_id: int) -> Optional[dict]:
     row = db.fetchone(
-        "SELECT u.*, p.headline, p.business_name, p.business_email, p.kind, p.school_programs, "
+        "SELECT u.*, p.pilot_no, p.headline, p.business_name, p.business_email, p.kind, p.school_programs, "
         "p.years_experience, p.hourly_rate, p.daily_rate, "
         "p.currency AS p_currency, p.travel_radius_km, p.accepts_remote, p.insurance, "
         "p.insurance_company, p.insurance_policy, p.is_available, p.languages, "
@@ -1365,7 +1365,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
     # N fois en Python (1 seule requete).
     _text = (text or "").strip().lower()   # recherche libre (search box / ?q=)
     q = [
-        "SELECT u.id, u.member_no, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
+        "SELECT u.id, p.pilot_no, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
         "       u.is_verified, u.avatar_path, u.bio, u.last_seen_at, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
@@ -3289,7 +3289,7 @@ def public_stats() -> dict:
 def featured_pilots(limit: int = 6) -> list:
     """Pilotes vedettes, avec rating folde dans la requete principale (1 query)."""
     rows = db.fetchall(
-        "SELECT u.id, u.member_no, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
+        "SELECT u.id, p.pilot_no, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
         "       p.headline, p.hourly_rate, p.currency AS p_currency, "
         "       COALESCE(p.kind, 'pro') AS kind, p.business_name, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "

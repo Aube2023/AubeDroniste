@@ -173,9 +173,9 @@ _ADD_COLUMNS = [
     ("users", "notify_alerts", "INTEGER NOT NULL DEFAULT 1"),
     ("users", "notify_news", "INTEGER NOT NULL DEFAULT 0"),
     ("users", "deleted_at", "TEXT"),
-    # Numero de membre public (1, 2, 3... dans l'ordre d'inscription), a la
-    # place de l'id SQLite qui ne repart pas a 1 apres une purge.
-    ("users", "member_no", "INTEGER"),
+    # Numero public du profil pilote (1, 2, 3... dans l'ordre de creation des
+    # profils), a la place de l'id SQLite qui ne repart pas a 1 apres une purge.
+    ("pilot_profiles", "pilot_no", "INTEGER"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
@@ -192,6 +192,10 @@ _POST_SQL = [
     """INSERT OR IGNORE INTO pilot_specialties (pilot_user_id, mission_type)
        SELECT pilot_user_id, mission_type FROM pilot_packages
        WHERE is_active = 1 AND mission_type IS NOT NULL AND mission_type != ''""",
+    # Premiere version (2026-09-17) numerotait les COMPTES ; remplacee par le
+    # numero de profil pilote. On retire l'ancien mecanisme.
+    "DROP TRIGGER IF EXISTS trg_users_member_no",
+    "DROP INDEX IF EXISTS idx_users_member_no",
 ]
 
 # Index additifs idempotents. schema.sql n'est execute QUE sur une base neuve
@@ -217,7 +221,7 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id)",
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_member_no ON users(member_no)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_pilot_profiles_no ON pilot_profiles(pilot_no)",
 ]
 
 
@@ -369,12 +373,12 @@ _ADD_TABLES = [
     handled_at       TEXT,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
 )""",
-    # Numero de membre pose a l'insertion (cf. schema.sql).
-    """CREATE TRIGGER IF NOT EXISTS trg_users_member_no AFTER INSERT ON users
-WHEN NEW.member_no IS NULL
+    # Numero de profil pose a la creation du profil pilote (cf. schema.sql).
+    """CREATE TRIGGER IF NOT EXISTS trg_pilot_profiles_no AFTER INSERT ON pilot_profiles
+WHEN NEW.pilot_no IS NULL
 BEGIN
-    UPDATE users SET member_no = (SELECT COALESCE(MAX(member_no), 0) + 1 FROM users)
-    WHERE id = NEW.id;
+    UPDATE pilot_profiles SET pilot_no = (SELECT COALESCE(MAX(pilot_no), 0) + 1 FROM pilot_profiles)
+    WHERE user_id = NEW.user_id;
 END""",
 ]
 
@@ -420,22 +424,27 @@ def run_migrations():
         c.execute("CREATE INDEX IF NOT EXISTS idx_cert_review ON pilot_certifications(review_status)")
         for stmt in _POST_SQL:
             c.execute(stmt)
-        _backfill_member_numbers(c)
+        if _column_exists(c, "users", "member_no"):
+            try:
+                c.execute("ALTER TABLE users DROP COLUMN member_no")
+            except sqlite3.OperationalError as exc:   # SQLite < 3.35 : colonne orpheline, sans effet
+                log.warning("migration: users.member_no non supprimee (%s)", exc)
+        _backfill_pilot_numbers(c)
         # commit par standalone() a la sortie du bloc
 
 
-def _backfill_member_numbers(c) -> None:
-    """Numerote les comptes qui n'ont pas encore de numero de membre, dans
-    l'ordre d'inscription (id croissant), a la suite du plus grand numero
+def _backfill_pilot_numbers(c) -> None:
+    """Numerote les profils pilotes qui n'ont pas encore de numero, dans
+    l'ordre de creation (user_id croissant), a la suite du plus grand numero
     deja attribue. Idempotent : ne touche jamais un numero existant."""
-    rows = c.execute("SELECT id FROM users WHERE member_no IS NULL ORDER BY id").fetchall()
+    rows = c.execute("SELECT user_id FROM pilot_profiles WHERE pilot_no IS NULL ORDER BY user_id").fetchall()
     if not rows:
         return
-    nxt = (c.execute("SELECT COALESCE(MAX(member_no), 0) FROM users").fetchone()[0] or 0) + 1
+    nxt = (c.execute("SELECT COALESCE(MAX(pilot_no), 0) FROM pilot_profiles").fetchone()[0] or 0) + 1
     for r in rows:
-        c.execute("UPDATE users SET member_no=? WHERE id=?", (nxt, r[0]))
+        c.execute("UPDATE pilot_profiles SET pilot_no=? WHERE user_id=?", (nxt, r[0]))
         nxt += 1
-    log.info("migration: %d numero(s) de membre attribue(s)", len(rows))
+    log.info("migration: %d numero(s) de profil attribue(s)", len(rows))
 
 
 def _timed(query: str, params: Iterable, action):

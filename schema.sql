@@ -28,19 +28,11 @@ CREATE TABLE IF NOT EXISTS users (
     notify_alerts   INTEGER NOT NULL DEFAULT 1,     -- pilote : missions publiees dans le rayon
     notify_news     INTEGER NOT NULL DEFAULT 0,     -- nouveautes plateforme
     deleted_at    TEXT,                             -- compte supprime (anonymise), connexion refusee
-    member_no     INTEGER UNIQUE,                   -- numero de membre public : 1, 2, 3... dans l'ordre d'inscription
     created_at    TEXT NOT NULL DEFAULT (datetime('now')),
     last_seen_at  TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_users_country ON users(country);
--- Numero de membre attribue a l'inscription, quel que soit le chemin
--- d'insertion (inscription, creation a la volee au login, tests).
-CREATE TRIGGER IF NOT EXISTS trg_users_member_no AFTER INSERT ON users
-WHEN NEW.member_no IS NULL
-BEGIN
-    UPDATE users SET member_no = (SELECT COALESCE(MAX(member_no), 0) + 1 FROM users)
-    WHERE id = NEW.id;
-END;
+
 CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
 
 -- Profil pilote etendu
@@ -75,8 +67,17 @@ CREATE TABLE IF NOT EXISTS pilot_profiles (
     stripe_account_id      TEXT,                  -- "acct_..." ou "acct_fake_..."
     stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
     stripe_payouts_enabled INTEGER NOT NULL DEFAULT 0,
+    pilot_no          INTEGER UNIQUE,              -- numero public du profil : 1, 2, 3... dans l'ordre de creation
     updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Numero de profil attribue a la creation du profil pilote (pas du compte :
+-- un simple client n'a pas de numero), quel que soit le chemin d'insertion.
+CREATE TRIGGER IF NOT EXISTS trg_pilot_profiles_no AFTER INSERT ON pilot_profiles
+WHEN NEW.pilot_no IS NULL
+BEGIN
+    UPDATE pilot_profiles SET pilot_no = (SELECT COALESCE(MAX(pilot_no), 0) + 1 FROM pilot_profiles)
+    WHERE user_id = NEW.user_id;
+END;
 
 -- Formations / certifications du pilote
 CREATE TABLE IF NOT EXISTS pilot_certifications (
