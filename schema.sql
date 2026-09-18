@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS missions (
     status          TEXT NOT NULL DEFAULT 'open',
     from_package_id   INTEGER REFERENCES pilot_packages(id) ON DELETE SET NULL,
     targeted_pilot_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    is_private      INTEGER NOT NULL DEFAULT 0,   -- demande reservee au pilote vise : invisible des autres
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );

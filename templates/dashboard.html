@@ -114,6 +114,29 @@
 </section>
 {% endif %}
 
+{% if my_requests %}
+<section class="section" style="margin: 48px 0 32px;">
+  <span class="eyebrow">{{ 'Demandes reçues' if fr else 'Requests received' }}</span>
+  <h2>{{ 'Des clients vous ont choisi' if fr else 'Clients picked you' }}</h2>
+  <div class="grid-cards">
+    {% for m in my_requests %}
+    <a class="mission-card" href="{{ url_for('mission_detail', mission_id=m.id) }}">
+      <div class="header">
+        <span class="tag">{{ mission_label(m.mission_type) }}</span>
+        <span class="tag tag-open">{{ 'à répondre' if fr else 'awaiting your quote' }}</span>
+      </div>
+      <h3>{{ m.title }}</h3>
+      <div class="coords">{{ m.country }}{% if m.city %} · {{ m.city }}{% endif %}</div>
+      <div class="footer">
+        <span class="price">{% if m.budget_min or m.budget_max %}{{ (m.budget_max or m.budget_min)|int }} {{ m.currency }}{% else %}{{ 'sur devis' if fr else 'on quote' }}{% endif %}</span>
+        <span>{{ m.created_at[:10] }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% if is_pilot and my_bids %}
 <section class="section" style="margin: 48px 0 32px;">
   <span class="eyebrow">{{ 'Mes offres' if fr else 'My bids' }}</span>

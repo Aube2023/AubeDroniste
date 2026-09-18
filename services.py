@@ -1749,7 +1749,7 @@ def pilots_in_place(*, country_names, city_slug: str = "", limit: int = 200) -> 
 def sitemap_missions(limit: int = 5000) -> list:
     rows = db.fetchall(
         "SELECT id, COALESCE(updated_at, created_at) AS lastmod "
-        "FROM missions WHERE status = 'open' ORDER BY id LIMIT ?",
+        "FROM missions WHERE status = 'open' AND is_private = 0 ORDER BY id LIMIT ?",
         (limit,),
     )
     return [dict(r) for r in rows]
@@ -1778,7 +1778,7 @@ def search_missions(*, country: str = "", city: str = "", mission_type: str = ""
     q = [
         "SELECT m.*, u.full_name AS client_name "
         "FROM missions m JOIN users u ON u.id=m.client_user_id "
-        "WHERE 1=1",
+        "WHERE m.is_private = 0",
     ]
     args: list = []
     if status:
@@ -1827,6 +1827,19 @@ def list_missions_by_client(client_user_id: int) -> list:
         "  (SELECT COUNT(*) FROM bids b WHERE b.mission_id=m.id) AS bid_count "
         "FROM missions m WHERE m.client_user_id=? ORDER BY m.created_at DESC",
         (client_user_id,),
+    )
+    return [dict(r) for r in rows]
+
+
+def list_requests_for_pilot(pilot_user_id: int) -> list:
+    """Demandes ouvertes adressees a ce pilote (« Réserver » / « Contacter »)
+    auxquelles il n'a pas encore repondu par un devis."""
+    rows = db.fetchall(
+        "SELECT m.* FROM missions m "
+        "WHERE m.targeted_pilot_id=? AND m.status='open' "
+        "  AND NOT EXISTS (SELECT 1 FROM bids b WHERE b.mission_id=m.id AND b.pilot_user_id=?) "
+        "ORDER BY m.created_at DESC",
+        (pilot_user_id, pilot_user_id),
     )
     return [dict(r) for r in rows]
 
@@ -3271,7 +3284,7 @@ def public_stats() -> dict:
     pilots = db.fetchone(
         "SELECT COUNT(*) AS n FROM users WHERE role IN ('pilot', 'both') AND deleted_at IS NULL"
     )["n"]
-    missions = db.fetchone("SELECT COUNT(*) AS n FROM missions WHERE status='open'")["n"]
+    missions = db.fetchone("SELECT COUNT(*) AS n FROM missions WHERE status='open' AND is_private=0")["n"]
     countries = db.fetchone(
         "SELECT COUNT(DISTINCT country) AS n FROM users "
         "WHERE country IS NOT NULL AND country<>'' AND deleted_at IS NULL"
@@ -3320,7 +3333,7 @@ def latest_missions(limit: int = 8) -> list:
         dict(r) for r in db.fetchall(
             "SELECT id, title, mission_type, country, city, budget_min, budget_max, "
             "       currency, is_urgent, created_at "
-            "FROM missions WHERE status='open' ORDER BY created_at DESC LIMIT ?",
+            "FROM missions WHERE status='open' AND is_private=0 ORDER BY created_at DESC LIMIT ?",
             (limit,),
         )
     ]
@@ -3342,7 +3355,7 @@ def country_breakdown(limit: int = 12) -> list:
         for r in db.fetchall(
             "SELECT country, COUNT(*) AS n FROM missions "
             "WHERE country IS NOT NULL AND country<>'' "
-            "AND status='open' "
+            "AND status='open' AND is_private=0 "
             "GROUP BY country"
         )
     }

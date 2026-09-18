@@ -1363,6 +1363,12 @@ def mission_detail(mission_id):
     if not mission:
         abort(404)
     user = getattr(g, "user", None)
+    # Demande privee : seuls le client, le pilote vise et l'admin la voient.
+    if mission.get("is_private") and not (user and (
+            user["id"] == mission["client_user_id"]
+            or user["id"] == mission.get("targeted_pilot_id")
+            or user.get("is_admin"))):
+        abort(404)
     all_bids = mission.get("bids") or []
     is_client = bool(user and user["id"] == mission["client_user_id"])
     my_bid = None
@@ -1718,6 +1724,7 @@ def dashboard():
         my_pilot_profile=services.get_pilot_profile(user["id"]) if is_pilot else None,
         my_missions=services.list_missions_by_client(user["id"]) if is_client else [],
         my_bids=services.list_missions_by_pilot(user["id"]) if is_pilot else [],
+        my_requests=services.list_requests_for_pilot(user["id"]) if is_pilot else [],
         my_bookings=services.list_bookings_for(user["id"]),
         unread=services.unread_count(user["id"]),
         admin_new_messages=(services.count_contact_messages("new")
@@ -2870,6 +2877,9 @@ def mission_create():
     if request.method == "POST":
         from_package_id = _to_int(request.form.get("from_package_id"))
         targeted_pilot_id = _to_int(request.form.get("targeted_pilot_id"))
+        # Demande adressee a un pilote : privee par defaut (lui seul la voit),
+        # sauf si le client choisit de l'ouvrir aussi aux autres pilotes.
+        is_private = bool(targeted_pilot_id) and request.form.get("visibility") != "open"
         try:
             mission_id = services.create_mission(
                 g.user["id"],
@@ -2897,16 +2907,16 @@ def mission_create():
             if from_package_id or targeted_pilot_id:
                 db.execute(
                     "UPDATE missions SET from_package_id=?, "
-                    "  targeted_pilot_id=? WHERE id=?",
-                    (from_package_id or None, targeted_pilot_id or None, mission_id),
+                    "  targeted_pilot_id=?, is_private=? WHERE id=?",
+                    (from_package_id or None, targeted_pilot_id or None,
+                     1 if is_private else 0, mission_id),
                 )
         except Exception as exc:  # garde large : on remonte un message clair a l'UI
             flash(f"Mission invalide: {exc}", "error")
             return render_template("mission_create.html", form=request.form)
-        # Alerte les pilotes disponibles dont le rayon couvre la mission.
-        # Pas de diffusion pour une commande ciblee (forfait / pilote vise) :
-        # seul le pilote designe recoit un courriel, comme promis sur le
-        # formulaire (« sera notifié de votre mission »).
+        # Pilote vise : courriel de demande directe, comme promis sur le
+        # formulaire. Diffusion aux pilotes du rayon seulement si la mission
+        # est ouverte (pas de pilote vise, ou client qui a choisi d'ouvrir).
         try:
             import mailer
             full = services.get_mission(mission_id)
@@ -2919,14 +2929,17 @@ def mission_create():
                         and not services.is_blocked_between(g.user["id"], pilot["id"]):
                     pkg = services.get_pilot_package(from_package_id) if from_package_id else None
                     mailer.send_mission_request(dict(pilot), full, pkg)
-            elif full:
-                recipients = services.pilots_for_mission_alert(
-                    full, exclude_user_id=g.user["id"])
+            if full and not is_private:
+                recipients = [r for r in services.pilots_for_mission_alert(
+                    full, exclude_user_id=g.user["id"]) if r.get("id") != targeted_pilot_id]
                 mailer.send_mission_alerts(recipients, full)
         except Exception as exc:
             log.warning("alertes mission %s echouees: %s", mission_id, exc)
-        flash("Mission publiee.", "success")
-        _ping_index([f"/missions/{mission_id}", "/missions"])
+        if is_private:
+            flash("Demande envoyée au pilote.", "success")
+        else:
+            flash("Mission publiee.", "success")
+            _ping_index([f"/missions/{mission_id}", "/missions"])
         return redirect(url_for("mission_detail", mission_id=mission_id))
     target_pilot = None
     pilot_arg = _to_int(request.args.get("pilot"))
@@ -2991,7 +3004,10 @@ def bid_place(mission_id):
     if g.user["role"] not in ("pilot", "both"):
         flash("Seuls les pilotes peuvent soumissionner.", "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
-    _m = db.fetchone("SELECT client_user_id FROM missions WHERE id=?", (mission_id,))
+    _m = db.fetchone("SELECT client_user_id, is_private, targeted_pilot_id FROM missions WHERE id=?",
+                     (mission_id,))
+    if _m and _m["is_private"] and _m["targeted_pilot_id"] != g.user["id"]:
+        abort(404)   # demande reservee a un autre pilote
     if _m and services.is_blocked_between(g.user["id"], _m["client_user_id"]):
         flash(i18n.t("block.bid_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))

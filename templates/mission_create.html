@@ -16,12 +16,19 @@
     {% if target_pilot %}
     <div class="notice notice-accent">
       <span class="eyebrow">{{ 'Demande adressée à un pilote' if fr else 'Request addressed to a pilot' }}</span>
-      <strong>{{ target_pilot.full_name }} {{ 'sera notifié de votre mission' if fr else 'will be notified of your job' }}</strong>
+      <strong>{{ target_pilot.full_name }} {{ 'recevra votre demande par courriel' if fr else 'will receive your request by email' }}</strong>
       <p class="muted small">
-        {{ 'Vous publiez une mission ouverte à laquelle' if fr else 'You are posting an open job to which' }} <strong>{{ target_pilot.full_name }}</strong> {{ 'sera invité en priorité.' if fr else 'will be invited first.' }}
-        {{ 'Elle reste visible des autres pilotes, ils peuvent aussi soumissionner.' if fr else 'It stays visible to other pilots, who can also bid on it.' }}
+        {{ 'Décrivez votre besoin ci-dessous :' if fr else 'Describe your need below:' }} <strong>{{ target_pilot.full_name }}</strong> {{ 'vous répondra par un devis, que vous acceptez ou non.' if fr else 'will answer with a quote, which you may accept or decline.' }}
       </p>
       <input type="hidden" name="targeted_pilot_id" value="{{ target_pilot.id }}">
+      <div class="choice-list" style="margin-top: 10px;">
+        <label class="check"><input type="radio" name="visibility" value="private"{% if form.get('visibility', 'private') != 'open' %} checked{% endif %}>
+          {{ 'Réservé à ' ~ target_pilot.full_name ~ ' seulement (recommandé)' if fr else 'For ' ~ target_pilot.full_name ~ ' only (recommended)' }}
+          <span class="muted small">{{ '· invisible des autres pilotes' if fr else '· hidden from other pilots' }}</span></label>
+        <label class="check"><input type="radio" name="visibility" value="open"{% if form.get('visibility') == 'open' %} checked{% endif %}>
+          {{ 'Ouvrir aussi aux autres pilotes du secteur' if fr else 'Also open it to other pilots in the area' }}
+          <span class="muted small">{{ '· vous recevrez plusieurs devis à comparer' if fr else '· you will get several quotes to compare' }}</span></label>
+      </div>
     </div>
     {% endif %}
     {% if prefill_package %}

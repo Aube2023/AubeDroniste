@@ -176,6 +176,9 @@ _ADD_COLUMNS = [
     # Numero public du profil pilote (1, 2, 3... dans l'ordre de creation des
     # profils), a la place de l'id SQLite qui ne repart pas a 1 apres une purge.
     ("pilot_profiles", "pilot_no", "INTEGER"),
+    # Demande reservee a un pilote (bouton « Réserver » / « Contacter ») :
+    # invisible de l'annuaire des missions, de la carte et des alertes.
+    ("missions", "is_private", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les

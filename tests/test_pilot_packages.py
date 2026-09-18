@@ -127,11 +127,12 @@ def test_reservation_forfait_notifie_le_pilote_vise(client, auth_client, make_us
     assert broadcast == []                      # pas de diffusion aux autres pilotes
     assert len(sent) == 1 and sent[0]["to"] == pilot["email"] and sent[0]["template"] == "mission_request"
     assert sent[0]["context"]["package"]["title"] == "Photogrammétrie"
-    # Le pilote visé voit le bandeau ; un autre pilote non.
+    # Le pilote visé voit le bandeau ; la demande (privée par défaut) est
+    # introuvable pour un autre pilote.
     html = auth_client(pilot["id"]).get(f"/missions/{m['id']}").get_data(as_text=True)
-    assert "adressée directement" in html
+    assert "vous est réservée" in html
     other = make_user("pkg_notif_other", role="pilot")
-    assert "adressée directement" not in auth_client(other["id"]).get(f"/missions/{m['id']}").get_data(as_text=True)
+    assert auth_client(other["id"]).get(f"/missions/{m['id']}").status_code == 404
 
 
 def test_reservation_forfait_pilote_bloque_non_notifie(client, auth_client, make_user, monkeypatch):
@@ -162,3 +163,52 @@ def test_courriel_demande_directe_se_rend(client, make_user):
     assert new, "aucun .eml produit"
     raw = open(os.path.join(MAIL_DUMP_DIR, new[-1]), "rb").read().decode("utf-8", "replace")
     assert pilot["email"] in raw and "/missions/42" in raw
+
+
+def test_reservation_privee_par_defaut_invisible_des_autres(client, auth_client, make_user, monkeypatch):
+    """« Réserver » = demande réservée au pilote visé : absente de /missions, de
+    l'API, de la carte et de l'accueil ; 404 pour un autre pilote ; devis d'un
+    autre pilote refusé ; visible du client et du pilote visé (tableau de bord)."""
+    import mailer, db
+    monkeypatch.setattr(mailer, "send", lambda **kw: True)
+    broadcast = []
+    monkeypatch.setattr(mailer, "send_mission_alerts", lambda *a, **k: broadcast.append(a) or 0)
+    pilot = make_user("priv_pilot", role="pilot", country="Canada", lat=46.8, lng=-71.2)
+    other = make_user("priv_other", role="pilot", country="Canada", lat=46.9, lng=-71.3)
+    cli = make_user("priv_client", role="client")
+    title = "Demande privée toiture Limoilou"
+    auth_client(cli["id"]).post("/missions/nouvelle", data=_mission_form(
+        title=title, targeted_pilot_id=str(pilot["id"])), follow_redirects=True)
+    with client.application.app_context():
+        m = db.fetchone("SELECT id, is_private FROM missions WHERE title=?", (title,))
+    assert m["is_private"] == 1 and broadcast == []
+    assert title not in client.get("/missions?country=Canada").get_data(as_text=True)
+    assert all(x["id"] != m["id"] for x in client.get("/api/missions?country=Canada").get_json()["missions"])
+    assert all(x["id"] != m["id"] for x in client.get("/api/map?country=Canada").get_json()["missions"])
+    assert title not in client.get("/").get_data(as_text=True)
+    anon = client.application.test_client()                                          # sans cookie
+    assert anon.get(f"/missions/{m['id']}", headers={"User-Agent": "Mozilla/5.0 pytest"}).status_code == 404
+    assert auth_client(other["id"]).get(f"/missions/{m['id']}").status_code == 404     # autre pilote
+    assert auth_client(other["id"]).post(f"/missions/{m['id']}/enchere", data={"price": "500", "message": "x"}).status_code == 404
+    assert auth_client(cli["id"]).get(f"/missions/{m['id']}").status_code == 200
+    html = auth_client(pilot["id"]).get(f"/missions/{m['id']}").get_data(as_text=True)
+    assert "vous est réservée" in html and "demande privée" in html
+    assert title in auth_client(pilot["id"]).get("/espace").get_data(as_text=True)
+
+
+def test_reservation_ouverte_aux_autres_sur_choix(client, auth_client, make_user, monkeypatch):
+    import mailer, db
+    sent, broadcast = [], []
+    monkeypatch.setattr(mailer, "send", lambda **kw: sent.append(kw) or True)
+    monkeypatch.setattr(mailer, "send_mission_alerts", lambda recipients, mission, **k: broadcast.append([r["id"] for r in recipients]) or 0)
+    pilot = make_user("open_pilot", role="pilot", country="Canada", city="Québec", lat=46.8, lng=-71.2)
+    cli = make_user("open_client", role="client")
+    title = "Demande ouverte façade Sillery"
+    auth_client(cli["id"]).post("/missions/nouvelle", data=_mission_form(
+        title=title, targeted_pilot_id=str(pilot["id"]), visibility="open"), follow_redirects=True)
+    with client.application.app_context():
+        m = db.fetchone("SELECT id, is_private FROM missions WHERE title=?", (title,))
+    assert m["is_private"] == 0
+    assert title in client.get("/missions?country=Canada").get_data(as_text=True)
+    assert len(sent) == 1 and sent[0]["to"] == pilot["email"]        # demande directe
+    assert len(broadcast) == 1 and pilot["id"] not in broadcast[0]   # diffusion sans doublon au pilote visé

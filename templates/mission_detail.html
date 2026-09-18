@@ -6,10 +6,11 @@
     <span class="tag">{{ mission_label(mission.mission_type) }}</span>
     <span class="tag tag-{{ mission.status }}">{{ status_label(mission.status) }}</span>
     {% if mission.is_urgent %}<span class="tag tag-urgent">⚡ urgent</span>{% endif %}
+    {% if mission.is_private %}<span class="tag">{{ 'demande privée' if lang == 'fr' else 'private request' }}</span>{% endif %}
   </div>
   <h1>{{ mission.title }}</h1>
   {% if current_user and mission.targeted_pilot_id == current_user.id and mission.status == 'open' %}
-  <p class="notice" style="margin: 10px 0 14px;">{{ 'Cette demande vous est adressée directement : le client vous a choisi depuis votre fiche. Envoyez votre devis en priorité.' if lang == 'fr' else 'This request was sent to you directly: the client picked you from your profile. You are invited first to send your quote.' }}</p>
+  <p class="notice" style="margin: 10px 0 14px;">{% if mission.is_private %}{{ 'Cette demande vous est réservée : le client vous a choisi depuis votre fiche et personne d\'autre ne la voit. Répondez par un devis.' if lang == 'fr' else 'This request is reserved for you: the client picked you from your profile and nobody else can see it. Answer with a quote.' }}{% else %}{{ 'Cette demande vous est adressée directement : le client vous a choisi depuis votre fiche. Envoyez votre devis en priorité.' if lang == 'fr' else 'This request was sent to you directly: the client picked you from your profile. You are invited first to send your quote.' }}{% endif %}</p>
   {% endif %}
   <div class="meta">
     {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
