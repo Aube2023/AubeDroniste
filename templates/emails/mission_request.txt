@@ -1,0 +1,35 @@
+AUBEPILOT, DEMANDE DIRECTE / DIRECT REQUEST
+===========================================
+
+[FR]
+Un client vous a choisi, {{ pilot.full_name.split(' ')[0] }}.
+
+{% if package %}Un client souhaite reserver votre forfait « {{ package.title }} ».{% else %}Un client vous a adresse directement une demande de mission.{% endif %}
+La mission est publiee sur AubePilot et vous etes invite en priorite a envoyer votre devis.
+
+Mission : {{ mission.title }}{% if mission.is_urgent %} (URGENT){% endif %}
+Type    : {{ mission_label(mission.mission_type) }}
+{% if mission.city or mission.country %}Lieu    : {{ [mission.city, mission.country]|select|join(', ') }}
+{% endif %}{% if mission.budget_min or mission.budget_max %}Budget  : {% if mission.budget_min and mission.budget_max %}{{ mission.budget_min|int }}-{{ mission.budget_max|int }}{% else %}{{ (mission.budget_min or mission.budget_max)|int }}{% endif %} {{ mission.currency }}
+{% endif %}
+Voir la demande et proposer un devis : {{ site_url }}/missions/{{ mission.id }}
+
+Vous recevez cet email parce qu'un client vous a designe depuis votre fiche.
+Vous n'etes engage a rien tant que vous n'avez pas envoye de devis.
+
+L'equipage AubePilot
+
+------------------------------------------------------------
+
+[EN]
+A client picked you, {{ pilot.full_name.split(' ')[0] }}.
+
+{% if package %}A client wants to book your package "{{ package.title }}".{% else %}A client sent you a direct job request.{% endif %}
+The job is posted on AubePilot and you are invited first to send your quote.
+
+View the request and quote: {{ site_url }}/missions/{{ mission.id }}
+
+You're getting this because a client picked you from your profile.
+Nothing is binding until you send a quote.
+
+The AubePilot crew

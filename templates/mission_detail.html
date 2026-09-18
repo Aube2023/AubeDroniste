@@ -8,6 +8,9 @@
     {% if mission.is_urgent %}<span class="tag tag-urgent">⚡ urgent</span>{% endif %}
   </div>
   <h1>{{ mission.title }}</h1>
+  {% if current_user and mission.targeted_pilot_id == current_user.id and mission.status == 'open' %}
+  <p class="notice" style="margin: 10px 0 14px;">{{ 'Cette demande vous est adressée directement : le client vous a choisi depuis votre fiche. Envoyez votre devis en priorité.' if lang == 'fr' else 'This request was sent to you directly: the client picked you from your profile. You are invited first to send your quote.' }}</p>
+  {% endif %}
   <div class="meta">
     {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
     <br>

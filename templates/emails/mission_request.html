@@ -1,0 +1,63 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}Demande directe / Direct request, {{ mission.title }}{% endblock %}
+{% block preview %}Un client vous a choisi depuis votre fiche · A client picked you from your profile.{% endblock %}
+
+{% block content %}
+{% set first = pilot.full_name.split(' ')[0] %}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR, Demande directe</div>
+  <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    Un client vous a choisi, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    {% if package %}Un client souhaite reserver votre forfait <strong>« {{ package.title }} »</strong>.{% else %}Un client vous a adresse directement une demande de mission.{% endif %}
+    La mission est publiee sur AubePilot et vous etes invite en priorite a envoyer votre devis.
+  </p>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3ded1;background:#faf8f3;">
+    <tr><td style="padding:14px 18px;border-bottom:1px solid #e3ded1;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Mission</div>
+      <div style="font:600 17px/1.3 Georgia,serif;color:#15181f;">{{ mission.title }}{% if mission.is_urgent %} <span style="color:#b93a2f;">(urgent)</span>{% endif %}</div>
+    </td></tr>
+    <tr><td style="padding:14px 18px;{% if mission.budget_min or mission.budget_max %}border-bottom:1px solid #e3ded1;{% endif %}">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Type{% if mission.city or mission.country %} &middot; Lieu{% endif %}</div>
+      <div style="font:400 15px/1.4 Georgia,serif;color:#3b414e;">{{ mission_label(mission.mission_type) }}{% if mission.city or mission.country %} &middot; {{ [mission.city, mission.country]|select|join(', ') }}{% endif %}</div>
+    </td></tr>
+    {% if mission.budget_min or mission.budget_max %}
+    <tr><td style="padding:14px 18px;">
+      <div style="font:500 10px/1 'Courier New',Courier,monospace;letter-spacing:0.18em;color:#9a9da4;text-transform:uppercase;margin-bottom:4px;">Budget indicatif</div>
+      <div style="font:700 18px/1 Georgia,serif;color:#1e6f5e;">{% if mission.budget_min and mission.budget_max %}{{ mission.budget_min|int }} &ndash; {{ mission.budget_max|int }}{% else %}{{ (mission.budget_min or mission.budget_max)|int }}{% endif %} {{ mission.currency }}</div>
+    </td></tr>
+    {% endif %}
+  </table>
+
+  <p style="margin:24px 0 0;">
+    <a href="{{ site_url }}/missions/{{ mission.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Voir la demande et proposer un devis</a>
+  </p>
+  <p style="font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">
+    Vous recevez cet email parce qu'un client vous a designe depuis votre fiche. Vous n'etes engage a rien tant que vous n'avez pas envoye de devis.
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN, Direct request</div>
+  <h1 style="font-family:Georgia,serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    A client picked you, {{ first }}.
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 16px;">
+    {% if package %}A client wants to book your package <strong>"{{ package.title }}"</strong>.{% else %}A client sent you a direct job request.{% endif %}
+    The job is posted on AubePilot and you are invited first to send your quote.
+  </p>
+  <p style="margin:24px 0 0;">
+    <a href="{{ site_url }}/missions/{{ mission.id }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">View the request and quote</a>
+  </p>
+  <p style="font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">
+    You're getting this because a client picked you from your profile. Nothing is binding until you send a quote.
+  </p>
+</td></tr>
+</table>
+{% endblock %}

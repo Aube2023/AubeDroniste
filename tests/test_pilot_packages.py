@@ -95,3 +95,70 @@ def test_forfait_sur_devis_et_specialite_deduite(make_user, auth_client, app_ctx
         "title": "Négatif", "description": "Description suffisamment longue pour passer.",
         "price": "-5", "currency": "CAD", "mission_type": "photo"}, follow_redirects=True)
     assert db.fetchone("SELECT COUNT(*) AS n FROM pilot_packages WHERE pilot_user_id=?", (u["id"],))["n"] == 1
+
+
+def _mission_form(**extra):
+    base = {"title": "Photogrammétrie du Vieux-Port", "description": "Captation des données brutes par drone, remise sans traitement.",
+            "mission_type": "3d", "country": "Canada", "city": "Montréal", "currency": "CAD",
+            "budget_min": "600", "budget_max": "1100"}
+    base.update(extra)
+    return base
+
+
+def test_reservation_forfait_notifie_le_pilote_vise(client, auth_client, make_user, monkeypatch):
+    """« Réserver » un forfait publie une mission ciblée : le pilote visé reçoit
+    un courriel de demande directe, et personne d'autre n'est alerté."""
+    import mailer, db, services
+    sent, broadcast = [], []
+    monkeypatch.setattr(mailer, "send", lambda **kw: sent.append(kw) or True)
+    monkeypatch.setattr(mailer, "send_mission_alerts", lambda *a, **k: broadcast.append(a) or 0)
+    pilot = make_user("pkg_notif_pilot", role="pilot", country="Canada", city="Québec", lat=46.8, lng=-71.2)
+    with client.application.app_context():
+        services.upsert_pilot_profile(pilot["id"], is_available=1)
+        pkg_id = services.create_pilot_package(pilot["id"], title="Photogrammétrie", description="Captation des données brutes uniquement.",
+                                               price=0, currency="CAD", mission_type="3d")
+    cli = make_user("pkg_notif_client", role="client")
+    r = auth_client(cli["id"]).post("/missions/nouvelle", data=_mission_form(
+        targeted_pilot_id=str(pilot["id"]), from_package_id=str(pkg_id)), follow_redirects=True)
+    assert r.status_code == 200
+    with client.application.app_context():
+        m = db.fetchone("SELECT id, targeted_pilot_id, from_package_id, status FROM missions WHERE client_user_id=?", (cli["id"],))
+    assert m["targeted_pilot_id"] == pilot["id"] and m["from_package_id"] == pkg_id and m["status"] == "open"
+    assert broadcast == []                      # pas de diffusion aux autres pilotes
+    assert len(sent) == 1 and sent[0]["to"] == pilot["email"] and sent[0]["template"] == "mission_request"
+    assert sent[0]["context"]["package"]["title"] == "Photogrammétrie"
+    # Le pilote visé voit le bandeau ; un autre pilote non.
+    html = auth_client(pilot["id"]).get(f"/missions/{m['id']}").get_data(as_text=True)
+    assert "adressée directement" in html
+    other = make_user("pkg_notif_other", role="pilot")
+    assert "adressée directement" not in auth_client(other["id"]).get(f"/missions/{m['id']}").get_data(as_text=True)
+
+
+def test_reservation_forfait_pilote_bloque_non_notifie(client, auth_client, make_user, monkeypatch):
+    import mailer, services
+    sent = []
+    monkeypatch.setattr(mailer, "send", lambda **kw: sent.append(kw) or True)
+    monkeypatch.setattr(mailer, "send_mission_alerts", lambda *a, **k: 0)
+    pilot = make_user("pkg_block_pilot", role="pilot", country="Canada")
+    cli = make_user("pkg_block_client", role="client")
+    with client.application.app_context():
+        services.block_user(pilot["id"], cli["id"])
+    auth_client(cli["id"]).post("/missions/nouvelle", data=_mission_form(targeted_pilot_id=str(pilot["id"])), follow_redirects=True)
+    assert sent == []
+
+
+def test_courriel_demande_directe_se_rend(client, make_user):
+    """Les gabarits HTML et texte de la demande directe se rendent (dump .eml en test)."""
+    import os, mailer
+    from config import MAIL_DUMP_DIR
+    pilot = make_user("pkg_render_pilot", role="pilot", country="Canada")
+    mission = {"id": 42, "title": "Photogrammétrie du Vieux-Port", "mission_type": "3d", "city": "Montréal",
+               "country": "Canada", "budget_min": 600, "budget_max": 1100, "currency": "CAD", "is_urgent": 0}
+    before = set(os.listdir(MAIL_DUMP_DIR)) if os.path.isdir(MAIL_DUMP_DIR) else set()
+    with client.application.app_context():
+        assert mailer.send_mission_request({"email": pilot["email"], "full_name": "Benoit Leroux"}, mission,
+                                           {"title": "Photogrammétrie"}, async_=False)
+    new = [f for f in os.listdir(MAIL_DUMP_DIR) if f not in before]
+    assert new, "aucun .eml produit"
+    raw = open(os.path.join(MAIL_DUMP_DIR, new[-1]), "rb").read().decode("utf-8", "replace")
+    assert pilot["email"] in raw and "/missions/42" in raw

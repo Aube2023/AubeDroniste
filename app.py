@@ -2900,17 +2900,27 @@ def mission_create():
             flash(f"Mission invalide: {exc}", "error")
             return render_template("mission_create.html", form=request.form)
         # Alerte les pilotes disponibles dont le rayon couvre la mission.
-        # Pas de diffusion pour une commande ciblee (forfait / pilote vise).
-        if not targeted_pilot_id:
-            try:
-                import mailer
-                full = services.get_mission(mission_id)
-                if full:
-                    recipients = services.pilots_for_mission_alert(
-                        full, exclude_user_id=g.user["id"])
-                    mailer.send_mission_alerts(recipients, full)
-            except Exception as exc:
-                log.warning("alertes mission %s echouees: %s", mission_id, exc)
+        # Pas de diffusion pour une commande ciblee (forfait / pilote vise) :
+        # seul le pilote designe recoit un courriel, comme promis sur le
+        # formulaire (« sera notifié de votre mission »).
+        try:
+            import mailer
+            full = services.get_mission(mission_id)
+            if full and targeted_pilot_id:
+                pilot = db.fetchone(
+                    "SELECT id, email, full_name FROM users "
+                    "WHERE id=? AND deleted_at IS NULL AND role IN ('pilot', 'both')",
+                    (targeted_pilot_id,))
+                if pilot and pilot["id"] != g.user["id"] \
+                        and not services.is_blocked_between(g.user["id"], pilot["id"]):
+                    pkg = services.get_pilot_package(from_package_id) if from_package_id else None
+                    mailer.send_mission_request(dict(pilot), full, pkg)
+            elif full:
+                recipients = services.pilots_for_mission_alert(
+                    full, exclude_user_id=g.user["id"])
+                mailer.send_mission_alerts(recipients, full)
+        except Exception as exc:
+            log.warning("alertes mission %s echouees: %s", mission_id, exc)
         flash("Mission publiee.", "success")
         _ping_index([f"/missions/{mission_id}", "/missions"])
         return redirect(url_for("mission_detail", mission_id=mission_id))

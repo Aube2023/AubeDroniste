@@ -283,6 +283,23 @@ def send_mission_alerts(pilots: list, mission: dict, cap: int = 200) -> int:
     return len(pilots)
 
 
+def send_mission_request(pilot: dict, mission: dict, package: Optional[dict] = None,
+                         async_: bool = True) -> bool:
+    """Previent le pilote qu'un client l'a designe depuis sa fiche (bouton
+    « Contacter ce pilote » ou « Réserver » un forfait). Envoye meme si le
+    pilote a coupe les alertes de rayon : c'est une demande nominative, pas
+    une diffusion. `mission` : infos publiques seulement (client anonyme)."""
+    if not pilot or not pilot.get("email"):
+        return False
+    return send(
+        to=pilot["email"],
+        subject=f"Demande directe / Direct request, {mission['title']}",
+        template="mission_request",
+        context={"pilot": pilot, "mission": mission, "package": package},
+        async_=async_,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Formulaire de contact public (/contact)
 # ---------------------------------------------------------------------------
