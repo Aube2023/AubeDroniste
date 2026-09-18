@@ -173,6 +173,9 @@ _ADD_COLUMNS = [
     ("users", "notify_alerts", "INTEGER NOT NULL DEFAULT 1"),
     ("users", "notify_news", "INTEGER NOT NULL DEFAULT 0"),
     ("users", "deleted_at", "TEXT"),
+    # Numero de membre public (1, 2, 3... dans l'ordre d'inscription), a la
+    # place de l'id SQLite qui ne repart pas a 1 apres une purge.
+    ("users", "member_no", "INTEGER"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
@@ -214,6 +217,7 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_member_no ON users(member_no)",
 ]
 
 
@@ -365,6 +369,13 @@ _ADD_TABLES = [
     handled_at       TEXT,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
 )""",
+    # Numero de membre pose a l'insertion (cf. schema.sql).
+    """CREATE TRIGGER IF NOT EXISTS trg_users_member_no AFTER INSERT ON users
+WHEN NEW.member_no IS NULL
+BEGIN
+    UPDATE users SET member_no = (SELECT COALESCE(MAX(member_no), 0) + 1 FROM users)
+    WHERE id = NEW.id;
+END""",
 ]
 
 
@@ -409,7 +420,22 @@ def run_migrations():
         c.execute("CREATE INDEX IF NOT EXISTS idx_cert_review ON pilot_certifications(review_status)")
         for stmt in _POST_SQL:
             c.execute(stmt)
+        _backfill_member_numbers(c)
         # commit par standalone() a la sortie du bloc
+
+
+def _backfill_member_numbers(c) -> None:
+    """Numerote les comptes qui n'ont pas encore de numero de membre, dans
+    l'ordre d'inscription (id croissant), a la suite du plus grand numero
+    deja attribue. Idempotent : ne touche jamais un numero existant."""
+    rows = c.execute("SELECT id FROM users WHERE member_no IS NULL ORDER BY id").fetchall()
+    if not rows:
+        return
+    nxt = (c.execute("SELECT COALESCE(MAX(member_no), 0) FROM users").fetchone()[0] or 0) + 1
+    for r in rows:
+        c.execute("UPDATE users SET member_no=? WHERE id=?", (nxt, r[0]))
+        nxt += 1
+    log.info("migration: %d numero(s) de membre attribue(s)", len(rows))
 
 
 def _timed(query: str, params: Iterable, action):

@@ -18,7 +18,7 @@
     <div class="avatar big">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
-      <span class="callsign">{{ 'Profil' if fr else 'Profile' }} nº {{ pilot.id }}</span>
+      <span class="callsign">{{ 'Profil' if fr else 'Profile' }} nº {{ pilot.member_no or pilot.id }}</span>
       <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ 'vérifié' if fr else 'verified' }}</span>{% endif %}</h1>
       <div class="loc">
         {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
