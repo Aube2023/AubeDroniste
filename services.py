@@ -1452,7 +1452,8 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         # filtre note minimum directement en SQL (LEFT JOIN garantit 0 si pas de reviews)
         q.append("AND COALESCE(r.avg_rating, 0.0) >= ?")
         args.append(float(min_rating))
-    q.append("ORDER BY u.is_verified DESC, p.is_available DESC")
+    # Annuaire trie par numero de profil (1, 2, 3...), comme l'accueil.
+    q.append("ORDER BY p.pilot_no, u.id")
     # La distance est calculee en Python. Avec des coordonnees, limiter en SQL
     # avant ce tri pouvait eliminer les pilotes les plus proches.
     if lat is None or lng is None:
@@ -1484,7 +1485,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         r["verified_authorities"] = [a for a in auths.split(",") if a]
         enriched.append(r)
     if lat is not None and lng is not None:
-        enriched.sort(key=lambda x: (x.get("distance_km") or 1e9))
+        enriched.sort(key=lambda x: (x.get("distance_km") or 1e9, x.get("pilot_no") or 1e9))
     return enriched[:limit]
 
 
@@ -3300,7 +3301,7 @@ def featured_pilots(limit: int = 6) -> list:
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
         "WHERE u.role IN ('pilot','both') AND p.is_available=1 AND u.deleted_at IS NULL "
-        "ORDER BY u.is_verified DESC, u.last_seen_at DESC LIMIT ?",
+        "ORDER BY p.pilot_no, u.id LIMIT ?",
         (limit,),
     )
     out = []
