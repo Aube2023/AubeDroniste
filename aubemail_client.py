@@ -25,8 +25,15 @@ _TIMEOUT = (5, 20)  # connect, read (useradd + Maildir peuvent prendre un peu)
 def provision_account(*, username: str, password: str,
                       display_name: Optional[str] = None,
                       source: str = "aubepilot",
-                      lang: Optional[str] = None) -> dict:
+                      lang: Optional[str] = None,
+                      client_ip: Optional[str] = None,
+                      user_agent: Optional[str] = None) -> dict:
     """Cree (ou confirme) le compte AubeMail correspondant.
+
+    `client_ip` / `user_agent` : la personne derriere le navigateur, telle
+    qu AubePilot la voit derriere son nginx. AubeMail ne voit sinon que
+    l IP du service et son alerte admin affiche « IP inconnue » : aucune
+    trace d origine pour la securite. Toujours les transmettre.
 
     Retourne {ok: bool, created: bool, reason: str|None} :
       - ok=True, created=True  -> compte cree
@@ -44,6 +51,8 @@ def provision_account(*, username: str, password: str,
                 "display_name": display_name,
                 "source": source,
                 "lang": lang,
+                "client_ip": client_ip,
+                "user_agent": (user_agent or "")[:300] or None,
             },
             headers={"X-Aube-Internal-Key": AUBE_INTERNAL_API_KEY},
             timeout=_TIMEOUT,

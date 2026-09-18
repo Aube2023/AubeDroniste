@@ -1576,6 +1576,10 @@ def register():
             prov = aubemail_client.provision_account(
                 username=username, password=password, display_name=full_name,
                 source="aubepilot", lang=getattr(g, "lang", None),
+                # Trace de la personne (pas du service) pour l alerte admin
+                # et le journal des inscriptions cote AubeMail.
+                client_ip=security.client_ip(),
+                user_agent=request.user_agent.string,
             )
             if not prov["ok"]:
                 log.error("inscription REFUSEE : provision AubeMail KO (%s) pour %r",
