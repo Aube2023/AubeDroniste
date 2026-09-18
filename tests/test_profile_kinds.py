@@ -166,3 +166,18 @@ def test_schools_page_and_full_school_signup(client):
     # sitemap + pied de page
     assert "/ecoles</loc>" in client.get("/sitemap-fr.xml").data.decode()
     assert 'href="/ecoles"' in client.get("/missions").data.decode()
+
+
+def test_map_markers_expose_photo_and_number(client, make_user):
+    import db
+    with client.application.app_context():
+        u = make_user("map_photo", role="pilot", country="Islande", lat=64.1, lng=-21.9)
+        db.execute("UPDATE users SET avatar_path=? WHERE id=?", ("uploads/avatar_%d.jpg" % u["id"], u["id"]))
+        db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (u["id"],))
+        v = make_user("map_nophoto", role="pilot", country="Islande", lat=64.2, lng=-21.8)
+        db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (v["id"],))
+    m = client.get("/api/map?country=Islande").get_json()
+    by_id = {p["id"]: p for p in m["pilots"]}
+    assert by_id[u["id"]]["avatar"] == "/media/avatar_%d.jpg" % u["id"]
+    assert by_id[v["id"]]["avatar"] is None
+    assert by_id[u["id"]]["no"] and by_id[v["id"]]["no"] == by_id[u["id"]]["no"] + 1

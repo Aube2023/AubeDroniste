@@ -543,7 +543,8 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
 @media (max-width: 760px) {
   .hero-band { padding: 48px 18px 40px; margin-top: -32px; }
   .hero-search { flex-direction: column; border-radius: 14px; padding: 8px; }
-  .hero-field, .hero-field:last-of-type { border-inline-end: 0; border-bottom: 1px solid #e6e7ee; padding: 10px 12px; }
+  /* En colonne, la base flex (160-220 px) deviendrait une hauteur : on la neutralise. */
+  .hero-field, .hero-field.grow, .hero-field:last-of-type { flex: 0 0 auto; border-inline-end: 0; border-bottom: 1px solid #e6e7ee; padding: 10px 12px; }
   .hero-field:last-of-type { border-bottom: 0; }
   .hero-search .cta { padding: 14px 22px; margin-top: 4px; }
 }
@@ -2181,7 +2182,8 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .search-more .grid-3 label, .search-more .grid-2 label { margin: 0; }
 @media (max-width: 760px) {
   .search-bar { flex-direction: column; border-radius: 14px; padding: 8px; }
-  .search-field, .search-field:last-of-type, .search-field.narrow { flex: 1 1 auto; border-inline-end: 0; border-bottom: 1px solid var(--rule); padding: 10px 12px; }
+  /* En colonne, la base flex (130-240 px) deviendrait une hauteur : base auto. */
+  .search-field, .search-field.grow, .search-field.narrow, .search-field:last-of-type { flex: 0 0 auto; border-inline-end: 0; border-bottom: 1px solid var(--rule); padding: 10px 12px; }
   .search-field:last-of-type { border-bottom: 0; }
   .search-bar .cta { padding: 14px 22px; margin-top: 4px; }
   .search-more .grid-3 { grid-template-columns: 1fr; }

@@ -29,6 +29,8 @@
 #aube-map .aube-pop-verif{font-weight:700;font-size:10.5px;background:rgba(255,255,255,.24);padding:2px 8px;border-radius:999px;letter-spacing:.03em}
 #aube-map .aube-pop-body{padding:10px 12px 12px;min-width:195px;max-width:250px;background:#fff;color:#1c1d22}
 #aube-map .aube-pop-muted{color:#6b7280;font-size:12.5px}
+#aube-map .aube-pop-who{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+#aube-map .aube-pop-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none;border:1px solid rgba(128,128,128,.3);background:#f3f4f6;color:#b45309;font:700 22px/1 Georgia,serif;display:grid;place-items:center}
 #aube-map .aube-pop-quote{font-style:italic;color:#555;margin:3px 0;font-size:12.5px}
 #aube-map .aube-pop-cta{display:inline-block;margin-top:8px;color:#fff;font-weight:700;font-size:12.5px;padding:6px 13px;border-radius:999px;text-decoration:none}
 #aube-map .aube-pop-cta:hover{filter:brightness(1.1)}
@@ -513,8 +515,11 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     var stars = p.rating && p.rating.count ? ('★ ' + p.rating.avg.toFixed(1) + ' · ' + p.rating.count + ' ' + L10N.reviews.replace('{n}', '').trim()) : L10N.new;
     var verif = p.verified ? '<span class="aube-pop-verif">✓ ' + L10N.verified + '</span>' : '';
     var title = p.name ? esc(p.name) : (KIND_LABEL[p.kind] || KIND_LABEL.pro);
+    var photo = p.avatar ? '<img class="aube-pop-avatar" src="' + esc(p.avatar) + '" alt="" loading="lazy">'
+                         : '<div class="aube-pop-avatar" aria-hidden="true">' + esc((p.name || '?').charAt(0).toUpperCase()) + '</div>';
+    var no = p.no ? '<div class="aube-pop-muted">nº ' + esc(p.no) + '</div>' : '';
     return '<div class="aube-pop">' + popHead(p.kind, verif) +
-      '<div class="aube-pop-body"><b>' + title + '</b>' +
+      '<div class="aube-pop-body"><div class="aube-pop-who">' + photo + '<div><b>' + title + '</b>' + no + '</div></div>' +
       (p.country ? '<div class="aube-pop-muted">' + esc(p.country) + '</div>' : '') +
       (p.headline ? '<div class="aube-pop-quote">« ' + esc(p.headline) + ' »</div>' : '') +
       '<div class="aube-pop-muted">' + stars + '</div>' +

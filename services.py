@@ -3415,6 +3415,10 @@ def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
             # Une ecole est une organisation : son nom n'est pas une donnee
             # personnelle, on l'affiche tel quel sur la carte.
             "name": public_name(p),
+            "no": p.get("pilot_no"),
+            # Photo publique (meme route /media que les cartes de l'annuaire).
+            "avatar": ("/media/" + p["avatar_path"][8:])
+                      if (p.get("avatar_path") or "").startswith("uploads/") else None,
         })
     m_out = []
     for m in missions:
