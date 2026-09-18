@@ -174,7 +174,12 @@ def _attach():
     elif public:
         g.lang = i18n.DEFAULT
         try:
-            best = request.accept_languages.best_match(endpoint_langs(request.endpoint))
+            langs = endpoint_langs(request.endpoint)
+            # Alias navigateur (« fil » -> tl) : on les propose aussi, puis on
+            # ramene au code de la langue reelle.
+            aliases = {a: c for a, c in i18n.ACCEPT_ALIASES.items() if c in langs}
+            best = request.accept_languages.best_match(list(langs) + list(aliases))
+            best = aliases.get(best, best)
         except Exception:
             best = None
         if best and best != i18n.DEFAULT:

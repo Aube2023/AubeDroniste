@@ -2382,16 +2382,17 @@ html[lang="ur"] textarea {
   letter-spacing: normal;
 }
 html[lang="ur"] body { line-height: 2.05; }
-/* Arabe : naskh, plus compact que le nastaliq, mais même règle sur la chasse. */
-html[lang="ar"] body,
+/* Arabe et persan : naskh, plus compact que le nastaliq, mais même règle sur la chasse. */
+html[lang="ar"] body, html[lang="fa"] body,
 html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3,
-html[lang="ar"] .lead, html[lang="ar"] .eyebrow,
-html[lang="ar"] button, html[lang="ar"] input, html[lang="ar"] select,
-html[lang="ar"] textarea {
+html[lang="fa"] h1, html[lang="fa"] h2, html[lang="fa"] h3,
+html[lang="ar"] .lead, html[lang="ar"] .eyebrow, html[lang="fa"] .lead, html[lang="fa"] .eyebrow,
+html[lang="ar"] button, html[lang="ar"] input, html[lang="ar"] select, html[lang="ar"] textarea,
+html[lang="fa"] button, html[lang="fa"] input, html[lang="fa"] select, html[lang="fa"] textarea {
   font-family: 'Noto Naskh Arabic', var(--sans);
   letter-spacing: normal;
 }
-html[lang="ar"] body { line-height: 1.75; }
+html[lang="ar"] body, html[lang="fa"] body { line-height: 1.75; }
 html[lang="ur"] h1 { line-height: 1.55; }
 html[lang="ur"] h2, html[lang="ur"] h3 { line-height: 1.7; }
 html[lang="ur"] .eyebrow { font-size: 13px; }

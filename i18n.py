@@ -27,10 +27,13 @@ _FMT_DEFAULTS = {"fee": int(PLATFORM_FEE_PCT), "pilot_share": int(PILOT_SHARE_PC
 # suivantes (ajoutees le 2026-09-13 d'apres la provenance des visiteurs :
 # monde arabe, Bresil, Allemagne, Vietnam, Indonesie) sont dans
 # translations/<code>.json et fusionnees a l'import (voir _load_extra).
-SUPPORTED = ("fr", "en", "es", "ru", "hi", "uk", "tr", "ur", "bn", "ar", "pt", "de", "vi", "id")
+SUPPORTED = ("fr", "en", "es", "ru", "hi", "uk", "tr", "ur", "bn", "ar", "pt", "de", "vi", "id",
+             "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl")
 DEFAULT = "fr"
 COOKIE = "aube_lang"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 an
+# Codes annonces par les navigateurs qui different du notre.
+ACCEPT_ALIASES = {"fil": "tl"}
 
 # Metadonnees d'affichage du selecteur : nom natif + drapeau. Seules les langues
 # de SUPPORTED apparaissent dans le menu ; les autres sont pretes pour le jour ou
@@ -52,6 +55,12 @@ LANGUAGE_META = {
     "bn": ("বাংলা",       "🇧🇩"),
     "vi": ("Tiếng Việt", "🇻🇳"),
     "id": ("Indonesia",  "🇮🇩"),
+    "ja": ("日本語",      "🇯🇵"),
+    "sw": ("Kiswahili",  "🇰🇪"),
+    "tl": ("Filipino",   "🇵🇭"),
+    "fa": ("فارسی",       "🇮🇷"),
+    "ko": ("한국어",       "🇰🇷"),
+    "pl": ("Polski",     "🇵🇱"),
 }
 
 # Palettes d'accent de l'interface : le nom est celui d'un ciel, la couleur
@@ -87,7 +96,7 @@ def month_year(date_str, lang: str = DEFAULT) -> str:
 
 
 # Langues ecrites de droite a gauche : <html dir="rtl"> + surcharges CSS.
-RTL = ("ur", "ar")
+RTL = ("ur", "ar", "fa")
 
 # Locale Open Graph (og:locale) par langue.
 LOCALES = {
@@ -230,7 +239,8 @@ def resolve_lang() -> str:
     if cookie in SUPPORTED:
         return cookie
     try:
-        return request.accept_languages.best_match(SUPPORTED) or DEFAULT
+        best = request.accept_languages.best_match(SUPPORTED + tuple(ACCEPT_ALIASES))
+        return ACCEPT_ALIASES.get(best, best) or DEFAULT
     except Exception:
         return DEFAULT
 
@@ -1861,7 +1871,7 @@ _T = {
 # parite (tests/test_i18n_parite.py) le signale.
 # ---------------------------------------------------------------------------
 
-EXTRA_LANGS = ("ar", "pt", "de", "vi", "id")
+EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl")
 _TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")
 
 

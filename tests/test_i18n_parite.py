@@ -47,3 +47,11 @@ def test_sens_decriture():
     assert i18n.lang_dir("bn") == "ltr"
     assert i18n.lang_dir("fr") == "ltr"
     assert all(code in i18n.LANGUAGE_META for code in i18n.RTL)
+
+
+def test_filipino_annonce_en_fil_par_le_navigateur(client):
+    # Chrome/Android envoient « fil », pas « tl » : le bandeau doit mener à /tl/.
+    html = client.get("/", headers={"Accept-Language": "fil-PH,fil;q=0.9,en;q=0.5"}).get_data(as_text=True)
+    assert 'href="/tl/"' in html
+    html = client.get("/", headers={"Accept-Language": "zh-CN,zh;q=0.9"}).get_data(as_text=True)
+    assert 'href="/zh/"' in html
