@@ -417,20 +417,21 @@ def seao_weekly_resources() -> list:
 
 def collect_seao(conn, state: dict) -> dict:
     done = set(state.get("seao_files") or [])
-    n_items = n_files = 0
+    downloaded = []   # (nom, fiches, ocid clos) : tout le réseau d'abord, la base ensuite
     for r in seao_weekly_resources():
         name = r["name"]
         if name in done:
             continue
         payload = json.loads(_fetch(r["url"]).decode("utf-8"))
-        items, closed = parse_seao(payload)
+        downloaded.append((name, *parse_seao(payload)))
+    n_items = 0
+    for name, items, closed in downloaded:
         n_items += _upsert_many(conn, items)
         for ocid in closed:
             conn.execute("UPDATE opportunities SET status='closed' WHERE source='seao' AND source_ref=? AND status='published'", (ocid,))
         done.add(name)
-        n_files += 1
     state["seao_files"] = sorted(done)[-40:]
-    return {"items": n_items, "files": n_files}
+    return {"items": n_items, "files": len(downloaded)}
 
 
 # ---------------------------------------------------------------------------
@@ -689,27 +690,36 @@ def link_status(url: str) -> int:
     return code
 
 
-def verify_links(conn, limit: int = 120) -> dict:
+def verify_links(limit: int = 120) -> dict:
     """Contrôle les liens des fiches publiées non encore vérifiées (et
     revérifie les plus anciennes) : lien mort -> fiche retirée (status
-    'broken'), ou bascule sur le lien anglais s'il répond. Borné par nuit
-    pour rester poli avec les portails."""
-    rows = conn.execute(
-        "SELECT id, url_fr, url_en FROM opportunities WHERE status='published' "
-        "ORDER BY link_checked_at IS NOT NULL, link_checked_at LIMIT ?", (limit,)).fetchall()
-    ok = broken = swapped = 0
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    'broken'), ou bascule sur le lien anglais s'il répond. Les requêtes
+    HTTP se font sans verrou sur la base ; l'écriture est une transaction
+    courte à la fin. Borné par nuit pour rester poli avec les portails."""
+    with db.standalone() as conn:
+        rows = conn.execute(
+            "SELECT id, url_fr, url_en FROM opportunities WHERE status='published' "
+            "ORDER BY link_checked_at IS NOT NULL, link_checked_at LIMIT ?", (limit,)).fetchall()
+    results = []
     for oid, url_fr, url_en in rows:
         code = link_status(url_fr)
         if code in LINK_OK:
-            conn.execute("UPDATE opportunities SET link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); ok += 1
-            continue
+            results.append((oid, "ok", code, None)); continue
         if url_en and url_en != url_fr and link_status(url_en) in LINK_OK:
-            conn.execute("UPDATE opportunities SET url_fr=url_en, link_checked_at=?, link_status=200 WHERE id=?", (now, oid)); swapped += 1
-            continue
-        conn.execute("UPDATE opportunities SET status='broken', link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); broken += 1
+            results.append((oid, "swap", 200, url_en)); continue
+        results.append((oid, "broken", code, None))
         log.warning("opportunite %s: lien mort (%s) %s", oid, code, url_fr)
-    return {"checked": len(rows), "ok": ok, "swapped": swapped, "broken": broken}
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    counts = {"checked": len(rows), "ok": 0, "swapped": 0, "broken": 0}
+    with db.standalone() as conn:
+        for oid, kind, code, new_url in results:
+            if kind == "ok":
+                conn.execute("UPDATE opportunities SET link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); counts["ok"] += 1
+            elif kind == "swap":
+                conn.execute("UPDATE opportunities SET url_fr=?, link_checked_at=?, link_status=200 WHERE id=?", (new_url, now, oid)); counts["swapped"] += 1
+            else:
+                conn.execute("UPDATE opportunities SET status='broken', link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); counts["broken"] += 1
+    return counts
 
 
 # ---------------------------------------------------------------------------
@@ -743,23 +753,28 @@ def expire(conn) -> int:
 
 
 def collect(verify: bool = True) -> dict:
-    """Une passe complète : chaque source dans son propre try, la collecte
-    d'une source ne bloque pas l'autre ; puis contrôle des liens. Retourne
-    un compte-rendu."""
+    """Une passe complète. Les téléchargements et les contrôles de liens se
+    font HORS transaction : chaque source ouvre sa propre connexion courte,
+    validée aussitôt, pour ne jamais retenir le verrou SQLite pendant le
+    réseau (une première version bloquait le site 30 s : les compteurs de
+    visites attendaient derrière la collecte). Une source en panne ne bloque
+    pas les autres."""
     report: dict = {}
     state = _load_state()
-    with db.standalone() as conn:
-        for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
-                         ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder)):
-            try:
+    for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
+                     ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder)):
+        try:
+            with db.standalone() as conn:
                 report[name] = fn(conn)
-            except Exception as exc:  # une source en panne ne doit pas casser la nuit
-                log.warning("opportunites %s: %s", name, exc)
-                report[name] = {"error": str(exc)[:200]}
+        except Exception as exc:
+            log.warning("opportunites %s: %s", name, exc)
+            report[name] = {"error": str(exc)[:200]}
+    with db.standalone() as conn:
         report["dedup"] = dedupe_cross_sources(conn)
         report["expired"] = expire(conn)
-        if verify:
-            report["links"] = verify_links(conn)
+    if verify:
+        report["links"] = verify_links()
+    with db.standalone() as conn:
         report["published"] = conn.execute("SELECT COUNT(*) FROM opportunities WHERE status='published'").fetchone()[0]
     state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
     state["last_report"] = report

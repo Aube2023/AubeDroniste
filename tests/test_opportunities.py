@@ -177,3 +177,29 @@ def test_expiration_des_avis_clos(app_ctx):
     with db.standalone() as conn:
         assert opp.expire(conn) >= 1
     assert db.fetchone("SELECT status FROM opportunities WHERE source_ref='old'")["status"] == "closed"
+
+
+def test_la_collecte_ne_bloque_pas_le_site(client, monkeypatch):
+    """Les téléchargements se font hors transaction : pendant une collecte
+    lente, une écriture du site (compteur de visite) passe sans attendre."""
+    import threading, time, db
+    from config import DATA_DIR
+    monkeypatch.setattr(opp, "STATE_FILE", DATA_DIR + "/opp_state_slow.json")
+    started, waited = threading.Event(), {"t": None}
+    def slow_fetch(url, timeout=120):
+        started.set(); time.sleep(1.5)
+        if url == opp.CANADABUYS_CSV:
+            return CSV.encode("utf-8")
+        return json.dumps({"result": {"resources": []}, "results": [], "releases": [], "links": {}}).encode("utf-8")
+    monkeypatch.setattr(opp, "_fetch", slow_fetch)
+    monkeypatch.setattr(opp, "_post_json", lambda *a, **k: {"notices": []})
+    monkeypatch.setattr(opp, "link_status", lambda url: 200)
+    th = threading.Thread(target=lambda: opp.collect()); th.start()
+    started.wait(5); time.sleep(0.2)
+    t0 = time.time()
+    with client.application.app_context():
+        db.execute("INSERT INTO visit_countries(day, country, kind, views) VALUES(date('now'), 'ZZ', 'human', 1) "
+                   "ON CONFLICT(day, country, kind) DO UPDATE SET views = views + 1")
+    waited["t"] = time.time() - t0
+    th.join(30)
+    assert waited["t"] < 1.0, f"écriture bloquée {waited['t']:.1f}s pendant la collecte"
