@@ -22,7 +22,7 @@
       {% endif %}
       <span class="inbox-body">
         <span class="inbox-top">
-          <span class="who">{{ c.peer_name if c.peer_is_client else mask_name(c.peer_name) }} <span class="muted small">· {{ t('messages.role_client') if c.peer_is_client else t('messages.role_pilot') }}</span></span>
+          <span class="who">{{ mask_name(c.peer_name) if c.peer_is_client and not c.peer_funded else c.peer_name }} <span class="muted small">· {{ t('messages.role_client') if c.peer_is_client else t('messages.role_pilot') }}</span></span>
           <span class="when" data-utc="{{ c.last_at }}" data-fmt="date">{{ c.last_at[:10] }}</span>
         </span>
         <span class="mission">{{ c.mission_title }}</span>
@@ -46,7 +46,7 @@
     <header class="thread-head">
       <a class="thread-back" href="{{ url_for('messages_inbox') }}" aria-label="{{ t('messages.title') }}">←</a>
       <div class="thread-who">
-        <strong>{{ conv.peer_name if conv.peer_is_client else mask_name(conv.peer_name) }}</strong>
+        <strong>{{ mask_name(conv.peer_name) if conv.peer_is_client and not conv.peer_funded else conv.peer_name }}</strong>
         <span class="muted small">{{ t('messages.role_client') if conv.peer_is_client else t('messages.role_pilot') }} · {{ conv.mission_title }}</span>
       </div>
       <div class="thread-links">

@@ -228,12 +228,12 @@ _FAQ = [
       "en": "What do you do with my data?"},
      {"fr": "Le minimum : aucun traceur publicitaire, aucun outil d'analyse "
             "tiers. Les positions des pilotes sont floutées sur la carte, "
-            "l'identité complète et les coordonnées ne sont révélées qu'après le "
-            "paiement d'une mission, et les justificatifs de brevet restent "
+            "les coordonnées directes ne sont échangées qu'après le paiement "
+            "d'une mission, et les justificatifs de brevet restent "
             "privés. Conformité Loi 25 (Québec) et RGPD.",
       "en": "The minimum: no ad trackers, no third-party analytics. Pilot positions "
-            "are blurred on the map, full identity and contact details are only "
-            "revealed after a mission is paid, and licence proofs stay private. "
+            "are blurred on the map, direct contact details are only exchanged "
+            "after a mission is paid, and licence proofs stay private. "
             "Compliant with Quebec's Law 25 and the GDPR."}),
 ]
 

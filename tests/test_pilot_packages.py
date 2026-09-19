@@ -212,3 +212,16 @@ def test_reservation_ouverte_aux_autres_sur_choix(client, auth_client, make_user
     assert title in client.get("/missions?country=Canada").get_data(as_text=True)
     assert len(sent) == 1 and sent[0]["to"] == pilot["email"]        # demande directe
     assert len(broadcast) == 1 and pilot["id"] not in broadcast[0]   # diffusion sans doublon au pilote visé
+
+
+def test_nom_complet_du_pilote_affiche_partout(client, make_user):
+    """Décision 2026-09-19 : le pilote apparaît sous son nom complet (annuaire,
+    accueil, fiche), sans mention « identité révélée après paiement »."""
+    import services
+    u = make_user("nom_complet", role="pilot", country="Canada", city="Québec", full_name="Benoit Leroux")
+    with client.application.app_context():
+        services.upsert_pilot_profile(u["id"], is_available=1)
+    fiche = client.get(f"/pilotes/{u['id']}").get_data(as_text=True)
+    assert "Benoit Leroux" in fiche and "Benoit L." not in fiche
+    assert "révélée après" not in fiche and "Québec" in fiche
+    assert "Benoit Leroux" in client.get("/pilotes?country=Canada").get_data(as_text=True)

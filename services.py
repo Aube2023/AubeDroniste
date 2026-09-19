@@ -112,12 +112,14 @@ def mask_full_name(full_name: str) -> str:
 
 
 def public_name(p: dict) -> str:
-    """Nom affiche dans les listes/cartes : les ORGANISATIONS (entreprise,
-    ecole, boutique) sous leur raison sociale en clair — elles veulent etre
-    identifiees ; les personnes physiques sous leur nom masque."""
+    """Nom affiche dans les listes/cartes : les organisations (entreprise,
+    ecole, boutique) sous leur raison sociale, les pilotes sous leur nom
+    complet. Decision du 2026-09-19 : un pilote pro veut etre trouve et
+    reconnu, comme sur les annuaires concurrents ; le masquage
+    « Prenom N. » ne s'applique plus qu'aux CLIENTS (mask_full_name)."""
     if (p.get("kind") in ORG_KINDS) and (p.get("business_name") or "").strip():
         return p["business_name"].strip()
-    return mask_full_name(p.get("full_name") or "")
+    return (p.get("full_name") or "").strip()
 
 
 def count_pilots_by_kind(only_available: bool = True) -> dict:
@@ -2863,6 +2865,9 @@ def list_conversations(user_id: int) -> list:
             "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
             "peer_avatar": peer["avatar_path"],
             "peer_is_client": mission["client_user_id"] == peer["id"],
+            # Le nom du client reste « Prenom N. » tant qu'aucune reservation
+            # n'est payee ; le pilote, lui, est toujours en clair.
+            "peer_funded": bool(booking and booking["status"] in ("funded", "in_progress", "completed", "disputed")),
             "last_body": last["body"], "last_at": last["created_at"],
             "last_mine": last["sender_user_id"] == user_id,
             "unread": int(r["unread"] or 0),

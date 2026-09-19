@@ -141,7 +141,7 @@
     <div class="card bid-card">
       <div class="bid-head">
         <div class="bid-id">
-          <a class="bid-name" href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}">{{ mask_name(b.pilot_name) }}</a>
+          <a class="bid-name" href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}">{{ b.pilot_name }}</a>
           {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
           {% if b.revision_no and b.revision_no > 1 %}<span class="badge">révision {{ b.revision_no }}</span>{% endif %}
           <div class="bid-sub muted small mono">
@@ -239,7 +239,7 @@
         <ul class="stack-list scroll">
           {% for m in fil %}
           <li>
-            <div class="who">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ mask_name(b.pilot_name) }}{% endif %} · {{ m.created_at[:16] }}</div>
+            <div class="who">{% if m.sender_user_id == current_user.id %}Vous{% else %}{{ b.pilot_name }}{% endif %} · {{ m.created_at[:16] }}</div>
             <div class="body">{{ m.body }}</div>
           </li>
           {% else %}
@@ -362,7 +362,7 @@
       <ul class="bid-roster">
         {% for b in others %}
         <li>
-          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}">{{ mask_name(b.pilot_name) }}</a>
+          <a href="{{ url_for('pilot_detail', user_id=b.pilot_user_id) }}">{{ b.pilot_name }}</a>
           {% if b.is_verified %}<span class="badge verified">vérifié</span>{% endif %}
           {% if b.pilot_rating.count > 0 %}<span class="muted small mono">★ {{ '%.1f' % b.pilot_rating.avg }} ({{ b.pilot_rating.count }})</span>{% endif %}
         </li>

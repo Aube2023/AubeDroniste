@@ -1330,9 +1330,8 @@ def pilot_detail(user_id):
     viewer_id = (g.user["id"] if getattr(g, "user", None) else 0)
     reveal = services.has_funded_relation(viewer_id, user_id)
     can_view_credentials = services.client_can_view_pilot_credentials(viewer_id, user_id)
-    masked = services.mask_full_name(profile["full_name"])
-    # Nom public (masque sauf relation financee), conforme a l'affichage page
-    public_name = profile["full_name"] if reveal else masked
+    masked = profile["full_name"]   # nom complet public depuis le 2026-09-19
+    public_name = profile["full_name"]
     avatar = profile.get("avatar_path") or ""
     avatar_url = (seo.CANONICAL_BASE + "/media/" + avatar[8:]) if avatar.startswith("uploads/") else None
     if not avatar_url:
@@ -3533,6 +3532,7 @@ def messages_thread(mission_id, peer_id):
         "booking_id": booking["id"] if booking else None,
         "booking_status": booking["status"] if booking else None,
         "funded": services.thread_is_funded(mission_id, user["id"], peer_id),
+        "peer_funded": services.thread_is_funded(mission_id, user["id"], peer_id),
         "blocked_by_me": services.has_blocked(user["id"], peer_id),
         "blocked_me": services.has_blocked(peer_id, user["id"]),
     }
@@ -3865,7 +3865,7 @@ def campaign_contribute(user_id):
         session_id, url = payments.create_contribution_session(
             contribution_id=cid, amount=amount, currency=campaign["currency"],
             campaign_title=campaign["title"],
-            pilot_name=services.mask_full_name(campaign["pilot_full_name"]),
+            pilot_name=campaign["pilot_full_name"],
             return_path=url_for("pilot_detail", user_id=user_id),
             supporter_email=(u["email"] if u else (request.form.get("supporter_email") or None)),
         )

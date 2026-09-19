@@ -89,9 +89,9 @@ def test_api_pilotes_masks_pii(app_ctx, client, make_user):
     data = json.loads(client.get("/api/pilotes?country=Canada").data)
     p = next((x for x in data["pilots"] if x["id"] == u["id"]), None)
     assert p is not None
-    # Nom masque : jamais le nom complet brut.
-    assert p["full_name"] == services.public_name(u)
-    assert p["full_name"] != u["full_name"]
+    # Nom complet public depuis le 2026-09-19 (comme les annuaires du secteur) ;
+    # ce qui reste prive : identifiant, bio, position exacte.
+    assert p["full_name"] == services.public_name(u) == u["full_name"]
     # Coordonnees floutees a la grille ~11 km (1 decimale), pas la valeur exacte.
     assert p["lat"] == round(45.501234, 1)
     assert p["lat"] != 45.501234

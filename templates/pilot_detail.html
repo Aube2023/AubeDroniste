@@ -6,7 +6,7 @@
    publiques — elle VEUT être identifiée. Une boutique ne fait pas de missions :
    pas de flotte, pas de brevets, pas de devis. #}
 {% set is_org = pilot.kind in ('company', 'school', 'shop') %}
-{% set display_name = (pilot.business_name or pilot.full_name) if is_org else (pilot.full_name if reveal_identity else masked_name) %}
+{% set display_name = (pilot.business_name or pilot.full_name) if is_org else pilot.full_name %}
 {% block content %}
 
 <section class="flightbook-hero">
@@ -21,7 +21,7 @@
       <span class="callsign">{{ t('tpl.profil') }} nº {{ pilot.pilot_no or pilot.id }}</span>
       <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ t('tpl.verifie') }}</span>{% endif %}</h1>
       <div class="loc">
-        {{ pilot.country or '—' }}{% if reveal_identity and pilot.city %} · {{ pilot.city }}{% endif %}
+        {{ pilot.country or '—' }}{% if pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
       {% if trust %}
       <ul class="trust-row" aria-label="{{ t('tpl.reperes') }}">
@@ -30,11 +30,6 @@
         {% if trust.response %}<li class="on" title="{{ t('trust.responds_title') }}">⚡ {% if trust.response.under_h <= 24 %}{{ t('trust.responds_h', n=trust.response.under_h) }}{% else %}{{ t('trust.responds_d', n=(trust.response.under_h // 24)) }}{% endif %}</li>{% endif %}
         {% if trust.completed %}<li class="on">✓ {{ t('trust.completed', n=trust.completed) }}</li>{% endif %}
       </ul>
-      {% endif %}
-      {% if not reveal_identity and not is_org %}
-      <p class="muted small mono" style="margin-top: 6px;">
-        {{ t('tpl.identite_complete_revelee_apres_acceptation_') }}
-      </p>
       {% endif %}
       {% if (is_school or is_shop) and pilot.school_programs %}
       <div style="margin-top: 14px;">
