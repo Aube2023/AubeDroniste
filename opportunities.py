@@ -209,6 +209,31 @@ _AMENDMENT_PARA = re.compile(
 _RULES = re.compile(r"[_\-=*~]{4,}")
 
 
+_ACRONYMS = {"DJI", "RTK", "PPK", "LIDAR", "UAV", "UAS", "RPAS", "SATP", "GNSS", "GPS", "NDVI", "BVLOS", "DAA", "EASA", "DGAC",
+             "FAA", "CNRC", "NRC", "SPAC", "PSPC", "MPO", "DFO", "ONF", "DIR", "DIMAR", "AMN", "FSI", "GHT", "DGA", "MDN", "DND",
+             "SIC", "ISC", "IDD", "USV", "UGV", "VTOL", "FPV", "RGB", "IR", "3D", "2D", "4K", "HD", "PDF", "GIS", "SIG", "CAD",
+             "BIM", "IA", "AI", "RF", "VHF", "UHF", "ADS-B", "NOTAM", "ULC", "CAA", "EU", "UE", "USA", "UK", "NRW", "IDM"}
+
+
+def sentence_case(text: str) -> str:
+    """Un titre ou un résumé publié TOUT EN CAPITALES devient une phrase
+    normale (première lettre haute), sigles et codes conservés."""
+    t = (text or "").strip()
+    letters = [c for c in t if c.isalpha()]
+    if len(letters) < 12 or sum(1 for c in letters if c.isupper()) / len(letters) < 0.85:
+        return t
+    words = []
+    for w in t.split(" "):
+        core = w.strip("(),.;:'\"«»")
+        if core in _ACRONYMS or (core.isupper() and any(ch.isdigit() for ch in core) and len(core) <= 12):
+            words.append(w)
+        else:
+            words.append(w.lower())
+    out = " ".join(words)
+    # majuscule en debut de phrase
+    return re.sub(r"(^|[.!?]\s+)([a-zà-ÿ])", lambda m: m.group(1) + m.group(2).upper(), out)
+
+
 def summarize(text: str, limit: int = SUMMARY_CHARS) -> str:
     """Résumé court : premiers paragraphes de fond (journal des modifications
     sauté), espaces normalisés, coupé au mot, jamais l'avis complet."""
@@ -221,7 +246,7 @@ def summarize(text: str, limit: int = SUMMARY_CHARS) -> str:
     text = " ".join(body or paras)
     # certaines lignes de modification sont collées au fond par des « *** »
     text = re.sub(r"(?:\*{2,}\s*(?:modification|amendment)[^*]{0,200}\*{0,3}\s*)+", " ", text, flags=re.I)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = sentence_case(re.sub(r"\s+", " ", text).strip())
     if len(text) <= limit:
         return text
     cut = text[:limit].rsplit(" ", 1)[0]
@@ -318,10 +343,24 @@ ON CONFLICT(source, source_ref) DO UPDATE SET
 """
 
 
+_EMPTY_VALUES = {"no definido", "no aplica", "n/a", "na", "none", "null", "-", "—", "sin definir"}
+
+
+def _clean(value: str) -> str:
+    v = (value or "").strip()
+    return "" if v.lower() in _EMPTY_VALUES else v
+
+
 def _upsert_many(conn, items: Iterable[dict]) -> int:
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     n = 0
     for it in items:
+        it["title_fr"] = sentence_case(it.get("title_fr") or "")
+        it["title_en"] = sentence_case(it.get("title_en") or "")
+        it["org"] = sentence_case(_clean(it.get("org") or ""))
+        it["city"] = _clean(it.get("city") or "")
+        if not _clean(it.get("region") or ""):
+            it["region"] = it.get("country") or ""
         row = {"summary_fr": "", "summary_en": "", "city": "", "notice_type": "", "category": "", "specialties": "",
                "published_at": None, "closes_at": None, "regions_raw": "", "status": "published",
                "url_en": None, "now": now, **it}

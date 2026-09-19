@@ -759,7 +759,8 @@ img.avatar { object-fit: cover; }
 /* Une seule colonne (téléphone) : la hauteur suit le contenu, pas de vide sous le pied. */
 @media (max-width: 640px) { .opp-card { height: auto; grid-template-rows: none; } .opp-card .footer { align-self: auto; } .opp-card .coords { min-height: 0; } }
 .opp-card-full { grid-template-rows: auto auto auto auto auto 1fr auto auto; }
-.opp-card-full .footer { align-self: end; }
+.opp-card-full .footer { align-self: end; flex-wrap: wrap; }
+.opp-card-full .footer > a { white-space: nowrap; overflow: visible; }
 
 /* ============ Page détail pilote ============ */
 
