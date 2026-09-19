@@ -150,21 +150,9 @@
     </label>
     <label>{{ t('tpl.nom_complet') }}
       <input value="{{ current_user.full_name }}" disabled>
-      {% if identity_locked %}
-        <small class="muted" style="display:block; margin-top:4px;">
-          {{ t('tpl.verrouille_apres_l_upload_d_un') }}
-          {% if pending_name_change %}
-            {{ t('tpl.une_demande_de_changement_est_en') }}
-          {% else %}
-            <a href="{{ url_for('request_name_change') }}">{{ t('tpl.demander_un_changement') }}</a>
-            {{ t('tpl.justificatif_officiel_requis') }}
-          {% endif %}
-        </small>
-      {% else %}
-        <small class="muted" style="display:block; margin-top:4px;">
-          {{ t('tpl.sera_verrouille_des_l_upload_d') }}
-        </small>
-      {% endif %}
+      <small class="muted" style="display:block; margin-top:4px;">
+        <a href="{{ url_for('settings') }}">{{ t('opp.name_edit_in_settings') }}</a>{% if identity_locked %} {{ t('opp.name_recheck') }}{% endif %}
+      </small>
     </label>
     <label>{{ t('tpl.telephone') }}
       {% with phone_value = profile.phone or '' %}{% include "_phone_field.html" %}{% endwith %}

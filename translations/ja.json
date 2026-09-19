@@ -1247,7 +1247,11 @@
   "opp.dash_h": "近くの入札案件",
   "opp.dash_lead": "お住まいの国でドローンのプロに関係する公共の公告を、公式ポータルから収集しています。",
   "opp.dash_all": "すべての入札案件を見る →",
-  "opp.home_lead": "ドローン事業者向けの公共入札を毎晩公式ポータルから収集。無料。"
+  "opp.home_lead": "ドローン事業者向けの公共入札を毎晩公式ポータルから収集。無料。",
+  "opp.filter_country": "国",
+  "opp.all_countries": "すべての国",
+  "opp.name_recheck": "氏名を変更すると、認証済みの資格は再審査になります（48時間）。",
+  "opp.name_edit_in_settings": "設定で氏名を変更 →"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

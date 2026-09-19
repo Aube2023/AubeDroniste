@@ -1177,6 +1177,12 @@ def set_certification_verified(cert_id: int, verified: bool) -> bool:
     return review_certification(cert_id, None, "verified" if verified else "pending") is not None
 
 
+def has_verified_certifications(user_id: int) -> bool:
+    """Au moins un brevet verifie : un changement de nom les remettra en attente."""
+    return bool(db.fetchone(
+        "SELECT 1 FROM pilot_certifications WHERE pilot_user_id=? AND review_status='verified' LIMIT 1", (user_id,)))
+
+
 def is_identity_locked(user_id: int) -> bool:
     """True des qu'au moins un brevet/justificatif a ete uploade.
     Le nom officiel devient alors non modifiable sans demande validee
@@ -4178,10 +4184,14 @@ def update_account(user_id: int, *, full_name: Optional[str] = None, phone: Opti
                    country: Optional[str] = None, city: Optional[str] = None,
                    lat: Optional[float] = None, lng: Optional[float] = None,
                    lang: Optional[str] = None, accent: Optional[str] = None) -> dict:
-    """Identite + base + langue. Le nom n'est modifiable que tant qu'aucun
-    justificatif n'a ete televerse (sinon : demande de changement de nom).
-    Retourne {"name_locked": bool}."""
-    locked = is_identity_locked(user_id)
+    """Identite + base + langue. Le nom est toujours modifiable par la
+    personne (decision du 2026-09-19) ; s'il change alors que des brevets ont
+    ete verifies sous l'ancien nom, ces brevets repassent « a verifier » et
+    le badge profil tombe, jusqu'a une nouvelle revue par l'admin.
+    Retourne {"name_locked": False, "name_changed": bool, "certs_reset": int}."""
+    locked = False
+    before = db.fetchone("SELECT full_name FROM users WHERE id=?", (user_id,))
+    old_name = (before["full_name"] if before else "") or ""
     fields = {
         "phone": (phone or "").strip()[:40] or None,
         "country": (country or "").strip()[:80] or None,
@@ -4192,11 +4202,47 @@ def update_account(user_id: int, *, full_name: Optional[str] = None, phone: Opti
         "lang": lang if lang in i18n.SUPPORTED else None,
         "accent": accent if accent in i18n.ACCENTS and accent != i18n.DEFAULT_ACCENT else None,
     }
-    if full_name is not None and not locked and len(full_name.strip()) >= 2:
-        fields["full_name"] = full_name.strip()[:120]
+    new_name = (full_name or "").strip()[:120] if full_name is not None else None
+    name_changed = bool(new_name and len(new_name) >= 2 and new_name != old_name)
+    if name_changed:
+        fields["full_name"] = new_name
     sets = ", ".join(f"{k}=?" for k in fields)
     db.execute(f"UPDATE users SET {sets} WHERE id=?", (*fields.values(), user_id))
-    return {"name_locked": locked}
+    certs_reset = 0
+    if name_changed:
+        certs_reset = reset_verified_certifications(user_id, old_name, new_name)
+    return {"name_locked": locked, "name_changed": name_changed, "certs_reset": certs_reset}
+
+
+def reset_verified_certifications(user_id: int, old_name: str, new_name: str) -> int:
+    """Le nom affiche ne correspond plus au nom sous lequel les justificatifs
+    ont ete verifies : les brevets verifies repassent en attente, le badge
+    profil est recalcule, l'admin est prevenu (best effort)."""
+    rows = db.fetchall(
+        "SELECT id FROM pilot_certifications WHERE pilot_user_id=? AND review_status='verified'", (user_id,))
+    if not rows:
+        return 0
+    note = f"Nom change de « {old_name} » en « {new_name} » : a revoir."
+    for r in rows:
+        db.execute(
+            "UPDATE pilot_certifications SET is_verified=0, review_status='pending', review_note=?, "
+            "reviewed_at=NULL, reviewed_by=NULL WHERE id=?", (note, r["id"]))
+    refresh_user_verified(user_id)
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) VALUES (?, 'name_change_self', ?, ?)",
+        (user_id, f"user:{user_id}", json.dumps({"old": old_name, "new": new_name, "certs_reset": len(rows)})))
+    try:
+        import mailer
+        from config import CONTACT_EMAIL
+        mailer.send(to=CONTACT_EMAIL, subject=f"[AubePilot] Brevets a revoir : {new_name} (ex-{old_name})",
+                    template="contact_message",
+                    context={"name": new_name, "email": CONTACT_EMAIL, "topic": "Changement de nom",
+                             "body": f"Le pilote #{user_id} a change son nom de « {old_name} » en « {new_name} ». "
+                                     f"{len(rows)} brevet(s) verifie(s) repassent a verifier dans /admin/brevets.",
+                             "user": None, "ip": ""})
+    except Exception:
+        pass
+    return len(rows)
 
 
 def update_notification_prefs(user_id: int, prefs: dict) -> None:
@@ -4426,14 +4472,33 @@ def list_opportunities(*, country: str = "", region: str = "", specialty: str = 
 
 
 def localize_opportunities(items: list, lang: str) -> list:
-    """Ajoute title / summary / url dans la langue de la page : le français
-    a sa version, toutes les autres langues lisent l'anglais de l'avis."""
+    """Ajoute title / summary / url dans la langue de la page. TED fournit le
+    titre et le lien dans les langues de l'Union (colonne i18n) ; sinon le
+    français a sa version et les autres langues lisent l'anglais."""
+    import json as _json
     fr = (lang == "fr")
     for o in items:
-        o["title"] = o["title_fr"] if fr else o["title_en"]
+        extra = {}
+        if o.get("i18n"):
+            try:
+                extra = _json.loads(o["i18n"])
+            except ValueError:
+                extra = {}
+        titles, urls = extra.get("titles") or {}, extra.get("urls") or {}
+        o["title"] = titles.get(lang) or (o["title_fr"] if fr else o["title_en"])
         o["summary"] = o["summary_fr"] if fr else o["summary_en"]
-        o["url"] = o["url_fr"] if fr else (o["url_en"] or o["url_fr"])
+        o["url"] = urls.get(lang) or (o["url_fr"] if fr else (o["url_en"] or o["url_fr"]))
+        o["country_label"] = i18n.country_name(o.get("country") or "", lang)
+        o["source_label"] = {"canadabuys": "CanadaBuys", "seao": "SEAO", "ted": "TED", "boamp": "BOAMP",
+                             "contractsfinder": "Contracts Finder"}.get(o.get("source"), o.get("source"))
     return items
+
+
+def opportunity_countries() -> list:
+    """Pays présents parmi les fiches ouvertes, avec leur nombre."""
+    return [dict(r) for r in db.fetchall(
+        "SELECT country, COUNT(*) AS n FROM opportunities WHERE status='published' "
+        "AND (closes_at IS NULL OR closes_at >= date('now')) GROUP BY country ORDER BY n DESC, country")]
 
 
 def opportunity_regions(country: str = "") -> list:
@@ -4443,7 +4508,7 @@ def opportunity_regions(country: str = "") -> list:
     args: list = []
     if country:
         q += " AND country=?"; args.append(country)
-    q += " GROUP BY region ORDER BY region='Canada', region"
+    q += " GROUP BY region ORDER BY region=country, region"
     return [dict(r) for r in db.fetchall(q, args)]
 
 
@@ -4453,7 +4518,8 @@ def count_opportunities() -> int:
 
 
 def opportunities_for_user(user: dict, lang: str = "fr", limit: int = 5) -> list:
-    """Bloc du tableau de bord : les fiches du pays du pilote, si on l'a."""
+    """Bloc du tableau de bord : les fiches du pays du pilote ; à défaut de
+    fiches dans son pays, rien (pas de bruit d'un autre continent)."""
     country = (user or {}).get("country") or ""
     if not country:
         return []

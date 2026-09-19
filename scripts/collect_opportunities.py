@@ -41,13 +41,15 @@ def main() -> int:
     log.info("collecte: %s", report)
     if "--digest" in sys.argv or date.today().weekday() == 0:
         with app.app_context():
-            items = opportunities.recent_for_digest(7)
-            if items:
-                pilots = services.pilots_for_opportunity_digest("Canada")
-                log.info("digest: %d fiche(s), %d destinataire(s)", len(items), len(pilots))
-                log.info("digest: %d envoye(s)", mailer.send_opportunity_digest(pilots, items))
-            else:
-                log.info("digest: rien de nouveau cette semaine")
+            for country in opportunities.digest_countries():
+                items = opportunities.recent_for_digest(7, country)
+                if not items:
+                    continue
+                pilots = services.pilots_for_opportunity_digest(country)
+                if not pilots:
+                    continue
+                sent = mailer.send_opportunity_digest(pilots, items)
+                log.info("digest %s: %d fiche(s), %d destinataire(s), %d envoye(s)", country, len(items), len(pilots), sent)
     return 0
 
 

@@ -927,14 +927,16 @@ def opportunities():
     """Appels d'offres publics pour les pros du drone, repris de données
     ouvertes (CanadaBuys, SEAO) avec leur source et un lien vers l'avis."""
     lang = getattr(g, "lang", i18n.DEFAULT)
+    country = (request.args.get("country") or "").strip()
     region = (request.args.get("region") or "").strip()
     specialty = (request.args.get("mission_type") or "").strip()
     text = (request.args.get("q") or "").strip()[:80]
     items = services.localize_opportunities(
-        services.list_opportunities(region=region, specialty=specialty, text=text), lang)
+        services.list_opportunities(country=country, region=region, specialty=specialty, text=text), lang)
     return render_template(
-        "opportunities.html", items=items, regions=services.opportunity_regions(),
-        region=region, specialty=specialty, q=text,
+        "opportunities.html", items=items, regions=services.opportunity_regions(country) if country else [],
+        countries=services.opportunity_countries(),
+        country=country, region=region, specialty=specialty, q=text,
         sources=__import__("opportunities").SOURCES,
         seo=seo.opportunities_page(lang),
     )
@@ -1819,9 +1821,10 @@ def settings_account():
         lang=lang,
         accent=(request.form.get("accent") or "").strip(),
     )
-    flash("Paramètres enregistrés." + (" (Le nom est verrouillé : passez par une demande de changement de nom.)"
-                                       if res["name_locked"] and request.form.get("full_name") else ""),
-          "success")
+    msg = "Paramètres enregistrés."
+    if res.get("certs_reset"):
+        msg += f" Votre nom a changé : {res['certs_reset']} brevet(s) vérifié(s) repassent en vérification, l'équipe les revoit sous 48 h."
+    flash(msg, "success")
     resp = make_response(redirect(url_for("settings")))
     if lang in i18n.SUPPORTED:
         resp.set_cookie(i18n.COOKIE, lang, max_age=i18n.COOKIE_MAX_AGE, httponly=False, samesite="Lax")
@@ -2000,7 +2003,7 @@ def pilot_edit():
         vis=services.pilot_visibility(user["id"]),
         profile_views=services.profile_view_counts(user["id"]),
         portfolio=services.list_portfolio_items(user["id"]),
-        identity_locked=services.is_identity_locked(user["id"]),
+        identity_locked=services.has_verified_certifications(user["id"]),
         pending_name_change=services.has_pending_name_change(user["id"]),
     )
 

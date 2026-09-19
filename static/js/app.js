@@ -306,3 +306,11 @@ document.addEventListener('change', function (e) {
   var form = input.closest('form');
   if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
 });
+
+
+// Liste déroulante qui envoie son formulaire dès le choix (filtre pays des
+// appels d'offres : la liste des provinces dépend du pays).
+document.addEventListener('change', function (e) {
+  var el = e.target;
+  if (el && el.tagName === 'SELECT' && el.getAttribute('data-action') === 'submit-on-change-select' && el.form) el.form.submit();
+});

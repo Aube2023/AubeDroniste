@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Gare d'appalto vicino a Lei",
   "opp.dash_lead": "Gli avvisi pubblici del Suo paese che riguardano i professionisti del drone, raccolti dai portali ufficiali.",
   "opp.dash_all": "Vedi tutte le gare d'appalto →",
-  "opp.home_lead": "Le gare pubbliche per i professionisti del drone, riprese ogni notte dai portali ufficiali. Gratis."
+  "opp.home_lead": "Le gare pubbliche per i professionisti del drone, riprese ogni notte dai portali ufficiali. Gratis.",
+  "opp.filter_country": "Paese",
+  "opp.all_countries": "Tutti i paesi",
+  "opp.name_recheck": "Se cambia nome, i Suoi attestati verificati tornano in revisione (48 h).",
+  "opp.name_edit_in_settings": "Modifica il nome nelle impostazioni →"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",

@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Licitações perto de você",
   "opp.dash_lead": "Os avisos públicos do seu país que interessam aos profissionais de drone, coletados dos portais oficiais.",
   "opp.dash_all": "Ver todas as licitações →",
-  "opp.home_lead": "Os avisos públicos para profissionais de drone, recolhidos todas as noites dos portais oficiais. Grátis."
+  "opp.home_lead": "Os avisos públicos para profissionais de drone, recolhidos todas as noites dos portais oficiais. Grátis.",
+  "opp.filter_country": "País",
+  "opp.all_countries": "Todos os países",
+  "opp.name_recheck": "Se mudar de nome, as suas licenças verificadas voltam a revisão (48 h).",
+  "opp.name_edit_in_settings": "Alterar o meu nome nas definições →"
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

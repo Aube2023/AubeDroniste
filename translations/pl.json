@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Przetargi w Państwa okolicy",
   "opp.dash_lead": "Ogłoszenia publiczne z Państwa kraju dotyczące profesjonalistów dronowych, pobrane z oficjalnych portali.",
   "opp.dash_all": "Zobacz wszystkie przetargi →",
-  "opp.home_lead": "Przetargi publiczne dla profesjonalistów dronowych, pobierane co noc z oficjalnych portali. Bezpłatnie."
+  "opp.home_lead": "Przetargi publiczne dla profesjonalistów dronowych, pobierane co noc z oficjalnych portali. Bezpłatnie.",
+  "opp.filter_country": "Kraj",
+  "opp.all_countries": "Wszystkie kraje",
+  "opp.name_recheck": "Po zmianie nazwiska zweryfikowane uprawnienia wracają do weryfikacji (48 h).",
+  "opp.name_edit_in_settings": "Zmień nazwisko w ustawieniach →"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

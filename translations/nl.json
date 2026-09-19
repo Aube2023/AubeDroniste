@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Aanbestedingen bij jou in de buurt",
   "opp.dash_lead": "Openbare aankondigingen uit jouw land die droneprofessionals aangaan, opgehaald van de officiële portalen.",
   "opp.dash_all": "Alle aanbestedingen bekijken →",
-  "opp.home_lead": "Openbare aanbestedingen voor droneprofessionals, elke nacht opgehaald van de officiële portalen. Gratis."
+  "opp.home_lead": "Openbare aanbestedingen voor droneprofessionals, elke nacht opgehaald van de officiële portalen. Gratis.",
+  "opp.filter_country": "Land",
+  "opp.all_countries": "Alle landen",
+  "opp.name_recheck": "Als je je naam wijzigt, gaan je geverifieerde vliegbewijzen terug in beoordeling (48 u).",
+  "opp.name_edit_in_settings": "Mijn naam wijzigen in instellingen →"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

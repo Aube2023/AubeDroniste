@@ -33,7 +33,7 @@ log = logging.getLogger("aubepilot.opportunities")
 
 USER_AGENT = "AubePilot-opportunites/1.0 (+https://pilot.aubeetoilee.com/opportunites)"
 CANADABUYS_CSV = "https://canadabuys.canada.ca/opendata/pub/openTenderNotice-ouvertAvisAppelOffres.csv"
-CANADABUYS_NOTICE_FR = "https://canadabuys.canada.ca/fr/appels-doffres/avis-dappel-doffres/{ref}"
+CANADABUYS_NOTICE_FR = "https://canadabuys.canada.ca/fr/occasions-de-marche/appels-d-offres/{ref}"
 CANADABUYS_NOTICE_EN = "https://canadabuys.canada.ca/en/tender-opportunities/tender-notice/{ref}"
 SEAO_PACKAGE = ("https://www.donneesquebec.ca/recherche/api/3/action/package_show"
                 "?id=systeme-electronique-dappel-doffres-seao")
@@ -46,7 +46,38 @@ SOURCES = {
                    "url": "https://canadabuys.canada.ca/fr/a-propos-de-nous/donnees-ouvertes"},
     "seao": {"label": "SEAO (Québec)", "licence": "Données Québec, CC BY 4.0",
              "url": "https://www.donneesquebec.ca/recherche/dataset/systeme-electronique-dappel-doffres-seao"},
+    "ted": {"label": "TED (Union européenne)", "licence": "Réutilisation libre des données TED (décision 2011/833/UE)",
+            "url": "https://ted.europa.eu/"},
+    "boamp": {"label": "BOAMP (France)", "licence": "Licence Ouverte / Open Licence (Etalab)",
+              "url": "https://www.boamp.fr/pages/donnees-ouvertes"},
+    "contractsfinder": {"label": "Contracts Finder (Royaume-Uni)", "licence": "Open Government Licence v3.0",
+                        "url": "https://www.contractsfinder.service.gov.uk/"},
 }
+TED_SEARCH = "https://api.ted.europa.eu/v3/notices/search"
+TED_QUERY = ('(FT~"drone" OR FT~"drones" OR FT~"UAV" OR FT~"UAS" OR FT~"RPAS" OR FT~"lidar" OR FT~"photogramm*" '
+             'OR FT~"orthophoto*" OR FT~"aerial imagery" OR FT~"imagerie aérienne") '
+             'AND notice-type IN (cn-standard cn-social cn-desg pin-only)')
+BOAMP_API = ("https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records"
+             "?where={where}&limit=100&offset={offset}&select=idweb,objet,nomacheteur,dateparution,datelimitereponse,"
+             "code_departement,nature_libelle,type_marche,url_avis,descripteur_libelle,donnees")
+BOAMP_WHERE = ('(search("drone") OR search("drones") OR search("lidar") OR search("photogrammétrie") OR search("orthophoto") '
+               'OR search("aéronef télépiloté") OR search("imagerie aérienne")) AND datelimitereponse>=now()')
+CONTRACTSFINDER_API = ("https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search"
+                       "?publishedFrom={since}T00:00:00&stages=tender&limit=100")
+
+# Pays de l'Union (code ISO-3 TED -> nom francais de reference, celui de la base users.country)
+TED_COUNTRIES = {
+    "AUT": "Autriche", "BEL": "Belgique", "BGR": "Bulgarie", "HRV": "Croatie", "CYP": "Chypre", "CZE": "Tchéquie",
+    "DNK": "Danemark", "EST": "Estonie", "FIN": "Finlande", "FRA": "France", "DEU": "Allemagne", "GRC": "Grèce",
+    "HUN": "Hongrie", "IRL": "Irlande", "ITA": "Italie", "LVA": "Lettonie", "LTU": "Lituanie", "LUX": "Luxembourg",
+    "MLT": "Malte", "NLD": "Pays-Bas", "POL": "Pologne", "PRT": "Portugal", "ROU": "Roumanie", "SVK": "Slovaquie",
+    "SVN": "Slovénie", "ESP": "Espagne", "SWE": "Suède", "NOR": "Norvège", "ISL": "Islande", "CHE": "Suisse",
+    "GBR": "Royaume-Uni", "LIE": "Liechtenstein",
+}
+# Langues du site -> code de langue TED (ISO 639-3) pour le titre et le lien
+TED_LANGS = {"fr": "fra", "en": "eng", "es": "spa", "de": "deu", "it": "ita", "pt": "por", "nl": "nld", "pl": "pol",
+             "ro": "ron", "el": "ell", "sw": "eng", "hu": "hun", "sv": "swe", "da": "dan", "fi": "fin", "cs": "ces"}
+TED_HTML_LANG = {"fra": "fr", "eng": "en", "spa": "es", "deu": "de", "ita": "it", "por": "pt", "nld": "nl", "pol": "pl", "ron": "ro", "ell": "el"}
 
 # Ce qui concerne un professionnel du drone. Le mot « aérien » seul ne suffit
 # pas (ravitailleurs, fret aérien...) : il faut un terme métier.
@@ -78,9 +109,13 @@ SPECIALTY_RULES = [
 
 # Termes qui signalent un avis SUR les drones mais pas POUR un pilote (lutte
 # anti-drone, véhicules de surface ou terrestres sans équipage).
-NOISE = re.compile(r"anti-?drones?|contre les (?:drones|syst[èe]mes d.a[ée]ronef)|counter-?(?:uas|drone)|"
-                   r"v[ée]hicule (?:de surface|terrestre) sans [ée]quipage|unmanned (?:surface|ground) vehicle|"
-                   r"\bvsse\b|\busv\b|\bugv\b", re.I)
+NOISE = re.compile(r"anti-?drones?|contre les (?:drones|syst[èe]mes d.a[ée]ronef)|counter-?\s?(?:uas|drone|uav)|c-uas|"
+                   r"drone remote id|remote id|d[ée]tection (?:et neutralisation )?de drones|neutralisation de drones|brouill\w+|"
+                   r"v[ée]hicule (?:de surface|terrestre) sans [ée]quipage|unmanned (?:surface|ground) vehicle|drones? navals?|"
+                   r"\bvsse\b|\busv\b|\bugv\b|munitions?|lõhkepea|minendetektion|mine ?detection|"
+                   r"drohnenabwehr|antidron|contradron|anti-uav|dronebestrijding|drone ?afvær|"
+                   r"p[óo]lizas? de seguro|seguros? de vida|contrat d.assurance|insurance polic|spectacle|pyrotechni|feu d.artifice|light show|"
+                   r"uav[- ]?gc|uav 2012|uav 1989", re.I)   # NL : « UAV » = Uniforme Administratieve Voorwaarden (conditions de marché), pas un drone
 
 # Provinces et territoires : libellé de référence (français) et variantes.
 PROVINCES = {
@@ -217,15 +252,15 @@ def _save_state(state: dict) -> None:
 UPSERT = """
 INSERT INTO opportunities (source, source_ref, kind, title_fr, title_en, summary_fr, summary_en,
     org, country, region, regions_raw, city, url_fr, url_en, notice_type, category, specialties,
-    published_at, closes_at, status, first_seen_at, last_seen_at)
+    published_at, closes_at, status, first_seen_at, last_seen_at, i18n)
 VALUES (:source, :source_ref, :kind, :title_fr, :title_en, :summary_fr, :summary_en,
     :org, :country, :region, :regions_raw, :city, :url_fr, :url_en, :notice_type, :category, :specialties,
-    :published_at, :closes_at, :status, :now, :now)
+    :published_at, :closes_at, :status, :now, :now, :i18n)
 ON CONFLICT(source, source_ref) DO UPDATE SET
     title_fr=excluded.title_fr, title_en=excluded.title_en, summary_fr=excluded.summary_fr,
     summary_en=excluded.summary_en, org=excluded.org, region=excluded.region,
     regions_raw=excluded.regions_raw, city=excluded.city, url_fr=excluded.url_fr, url_en=excluded.url_en,
-    notice_type=excluded.notice_type, category=excluded.category, specialties=excluded.specialties,
+    notice_type=excluded.notice_type, category=excluded.category, specialties=excluded.specialties, i18n=excluded.i18n,
     published_at=COALESCE(excluded.published_at, opportunities.published_at),
     closes_at=excluded.closes_at, last_seen_at=excluded.last_seen_at,
     -- une fiche masquée par l'admin le reste ; un avis clos puis revu redevient publié
@@ -240,6 +275,8 @@ def _upsert_many(conn, items: Iterable[dict]) -> int:
         row = {"summary_fr": "", "summary_en": "", "city": "", "notice_type": "", "category": "", "specialties": "",
                "published_at": None, "closes_at": None, "regions_raw": "", "status": "published",
                "url_en": None, "now": now, **it}
+        row["i18n"] = json.dumps({"titles": it.get("titles") or {}, "urls": it.get("urls") or {}}, ensure_ascii=False) \
+            if (it.get("titles") or it.get("urls")) else ""
         conn.execute(UPSERT, row)
         n += 1
     return n
@@ -382,8 +419,245 @@ def collect_seao(conn, state: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# TED (Union européenne) : API publique de recherche, avis actifs
+# ---------------------------------------------------------------------------
+
+def _post_json(url: str, payload: dict, timeout: int = 120) -> dict:
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
+                                 headers={"User-Agent": USER_AGENT, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _first(v):
+    if isinstance(v, list):
+        return v[0] if v else ""
+    return v or ""
+
+
+def parse_ted(notices: list) -> list:
+    out = []
+    for n in notices or []:
+        pub = n.get("publication-number") or ""
+        titles = n.get("notice-title") or {}
+        if not pub or not titles:
+            continue
+        title_en = titles.get("eng") or next(iter(titles.values()), "")
+        title_fr = titles.get("fra") or title_en
+        desc = n.get("description-lot") or {}
+        desc_txt = " ".join(_first(v) if isinstance(v, list) else str(v) for v in (desc.values() if isinstance(desc, dict) else []))
+        if not matches(title_en + " " + title_fr, desc_txt + " " + " ".join(str(v) for v in titles.values())):
+            continue
+        cc = _first(n.get("buyer-country"))
+        country = TED_COUNTRIES.get(cc, "")
+        if not country:
+            continue
+        buyer = n.get("buyer-name") or {}
+        org = _first(next(iter(buyer.values()), "")) if isinstance(buyer, dict) else str(buyer)
+        html = (n.get("links") or {}).get("html") or {}
+        url_en = html.get("ENG") or f"https://ted.europa.eu/en/notice/-/detail/{pub}"
+        url_fr = html.get("FRA") or url_en
+        # Le titre TED commence par « Pays – Objet CPV – Intitulé » : on garde l'intitulé.
+        def strip(t):
+            parts = [x.strip() for x in t.split(" – ")]
+            return parts[-1] if len(parts) >= 3 else t
+        if not _first(n.get("deadline-receipt-tender-date-lot")):
+            continue   # sans date limite : avis d'information ou attribution, pas une chose à laquelle répondre
+        out.append({
+            "source": "ted", "source_ref": pub, "kind": "tender",
+            "title_fr": strip(title_fr), "title_en": strip(title_en),
+            "summary_fr": summarize(desc.get("fra", [""])[0] if isinstance(desc.get("fra"), list) else desc_txt),
+            "summary_en": summarize(desc.get("eng", [""])[0] if isinstance(desc.get("eng"), list) else desc_txt),
+            "org": org, "country": country, "region": country, "regions_raw": country, "city": "",
+            "url_fr": url_fr, "url_en": url_en,
+            "notice_type": n.get("notice-type") or "",
+            "category": "", "specialties": specialties_for(title_en + " " + title_fr + " " + desc_txt),
+            "published_at": _iso_date(str(n.get("publication-date") or "")),
+            "closes_at": _iso_date(_first(n.get("deadline-receipt-tender-date-lot"))),
+            "titles": {TED_HTML_LANG[k]: strip(v) for k, v in titles.items() if k in TED_HTML_LANG},
+            "urls": {TED_HTML_LANG[k.lower()]: v for k, v in html.items() if k.lower() in TED_HTML_LANG},
+        })
+    return out
+
+
+def collect_ted(conn) -> dict:
+    since = (date.today() - timedelta(days=60)).strftime("%Y%m%d")
+    payload = {"query": f"{TED_QUERY} AND PD>={since}", "scope": "ACTIVE", "limit": 250, "page": 1,
+               "fields": ["publication-number", "notice-title", "buyer-name", "buyer-country",
+                          "deadline-receipt-tender-date-lot", "description-lot", "publication-date", "notice-type", "links"]}
+    data = _post_json(TED_SEARCH, payload)
+    items = parse_ted(data.get("notices") or [])
+    n = _upsert_many(conn, items)
+    refs = [it["source_ref"] for it in items]
+    # Un avis actif ce mois-ci qui n'est plus renvoye est clos.
+    if refs:
+        conn.execute("UPDATE opportunities SET status='closed' WHERE source='ted' AND status='published' "
+                     "AND source_ref NOT IN (%s)" % ",".join("?" * len(refs)), refs)
+    return {"items": n, "total": data.get("totalNoticeCount")}
+
+
+# ---------------------------------------------------------------------------
+# BOAMP (France) : API ouverte Opendatasoft, avis de marché en cours
+# ---------------------------------------------------------------------------
+
+FR_DEPT_REGION = {  # departement -> region (nom court)
+    **{d: "Île-de-France" for d in ("75", "77", "78", "91", "92", "93", "94", "95")},
+    **{d: "Auvergne-Rhône-Alpes" for d in ("01", "03", "07", "15", "26", "38", "42", "43", "63", "69", "73", "74")},
+    **{d: "Provence-Alpes-Côte d'Azur" for d in ("04", "05", "06", "13", "83", "84")},
+    **{d: "Occitanie" for d in ("09", "11", "12", "30", "31", "32", "34", "46", "48", "65", "66", "81", "82")},
+    **{d: "Nouvelle-Aquitaine" for d in ("16", "17", "19", "23", "24", "33", "40", "47", "64", "79", "86", "87")},
+    **{d: "Hauts-de-France" for d in ("02", "59", "60", "62", "80")},
+    **{d: "Grand Est" for d in ("08", "10", "51", "52", "54", "55", "57", "67", "68", "88")},
+    **{d: "Bretagne" for d in ("22", "29", "35", "56")},
+    **{d: "Pays de la Loire" for d in ("44", "49", "53", "72", "85")},
+    **{d: "Normandie" for d in ("14", "27", "50", "61", "76")},
+    **{d: "Bourgogne-Franche-Comté" for d in ("21", "25", "39", "58", "70", "71", "89", "90")},
+    **{d: "Centre-Val de Loire" for d in ("18", "28", "36", "37", "41", "45")},
+    "2A": "Corse", "2B": "Corse", "20": "Corse",
+    "971": "Guadeloupe", "972": "Martinique", "973": "Guyane", "974": "La Réunion", "976": "Mayotte",
+}
+
+
+def _boamp_description(record: dict) -> str:
+    """Le texte de l'avis est dans `donnees` (JSON imbriqué) : on prend les
+    champs description / caractéristiques, sans les renseignements pratiques."""
+    raw = record.get("donnees")
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else (raw or {})
+    except ValueError:
+        return ""
+    found: list = []
+    def walk(o, key=""):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                walk(v, k)
+        elif isinstance(o, str) and key in ("objet", "principales", "description", "descriptionMarche") and len(o) > 20:
+            found.append(o)
+    walk(data)
+    return " ".join(dict.fromkeys(found))
+
+
+def parse_boamp(records: list) -> list:
+    out = []
+    for r in records or []:
+        ref = r.get("idweb") or ""
+        title = (r.get("objet") or "").strip()
+        desc = _boamp_description(r)
+        body = " ".join([desc, " ".join(r.get("descripteur_libelle") or [])])
+        if not ref or not title or not matches(title, body):
+            continue
+        depts = [str(d).zfill(2) if len(str(d)) < 2 else str(d) for d in (r.get("code_departement") or [])]
+        region = next((FR_DEPT_REGION[d] for d in depts if d in FR_DEPT_REGION), "France")
+        cat = {"SERVICES": "services", "FOURNITURES": "goods", "TRAVAUX": "construction"}.get(_first(r.get("type_marche")), "")
+        out.append({
+            "source": "boamp", "source_ref": ref, "kind": "tender",
+            "title_fr": title, "title_en": title,
+            "summary_fr": summarize(desc), "summary_en": summarize(desc),
+            "org": (r.get("nomacheteur") or "").strip(), "country": "France", "region": region,
+            "regions_raw": ", ".join(depts), "city": "",
+            "url_fr": r.get("url_avis") or f"https://www.boamp.fr/pages/avis/?q=idweb:{ref}", "url_en": None,
+            "notice_type": r.get("nature_libelle") or "", "category": cat,
+            "specialties": specialties_for(title + " " + body),
+            "published_at": _iso_date(r.get("dateparution") or ""),
+            "closes_at": _iso_date(r.get("datelimitereponse") or ""),
+        })
+    return out
+
+
+def collect_boamp(conn) -> dict:
+    from urllib.parse import quote
+    items, offset = [], 0
+    while offset < 1000:
+        data = json.loads(_fetch(BOAMP_API.format(where=quote(BOAMP_WHERE), offset=offset), timeout=90).decode("utf-8"))
+        batch = data.get("results") or []
+        items.extend(parse_boamp(batch))
+        offset += 100
+        if len(batch) < 100:
+            break
+    n = _upsert_many(conn, items)
+    refs = [it["source_ref"] for it in items]
+    if refs:
+        conn.execute("UPDATE opportunities SET status='closed' WHERE source='boamp' AND status='published' "
+                     "AND source_ref NOT IN (%s)" % ",".join("?" * len(refs)), refs)
+    return {"items": n}
+
+
+# ---------------------------------------------------------------------------
+# Contracts Finder (Royaume-Uni) : API OCDS, avis en phase d'appel d'offres
+# ---------------------------------------------------------------------------
+
+UK_REGIONS = {"UKC": "North East", "UKD": "North West", "UKE": "Yorkshire and the Humber", "UKF": "East Midlands",
+              "UKG": "West Midlands", "UKH": "East of England", "UKI": "London", "UKJ": "South East",
+              "UKK": "South West", "UKL": "Wales", "UKM": "Scotland", "UKN": "Northern Ireland"}
+
+
+def parse_contractsfinder(releases: list) -> list:
+    out = []
+    for rel in releases or []:
+        tender = rel.get("tender") or {}
+        title = tender.get("title") or ""
+        body = tender.get("description") or ""
+        ocid = rel.get("ocid") or ""
+        if not ocid or not title or not matches(title, body):
+            continue
+        if tender.get("status") not in (None, "active", "planned"):
+            continue
+        addr = ((tender.get("items") or [{}])[0].get("deliveryAddresses") or [{}])[0] if tender.get("items") else {}
+        reg = (addr.get("region") or "")
+        region = next((v for k, v in UK_REGIONS.items() if reg.upper().startswith(k)), reg or "Royaume-Uni")
+        docs = tender.get("documents") or []
+        url = next((d.get("url") for d in docs if d.get("url")), "") or f"https://www.contractsfinder.service.gov.uk/Search/Results?keyword={ocid}"
+        out.append({
+            "source": "contractsfinder", "source_ref": ocid, "kind": "tender",
+            "title_fr": title, "title_en": title,
+            "summary_fr": summarize(body), "summary_en": summarize(body),
+            "org": (rel.get("buyer") or {}).get("name") or "", "country": "Royaume-Uni", "region": region,
+            "regions_raw": reg, "city": addr.get("locality") or "",
+            "url_fr": url, "url_en": url,
+            "notice_type": tender.get("procurementMethodDetails") or "",
+            "category": {"services": "services", "goods": "goods", "works": "construction"}.get(tender.get("mainProcurementCategory") or "", ""),
+            "specialties": specialties_for(title + " " + body),
+            "published_at": _iso_date(rel.get("date") or ""),
+            "closes_at": _iso_date((tender.get("tenderPeriod") or {}).get("endDate") or ""),
+        })
+    return out
+
+
+def collect_contractsfinder(conn) -> dict:
+    since = (date.today() - timedelta(days=45)).isoformat()
+    items, url, pages = [], CONTRACTSFINDER_API.format(since=since), 0
+    while url and pages < 40:
+        data = json.loads(_fetch(url, timeout=120).decode("utf-8"))
+        rel = data.get("releases") or []
+        items.extend(parse_contractsfinder(rel))
+        pages += 1
+        url = (data.get("links") or {}).get("next") or "" if rel else ""
+    n = _upsert_many(conn, items)
+    return {"items": n, "pages": pages}
+
+
+# ---------------------------------------------------------------------------
 # Collecte complète
 # ---------------------------------------------------------------------------
+
+def _norm_title(t: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (t or "").lower()).strip()[:80]
+
+
+def dedupe_cross_sources(conn) -> int:
+    """Un marché français est publié à la fois au BOAMP et au TED : on garde
+    la fiche nationale (lien direct, région) et on ferme le doublon TED."""
+    rows = conn.execute("SELECT id, source, country, title_fr FROM opportunities WHERE status='published'").fetchall()
+    seen: dict = {}
+    closed = 0
+    for r in sorted(rows, key=lambda r: (r[1] == "ted",)):   # sources nationales d'abord
+        key = (r[2], _norm_title(r[3]))
+        if key in seen and r[1] == "ted":
+            conn.execute("UPDATE opportunities SET status='closed' WHERE id=?", (r[0],)); closed += 1
+        else:
+            seen.setdefault(key, r[0])
+    return closed
+
 
 def expire(conn) -> int:
     """Un avis dont la date de clôture est passée n'est plus proposé."""
@@ -398,12 +672,14 @@ def collect() -> dict:
     report: dict = {}
     state = _load_state()
     with db.standalone() as conn:
-        for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state))):
+        for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
+                         ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder)):
             try:
                 report[name] = fn(conn)
             except Exception as exc:  # une source en panne ne doit pas casser la nuit
                 log.warning("opportunites %s: %s", name, exc)
                 report[name] = {"error": str(exc)[:200]}
+        report["dedup"] = dedupe_cross_sources(conn)
         report["expired"] = expire(conn)
         report["published"] = conn.execute("SELECT COUNT(*) FROM opportunities WHERE status='published'").fetchone()[0]
     state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
@@ -412,9 +688,17 @@ def collect() -> dict:
     return report
 
 
-def recent_for_digest(days: int = 7) -> list:
-    """Fiches vues pour la première fois depuis `days` jours, encore ouvertes."""
+def recent_for_digest(days: int = 7, country: str = "") -> list:
+    """Fiches vues pour la première fois depuis `days` jours, encore ouvertes,
+    pour un pays (ou tous)."""
     since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
-    return [dict(r) for r in db.fetchall(
-        "SELECT * FROM opportunities WHERE status='published' AND first_seen_at >= ? "
-        "ORDER BY closes_at IS NULL, closes_at, id DESC LIMIT 40", (since,))]
+    q = "SELECT * FROM opportunities WHERE status='published' AND first_seen_at >= ?"
+    args = [since]
+    if country:
+        q += " AND country=?"; args.append(country)
+    return [dict(r) for r in db.fetchall(q + " ORDER BY closes_at IS NULL, closes_at, id DESC LIMIT 40", args)]
+
+
+def digest_countries() -> list:
+    """Pays ayant des fiches ouvertes : un courriel par pays de pilote."""
+    return [r["country"] for r in db.fetchall("SELECT DISTINCT country FROM opportunities WHERE status='published'")]

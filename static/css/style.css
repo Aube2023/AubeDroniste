@@ -742,6 +742,17 @@ img.avatar { object-fit: cover; }
   color: var(--ink-dim);
 }
 .mission-card .footer .budget { color: var(--ink); font-weight: 700; }
+/* Cartes d'appels d'offres (accueil, page, tableau de bord) : hauteurs égales
+   dans la rangée, titre borné à quatre lignes, date de clôture et source
+   alignées en bas ; la date ne se coupe pas au tiret. */
+.opp-card { grid-template-rows: auto auto auto 1fr auto; align-content: start; height: 100%; }
+.opp-card h3 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.opp-card .footer { align-self: end; align-items: baseline; gap: 10px; }
+.opp-card .footer .price { white-space: nowrap; font-size: 15px; }
+.opp-card .footer > span:last-child { white-space: nowrap; }
+.opp-card .coords { min-height: 2.4em; }
+.opp-card-full { grid-template-rows: auto auto auto auto auto 1fr auto auto; }
+.opp-card-full .footer { align-self: end; }
 
 /* ============ Page détail pilote ============ */
 

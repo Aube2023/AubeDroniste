@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Tanda kusa da kai",
   "opp.dash_lead": "Sanarwar gwamnati na ƙasarka da suka shafi ƙwararrun drone, an ɗauko su daga shafukan hukuma.",
   "opp.dash_all": "Duba dukkan tanda →",
-  "opp.home_lead": "Tandar gwamnati ga ƙwararrun drone, ana tattarawa kowane dare daga shafukan hukuma. Kyauta."
+  "opp.home_lead": "Tandar gwamnati ga ƙwararrun drone, ana tattarawa kowane dare daga shafukan hukuma. Kyauta.",
+  "opp.filter_country": "Ƙasa",
+  "opp.all_countries": "Dukkan ƙasashe",
+  "opp.name_recheck": "Idan ka canza suna, lasisin da aka tabbatar za a sake duba su (awa 48).",
+  "opp.name_edit_in_settings": "Canza sunana a saituna →"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

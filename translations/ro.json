@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Licitații în apropierea dumneavoastră",
   "opp.dash_lead": "Anunțurile publice din țara dumneavoastră care privesc profesioniștii dronelor, preluate de pe portalurile oficiale.",
   "opp.dash_all": "Vezi toate licitațiile →",
-  "opp.home_lead": "Licitațiile publice pentru profesioniștii dronelor, preluate în fiecare noapte de pe portalurile oficiale. Gratuit."
+  "opp.home_lead": "Licitațiile publice pentru profesioniștii dronelor, preluate în fiecare noapte de pe portalurile oficiale. Gratuit.",
+  "opp.filter_country": "Țară",
+  "opp.all_countries": "Toate țările",
+  "opp.name_recheck": "Dacă vă schimbați numele, licențele verificate revin la verificare (48 h).",
+  "opp.name_edit_in_settings": "Modifică numele în setări →"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

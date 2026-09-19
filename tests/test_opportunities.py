@@ -14,7 +14,7 @@ def test_parse_canadabuys_filtre_et_resume():
     it = items[0]
     assert it["region"] == "Québec" and it["regions_raw"] == "Canada, Québec (sauf RCN)"
     assert it["closes_at"] == "2026-10-15" and it["published_at"] == "2026-09-10"
-    assert it["url_fr"].endswith("/avis-dappel-doffres/cb-26-1") and "/en/" in it["url_en"]
+    assert it["url_fr"].endswith("/appels-d-offres/cb-26-1") and "/en/" in it["url_en"]
     assert it["specialties"] == "topographie"
     assert len(it["summary_en"]) <= opp.SUMMARY_CHARS + 1 and it["summary_en"].endswith("…")
 
@@ -48,6 +48,51 @@ def test_parse_seao():
     assert it["url_fr"] == "https://seao.gouv.qc.ca/avis/1" and "3d" in it["specialties"]
 
 
+def _ted_notices():
+    html = {k: f"https://ted.europa.eu/{v}/notice/-/detail/604138-2026" for k, v in
+            (("ENG", "en"), ("FRA", "fr"), ("DEU", "de"))}
+    return [
+        {"publication-number": "604138-2026", "buyer-country": ["DEU"], "publication-date": "2026-09-02+02:00",
+         "deadline-receipt-tender-date-lot": ["2026-10-07+02:00"], "notice-type": "cn-standard",
+         "notice-title": {"eng": "Germany – Surveying instruments – LiDAR-Sensorpaket", "fra": "Allemagne – Instruments de géodésie – LiDAR-Sensorpaket", "deu": "Deutschland – Vermessungsinstrumente – LiDAR-Sensorpaket"},
+         "buyer-name": {"deu": ["Christian-Albrechts-Universität zu Kiel"]}, "description-lot": {"deu": ["LiDAR-Sensorpaket für Drohnenbefliegung"]},
+         "links": {"html": html}},
+        {"publication-number": "600001-2026", "buyer-country": ["ESP"], "notice-title": {"eng": "Spain – Office chairs – Sillas"}, "buyer-name": {"spa": ["X"]}, "links": {"html": {}}},
+    ]
+
+
+def _boamp_records():
+    return [
+        {"idweb": "26-90001", "objet": "Relevé photogrammétrique du littoral par drone", "nomacheteur": "Métropole de Lyon",
+         "dateparution": "2026-09-10", "datelimitereponse": "2026-10-20T12:00:00+00:00", "code_departement": ["69"],
+         "nature_libelle": "Avis de marché", "type_marche": ["SERVICES"], "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:26-90001",
+         "descripteur_libelle": ["Topographie"], "resume": "Acquisition d'orthophotos par drone sur le littoral."},
+        {"idweb": "26-90002", "objet": "Spectacle pyrotechnique", "nomacheteur": "Mairie", "code_departement": ["06"], "resume": "Feu d'artifice"},
+    ]
+
+
+def _uk_releases():
+    return [
+        {"ocid": "ocds-b5fd17-uk1", "date": "2026-09-05T10:00:00Z", "buyer": {"name": "Environment Agency"},
+         "tender": {"title": "Drone survey of coastal defences", "description": "Aerial survey by UAV with LiDAR and photogrammetry outputs.",
+                    "status": "active", "tenderPeriod": {"endDate": "2026-10-15T12:00:00Z"}, "mainProcurementCategory": "services",
+                    "items": [{"deliveryAddresses": [{"region": "UKK South West", "locality": "Exeter"}]}],
+                    "documents": [{"url": "https://www.contractsfinder.service.gov.uk/Notice/uk1"}]}},
+        {"ocid": "ocds-b5fd17-uk2", "buyer": {"name": "Council"}, "tender": {"title": "Taxi services", "description": "Cars", "status": "active"}},
+    ]
+
+
+def test_parse_sources_europe():
+    ted = opp.parse_ted(_ted_notices())
+    assert len(ted) == 1 and ted[0]["country"] == "Allemagne" and ted[0]["title_fr"] == "LiDAR-Sensorpaket"
+    assert ted[0]["titles"]["de"] == "LiDAR-Sensorpaket" and ted[0]["urls"]["de"].endswith("/de/notice/-/detail/604138-2026")
+    assert ted[0]["closes_at"] == "2026-10-07" and "topographie" in ted[0]["specialties"]
+    bo = opp.parse_boamp(_boamp_records())
+    assert len(bo) == 1 and bo[0]["region"] == "Auvergne-Rhône-Alpes" and bo[0]["closes_at"] == "2026-10-20" and bo[0]["category"] == "services"
+    uk = opp.parse_contractsfinder(_uk_releases())
+    assert len(uk) == 1 and uk[0]["region"] == "South West" and uk[0]["city"] == "Exeter" and uk[0]["country"] == "Royaume-Uni"
+
+
 def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user, monkeypatch):
     import db, services, mailer
     from config import DATA_DIR
@@ -60,17 +105,33 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return json.dumps(resources).encode("utf-8")
         if url == "seao://hebdo":
             return json.dumps(_seao_payload()).encode("utf-8")
+        if url.startswith("https://boamp-datadila.opendatasoft.com/"):
+            return json.dumps({"results": _boamp_records()}).encode("utf-8")
+        if url.startswith("https://www.contractsfinder.service.gov.uk/"):
+            return json.dumps({"releases": _uk_releases(), "links": {}}).encode("utf-8")
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
+    monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
     report = opp.collect()
-    assert report["canadabuys"]["items"] == 1 and report["seao"]["items"] == 1 and report["published"] >= 2
+    assert report["canadabuys"]["items"] == 1 and report["seao"]["items"] == 1
+    assert report["ted"]["items"] == 1 and report["boamp"]["items"] == 1 and report["contractsfinder"]["items"] == 1
+    assert report["published"] >= 5
+    # Pays : filtre et titre dans la langue du visiteur (TED)
+    fr_page = client.get("/opportunites?country=Allemagne").get_data(as_text=True)
+    assert "LiDAR-Sensorpaket" in fr_page and "Levé LiDAR" not in fr_page and "ted.europa.eu/fr/" in fr_page
+    de_page = client.get("/de/opportunites?country=Allemagne").get_data(as_text=True)
+    assert "ted.europa.eu/de/" in de_page and "Deutschland" in de_page
+    client.set_cookie("aube_lang", "fr", domain="localhost.localdomain")
+    assert "Relevé photogrammétrique du littoral" in client.get("/opportunites?country=France").get_data(as_text=True)
+    assert "Drone survey of coastal defences" in client.get("/en/opportunites?country=Royaume-Uni").get_data(as_text=True)
+    client.set_cookie("aube_lang", "fr", domain="localhost.localdomain")
     # deuxième passe : rien ne casse, le fichier SEAO déjà lu n'est pas relu
     report2 = opp.collect()
     assert report2["seao"]["files"] == 0 and report2["published"] == report["published"]
 
     html = client.get("/opportunites").get_data(as_text=True)
     assert "Levé LiDAR aéroporté" in html and "Levés laser aéroporté" in html
-    assert "canadabuys.canada.ca/fr/appels-doffres/avis-dappel-doffres/cb-26-1" in html
+    assert "canadabuys.canada.ca/fr/occasions-de-marche/appels-d-offres/cb-26-1" in html
     assert "Chaises de bureau" not in html
     assert "Aerial LiDAR survey" in client.get("/en/opportunites?region=Québec").get_data(as_text=True)
     client.set_cookie("aube_lang", "fr", domain="localhost.localdomain")   # la visite de /en/ a pose le cookie

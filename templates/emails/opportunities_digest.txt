@@ -10,7 +10,7 @@ AUBEPILOT, OPPORTUNITES DE LA SEMAINE / THIS WEEK'S TENDERS
 {% endfor %}
 Tous les avis, par province et specialite : {{ site_url }}/opportunites
 
-Sources : CanadaBuys (Licence du gouvernement ouvert, Canada) et SEAO (Donnees Quebec, CC BY 4.0).
+Sources : portails publics officiels (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), donnees ouvertes.
 AubePilot n'est pas l'organisme emetteur : chaque fiche renvoie a l'avis d'origine.
 Vous recevez ce courriel car vos alertes sont activees ; desactivez-les dans vos parametres.
 
@@ -27,7 +27,7 @@ L'equipage AubePilot
 {% endfor %}
 All notices, by province and specialty: {{ site_url }}/en/opportunites
 
-Sources: CanadaBuys (Open Government Licence, Canada) and SEAO (Donnees Quebec, CC BY 4.0).
+Sources: official public portals (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), open data.
 AubePilot is not the issuing body: each entry links to the original notice.
 You receive this because alerts are on; turn them off in your settings.
 

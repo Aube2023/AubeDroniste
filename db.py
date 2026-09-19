@@ -181,6 +181,7 @@ _ADD_COLUMNS = [
     ("missions", "is_private", "INTEGER NOT NULL DEFAULT 0"),
     # Opportunites : categorie d'approvisionnement (ajoutee apres la table).
     ("opportunities", "category", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "i18n", "TEXT NOT NULL DEFAULT ''"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
@@ -398,6 +399,7 @@ _ADD_TABLES = [
     url_en        TEXT,
     notice_type   TEXT NOT NULL DEFAULT '',
     category      TEXT NOT NULL DEFAULT '',       -- services | goods | construction
+    i18n          TEXT NOT NULL DEFAULT '',       -- JSON {titles: {lang: titre}, urls: {lang: url}} (TED)
     specialties   TEXT NOT NULL DEFAULT '',       -- CSV codes MISSION_TYPES
     published_at  TEXT,
     closes_at     TEXT,

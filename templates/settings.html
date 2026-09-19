@@ -21,12 +21,9 @@
     <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.qui_vous_etes_d_ou_vous') }}</h2>
 
     <label>{{ t('tpl.nom_complet') }}
-      <input name="full_name" value="{{ user.full_name }}" maxlength="120" {% if name_locked %}disabled{% endif %}>
+      <input name="full_name" value="{{ user.full_name }}" maxlength="120">
       {% if name_locked %}
-      <small class="muted" style="display: block; margin-top: 4px;">
-        {{ t('tpl.verrouille_un_justificatif_de_brevet_a') }}
-        <a href="{{ url_for('request_name_change') }}">{{ t('tpl.demander_un_changement_de_nom') }}</a>
-      </small>
+      <small class="muted" style="display: block; margin-top: 4px;">{{ t('opp.name_recheck') }}</small>
       {% endif %}
     </label>
     <label>{{ t('tpl.identifiant_courriel_de_connexion') }}

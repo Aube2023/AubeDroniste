@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Mga tender malapit sa iyo",
   "opp.dash_lead": "Mga pampublikong abiso sa iyong bansa para sa mga propesyonal sa drone, mula sa mga opisyal na portal.",
   "opp.dash_all": "Tingnan ang lahat ng tender →",
-  "opp.home_lead": "Mga pampublikong tender para sa mga propesyonal sa drone, kinukuha gabi-gabi mula sa mga opisyal na portal. Libre."
+  "opp.home_lead": "Mga pampublikong tender para sa mga propesyonal sa drone, kinukuha gabi-gabi mula sa mga opisyal na portal. Libre.",
+  "opp.filter_country": "Bansa",
+  "opp.all_countries": "Lahat ng bansa",
+  "opp.name_recheck": "Kapag binago mo ang pangalan mo, babalik sa pagsusuri ang mga beripikadong lisensya mo (48 oras).",
+  "opp.name_edit_in_settings": "Baguhin ang pangalan ko sa mga setting →"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",

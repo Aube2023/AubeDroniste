@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Gói thầu gần bạn",
   "opp.dash_lead": "Các thông báo công ở nước bạn liên quan đến người làm drone chuyên nghiệp, lấy từ các cổng thông tin chính thức.",
   "opp.dash_all": "Xem tất cả gói thầu →",
-  "opp.home_lead": "Thông báo đấu thầu công cho chuyên gia drone, thu thập mỗi đêm từ các cổng chính thức. Miễn phí."
+  "opp.home_lead": "Thông báo đấu thầu công cho chuyên gia drone, thu thập mỗi đêm từ các cổng chính thức. Miễn phí.",
+  "opp.filter_country": "Quốc gia",
+  "opp.all_countries": "Tất cả quốc gia",
+  "opp.name_recheck": "Nếu bạn đổi tên, các giấy phép đã xác minh sẽ được xét duyệt lại (48 giờ).",
+  "opp.name_edit_in_settings": "Đổi tên trong cài đặt →"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

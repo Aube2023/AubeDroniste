@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Tender di dekat Anda",
   "opp.dash_lead": "Pengumuman publik di negara Anda yang menyangkut profesional drone, diambil dari portal resmi.",
   "opp.dash_all": "Lihat semua tender →",
-  "opp.home_lead": "Tender publik untuk profesional drone, dikumpulkan setiap malam dari portal resmi. Gratis."
+  "opp.home_lead": "Tender publik untuk profesional drone, dikumpulkan setiap malam dari portal resmi. Gratis.",
+  "opp.filter_country": "Negara",
+  "opp.all_countries": "Semua negara",
+  "opp.name_recheck": "Jika Anda mengubah nama, lisensi terverifikasi Anda akan ditinjau ulang (48 jam).",
+  "opp.name_edit_in_settings": "Ubah nama di pengaturan →"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

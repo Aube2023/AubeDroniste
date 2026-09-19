@@ -1247,7 +1247,11 @@
   "opp.dash_h": "내 주변 입찰 공고",
   "opp.dash_lead": "공식 포털에서 가져온, 드론 전문가와 관련된 내 국가의 공공 공고입니다.",
   "opp.dash_all": "모든 입찰 공고 보기 →",
-  "opp.home_lead": "드론 전문가를 위한 공공 입찰 공고, 매일 밤 공식 포털에서 수집합니다. 무료."
+  "opp.home_lead": "드론 전문가를 위한 공공 입찰 공고, 매일 밤 공식 포털에서 수집합니다. 무료.",
+  "opp.filter_country": "국가",
+  "opp.all_countries": "모든 국가",
+  "opp.name_recheck": "이름을 변경하면 인증된 자격증이 다시 검토됩니다(48시간).",
+  "opp.name_edit_in_settings": "설정에서 이름 변경 →"
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",

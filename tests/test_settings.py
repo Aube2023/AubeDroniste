@@ -32,17 +32,31 @@ def test_settings_page_and_account_update(client, auth_client, make_user):
     assert "Find a pilot<" in c2.get("/pilotes", follow_redirects=True).data.decode()
 
 
-def test_name_locked_after_certificate_upload(client, auth_client, make_user):
+def test_name_change_resets_verified_certificates(client, auth_client, make_user):
+    """Décision 2026-09-19 : le nom reste modifiable par la personne ; un brevet
+    vérifié sous l'ancien nom repasse en vérification et le badge tombe."""
     import db
     import services
     u = make_user("set_lock", role="pilot", full_name="Marie Verrou")
     with client.application.app_context():
-        services.add_certification(u["id"], authority="DGAC", title="A2", document_path="uploads/x.pdf")
+        cid = services.add_certification(u["id"], authority="DGAC", title="A2", document_path="uploads/x.pdf")
+        services.review_certification(cid, None, "verified")
+        assert db.fetchone("SELECT is_verified FROM users WHERE id=?", (u["id"],))["is_verified"] == 1
     c = auth_client(u["id"])
-    assert "Demander un changement de nom" in c.get("/espace/parametres").data.decode()
-    c.post("/espace/parametres/compte", data={"full_name": "Pirate", "country": "France"})
+    html = c.get("/espace/parametres").data.decode()
+    assert "Demander un changement de nom" not in html and 'name="full_name"' in html and "disabled" not in html.split('name="full_name"')[1][:80]
+    c.post("/espace/parametres/compte", data={"full_name": "Marie Mariée", "country": "France"})
     with client.application.app_context():
-        assert db.fetchone("SELECT full_name FROM users WHERE id=?", (u["id"],))["full_name"] == "Marie Verrou"
+        assert db.fetchone("SELECT full_name, is_verified FROM users WHERE id=?", (u["id"],))["full_name"] == "Marie Mariée"
+        cert = db.fetchone("SELECT review_status, is_verified, review_note FROM pilot_certifications WHERE id=?", (cid,))
+        assert cert["review_status"] == "pending" and cert["is_verified"] == 0 and "Marie Verrou" in cert["review_note"]
+        assert db.fetchone("SELECT is_verified FROM users WHERE id=?", (u["id"],))["is_verified"] == 0
+    # Sans changement de nom, rien ne bouge.
+    with client.application.app_context():
+        services.review_certification(cid, None, "verified")
+    c.post("/espace/parametres/compte", data={"full_name": "Marie Mariée", "country": "France"})
+    with client.application.app_context():
+        assert db.fetchone("SELECT review_status FROM pilot_certifications WHERE id=?", (cid,))["review_status"] == "verified"
 
 
 def test_notification_prefs_are_honored(client, auth_client, make_user):

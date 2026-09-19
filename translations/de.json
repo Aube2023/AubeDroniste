@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Ausschreibungen in Ihrer Nähe",
   "opp.dash_lead": "Die öffentlichen Bekanntmachungen Ihres Landes, die Drohnenprofis betreffen, übernommen von den offiziellen Portalen.",
   "opp.dash_all": "Alle Ausschreibungen ansehen →",
-  "opp.home_lead": "Öffentliche Ausschreibungen für Drohnenprofis, jede Nacht von den offiziellen Portalen übernommen. Kostenlos."
+  "opp.home_lead": "Öffentliche Ausschreibungen für Drohnenprofis, jede Nacht von den offiziellen Portalen übernommen. Kostenlos.",
+  "opp.filter_country": "Land",
+  "opp.all_countries": "Alle Länder",
+  "opp.name_recheck": "Wenn Sie Ihren Namen ändern, gehen Ihre geprüften Lizenzen zurück in die Prüfung (48 h).",
+  "opp.name_edit_in_settings": "Namen in den Einstellungen ändern →"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

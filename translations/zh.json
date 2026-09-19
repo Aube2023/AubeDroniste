@@ -1247,7 +1247,11 @@
   "opp.dash_h": "您附近的招标",
   "opp.dash_lead": "您所在国家与无人机专业人士相关的公共公告，取自官方门户。",
   "opp.dash_all": "查看所有招标 →",
-  "opp.home_lead": "面向无人机专业人士的公开招标，每晚从官方平台同步。免费。"
+  "opp.home_lead": "面向无人机专业人士的公开招标，每晚从官方平台同步。免费。",
+  "opp.filter_country": "国家",
+  "opp.all_countries": "所有国家",
+  "opp.name_recheck": "若您更改姓名，已核验的执照将重新审核（48 小时）。",
+  "opp.name_edit_in_settings": "在设置中修改姓名 →"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

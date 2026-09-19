@@ -1247,7 +1247,11 @@
   "opp.dash_h": "Zabuni karibu nawe",
   "opp.dash_lead": "Matangazo ya umma ya nchi yako yanayowahusu wataalamu wa droni, yaliyochukuliwa kutoka tovuti rasmi.",
   "opp.dash_all": "Tazama zabuni zote →",
-  "opp.home_lead": "Zabuni za umma kwa wataalamu wa droni, zinakusanywa kila usiku kutoka tovuti rasmi. Bure."
+  "opp.home_lead": "Zabuni za umma kwa wataalamu wa droni, zinakusanywa kila usiku kutoka tovuti rasmi. Bure.",
+  "opp.filter_country": "Nchi",
+  "opp.all_countries": "Nchi zote",
+  "opp.name_recheck": "Ukibadilisha jina, leseni zako zilizothibitishwa zitakaguliwa upya (saa 48).",
+  "opp.name_edit_in_settings": "Badilisha jina langu kwenye mipangilio →"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

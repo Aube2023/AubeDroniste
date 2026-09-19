@@ -101,16 +101,16 @@
   </div>
   <div class="grid-cards">
     {% for o in home_opportunities %}
-    <a class="mission-card" href="{{ o.url }}" target="_blank" rel="noopener nofollow">
+    <a class="mission-card opp-card" href="{{ o.url }}" target="_blank" rel="noopener nofollow">
       <div class="header">
         <span class="tag">{{ t('opp.kind_' ~ o.kind) }}</span>
-        <span class="tag tag-open">{{ o.region }}</span>
+        <span class="tag tag-open">{{ o.country_label }}{% if o.region and o.region != o.country %} · {{ o.region }}{% endif %}</span>
       </div>
       <h3>{{ o.title }}</h3>
       <div class="coords">{{ o.org }}</div>
       <div class="footer">
         <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
-        <span>{{ 'CanadaBuys' if o.source == 'canadabuys' else 'SEAO' }}</span>
+        <span>{{ o.source_label }}</span>
       </div>
     </a>
     {% endfor %}
