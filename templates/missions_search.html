@@ -6,7 +6,6 @@
 
 <div class="search-head centered">
   <h1>{{ t('tpl.missions_ouvertes') }}</h1>
-  <p class="lead muted">{{ t('search.missions_intro') }}</p>
   <p class="search-count">
     {% if n == 0 and not has_filters %}{{ t('search.missions_none') }}{% elif n == 1 %}{{ t('search.missions_one') }}{% else %}{{ t('search.missions_many', n=n) }}{% endif %}{% if params.near_label %}, {{ t('search.nearest_around', place=params.near_label) }}{% endif %}{% if n %}.{% endif %}
     <a href="{{ url_for('mission_create') if current_user else url_for('register') }}">{{ t('nav.publish') }} →</a>
