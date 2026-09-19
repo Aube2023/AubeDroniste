@@ -733,6 +733,7 @@ def _localized_next(next_url: str, code: str) -> str:
 def index():
     return render_template(
         "index.html",
+        home_opportunities=services.localize_opportunities(services.list_opportunities(limit=3), getattr(g, "lang", i18n.DEFAULT)),
         stats=services.public_stats(),
         featured_pilots=services.featured_pilots(8),
         latest_missions=services.latest_missions(8),

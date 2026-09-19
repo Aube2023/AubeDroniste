@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot si shirika linalotoa zabuni: kila kadi inaelekeza kwenye tangazo la awali. Marubani waliojisajili hupokea matangazo mapya ya nchi yao kila wiki, kulingana na mpangilio wa arifa katika mipangilio yao.",
   "opp.dash_h": "Zabuni karibu nawe",
   "opp.dash_lead": "Matangazo ya umma ya nchi yako yanayowahusu wataalamu wa droni, yaliyochukuliwa kutoka tovuti rasmi.",
-  "opp.dash_all": "Tazama zabuni zote →"
+  "opp.dash_all": "Tazama zabuni zote →",
+  "opp.home_lead": "Zabuni za umma kwa wataalamu wa droni, zinakusanywa kila usiku kutoka tovuti rasmi. Bure."
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

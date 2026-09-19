@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot không phải là cơ quan phát hành: mỗi mục đều dẫn về thông báo gốc. Phi công đã đăng ký nhận thông báo mới của nước mình mỗi tuần, theo tùy chọn cảnh báo trong cài đặt của họ.",
   "opp.dash_h": "Gói thầu gần bạn",
   "opp.dash_lead": "Các thông báo công ở nước bạn liên quan đến người làm drone chuyên nghiệp, lấy từ các cổng thông tin chính thức.",
-  "opp.dash_all": "Xem tất cả gói thầu →"
+  "opp.dash_all": "Xem tất cả gói thầu →",
+  "opp.home_lead": "Thông báo đấu thầu công cho chuyên gia drone, thu thập mỗi đêm từ các cổng chính thức. Miễn phí."
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot bukan lembaga penerbit: setiap entri menautkan ke pengumuman aslinya. Pilot terdaftar menerima pengumuman baru dari negaranya setiap minggu, sesuai opsi notifikasi di pengaturan mereka.",
   "opp.dash_h": "Tender di dekat Anda",
   "opp.dash_lead": "Pengumuman publik di negara Anda yang menyangkut profesional drone, diambil dari portal resmi.",
-  "opp.dash_all": "Lihat semua tender →"
+  "opp.dash_all": "Lihat semua tender →",
+  "opp.home_lead": "Tender publik untuk profesional drone, dikumpulkan setiap malam dari portal resmi. Gratis."
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

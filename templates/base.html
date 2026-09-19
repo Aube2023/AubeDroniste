@@ -106,6 +106,7 @@
   <nav class="topnav">
     <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a>
     <a href="{{ url_for('missions_search') }}">{{ t('nav.missions') }}</a>
+    <a href="{{ url_for('opportunities') }}" class="{{ 'on' if request.endpoint == 'opportunities' else '' }}">{{ t('opp.nav') }}</a>
     {% if current_user %}
       <a href="{{ url_for('messages_inbox') }}" class="{{ 'on' if request.endpoint in ('messages_inbox', 'messages_thread') else '' }}">{{ t('nav.messages') }}{% if unread_messages %}<span class="nav-badge">{{ unread_messages }}</span>{% endif %}</a>
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>

@@ -33,6 +33,7 @@
       <button class="hero-link" type="button" data-action="near-me" data-url="{{ url_for('pilots_search') }}">{{ t('home.nearby.cta') }}</button>
       <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="hero-link">{{ t('home.cta_publish')|replace('→', '')|trim }} →</a>
       <a href="{{ url_for('register') }}?role=pilot" class="hero-link">{{ t('home.cta_pilot')|replace('→', '')|trim }} →</a>
+      <a href="{{ url_for('opportunities') }}" class="hero-link">{{ t('opp.h1') }} →</a>
     </div>
   </div>
   {# Fait au Canada et au Québec : en bas à droite du bandeau (drapeau canadien
@@ -90,6 +91,33 @@
     </div>
   </div>
 </section>
+
+{% if home_opportunities %}
+<section class="section" id="appels-offres">
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('opp.eyebrow') }}</span>
+    <h2>{{ t('opp.h1') }}</h2>
+    <p class="muted">{{ t('opp.home_lead') }}</p>
+  </div>
+  <div class="grid-cards">
+    {% for o in home_opportunities %}
+    <a class="mission-card" href="{{ o.url }}" target="_blank" rel="noopener nofollow">
+      <div class="header">
+        <span class="tag">{{ t('opp.kind_' ~ o.kind) }}</span>
+        <span class="tag tag-open">{{ o.region }}</span>
+      </div>
+      <h3>{{ o.title }}</h3>
+      <div class="coords">{{ o.org }}</div>
+      <div class="footer">
+        <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
+        <span>{{ 'CanadaBuys' if o.source == 'canadabuys' else 'SEAO' }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <p style="text-align: center; margin-top: 18px;"><a class="ghost" href="{{ url_for('opportunities') }}">{{ t('opp.dash_all') }}</a></p>
+</section>
+{% endif %}
 
 <section class="section" id="comment-ca-marche">
   <div class="section-header centered">

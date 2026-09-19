@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "A AubePilot não é o órgão emissor: cada ficha remete ao aviso original. Os pilotos cadastrados recebem toda semana as novidades do seu país, conforme o ajuste de alertas nas suas configurações.",
   "opp.dash_h": "Licitações perto de você",
   "opp.dash_lead": "Os avisos públicos do seu país que interessam aos profissionais de drone, coletados dos portais oficiais.",
-  "opp.dash_all": "Ver todas as licitações →"
+  "opp.dash_all": "Ver todas as licitações →",
+  "opp.home_lead": "Os avisos públicos para profissionais de drone, recolhidos todas as noites dos portais oficiais. Grátis."
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

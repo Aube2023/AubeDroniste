@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot nie jest instytucją ogłaszającą: każda karta odsyła do oryginalnego ogłoszenia. Zarejestrowani piloci otrzymują co tydzień nowe ogłoszenia ze swojego kraju, zgodnie z ustawieniem powiadomień w swoich ustawieniach.",
   "opp.dash_h": "Przetargi w Państwa okolicy",
   "opp.dash_lead": "Ogłoszenia publiczne z Państwa kraju dotyczące profesjonalistów dronowych, pobrane z oficjalnych portali.",
-  "opp.dash_all": "Zobacz wszystkie przetargi →"
+  "opp.dash_all": "Zobacz wszystkie przetargi →",
+  "opp.home_lead": "Przetargi publiczne dla profesjonalistów dronowych, pobierane co noc z oficjalnych portali. Bezpłatnie."
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

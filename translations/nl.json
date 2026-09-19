@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot is niet de aanbestedende instantie: elke kaart verwijst naar de oorspronkelijke aankondiging. Geregistreerde piloten ontvangen elke week de nieuwe aankondigingen uit hun land, volgens de meldingsinstelling in hun instellingen.",
   "opp.dash_h": "Aanbestedingen bij jou in de buurt",
   "opp.dash_lead": "Openbare aankondigingen uit jouw land die droneprofessionals aangaan, opgehaald van de officiële portalen.",
-  "opp.dash_all": "Alle aanbestedingen bekijken →"
+  "opp.dash_all": "Alle aanbestedingen bekijken →",
+  "opp.home_lead": "Openbare aanbestedingen voor droneprofessionals, elke nacht opgehaald van de officiële portalen. Gratis."
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

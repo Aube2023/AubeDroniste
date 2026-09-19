@@ -1246,7 +1246,8 @@
   "opp.about_alerts": "AubePilot non è l'ente emittente: ogni scheda rimanda all'avviso originale. I piloti iscritti ricevono ogni settimana le novità del loro paese, secondo l'opzione di notifica nelle loro impostazioni.",
   "opp.dash_h": "Gare d'appalto vicino a Lei",
   "opp.dash_lead": "Gli avvisi pubblici del Suo paese che riguardano i professionisti del drone, raccolti dai portali ufficiali.",
-  "opp.dash_all": "Vedi tutte le gare d'appalto →"
+  "opp.dash_all": "Vedi tutte le gare d'appalto →",
+  "opp.home_lead": "Le gare pubbliche per i professionisti del drone, riprese ogni notte dai portali ufficiali. Gratis."
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",
