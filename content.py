@@ -280,15 +280,19 @@ _UPDATES = [
                "pages.",
          "en": "Country lists now show in your language, in its alphabetical order, on every page.",
          "es": "Las listas de países aparecen en su idioma y en su orden alfabético, en todas las páginas."},
-        {"fr": "Appels d'offres et contrats drone : les avis publics pour les pros du drone (CanadaBuys, SEAO), "
-               "classés par province et spécialité, avec la date de clôture et le lien vers l'avis. Gratuit ; "
-               "les pilotes inscrits reçoivent les nouveautés de leur pays chaque semaine.",
-         "en": "Drone tenders and contracts: public notices for drone professionals (CanadaBuys, SEAO), by "
-               "province and specialty, with closing date and a link to the notice. Free; registered pilots "
-               "get their country's new notices every week.",
-         "es": "Licitaciones y contratos de dron: los avisos públicos para profesionales del dron (CanadaBuys, "
-               "SEAO), por provincia y especialidad, con fecha de cierre y enlace al aviso. Gratis; los pilotos "
-               "inscritos reciben las novedades de su país cada semana."},
+        {"fr": "Appels d'offres et contrats drone : les avis publics pour les pros du drone, repris chaque nuit "
+               "de neuf portails officiels (Canada, Québec, Union européenne, France, Royaume-Uni, Australie, "
+               "Nouvelle-Zélande, Colombie, États-Unis), par pays, province et spécialité, avec la date de clôture "
+               "et un lien vérifié vers l'avis. Gratuit ; les pilotes inscrits reçoivent les nouveautés de leur pays "
+               "chaque semaine.",
+         "en": "Drone tenders and contracts: public notices for drone professionals, collected nightly from nine "
+               "official portals (Canada, Québec, European Union, France, United Kingdom, Australia, New Zealand, "
+               "Colombia, United States), by country, province and specialty, with closing date and a verified link "
+               "to the notice. Free; registered pilots get their country's new notices every week.",
+         "es": "Licitaciones y contratos de dron: los avisos públicos para profesionales del dron, recogidos cada "
+               "noche de nueve portales oficiales (Canadá, Quebec, Unión Europea, Francia, Reino Unido, Australia, "
+               "Nueva Zelanda, Colombia, Estados Unidos), por país, provincia y especialidad, con fecha de cierre y "
+               "enlace verificado al aviso. Gratis; los pilotos inscritos reciben las novedades de su país cada semana."},
         {"fr": "Le site se lit en 31 langues, chaque page avec sa propre adresse : français, anglais, "
                "espagnol, portugais, allemand, néerlandais, italien, roumain, grec, polonais, arabe, "
                "hébreu, persan, russe, ukrainien, turc, hindi, népalais, tamoul, ourdou, bengali, "

@@ -4490,7 +4490,8 @@ def localize_opportunities(items: list, lang: str) -> list:
         o["url"] = urls.get(lang) or (o["url_fr"] if fr else (o["url_en"] or o["url_fr"]))
         o["country_label"] = i18n.country_name(o.get("country") or "", lang)
         o["source_label"] = {"canadabuys": "CanadaBuys", "seao": "SEAO", "ted": "TED", "boamp": "BOAMP",
-                             "contractsfinder": "Contracts Finder"}.get(o.get("source"), o.get("source"))
+                             "contractsfinder": "Contracts Finder", "austender": "AusTender", "gets": "GETS",
+                             "secop": "SECOP II", "samgov": "SAM.gov"}.get(o.get("source"), o.get("source"))
     return items
 
 

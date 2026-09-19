@@ -32,7 +32,9 @@ from config import DATA_DIR
 
 log = logging.getLogger("aubepilot.opportunities")
 
-USER_AGENT = "AubePilot-opportunites/1.0 (+https://pilot.aubeetoilee.com/opportunites)"
+# Forme conventionnelle des robots déclarés (comme Googlebot ou Bingbot) :
+# le pare-feu d'AusTender refuse tout agent qui ne commence pas par Mozilla.
+USER_AGENT = "Mozilla/5.0 (compatible; AubePilot-opportunites/1.0; +https://pilot.aubeetoilee.com/opportunites)"
 CANADABUYS_CSV = "https://canadabuys.canada.ca/opendata/pub/openTenderNotice-ouvertAvisAppelOffres.csv"
 CANADABUYS_NOTICE_FR = "https://canadabuys.canada.ca/fr/occasions-de-marche/appels-d-offres/{ref}"
 CANADABUYS_NOTICE_EN = "https://canadabuys.canada.ca/en/tender-opportunities/tender-notice/{ref}"
@@ -53,7 +55,39 @@ SOURCES = {
               "url": "https://www.boamp.fr/pages/donnees-ouvertes"},
     "contractsfinder": {"label": "Contracts Finder (Royaume-Uni)", "licence": "Open Government Licence v3.0",
                         "url": "https://www.contractsfinder.service.gov.uk/"},
+    "austender": {"label": "AusTender (Australie)", "licence": "Creative Commons BY 3.0 AU (flux officiel)",
+                  "url": "https://www.tenders.gov.au/"},
+    "gets": {"label": "GETS (Nouvelle-Zélande)", "licence": "Flux officiel des appels ouverts, New Zealand Government",
+             "url": "https://www.gets.govt.nz/"},
+    "secop": {"label": "SECOP II (Colombie)", "licence": "Datos Abiertos Colombia (Licencia CC BY-SA)",
+              "url": "https://www.datos.gov.co/"},
+    "samgov": {"label": "SAM.gov (États-Unis)", "licence": "U.S. Government Work, données publiques",
+               "url": "https://sam.gov/"},
 }
+AUSTENDER_RSS = "https://www.tenders.gov.au/public_data/rss/rss.xml"
+GETS_RSS = "https://www.gets.govt.nz/ExternalRSSFeed.htm"
+SECOP_API = ("https://www.datos.gov.co/resource/p6dx-8zbt.json?$limit=200&$order=fecha_de_publicacion_del%20DESC"
+             "&$where=fecha_de_recepcion_de%20%3E%3D%20'{today}'%20AND%20fecha_de_publicacion_del%20%3E%3D%20'{since}'%20AND%20"
+             "fase%20in('Fase%20de%20ofertas','Presentaci%C3%B3n%20de%20oferta','Fase%20de%20Selecci%C3%B3n%20(Presentaci%C3%B3n%20de%20ofertas)','Manifestaci%C3%B3n%20de%20inter%C3%A9s%20(Menor%20Cuant%C3%ADa)')"
+             "%20AND%20(upper(nombre_del_procedimiento)%20like%20'%25DRON%25'%20OR%20upper(nombre_del_procedimiento)%20like%20'%25LIDAR%25'"
+             "%20OR%20upper(nombre_del_procedimiento)%20like%20'%25FOTOGRAMETR%25'%20OR%20upper(nombre_del_procedimiento)%20like%20'%25ORTOFOTO%25'"
+             "%20OR%20upper(descripci_n_del_procedimiento)%20like%20'%25DRON%25')")
+_SECOP_API_OLD = ("https://www.datos.gov.co/resource/p6dx-8zbt.json?$limit=200&$order=fecha_de_publicacion_del%20DESC"
+             "&$where=fase%20in('Fase%20de%20ofertas','Presentaci%C3%B3n%20de%20oferta','Fase%20de%20Selecci%C3%B3n%20(Presentaci%C3%B3n%20de%20ofertas)','Manifestaci%C3%B3n%20de%20inter%C3%A9s%20(Menor%20Cuant%C3%ADa)')"
+             "%20AND%20(upper(nombre_del_procedimiento)%20like%20'%25DRON%25'%20OR%20upper(nombre_del_procedimiento)%20like%20'%25LIDAR%25'"
+             "%20OR%20upper(nombre_del_procedimiento)%20like%20'%25FOTOGRAMETR%25'%20OR%20upper(nombre_del_procedimiento)%20like%20'%25ORTOFOTO%25'"
+             "%20OR%20upper(descripci_n_del_procedimiento)%20like%20'%25DRON%25')")
+SAMGOV_API = ("https://api.sam.gov/opportunities/v2/search?limit=100&api_key={key}&postedFrom={frm}&postedTo={to}"
+              "&ptype=o,k,p&keywords={kw}")
+SAMGOV_KEY = os.environ.get("SAMGOV_API_KEY", "").strip()
+US_STATES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut",
+             "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida", "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois",
+             "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+             "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri", "MT": "Montana",
+             "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York",
+             "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania",
+             "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah",
+             "VT": "Vermont", "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"}
 TED_SEARCH = "https://api.ted.europa.eu/v3/notices/search"
 TED_QUERY = ('(FT~"drone" OR FT~"drones" OR FT~"dron" OR FT~"drohne*" OR FT~"UAV" OR FT~"UAS" OR FT~"RPAS" '
              'OR FT~"lidar" OR FT~"photogramm*" OR FT~"fotogramm*" OR FT~"orthophoto*" OR FT~"ortofoto*" '
@@ -86,7 +120,8 @@ TED_HTML_LANG = {"fra": "fr", "eng": "en", "spa": "es", "deu": "de", "ita": "it"
 # Ce qui concerne un professionnel du drone. Le mot « aérien » seul ne suffit
 # pas (ravitailleurs, fret aérien...) : il faut un terme métier.
 KEYWORDS = re.compile(
-    r"\b(drones?|dron|drohnen?|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
+    r"\b(drones?|dron|drones|drohnen?|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
+    r"aeronaves? (?:no tripulada|remotamente pilotada)s?|fotogrametr[ií]a|ortofoto\w*|levantamiento a[ée]reo|"
     r"a[ée]ronefs? (?:t[ée]l[ée]pilot|sans [ée]quipage|sans pilote)\w*|t[ée]l[ée]pilot\w*|remotely piloted\w*|"
     r"lidar|photogramm\w*|orthophoto\w*|orthoimage\w*|orthomosa\w*|"
     r"aerial (?:imagery|survey\w*|photograph\w*|mapping|inspection|lidar|thermograph\w*)|"
@@ -98,10 +133,10 @@ KEYWORDS = re.compile(
 # Mots-clés -> spécialités AubePilot (codes de config.MISSION_TYPES). Règles
 # volontairement étroites : mieux vaut aucune spécialité qu'une fausse.
 SPECIALTY_RULES = [
-    (re.compile(r"\blidar\b|\btopograph\w*|\barpentage\b|lev[ée]s? (?:laser|de terrain|a[ée]riens?)|\bland survey\w*", re.I), ("topographie",)),
-    (re.compile(r"photogramm\w*|mod[ée]lisation 3d|\b3d model\w*", re.I), ("3d",)),
-    (re.compile(r"orthophoto\w*|orthoimage\w*|orthomosa\w*|cartograph\w*|\bmapping\b|imagerie a[ée]rienne|aerial imagery", re.I), ("mapping",)),
-    (re.compile(r"\binspection\b", re.I), ("inspection",)),
+    (re.compile(r"\blidar\b|\btopograf\w*|\btopograph\w*|\barpentage\b|lev[ée]s? (?:laser|de terrain|a[ée]riens?)|levantamiento\w*|\bland survey\w*|vermessung|rilievo\w*", re.I), ("topographie",)),
+    (re.compile(r"photogramm\w*|fotogram\w*|mod[ée]lisation 3d|modelo 3d|\b3d model\w*", re.I), ("3d",)),
+    (re.compile(r"orthophoto\w*|ortho-?image\w*|orthomosa\w*|ortofoto\w*|cartograph\w*|cartograf\w*|\bmapping\b|imagerie a[ée]rienne|aerial imagery|luftbild\w*", re.I), ("mapping",)),
+    (re.compile(r"\binspection\b|\binspecci[óo]n\b|\bispezion\w*|\binspektion\w*", re.I), ("inspection",)),
     (re.compile(r"thermograph\w*|imagerie thermique|thermal imag\w*", re.I), ("thermographie",)),
     (re.compile(r"\bagricol\w*|\bagricultur\w*|\bndvi\b|\bcrop\b", re.I), ("agriculture",)),
     (re.compile(r"\bforest\w*|\bfor[êe]ts?\b|\bforesterie\b|\bsylvic\w*", re.I), ("foresterie",)),
@@ -662,6 +697,213 @@ def collect_contractsfinder(conn) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Flux RSS officiels : AusTender (Australie) et GETS (Nouvelle-Zélande)
+# ---------------------------------------------------------------------------
+
+def _rss_items(raw: bytes) -> list:
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(raw)
+    out = []
+    for it in root.iter("item"):
+        d: dict = {}
+        for c in it:
+            d[c.tag.split("}")[-1]] = (c.text or "").strip()
+        out.append(d)
+    return out
+
+
+def _strip_html(text: str) -> str:
+    import html as _html
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", _html.unescape(text or ""))).strip()
+
+
+def _rss_date(value: str) -> Optional[str]:
+    from email.utils import parsedate_to_datetime
+    try:
+        return parsedate_to_datetime(value).date().isoformat()
+    except Exception:
+        return _iso_date(value)
+
+
+AU_STATES = ("New South Wales", "Victoria", "Queensland", "Western Australia", "South Australia", "Tasmania",
+             "Australian Capital Territory", "Northern Territory")
+
+
+def parse_austender(items: list) -> list:
+    out = []
+    for it in items:
+        title = it.get("title") or ""
+        body = _strip_html(it.get("description") or "")
+        link = it.get("link") or it.get("guid") or ""
+        if not title or not link or not matches(title, body):
+            continue
+        m = re.search(r"(?:Close|Closing) (?:Date|date)[^A-Za-z0-9]*([0-9]{1,2}[- ][A-Za-z]{3,9}[- ][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})", body)
+        closes = None
+        if m:
+            raw = m.group(1).replace("-", " ")
+            for fmt in ("%d %B %Y", "%d %b %Y"):
+                try:
+                    closes = datetime.strptime(raw, fmt).date().isoformat(); break
+                except ValueError:
+                    continue
+            closes = closes or _iso_date(m.group(1))
+        # Résumé sans l'en-tête « Agency: … » ni la ligne de clôture.
+        overview = re.sub(r"(?:Agency|Organisation)\s*:?\s*[^.]{3,80}\.\s*", "", body, count=1)
+        overview = re.sub(r"(?:Close|Closing) (?:Date|date).*$", "", overview).strip()
+        region = next((st for st in AU_STATES if st.lower() in body.lower()), "Australie")
+        org = ""
+        mo = re.search(r"(?:Agency|Organisation)\s*:?\s*([^|.]{3,80})", body)
+        if mo:
+            org = mo.group(1).strip()
+        out.append({
+            "source": "austender", "source_ref": link.rsplit("/", 1)[-1], "kind": "tender",
+            "title_fr": title, "title_en": title, "summary_fr": summarize(overview), "summary_en": summarize(overview),
+            "org": org, "country": "Australie", "region": region, "regions_raw": region, "city": "",
+            "url_fr": link, "url_en": link, "notice_type": "Approach to market", "category": "",
+            "specialties": specialties_for(title + " " + body),
+            "published_at": _rss_date(it.get("pubDate") or ""), "closes_at": closes,
+        })
+    return out
+
+
+def collect_austender(conn) -> dict:
+    items = parse_austender(_rss_items(_fetch(AUSTENDER_RSS, timeout=90)))
+    n = _upsert_many(conn, items)
+    refs = [it["source_ref"] for it in items]
+    conn.execute("UPDATE opportunities SET status='closed' WHERE source='austender' AND status='published'"
+                 + (" AND source_ref NOT IN (%s)" % ",".join("?" * len(refs)) if refs else ""), refs)
+    return {"items": n}
+
+
+def parse_gets(items: list) -> list:
+    out = []
+    for it in items:
+        title = it.get("title") or ""
+        body = _strip_html(it.get("description") or "")
+        link = it.get("link") or it.get("guid") or ""
+        if not title or not link or not matches(title, body):
+            continue
+        m = re.search(r"Close date:\s*[A-Za-z]+,\s*([0-9]{1,2} [A-Za-z]+ [0-9]{4})", body)
+        closes = None
+        if m:
+            try:
+                closes = datetime.strptime(m.group(1), "%d %B %Y").date().isoformat()
+            except ValueError:
+                closes = None
+        mr = re.search(r"Region:\s*([A-Za-z' /-]{3,40}?)\s*(?:Overview|Categories|Open date|$)", body)
+        region = (mr.group(1).strip() if mr else "") or "Nouvelle-Zélande"
+        mo = re.search(r"Organisation:\s*(.{3,80}?)\s*(?:Open date|Close date|Categories)", body)
+        overview = body.split("Overview:", 1)[1] if "Overview:" in body else body
+        out.append({
+            "source": "gets", "source_ref": (re.search(r"id=(\d+)", link) or [None, link])[1], "kind": "tender",
+            "title_fr": title, "title_en": title, "summary_fr": summarize(overview), "summary_en": summarize(overview),
+            "org": (mo.group(1).strip() if mo else it.get("creator") or ""), "country": "Nouvelle-Zélande",
+            "region": region, "regions_raw": region, "city": "",
+            "url_fr": link.replace("//", "/").replace("https:/", "https://"), "url_en": link.replace("//", "/").replace("https:/", "https://"),
+            "notice_type": "Open tender", "category": "", "specialties": specialties_for(title + " " + body),
+            "published_at": _iso_date(it.get("date") or "") or _rss_date(it.get("pubDate") or ""), "closes_at": closes,
+        })
+    return out
+
+
+def collect_gets(conn) -> dict:
+    items = parse_gets(_rss_items(_fetch(GETS_RSS, timeout=120)))
+    n = _upsert_many(conn, items)
+    refs = [it["source_ref"] for it in items]
+    conn.execute("UPDATE opportunities SET status='closed' WHERE source='gets' AND status='published'"
+                 + (" AND source_ref NOT IN (%s)" % ",".join("?" * len(refs)) if refs else ""), refs)
+    return {"items": n}
+
+
+# ---------------------------------------------------------------------------
+# SECOP II (Colombie) : API Datos Abiertos (Socrata)
+# ---------------------------------------------------------------------------
+
+def parse_secop(rows: list) -> list:
+    out = []
+    for r in rows or []:
+        title = (r.get("nombre_del_procedimiento") or "").strip()
+        body = (r.get("descripci_n_del_procedimiento") or "")
+        ref = r.get("id_del_proceso") or r.get("referencia_del_proceso") or ""
+        if not title or not ref or not matches(title, body):
+            continue
+        if (r.get("estado_del_procedimiento") or "").lower() in ("cancelado", "terminado anormalmente después de convocado", "suspendido"):
+            continue
+        if not KEYWORDS.search(title):
+            continue   # SECOP : le mot métier doit être dans l'objet même, pas seulement dans la description
+        url = r.get("urlproceso") or {}
+        url = url.get("url") if isinstance(url, dict) else str(url)
+        if not url or "Login" in url:
+            url = "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=" + ref
+        out.append({
+            "source": "secop", "source_ref": ref, "kind": "tender",
+            "title_fr": title, "title_en": title, "summary_fr": summarize(body), "summary_en": summarize(body),
+            "org": (r.get("entidad") or "").strip(), "country": "Colombie",
+            "region": (r.get("departamento_entidad") or "Colombie").strip(), "regions_raw": r.get("departamento_entidad") or "",
+            "city": (r.get("ciudad_entidad") or "").strip(),
+            "url_fr": url, "url_en": url, "notice_type": r.get("modalidad_de_contratacion") or "", "category": "",
+            "specialties": specialties_for(title + " " + body),
+            "published_at": _iso_date(r.get("fecha_de_publicacion_del") or ""),
+            "closes_at": _iso_date(r.get("fecha_de_recepcion_de") or ""),
+        })
+    return out
+
+
+def collect_secop(conn) -> dict:
+    url = SECOP_API.format(today=date.today().isoformat() + "T00:00:00",
+                           since=(date.today() - timedelta(days=60)).isoformat() + "T00:00:00")
+    items = parse_secop(json.loads(_fetch(url, timeout=120).decode("utf-8")))
+    n = _upsert_many(conn, items)
+    return {"items": n}
+
+
+# ---------------------------------------------------------------------------
+# SAM.gov (États-Unis) : API officielle, clé gratuite requise (SAMGOV_API_KEY)
+# ---------------------------------------------------------------------------
+
+def parse_samgov(data: dict) -> list:
+    out = []
+    for o in (data or {}).get("opportunitiesData") or []:
+        title = o.get("title") or ""
+        body = o.get("description") if isinstance(o.get("description"), str) else ""
+        ref = o.get("noticeId") or ""
+        if not title or not ref or not matches(title, body or title):
+            continue
+        if o.get("active") not in (None, "Yes", True):
+            continue
+        pop = o.get("placeOfPerformance") or {}
+        state = ((pop.get("state") or {}).get("code") or "") if isinstance(pop.get("state"), dict) else (pop.get("state") or "")
+        out.append({
+            "source": "samgov", "source_ref": ref, "kind": "tender",
+            "title_fr": title, "title_en": title, "summary_fr": summarize(body), "summary_en": summarize(body),
+            "org": (o.get("fullParentPathName") or o.get("department") or "").split(".")[0].strip(), "country": "États-Unis",
+            "region": US_STATES.get(state, "États-Unis"), "regions_raw": state,
+            "city": ((pop.get("city") or {}).get("name") or "") if isinstance(pop.get("city"), dict) else "",
+            "url_fr": o.get("uiLink") or f"https://sam.gov/opp/{ref}/view", "url_en": o.get("uiLink") or f"https://sam.gov/opp/{ref}/view",
+            "notice_type": o.get("type") or "", "category": "", "specialties": specialties_for(title + " " + (body or "")),
+            "published_at": _iso_date(o.get("postedDate") or ""), "closes_at": _iso_date(o.get("responseDeadLine") or ""),
+        })
+    return out
+
+
+def collect_samgov(conn) -> dict:
+    if not SAMGOV_KEY:
+        return {"skipped": "SAMGOV_API_KEY absente"}
+    frm = (date.today() - timedelta(days=60)).strftime("%m/%d/%Y")
+    to = date.today().strftime("%m/%d/%Y")
+    items: list = []
+    for kw in ("drone", "UAS", "unmanned aircraft", "lidar", "photogrammetry", "aerial survey"):
+        data = json.loads(_fetch(SAMGOV_API.format(key=SAMGOV_KEY, frm=frm, to=to, kw=kw.replace(" ", "%20")), timeout=90).decode("utf-8"))
+        items.extend(parse_samgov(data))
+    seen, uniq = set(), []
+    for it in items:
+        if it["source_ref"] not in seen:
+            seen.add(it["source_ref"]); uniq.append(it)
+    n = _upsert_many(conn, uniq)
+    return {"items": n}
+
+
+# ---------------------------------------------------------------------------
 # Vérification des liens : un avis dont la page ne répond pas n'est pas montré
 # ---------------------------------------------------------------------------
 
@@ -762,7 +1004,9 @@ def collect(verify: bool = True) -> dict:
     report: dict = {}
     state = _load_state()
     for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
-                     ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder)):
+                     ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder),
+                     ("austender", collect_austender), ("gets", collect_gets), ("secop", collect_secop),
+                     ("samgov", collect_samgov)):
         try:
             with db.standalone() as conn:
                 report[name] = fn(conn)

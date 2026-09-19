@@ -48,6 +48,31 @@ def test_parse_seao():
     assert it["url_fr"] == "https://seao.gouv.qc.ca/avis/1" and "3d" in it["specialties"]
 
 
+AU_XML = b"""<rss><channel><item><title>DAF-2026-44: Aerial LiDAR survey of floodplains</title><link>https://www.tenders.gov.au/Atm/Show/ae88</link><description>&lt;p&gt;Agency: Department of Agriculture. Capture airborne LiDAR and orthophoto imagery by drone over New South Wales floodplains. Close Date: 15-Oct-2026 2:00 pm&lt;/p&gt;</description><pubDate>Tue, 25 Aug 2026 00:00:00 GMT</pubDate></item>
+<item><title>DFAT-1111: Mid-Term Review</title><link>https://www.tenders.gov.au/Atm/Show/x</link><description>evaluation team</description></item></channel></rss>"""
+NZ_XML = b"""<rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><item><title>RFP 2026-77 Drone inspection of bridges</title><link>https://www.gets.govt.nz//NZTA/ExternalTenderDetails.htm?id=34580891</link><description>&lt;table&gt;&lt;tr&gt;&lt;td&gt;Organisation: &lt;/td&gt;&lt;td&gt;Waka Kotahi&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Close date: &lt;/td&gt;&lt;td&gt;Thursday, 15 October 2026 4:00 PM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Region: &lt;/td&gt;&lt;td&gt;Canterbury&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Overview: &lt;/td&gt;&lt;td&gt;UAV-based inspection of 40 bridges with photogrammetry deliverables.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</description><dc:date>2026-08-03T20:00:00Z</dc:date></item></channel></rss>"""
+
+
+def _secop_rows():
+    return [{"nombre_del_procedimiento": "LEVANTAMIENTO TOPOGRAFICO CON DRON Y FOTOGRAMETRIA", "descripci_n_del_procedimiento": "Levantamiento aereo con dron RTK",
+             "id_del_proceso": "CO1.REQ.1", "entidad": "ALCALDIA DE MEDELLIN", "departamento_entidad": "Antioquia", "ciudad_entidad": "Medellín",
+             "urlproceso": {"url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.1"},
+             "modalidad_de_contratacion": "Mínima cuantía", "fecha_de_publicacion_del": "2026-09-10T00:00:00.000", "fecha_de_recepcion_de": "2026-09-25T00:00:00.000"},
+            {"nombre_del_procedimiento": "COMPRA DE SILLAS", "descripci_n_del_procedimiento": "sillas", "id_del_proceso": "CO1.REQ.2", "urlproceso": {"url": "x"}}]
+
+
+def test_parse_sources_monde():
+    au = opp.parse_austender(opp._rss_items(AU_XML))
+    assert len(au) == 1 and au[0]["closes_at"] == "2026-10-15" and au[0]["region"] == "New South Wales" and au[0]["org"] == "Department of Agriculture"
+    nz = opp.parse_gets(opp._rss_items(NZ_XML))
+    assert len(nz) == 1 and nz[0]["closes_at"] == "2026-10-15" and nz[0]["region"] == "Canterbury" and nz[0]["url_fr"].startswith("https://www.gets.govt.nz/NZTA/")
+    co = opp.parse_secop(_secop_rows())
+    assert len(co) == 1 and co[0]["region"] == "Antioquia" and co[0]["closes_at"] == "2026-09-25" and "topographie" in co[0]["specialties"]
+    us = opp.parse_samgov({"opportunitiesData": [{"noticeId": "abc", "title": "UAS LiDAR mapping services", "active": "Yes", "responseDeadLine": "2026-10-01",
+                                                 "uiLink": "https://sam.gov/opp/abc/view", "fullParentPathName": "DEPT OF THE INTERIOR.BLM", "placeOfPerformance": {"state": {"code": "CO"}}}]})
+    assert len(us) == 1 and us[0]["region"] == "Colorado" and us[0]["country"] == "États-Unis"
+
+
 def _ted_notices():
     html = {k: f"https://ted.europa.eu/{v}/notice/-/detail/604138-2026" for k, v in
             (("ENG", "en"), ("FRA", "fr"), ("DEU", "de"))}
@@ -109,6 +134,12 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return json.dumps({"results": _boamp_records()}).encode("utf-8")
         if url.startswith("https://www.contractsfinder.service.gov.uk/"):
             return json.dumps({"releases": _uk_releases(), "links": {}}).encode("utf-8")
+        if url == opp.AUSTENDER_RSS:
+            return AU_XML
+        if url == opp.GETS_RSS:
+            return NZ_XML
+        if url.startswith("https://www.datos.gov.co/"):
+            return json.dumps(_secop_rows()).encode("utf-8")
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
@@ -117,7 +148,9 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     report = opp.collect()
     assert report["canadabuys"]["items"] == 1 and report["seao"]["items"] == 1
     assert report["ted"]["items"] == 1 and report["boamp"]["items"] == 1 and report["contractsfinder"]["items"] == 1
-    assert report["published"] == 4   # 5 fiches, moins celle au lien mort
+    assert report["austender"]["items"] == 1 and report["gets"]["items"] == 1 and report["secop"]["items"] == 1
+    assert "skipped" in report["samgov"]   # pas de clé SAM.gov en test
+    assert report["published"] == 7   # 8 fiches, moins celle au lien mort
     # Pays : filtre et titre dans la langue du visiteur (TED)
     fr_page = client.get("/opportunites?country=Allemagne").get_data(as_text=True)
     assert "LiDAR-Sensorpaket" in fr_page and "Levé LiDAR" not in fr_page and "ted.europa.eu/fr/" in fr_page

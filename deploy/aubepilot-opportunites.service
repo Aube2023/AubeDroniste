@@ -2,7 +2,7 @@
 # et courriel hebdomadaire du lundi. Installé dans /etc/systemd/system/ ; la
 # minuterie associée est aubepilot-opportunites.timer.
 [Unit]
-Description=AubePilot - collecte des opportunites (CanadaBuys, SEAO)
+Description=AubePilot - collecte des opportunites (9 portails publics, cle SAM.gov optionnelle)
 After=network-online.target
 Wants=network-online.target
 
