@@ -665,11 +665,14 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   font-size: 1.1rem; line-height: 1.15;
   margin-bottom: 4px;
 }
+/* Ville en petit, casse normale, à côté du pays. */
+.pilot-card .loc .loc-city { text-transform: none; letter-spacing: .02em; }
 .pilot-card .loc {
   font: 500 11px/1.4 var(--mono);
   color: var(--ink-dim);
   letter-spacing: .08em;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 .pilot-card .headline {
   font-family: var(--serif); font-style: italic;

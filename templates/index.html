@@ -157,7 +157,7 @@
         {% endif %}
         <div>
           <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
-          <div class="loc">{{ p.country }}</div>
+          <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}</div>
           {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
         </div>
       </div>
