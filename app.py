@@ -1764,7 +1764,7 @@ def dashboard():
         my_missions=services.list_missions_by_client(user["id"]) if is_client else [],
         my_bids=services.list_missions_by_pilot(user["id"]) if is_pilot else [],
         my_requests=services.list_requests_for_pilot(user["id"]) if is_pilot else [],
-        my_opportunities=services.opportunities_for_user(user, getattr(g, "lang", i18n.DEFAULT)) if is_pilot else [],
+        my_opportunities=services.opportunities_for_user(user, getattr(g, "lang", i18n.DEFAULT), limit=4) if is_pilot else [],
         my_bookings=services.list_bookings_for(user["id"]),
         unread=services.unread_count(user["id"]),
         admin_new_messages=(services.count_contact_messages("new")

@@ -153,7 +153,7 @@
       <div class="coords">{{ o.org }}</div>
       <div class="footer">
         <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
-        <span>{{ t('opp.source') }} {{ o.source_label }}</span>
+        <span>{{ o.source_label }}</span>
       </div>
     </a>
     {% endfor %}
