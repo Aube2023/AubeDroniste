@@ -35,6 +35,12 @@
       <a href="{{ url_for('register') }}?role=pilot" class="hero-link">{{ t('home.cta_pilot')|replace('→', '')|trim }} →</a>
     </div>
   </div>
+  {# Fait au Canada et au Québec : en bas à droite du bandeau (drapeau canadien
+     en emoji comme le menu des langues, fleurdelisé en SVG). #}
+  <div class="made-in" role="img" title="{{ t('nav.made_in') }}" aria-label="{{ t('nav.made_in') }}">
+    <span class="ca">🇨🇦</span><svg class="qc-flag" viewBox="0 0 900 600" aria-hidden="true"><rect width="900" height="600" fill="#003da5"/><rect x="375" width="150" height="600" fill="#fff"/><rect y="225" width="900" height="150" fill="#fff"/><g fill="#fff"><use href="#qc-lis" x="112" y="37"/><use href="#qc-lis" x="637" y="37"/><use href="#qc-lis" x="112" y="412"/><use href="#qc-lis" x="637" y="412"/></g></svg>
+    <span class="made-in-txt">{{ t('nav.made_in') }}</span>
+  </div>
 </section>
 
 <div class="notam-strip">
