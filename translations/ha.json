@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "Ayyuka {n}",
   "tpl.n_offres": "Tayi {n}",
   "tpl.n_appareils": "Jirage {n}",
-  "home.lead_short": "Duba matuƙan drone →"
+  "home.lead_short": "Duba matuƙan drone →",
+  "nav.made_in": "An yi shi a Kanada da Québec"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

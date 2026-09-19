@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "案件{n}件",
   "tpl.n_offres": "提案{n}件",
   "tpl.n_appareils": "機体{n}機",
-  "home.lead_short": "ドローンパイロットを見る →"
+  "home.lead_short": "ドローンパイロットを見る →",
+  "nav.made_in": "カナダ・ケベック製"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

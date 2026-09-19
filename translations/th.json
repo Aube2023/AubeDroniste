@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "ภารกิจ {n} รายการ",
   "tpl.n_offres": "ข้อเสนอ {n} รายการ",
   "tpl.n_appareils": "อากาศยาน {n} ลำ",
-  "home.lead_short": "ดูนักบินโดรน →"
+  "home.lead_short": "ดูนักบินโดรน →",
+  "nav.made_in": "ผลิตในแคนาดาและควิเบก"
  },
  "seo": {
   "home.title": "จ้างนักบินโดรนที่ได้รับใบอนุญาต — ใบเสนอราคาฟรี | AubePilot",

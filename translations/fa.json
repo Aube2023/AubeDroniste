@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} مأموریت",
   "tpl.n_offres": "{n} پیشنهاد",
   "tpl.n_appareils": "{n} پهپاد",
-  "home.lead_short": "مشاهدهٔ خلبانان پهپاد →"
+  "home.lead_short": "مشاهدهٔ خلبانان پهپاد →",
+  "nav.made_in": "ساخته‌شده در کانادا و کبک"
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

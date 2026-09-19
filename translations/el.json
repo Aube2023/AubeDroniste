@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} αποστολές",
   "tpl.n_offres": "{n} προσφορές",
   "tpl.n_appareils": "{n} αεροσκάφη",
-  "home.lead_short": "Δείτε τους χειριστές drone →"
+  "home.lead_short": "Δείτε τους χειριστές drone →",
+  "nav.made_in": "Φτιαγμένο στον Καναδά και στο Κεμπέκ"
  },
  "seo": {
   "home.title": "Προσλάβετε πιστοποιημένο χειριστή drone — Δωρεάν προσφορές | AubePilot",

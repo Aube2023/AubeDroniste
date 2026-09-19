@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "미션 {n}건",
   "tpl.n_offres": "견적 {n}건",
   "tpl.n_appareils": "기체 {n}대",
-  "home.lead_short": "드론 조종자 보기 →"
+  "home.lead_short": "드론 조종자 보기 →",
+  "nav.made_in": "캐나다 퀘벡에서 만들었습니다"
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",

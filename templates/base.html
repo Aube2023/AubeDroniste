@@ -82,7 +82,7 @@
 <a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
 <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
   <!-- Marque AubePilot : épingle, ruban, point (source : static/brand/logo-mark.svg) -->
-  <symbol id="ap-mark" viewBox="0 0 256 256">
+  <symbol id="qc-lis" viewBox="0 0 100 100" width="150" height="150"><path d="M50 4 C42 20 40 32 50 48 C60 32 58 20 50 4 Z M50 50 C38 40 18 40 14 54 C22 64 40 64 50 56 C60 64 78 64 86 54 C82 40 62 40 50 50 Z M42 60 h16 l-3 32 h-10 z M30 84 h40 v6 h-40 z"/></symbol><symbol id="ap-mark" viewBox="0 0 256 256">
     <defs>
       <path id="ap-pin" d="M24.7 147.9A81 81 0 1 1 155.3 147.9L95.2 229.8A6.5 6.5 0 0 1 84.8 229.8ZM56 100a34 34 0 1 0 68 0a34 34 0 1 0-68 0Z"/>
       <path id="ap-k" d="M14.3 204.8C17.6 202.4 27.6 195.1 33.8 190.7C39.9 186.3 47.3 181 51.4 178.3C55.5 175.6 54.4 177.1 58.5 174.3C62.6 171.6 68.8 167.9 76.1 162C83.5 156.1 93.8 146.5 102.6 139C111.4 131.6 121.7 122.8 129.1 117.4C136.5 112 140.9 109.9 146.8 106.8C152.6 103.7 158.5 101.1 164.4 98.9C170.3 96.7 175.6 94.7 182.1 93.6C188.5 92.4 199.7 92.1 203.3 91.8"/>
@@ -148,6 +148,11 @@
       <span class="label-dark">{{ t('nav.theme_dark') }}</span>
       <span class="label-light">{{ t('nav.theme_light') }}</span>
     </button>
+    {# Fait au Canada et au Québec : drapeau canadien (emoji, comme le menu des
+       langues) et fleurdelisé en SVG (pas d'emoji pour le Québec). #}
+    <span class="made-in" role="img" title="{{ t('nav.made_in') }}" aria-label="{{ t('nav.made_in') }}">
+      <span class="ca">🇨🇦</span><svg class="qc-flag" viewBox="0 0 900 600" aria-hidden="true"><rect width="900" height="600" fill="#003da5"/><rect x="375" width="150" height="600" fill="#fff"/><rect y="225" width="900" height="150" fill="#fff"/><g fill="#fff"><use href="#qc-lis" x="112" y="37"/><use href="#qc-lis" x="637" y="37"/><use href="#qc-lis" x="112" y="412"/><use href="#qc-lis" x="637" y="412"/></g></svg>
+    </span>
   </nav>
   {% if lang_suggestion %}
   {# Langue du navigateur differente de la page : on propose, on n'impose pas #}

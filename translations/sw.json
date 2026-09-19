@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "Kazi {n}",
   "tpl.n_offres": "Ofa {n}",
   "tpl.n_appareils": "Ndege {n}",
-  "home.lead_short": "Tazama marubani wa droni →"
+  "home.lead_short": "Tazama marubani wa droni →",
+  "nav.made_in": "Imetengenezwa Kanada na Québec"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

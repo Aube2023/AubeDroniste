@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} missão(ões)",
   "tpl.n_offres": "{n} proposta(s)",
   "tpl.n_appareils": "{n} aeronave(s)",
-  "home.lead_short": "Ver os pilotos de drone →"
+  "home.lead_short": "Ver os pilotos de drone →",
+  "nav.made_in": "Feito no Canadá e no Quebec"
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} Auftrag/Aufträge",
   "tpl.n_offres": "{n} Angebot(e)",
   "tpl.n_appareils": "{n} Fluggerät(e)",
-  "home.lead_short": "Drohnenpiloten ansehen →"
+  "home.lead_short": "Drohnenpiloten ansehen →",
+  "nav.made_in": "Gemacht in Kanada und Québec"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

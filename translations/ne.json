@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} मिसन",
   "tpl.n_offres": "{n} प्रस्ताव",
   "tpl.n_appareils": "{n} वायुयान",
-  "home.lead_short": "ड्रोन पाइलटहरू हेर्नुहोस् →"
+  "home.lead_short": "ड्रोन पाइलटहरू हेर्नुहोस् →",
+  "nav.made_in": "क्यानाडा र क्युबेकमा निर्मित"
  },
  "seo": {
   "home.title": "प्रमाणित ड्रोन पाइलट भाडामा — निःशुल्क कोटेसन | AubePilot",

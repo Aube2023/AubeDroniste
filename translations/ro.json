@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} misiuni",
   "tpl.n_offres": "{n} oferte",
   "tpl.n_appareils": "{n} aeronave",
-  "home.lead_short": "Vezi piloții de dronă →"
+  "home.lead_short": "Vezi piloții de dronă →",
+  "nav.made_in": "Făcut în Canada și Québec"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} 个任务",
   "tpl.n_offres": "{n} 个报价",
   "tpl.n_appareils": "{n} 架无人机",
-  "home.lead_short": "查看无人机飞手 →"
+  "home.lead_short": "查看无人机飞手 →",
+  "nav.made_in": "加拿大魁北克制造"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

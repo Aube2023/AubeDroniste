@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} opdrachten",
   "tpl.n_offres": "{n} offertes",
   "tpl.n_appareils": "{n} toestellen",
-  "home.lead_short": "Bekijk de dronepiloten →"
+  "home.lead_short": "Bekijk de dronepiloten →",
+  "nav.made_in": "Gemaakt in Canada en Québec"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

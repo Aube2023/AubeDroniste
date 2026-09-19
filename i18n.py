@@ -280,6 +280,7 @@ _T = {
     # ---- Navigation
     "nav.home":         {"fr": "Accueil",            "en": "Home",     "es": "Inicio",       "ru": "Главная",              "hi": "मुख्य पृष्ठ", "uk": "Головна", "tr": "Ana sayfa", "ur": "صفحۂ اول", "bn": "হোম"},
     "nav.publish_short":{"fr": "Publier",            "en": "Post",     "es": "Publicar",     "ru": "Опубликовать",         "hi": "पोस्ट करें", "uk": "Опублікувати", "tr": "Yayınla", "ur": "شائع کریں", "bn": "পোস্ট করুন"},
+    "nav.made_in":      {"fr": "Fait au Canada et au Québec", "en": "Made in Canada and Québec", "es": "Hecho en Canadá y Quebec", "ru": "Сделано в Канаде и Квебеке", "hi": "कनाडा और क्यूबेक में निर्मित", "uk": "Зроблено в Канаді та Квебеку", "tr": "Kanada ve Québec\'te yapıldı", "ur": "کینیڈا اور کیوبیک میں تیار کردہ", "bn": "কানাডা ও কুইবেকে তৈরি"},
     "nav.pilots":       {"fr": "Pilotes",            "en": "Pilots",   "es": "Pilotos",      "ru": "Пилоты",               "hi": "पायलट", "uk": "Пілоти", "tr": "Pilotlar", "ur": "پائلٹ", "bn": "পাইলট"},
     "nav.missions":     {"fr": "Missions",           "en": "Missions", "es": "Misiones",     "ru": "Задания",              "hi": "मिशन", "uk": "Місії", "tr": "Görevler", "ur": "مشن", "bn": "মিশন"},
     "nav.messages": {"fr": "Messages", "en": "Messages", "es": "Mensajes", "ru": "Сообщения", "hi": "संदेश", "uk": "Повідомлення", "tr": "Mesajlar", "ur": "پیغامات", "bn": "বার্তা"},

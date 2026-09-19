@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "Zlecenia: {n}",
   "tpl.n_offres": "Oferty: {n}",
   "tpl.n_appareils": "Statki powietrzne: {n}",
-  "home.lead_short": "Zobacz pilotów dronów →"
+  "home.lead_short": "Zobacz pilotów dronów →",
+  "nav.made_in": "Stworzone w Kanadzie i Quebecu"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

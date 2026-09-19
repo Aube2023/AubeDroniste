@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} משימות",
   "tpl.n_offres": "{n} הצעות",
   "tpl.n_appareils": "{n} כלי טיס",
-  "home.lead_short": "לצפייה בטייסי רחפנים ←"
+  "home.lead_short": "לצפייה בטייסי רחפנים ←",
+  "nav.made_in": "נוצר בקנדה ובקוויבק"
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",

@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} misyon",
   "tpl.n_offres": "{n} alok",
   "tpl.n_appareils": "{n} aircraft",
-  "home.lead_short": "Tingnan ang mga piloto ng drone →"
+  "home.lead_short": "Tingnan ang mga piloto ng drone →",
+  "nav.made_in": "Gawa sa Canada at Québec"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",

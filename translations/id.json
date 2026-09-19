@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} misi",
   "tpl.n_offres": "{n} penawaran",
   "tpl.n_appareils": "{n} pesawat",
-  "home.lead_short": "Lihat pilot drone →"
+  "home.lead_short": "Lihat pilot drone →",
+  "nav.made_in": "Dibuat di Kanada dan Québec"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

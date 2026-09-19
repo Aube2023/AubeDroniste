@@ -1282,6 +1282,11 @@ img.avatar { object-fit: cover; }
 
 /* ============ Theme toggle ============ */
 
+/* Drapeaux « Fait au Canada et au Québec », tout à droite de la barre. */
+.made-in { display: inline-flex; align-items: center; gap: 5px; line-height: 1; cursor: default; }
+.made-in .ca { font-size: 17px; }
+.made-in .qc-flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 0 0 1px var(--rule); }
+@media (max-width: 760px) { .topnav { gap: 8px; } .made-in { gap: 3px; } .made-in .qc-flag { width: 21px; height: 14px; } }
 .theme-toggle {
   display: inline-flex; align-items: center; gap: 8px;
   background: transparent;

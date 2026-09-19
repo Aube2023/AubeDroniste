@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} nhiệm vụ",
   "tpl.n_offres": "{n} đề xuất",
   "tpl.n_appareils": "{n} thiết bị bay",
-  "home.lead_short": "Xem các phi công drone →"
+  "home.lead_short": "Xem các phi công drone →",
+  "nav.made_in": "Làm tại Canada và Québec"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

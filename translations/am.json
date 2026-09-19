@@ -1220,7 +1220,8 @@
   "tpl.n_missions": "{n} ተልዕኮዎች",
   "tpl.n_offres": "{n} ማቅረቢያዎች",
   "tpl.n_appareils": "{n} አውሮፕላኖች",
-  "home.lead_short": "የድሮን አብራሪዎችን ይመልከቱ →"
+  "home.lead_short": "የድሮን አብራሪዎችን ይመልከቱ →",
+  "nav.made_in": "በካናዳ እና በኩቤክ የተሰራ"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",
