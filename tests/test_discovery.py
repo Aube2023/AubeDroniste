@@ -299,7 +299,7 @@ def test_home_shows_new_sections(client):
     html = client.get("/").data.decode()
     assert 'name="near"' in html                       # recherche code postal
     assert 'id="comment-ca-marche"' in html
-    assert 'id="pourquoi"' in html and 'class="trust-grid"' in html
+    assert 'id="pourquoi"' not in html                # bloc « Pourquoi AubePilot » retiré le 2026-09-19 (redondant)
     assert 'id="rejoindre"' in html and 'class="join-card"' in html
     assert 'class="faq-item"' in html and 'href="/faq"' in html
     assert 'href="/contact"' in html
