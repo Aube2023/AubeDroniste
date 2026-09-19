@@ -3440,6 +3440,10 @@ def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
             # personnelle, on l'affiche tel quel sur la carte.
             "name": public_name(p),
             "no": p.get("pilot_no"),
+            "city": p.get("city") or "",
+            # Tarif horaire affiche, ou rien (« sur devis » se lit sur la fiche).
+            "rate": (f"{int(p['hourly_rate'])} {p.get('p_currency') or ''}/h".strip()
+                     if p.get("hourly_rate") else ""),
             # Photo publique (meme route /media que les cartes de l'annuaire).
             "avatar": ("/media/" + p["avatar_path"][8:])
                       if (p.get("avatar_path") or "").startswith("uploads/") else None,

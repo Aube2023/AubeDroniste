@@ -520,9 +520,9 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     var no = p.no ? '<div class="aube-pop-muted">nº ' + esc(p.no) + '</div>' : '';
     return '<div class="aube-pop">' + popHead(p.kind, verif) +
       '<div class="aube-pop-body"><div class="aube-pop-who">' + photo + '<div><b>' + title + '</b>' + no + '</div></div>' +
-      (p.country ? '<div class="aube-pop-muted">' + esc(p.country) + '</div>' : '') +
+      (p.country ? '<div class="aube-pop-muted">' + esc(p.country) + (p.city ? ' · ' + esc(p.city) : '') + '</div>' : '') +
       (p.headline ? '<div class="aube-pop-quote">« ' + esc(p.headline) + ' »</div>' : '') +
-      '<div class="aube-pop-muted">' + stars + '</div>' +
+      '<div class="aube-pop-muted">' + stars + (p.rate ? ' · ' + esc(p.rate) : '') + '</div>' +
       '<a class="aube-pop-cta" style="background:' + color + '" href="' + LANG_PREFIX + '/pilotes/' + p.id + '">' + L10N.viewProfile + '</a></div></div>';
   }
   function popupMission(m) {
@@ -634,8 +634,9 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
 
   function addSingle(pt) {
     var d = pinEl(pt.p.kind, {verified: pt.p.verified, size: 30});
+    // Pas de météo sur un pilote (elle décrit son domicile, pas un chantier) ;
+    // elle reste sur les missions, où elle donne les conditions de vol sur place.
     var pop = new maplibregl.Popup({offset: 46, maxWidth: '270px'}).setHTML(popupPilot(pt.p));
-    attachPopupMeteo(pop, pt.lngLat[1], pt.lngLat[0]);
     var mk = new maplibregl.Marker({element: d, anchor: 'bottom'}).setLngLat(pt.lngLat).setPopup(pop).addTo(map);
     markers[pt.p.id] = {type: 'single', marker: mk, el: d, lngLat: pt.lngLat};
     liveMarkers.push(mk);

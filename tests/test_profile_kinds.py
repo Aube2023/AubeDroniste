@@ -181,6 +181,7 @@ def test_map_markers_expose_photo_and_number(client, make_user):
     assert by_id[u["id"]]["avatar"] == "/media/avatar_%d.jpg" % u["id"]
     assert by_id[v["id"]]["avatar"] is None
     assert by_id[u["id"]]["no"] and by_id[v["id"]]["no"] == by_id[u["id"]]["no"] + 1
+    assert "city" in by_id[u["id"]] and "rate" in by_id[u["id"]]
 
 
 def test_photo_de_profil_cliquable_en_grand(client, make_user):
