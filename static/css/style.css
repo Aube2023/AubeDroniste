@@ -2530,16 +2530,19 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 .world-grid { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 980px) { .world-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .world-grid { grid-template-columns: 1fr; } }
+/* Brevets reconnus : étiquette, grille de pastilles à cellules égales (rangées
+   alignées quel que soit le nom), puis une ligne de pied « + N autres » / lien. */
 .world-auths {
   margin-top: 22px; padding: 18px 20px;
   border: 1px solid var(--rule); border-radius: 14px; background: var(--paper-2);
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+  display: grid; gap: 14px;
 }
 .world-auths .lbl { font: 600 11px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
-.world-auths .auth-chips { margin: 0; flex: 1 1 320px; }
-.world-auths .auth-chip { font-size: 11px; padding: 7px 10px; }
+.world-auths .auth-chips { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.world-auths .auth-chip { font-size: 11px; padding: 8px 10px; justify-content: center; white-space: nowrap; }
 .world-auths .auth-chip.more { color: var(--ink-soft); border-color: var(--rule); background: transparent; }
-.world-auths .ghost { margin-inline-start: auto; }
+.world-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+@media (max-width: 560px) { .world-auths .auth-chips { grid-template-columns: repeat(2, 1fr); } .world-auths .auth-chip { font-size: 10px; padding: 8px 6px; } }
 .part107-head .cta-row { margin-top: 22px; }
 .part107-grid { margin: 8px 0 40px; }
 

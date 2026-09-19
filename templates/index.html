@@ -77,9 +77,11 @@
     <span class="lbl">{{ t('home.world.auth_label') }}</span>
     <div class="auth-chips">
       {% for code in shown %}<span class="auth-chip" title="{{ auth_label(code) }}">✓ {{ auth_chip(code) }}</span>{% endfor %}
-      <span class="auth-chip more">{{ t('home.world.auth_more', n=(licence_authorities|length) - (shown|length) - 1) }}</span>
     </div>
-    <a class="ghost" href="{{ url_for('pilots_search') }}">{{ t('home.world.all') }}</a>
+    <div class="world-foot">
+      <span class="auth-chip more">{{ t('home.world.auth_more', n=(licence_authorities|length) - (shown|length) - 1) }}</span>
+      <a class="ghost" href="{{ url_for('pilots_search') }}">{{ t('home.world.all') }}</a>
+    </div>
   </div>
 </section>
 
