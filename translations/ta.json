@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} விமானிகள்",
   "tpl.n_missions": "{n} பணிகள்",
   "tpl.n_offres": "{n} விலைப்புள்ளிகள்",
-  "tpl.n_appareils": "{n} வானூர்திகள்"
+  "tpl.n_appareils": "{n} வானூர்திகள்",
+  "home.lead_short": "ட்ரோன் விமானிகளைப் பார்க்க →"
  },
  "seo": {
   "home.title": "சான்றளிக்கப்பட்ட ட்ரோன் விமானி — இலவச விலைப்புள்ளி | AubePilot",

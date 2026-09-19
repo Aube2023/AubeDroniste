@@ -377,6 +377,7 @@ _T = {
                            "bn": "মন্ট্রিয়লে তৈরি"},
 
     # ---- Landing
+    "home.lead_short":  {"fr": "Voir les pilotes de drone →", "en": "See drone pilots →", "es": "Ver los pilotos de drones →", "ru": "Смотреть пилотов дронов →", "hi": "ड्रोन पायलट देखें →", "uk": "Переглянути пілотів дронів →", "tr": "Drone pilotlarını gör →", "ur": "ڈرون پائلٹ دیکھیں ←", "bn": "ড্রোন পাইলট দেখুন →"},
     "home.eyebrow":     {"fr": "Le réseau mondial des pilotes de drone, depuis 2026", "en": "The worldwide drone pilot network, since 2026", "es": "La red mundial de pilotos de drones, desde 2026", "ru": "Всемирная сеть пилотов дронов, с 2026 года", "hi": "ड्रोन पायलटों का वैश्विक नेटवर्क, 2026 से", "uk": "Всесвітня мережа пілотів дронів, з 2026 року", "tr": "Dünya çapında drone pilotu ağı, 2026'dan beri", "ur": "ڈرون پائلٹس کا عالمی نیٹ ورک، 2026 سے", "bn": "ড্রোন পাইলটদের বিশ্বব্যাপী নেটওয়ার্ক, 2026 সাল থেকে"},
     "home.h1_a":        {"fr": "Le ciel n'a pas de frontière.",
                          "en": "The sky knows no border.",

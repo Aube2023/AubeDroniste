@@ -7,7 +7,7 @@
   <div class="hero-inner">
     <span class="hero-badge"><i></i>{{ t('home.eyebrow') }}</span>
     <h1>{{ t('home.h1_a') }}<br>{{ t('home.h1_b') }} <em>{{ t('home.h1_b_em') }}</em></h1>
-    <p class="lead">{{ t('home.lead') }}</p>
+    <p class="lead"><a class="hero-link" href="{{ url_for('pilots_search') }}">{{ t('home.lead_short') }}</a></p>
     <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}" aria-label="{{ t('home.search_title') }}">
       <label class="hero-field grow">
         <span>{{ t('home.search_near') }}</span>

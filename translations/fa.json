@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} خلبان",
   "tpl.n_missions": "{n} مأموریت",
   "tpl.n_offres": "{n} پیشنهاد",
-  "tpl.n_appareils": "{n} پهپاد"
+  "tpl.n_appareils": "{n} پهپاد",
+  "home.lead_short": "مشاهدهٔ خلبانان پهپاد →"
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

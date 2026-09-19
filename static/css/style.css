@@ -543,6 +543,8 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   font: 600 14px/1.4 var(--display); color: #d5d7e2;
 }
 .hero-link:hover { color: #ffffff; text-decoration: underline; text-underline-offset: 4px; }
+/* Ligne unique sous le titre (« Voir les pilotes de drone → ») : taille de l'accroche. */
+.hero .lead .hero-link { font-size: inherit; color: #e8e9f2; }
 @media (max-width: 760px) {
   .hero-band { padding: 48px 18px 40px; margin-top: -32px; }
   .hero-search { flex-direction: column; border-radius: 14px; padding: 8px; }

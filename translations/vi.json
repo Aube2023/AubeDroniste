@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} phi công",
   "tpl.n_missions": "{n} nhiệm vụ",
   "tpl.n_offres": "{n} đề xuất",
-  "tpl.n_appareils": "{n} thiết bị bay"
+  "tpl.n_appareils": "{n} thiết bị bay",
+  "home.lead_short": "Xem các phi công drone →"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} piloți",
   "tpl.n_missions": "{n} misiuni",
   "tpl.n_offres": "{n} oferte",
-  "tpl.n_appareils": "{n} aeronave"
+  "tpl.n_appareils": "{n} aeronave",
+  "home.lead_short": "Vezi piloții de dronă →"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} piloti",
   "tpl.n_missions": "{n} missioni",
   "tpl.n_offres": "{n} offerte",
-  "tpl.n_appareils": "{n} velivoli"
+  "tpl.n_appareils": "{n} velivoli",
+  "home.lead_short": "Vedi i piloti di drone →"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",

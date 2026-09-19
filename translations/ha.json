@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "Matuƙa {n}",
   "tpl.n_missions": "Ayyuka {n}",
   "tpl.n_offres": "Tayi {n}",
-  "tpl.n_appareils": "Jirage {n}"
+  "tpl.n_appareils": "Jirage {n}",
+  "home.lead_short": "Duba matuƙan drone →"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

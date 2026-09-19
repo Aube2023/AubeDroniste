@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "Marubani {n}",
   "tpl.n_missions": "Kazi {n}",
   "tpl.n_offres": "Ofa {n}",
-  "tpl.n_appareils": "Ndege {n}"
+  "tpl.n_appareils": "Ndege {n}",
+  "home.lead_short": "Tazama marubani wa droni →"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} piloten",
   "tpl.n_missions": "{n} opdrachten",
   "tpl.n_offres": "{n} offertes",
-  "tpl.n_appareils": "{n} toestellen"
+  "tpl.n_appareils": "{n} toestellen",
+  "home.lead_short": "Bekijk de dronepiloten →"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

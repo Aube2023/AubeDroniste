@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} 位飞手",
   "tpl.n_missions": "{n} 个任务",
   "tpl.n_offres": "{n} 个报价",
-  "tpl.n_appareils": "{n} 架无人机"
+  "tpl.n_appareils": "{n} 架无人机",
+  "home.lead_short": "查看无人机飞手 →"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

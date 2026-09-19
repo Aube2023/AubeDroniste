@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "Piloci: {n}",
   "tpl.n_missions": "Zlecenia: {n}",
   "tpl.n_offres": "Oferty: {n}",
-  "tpl.n_appareils": "Statki powietrzne: {n}"
+  "tpl.n_appareils": "Statki powietrzne: {n}",
+  "home.lead_short": "Zobacz pilotów dronów →"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

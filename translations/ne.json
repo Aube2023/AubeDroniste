@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} पाइलट",
   "tpl.n_missions": "{n} मिसन",
   "tpl.n_offres": "{n} प्रस्ताव",
-  "tpl.n_appareils": "{n} वायुयान"
+  "tpl.n_appareils": "{n} वायुयान",
+  "home.lead_short": "ड्रोन पाइलटहरू हेर्नुहोस् →"
  },
  "seo": {
   "home.title": "प्रमाणित ड्रोन पाइलट भाडामा — निःशुल्क कोटेसन | AubePilot",

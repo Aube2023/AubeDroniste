@@ -1219,7 +1219,8 @@
   "tpl.n_pilotes": "{n} piloto(s)",
   "tpl.n_missions": "{n} missão(ões)",
   "tpl.n_offres": "{n} proposta(s)",
-  "tpl.n_appareils": "{n} aeronave(s)"
+  "tpl.n_appareils": "{n} aeronave(s)",
+  "home.lead_short": "Ver os pilotos de drone →"
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",
