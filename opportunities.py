@@ -168,18 +168,25 @@ def _fetch(url: str, timeout: int = 120) -> bytes:
 # résumer le fond de l'avis, pas son historique.
 _AMENDMENT_PARA = re.compile(
     r"^\W*(?:modification|amendment|amend\.?|addenda|addendum|erratum|correction|"
-    r"prière de noter|please note|q\s*(?:et|and|&)\s*r|q\s*&\s*a)\b", re.I)
+    r"prière de noter|please note|question(?:s)? (?:et|and|&) r[ée]ponse(?:s)?|q\s*(?:et|and|&)\s*r|q\s*&\s*a|"
+    r"attention\s*[:\u00a0]|note\s*:|la présente|this amendment|cette modification)", re.I)
+# Traits de séparation (« ______ », « ------ », « ====== »), tirets décoratifs.
+_RULES = re.compile(r"[_\-=*~]{4,}")
 
 
 def summarize(text: str, limit: int = SUMMARY_CHARS) -> str:
     """Résumé court : premiers paragraphes de fond (journal des modifications
     sauté), espaces normalisés, coupé au mot, jamais l'avis complet."""
-    paras = [re.sub(r"\s+", " ", x).strip() for x in re.split(r"\n\s*\n|\r\n\s*\r\n", text or "")]
+    text = _RULES.sub("\n\n", text or "")   # un trait de séparation vaut un saut de paragraphe
+    paras = [re.sub(r"\s+", " ", x).strip() for x in re.split(r"\n\s*\n|\r\n\s*\r\n", text)]
     paras = [x for x in paras if x]
     body = [x for x in paras if not _AMENDMENT_PARA.match(x) and len(x) > 40]
+    if body and len(" ".join(body)) < 60 and len(paras) > len(body):
+        body = []   # trop peu de fond une fois les avertissements retirés : on garde tout
     text = " ".join(body or paras)
     # certaines lignes de modification sont collées au fond par des « *** »
-    text = re.sub(r"(?:\*{2,}\s*(?:modification|amendment)[^*]{0,200}\*{0,3}\s*)+", " ", text, flags=re.I).strip()
+    text = re.sub(r"(?:\*{2,}\s*(?:modification|amendment)[^*]{0,200}\*{0,3}\s*)+", " ", text, flags=re.I)
+    text = re.sub(r"\s+", " ", text).strip()
     if len(text) <= limit:
         return text
     cut = text[:limit].rsplit(" ", 1)[0]
@@ -478,7 +485,8 @@ def parse_ted(notices: list) -> list:
             "summary_en": summarize(desc.get("eng", [""])[0] if isinstance(desc.get("eng"), list) else desc_txt),
             "org": org, "country": country, "region": country, "regions_raw": country, "city": "",
             "url_fr": url_fr, "url_en": url_en,
-            "notice_type": n.get("notice-type") or "",
+            "notice_type": {"cn-standard": "Avis de marché", "cn-social": "Avis de marché (services sociaux)",
+                            "cn-desg": "Concours", "pin-only": "Avis de préinformation"}.get(n.get("notice-type") or "", ""),
             "category": "", "specialties": specialties_for(title_en + " " + title_fr + " " + desc_txt),
             "published_at": _iso_date(str(n.get("publication-date") or "")),
             "closes_at": _iso_date(_first(n.get("deadline-receipt-tender-date-lot"))),
