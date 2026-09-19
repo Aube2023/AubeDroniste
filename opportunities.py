@@ -43,7 +43,7 @@ STATE_FILE = os.path.join(DATA_DIR, "opportunities_state.json")
 
 SOURCES = {
     "canadabuys": {"label": "CanadaBuys", "licence": "Licence du gouvernement ouvert – Canada",
-                   "url": "https://canadabuys.canada.ca/fr/a-propos-de-nous/donnees-ouvertes"},
+                   "url": "https://canadabuys.canada.ca/en/support/open-data"},
     "seao": {"label": "SEAO (Québec)", "licence": "Données Québec, CC BY 4.0",
              "url": "https://www.donneesquebec.ca/recherche/dataset/systeme-electronique-dappel-doffres-seao"},
     "ted": {"label": "TED (Union européenne)", "licence": "Réutilisation libre des données TED (décision 2011/833/UE)",
