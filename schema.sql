@@ -572,6 +572,8 @@ CREATE TABLE IF NOT EXISTS opportunities (
     notice_type   TEXT NOT NULL DEFAULT '',
     category      TEXT NOT NULL DEFAULT '',       -- services | goods | construction
     i18n          TEXT NOT NULL DEFAULT '',       -- JSON {titles: {lang: titre}, urls: {lang: url}} (TED)
+    link_checked_at TEXT,                          -- derniere verification du lien (verify_links)
+    link_status   INTEGER,                        -- code HTTP obtenu
     specialties   TEXT NOT NULL DEFAULT '',       -- CSV codes MISSION_TYPES
     published_at  TEXT,
     closes_at     TEXT,

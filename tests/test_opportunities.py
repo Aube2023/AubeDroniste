@@ -112,10 +112,12 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
+    # Liens : tout répond sauf l'avis SEAO (mort) -> retiré du site.
+    monkeypatch.setattr(opp, "link_status", lambda url: 404 if "seao.gouv.qc.ca/avis/1" in url else 200)
     report = opp.collect()
     assert report["canadabuys"]["items"] == 1 and report["seao"]["items"] == 1
     assert report["ted"]["items"] == 1 and report["boamp"]["items"] == 1 and report["contractsfinder"]["items"] == 1
-    assert report["published"] >= 5
+    assert report["published"] == 4   # 5 fiches, moins celle au lien mort
     # Pays : filtre et titre dans la langue du visiteur (TED)
     fr_page = client.get("/opportunites?country=Allemagne").get_data(as_text=True)
     assert "LiDAR-Sensorpaket" in fr_page and "Levé LiDAR" not in fr_page and "ted.europa.eu/fr/" in fr_page
@@ -129,8 +131,11 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     report2 = opp.collect()
     assert report2["seao"]["files"] == 0 and report2["published"] == report["published"]
 
+    assert report["links"]["broken"] == 1 and report["links"]["ok"] >= 4
     html = client.get("/opportunites").get_data(as_text=True)
-    assert "Levé LiDAR aéroporté" in html and "Levés laser aéroporté" in html
+    assert "Levé LiDAR aéroporté" in html and "Levés laser aéroporté" not in html   # lien SEAO mort : fiche retirée
+    with client.application.app_context():
+        assert db.fetchone("SELECT status, link_status FROM opportunities WHERE source='seao'")["status"] == "broken"
     assert "canadabuys.canada.ca/fr/occasions-de-marche/appels-d-offres/cb-26-1" in html
     assert "Chaises de bureau" not in html
     assert "Aerial LiDAR survey" in client.get("/en/opportunites?region=Québec").get_data(as_text=True)

@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import re
+import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta
 from typing import Iterable, Optional
@@ -54,8 +55,11 @@ SOURCES = {
                         "url": "https://www.contractsfinder.service.gov.uk/"},
 }
 TED_SEARCH = "https://api.ted.europa.eu/v3/notices/search"
-TED_QUERY = ('(FT~"drone" OR FT~"drones" OR FT~"UAV" OR FT~"UAS" OR FT~"RPAS" OR FT~"lidar" OR FT~"photogramm*" '
-             'OR FT~"orthophoto*" OR FT~"aerial imagery" OR FT~"imagerie aérienne") '
+TED_QUERY = ('(FT~"drone" OR FT~"drones" OR FT~"dron" OR FT~"drohne*" OR FT~"UAV" OR FT~"UAS" OR FT~"RPAS" '
+             'OR FT~"lidar" OR FT~"photogramm*" OR FT~"fotogramm*" OR FT~"orthophoto*" OR FT~"ortofoto*" '
+             'OR FT~"aerial imagery" OR FT~"aerial survey*" OR FT~"aerial inspection*" OR FT~"imagerie aérienne" '
+             'OR FT~"prises de vues aériennes" OR FT~"inspection aérienne" OR FT~"télépilot*" OR FT~"luftbild*" '
+             'OR FT~"unmanned aircraft" OR FT~"sistema aéreo no tripulado" OR FT~"aeromobile a pilotaggio remoto") '
              'AND notice-type IN (cn-standard cn-social cn-desg pin-only)')
 BOAMP_API = ("https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records"
              "?where={where}&limit=100&offset={offset}&select=idweb,objet,nomacheteur,dateparution,datelimitereponse,"
@@ -82,7 +86,7 @@ TED_HTML_LANG = {"fra": "fr", "eng": "en", "spa": "es", "deu": "de", "ita": "it"
 # Ce qui concerne un professionnel du drone. Le mot « aérien » seul ne suffit
 # pas (ravitailleurs, fret aérien...) : il faut un terme métier.
 KEYWORDS = re.compile(
-    r"\b(drones?|rpas|satp|uavs?|uas|sua|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
+    r"\b(drones?|dron|drohnen?|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
     r"a[ée]ronefs? (?:t[ée]l[ée]pilot|sans [ée]quipage|sans pilote)\w*|t[ée]l[ée]pilot\w*|remotely piloted\w*|"
     r"lidar|photogramm\w*|orthophoto\w*|orthoimage\w*|orthomosa\w*|"
     r"aerial (?:imagery|survey\w*|photograph\w*|mapping|inspection|lidar|thermograph\w*)|"
@@ -263,8 +267,12 @@ ON CONFLICT(source, source_ref) DO UPDATE SET
     notice_type=excluded.notice_type, category=excluded.category, specialties=excluded.specialties, i18n=excluded.i18n,
     published_at=COALESCE(excluded.published_at, opportunities.published_at),
     closes_at=excluded.closes_at, last_seen_at=excluded.last_seen_at,
-    -- une fiche masquée par l'admin le reste ; un avis clos puis revu redevient publié
-    status=CASE WHEN opportunities.status='hidden' THEN 'hidden' ELSE excluded.status END
+    -- une fiche masquée par l'admin le reste ; un lien mort reste retiré tant que l'URL ne change pas ;
+    -- un avis clos puis revu redevient publié
+    status=CASE WHEN opportunities.status='hidden' THEN 'hidden'
+                WHEN opportunities.status='broken' AND opportunities.url_fr=excluded.url_fr THEN 'broken'
+                ELSE excluded.status END,
+    link_checked_at=CASE WHEN opportunities.url_fr=excluded.url_fr THEN opportunities.link_checked_at ELSE NULL END
 """
 
 
@@ -481,19 +489,27 @@ def parse_ted(notices: list) -> list:
 
 
 def collect_ted(conn) -> dict:
-    since = (date.today() - timedelta(days=60)).strftime("%Y%m%d")
-    payload = {"query": f"{TED_QUERY} AND PD>={since}", "scope": "ACTIVE", "limit": 250, "page": 1,
-               "fields": ["publication-number", "notice-title", "buyer-name", "buyer-country",
-                          "deadline-receipt-tender-date-lot", "description-lot", "publication-date", "notice-type", "links"]}
-    data = _post_json(TED_SEARCH, payload)
-    items = parse_ted(data.get("notices") or [])
+    since = (date.today() - timedelta(days=120)).strftime("%Y%m%d")
+    notices, page, total = [], 1, None
+    while page <= 4:
+        payload = {"query": f"{TED_QUERY} AND PD>={since}", "scope": "ACTIVE", "limit": 250, "page": page,
+                   "fields": ["publication-number", "notice-title", "buyer-name", "buyer-country",
+                              "deadline-receipt-tender-date-lot", "description-lot", "publication-date", "notice-type", "links"]}
+        data = _post_json(TED_SEARCH, payload)
+        batch = data.get("notices") or []
+        notices.extend(batch)
+        total = data.get("totalNoticeCount")
+        if len(batch) < 250:
+            break
+        page += 1
+    items = parse_ted(notices)
     n = _upsert_many(conn, items)
     refs = [it["source_ref"] for it in items]
     # Un avis actif ce mois-ci qui n'est plus renvoye est clos.
     if refs:
         conn.execute("UPDATE opportunities SET status='closed' WHERE source='ted' AND status='published' "
                      "AND source_ref NOT IN (%s)" % ",".join("?" * len(refs)), refs)
-    return {"items": n, "total": data.get("totalNoticeCount")}
+    return {"items": n, "total": total}
 
 
 # ---------------------------------------------------------------------------
@@ -624,7 +640,7 @@ def parse_contractsfinder(releases: list) -> list:
 
 
 def collect_contractsfinder(conn) -> dict:
-    since = (date.today() - timedelta(days=45)).isoformat()
+    since = (date.today() - timedelta(days=90)).isoformat()
     items, url, pages = [], CONTRACTSFINDER_API.format(since=since), 0
     while url and pages < 40:
         data = json.loads(_fetch(url, timeout=120).decode("utf-8"))
@@ -634,6 +650,58 @@ def collect_contractsfinder(conn) -> dict:
         url = (data.get("links") or {}).get("next") or "" if rel else ""
     n = _upsert_many(conn, items)
     return {"items": n, "pages": pages}
+
+
+# ---------------------------------------------------------------------------
+# Vérification des liens : un avis dont la page ne répond pas n'est pas montré
+# ---------------------------------------------------------------------------
+
+LINK_OK = (200, 202, 203, 301, 302, 303, 307, 308)
+LINK_TIMEOUT = 20
+
+
+def link_status(url: str) -> int:
+    """Code HTTP de la page d'un avis (HEAD, puis GET si le portail refuse
+    HEAD). 0 = injoignable."""
+    if not url:
+        return 0
+    for method in ("HEAD", "GET"):
+        try:
+            req = urllib.request.Request(url, method=method, headers={"User-Agent": USER_AGENT,
+                                                                       "Accept": "text/html,*/*"})
+            with urllib.request.urlopen(req, timeout=LINK_TIMEOUT) as resp:
+                code = resp.getcode()
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+        except Exception:
+            code = 0
+        if method == "HEAD" and code in (403, 405, 0):
+            continue   # certains portails refusent HEAD : on retente en GET
+        return code
+    return code
+
+
+def verify_links(conn, limit: int = 120) -> dict:
+    """Contrôle les liens des fiches publiées non encore vérifiées (et
+    revérifie les plus anciennes) : lien mort -> fiche retirée (status
+    'broken'), ou bascule sur le lien anglais s'il répond. Borné par nuit
+    pour rester poli avec les portails."""
+    rows = conn.execute(
+        "SELECT id, url_fr, url_en FROM opportunities WHERE status='published' "
+        "ORDER BY link_checked_at IS NOT NULL, link_checked_at LIMIT ?", (limit,)).fetchall()
+    ok = broken = swapped = 0
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    for oid, url_fr, url_en in rows:
+        code = link_status(url_fr)
+        if code in LINK_OK:
+            conn.execute("UPDATE opportunities SET link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); ok += 1
+            continue
+        if url_en and url_en != url_fr and link_status(url_en) in LINK_OK:
+            conn.execute("UPDATE opportunities SET url_fr=url_en, link_checked_at=?, link_status=200 WHERE id=?", (now, oid)); swapped += 1
+            continue
+        conn.execute("UPDATE opportunities SET status='broken', link_checked_at=?, link_status=? WHERE id=?", (now, code, oid)); broken += 1
+        log.warning("opportunite %s: lien mort (%s) %s", oid, code, url_fr)
+    return {"checked": len(rows), "ok": ok, "swapped": swapped, "broken": broken}
 
 
 # ---------------------------------------------------------------------------
@@ -666,9 +734,10 @@ def expire(conn) -> int:
     return cur.rowcount
 
 
-def collect() -> dict:
+def collect(verify: bool = True) -> dict:
     """Une passe complète : chaque source dans son propre try, la collecte
-    d'une source ne bloque pas l'autre. Retourne un compte-rendu."""
+    d'une source ne bloque pas l'autre ; puis contrôle des liens. Retourne
+    un compte-rendu."""
     report: dict = {}
     state = _load_state()
     with db.standalone() as conn:
@@ -681,6 +750,8 @@ def collect() -> dict:
                 report[name] = {"error": str(exc)[:200]}
         report["dedup"] = dedupe_cross_sources(conn)
         report["expired"] = expire(conn)
+        if verify:
+            report["links"] = verify_links(conn)
         report["published"] = conn.execute("SELECT COUNT(*) FROM opportunities WHERE status='published'").fetchone()[0]
     state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
     state["last_report"] = report
