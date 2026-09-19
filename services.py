@@ -4391,3 +4391,80 @@ def _rowcount(cur) -> int:
         return int(getattr(cur, "rowcount", 0) or 0)
     except (TypeError, ValueError):
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Opportunites (appels d'offres publics, cf. opportunities.py)
+# ---------------------------------------------------------------------------
+
+def list_opportunities(*, country: str = "", region: str = "", specialty: str = "",
+                       text: str = "", limit: int = 200, include_hidden: bool = False) -> list:
+    """Fiches ouvertes, les clôtures les plus proches d'abord (celles sans
+    date à la fin). L'admin voit aussi les fiches masquées et closes."""
+    q = ["SELECT * FROM opportunities WHERE 1=1"]
+    args: list = []
+    if not include_hidden:
+        q.append("AND status='published' AND (closes_at IS NULL OR closes_at >= date('now'))")
+    if country:
+        q.append("AND country=?"); args.append(country)
+    if region:
+        q.append("AND region=?"); args.append(region)
+    if specialty:
+        q.append("AND (',' || specialties || ',') LIKE ?"); args.append(f"%,{specialty},%")
+    if text:
+        like = f"%{text.strip().lower()}%"
+        q.append("AND (lower(title_fr) LIKE ? OR lower(title_en) LIKE ? OR lower(org) LIKE ? OR lower(summary_fr) LIKE ?)")
+        args.extend([like, like, like, like])
+    q.append("ORDER BY status='published' DESC, closes_at IS NULL, closes_at, id DESC LIMIT ?")
+    args.append(limit)
+    return [dict(r) for r in db.fetchall(" ".join(q), args)]
+
+
+def localize_opportunities(items: list, lang: str) -> list:
+    """Ajoute title / summary / url dans la langue de la page : le français
+    a sa version, toutes les autres langues lisent l'anglais de l'avis."""
+    fr = (lang == "fr")
+    for o in items:
+        o["title"] = o["title_fr"] if fr else o["title_en"]
+        o["summary"] = o["summary_fr"] if fr else o["summary_en"]
+        o["url"] = o["url_fr"] if fr else (o["url_en"] or o["url_fr"])
+    return items
+
+
+def opportunity_regions(country: str = "") -> list:
+    """Régions présentes parmi les fiches ouvertes, avec leur nombre."""
+    q = ("SELECT region, COUNT(*) AS n FROM opportunities WHERE status='published' "
+         "AND (closes_at IS NULL OR closes_at >= date('now'))")
+    args: list = []
+    if country:
+        q += " AND country=?"; args.append(country)
+    q += " GROUP BY region ORDER BY region='Canada', region"
+    return [dict(r) for r in db.fetchall(q, args)]
+
+
+def count_opportunities() -> int:
+    return db.fetchone("SELECT COUNT(*) AS n FROM opportunities WHERE status='published' "
+                       "AND (closes_at IS NULL OR closes_at >= date('now'))")["n"]
+
+
+def opportunities_for_user(user: dict, lang: str = "fr", limit: int = 5) -> list:
+    """Bloc du tableau de bord : les fiches du pays du pilote, si on l'a."""
+    country = (user or {}).get("country") or ""
+    if not country:
+        return []
+    return localize_opportunities(list_opportunities(country=country, limit=limit), lang)
+
+
+def set_opportunity_status(opp_id: int, status: str) -> None:
+    if status not in ("published", "hidden"):
+        return
+    db.execute("UPDATE opportunities SET status=? WHERE id=?", (status, opp_id))
+
+
+def pilots_for_opportunity_digest(country: str) -> list:
+    """Pilotes du pays qui acceptent les alertes (même réglage que les
+    alertes de mission), pour le courriel hebdomadaire."""
+    return [dict(r) for r in db.fetchall(
+        "SELECT u.id, u.email, u.full_name, u.lang FROM users u JOIN pilot_profiles p ON p.user_id=u.id "
+        "WHERE u.role IN ('pilot','both') AND u.deleted_at IS NULL AND COALESCE(u.notify_alerts,1)=1 "
+        "AND u.country=? AND u.email LIKE '%@%' ORDER BY u.id", (country,))]

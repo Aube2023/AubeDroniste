@@ -1,0 +1,20 @@
+# Collecte nocturne des opportunités (appels d'offres publics, données ouvertes)
+# et courriel hebdomadaire du lundi. Installé dans /etc/systemd/system/ ; la
+# minuterie associée est aubepilot-opportunites.timer.
+[Unit]
+Description=AubePilot - collecte des opportunites (CanadaBuys, SEAO)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=aube
+WorkingDirectory=/srv/aubepilot
+EnvironmentFile=/etc/aubepilot.env
+Environment=HOME=/var/lib/aubepilot
+Environment=AUBEPILOT_DATA=/var/lib/aubepilot
+ExecStart=/srv/aubepilot/.venv/bin/python /srv/aubepilot/scripts/collect_opportunities.py
+ProtectSystem=strict
+ReadWritePaths=/var/lib/aubepilot /var/log/aubepilot
+PrivateTmp=yes
+NoNewPrivileges=yes

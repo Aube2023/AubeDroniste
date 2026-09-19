@@ -1,0 +1,34 @@
+AUBEPILOT, OPPORTUNITES DE LA SEMAINE / THIS WEEK'S TENDERS
+============================================================
+
+[FR]
+{{ pilot.full_name.split(' ')[0] }}, {{ count }} appel(s) d'offres publics pour les pros du drone ont ete publies cette semaine.
+{% for it in items %}
+- {{ it.title_fr }}
+  {{ it.org }}{% if it.region %} · {{ it.region }}{% endif %}{% if it.closes_at %} · cloture le {{ it.closes_at }}{% endif %}
+  {{ it.url_fr }}
+{% endfor %}
+Tous les avis, par province et specialite : {{ site_url }}/opportunites
+
+Sources : CanadaBuys (Licence du gouvernement ouvert, Canada) et SEAO (Donnees Quebec, CC BY 4.0).
+AubePilot n'est pas l'organisme emetteur : chaque fiche renvoie a l'avis d'origine.
+Vous recevez ce courriel car vos alertes sont activees ; desactivez-les dans vos parametres.
+
+L'equipage AubePilot
+
+------------------------------------------------------------
+
+[EN]
+{{ pilot.full_name.split(' ')[0] }}, {{ count }} public tender(s) for drone professionals were published this week.
+{% for it in items %}
+- {{ it.title_en }}
+  {{ it.org }}{% if it.region %} · {{ it.region }}{% endif %}{% if it.closes_at %} · closes {{ it.closes_at }}{% endif %}
+  {{ it.url_en or it.url_fr }}
+{% endfor %}
+All notices, by province and specialty: {{ site_url }}/en/opportunites
+
+Sources: CanadaBuys (Open Government Licence, Canada) and SEAO (Donnees Quebec, CC BY 4.0).
+AubePilot is not the issuing body: each entry links to the original notice.
+You receive this because alerts are on; turn them off in your settings.
+
+The AubePilot crew

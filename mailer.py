@@ -300,6 +300,27 @@ def send_mission_request(pilot: dict, mission: dict, package: Optional[dict] = N
     )
 
 
+def send_opportunity_digest(pilots: list, items: list, cap: int = 500) -> int:
+    """Courriel hebdomadaire : les nouveaux appels d'offres publics du pays du
+    pilote (opportunites.py). Synchrone (appele par un script planifie).
+    Meme reglage d'abonnement que les alertes de mission (notify_alerts)."""
+    pilots = [p for p in (pilots or []) if p.get("email")][:cap]
+    if not pilots or not items:
+        return 0
+    sent = 0
+    for p in pilots:
+        try:
+            if send(to=p["email"],
+                    subject=f"Opportunités drone de la semaine / This week's drone tenders ({len(items)})",
+                    template="opportunities_digest",
+                    context={"pilot": p, "items": items, "count": len(items)},
+                    async_=False):
+                sent += 1
+        except Exception as exc:
+            log.warning("digest opportunites -> %s echoue: %s", p.get("email"), exc)
+    return sent
+
+
 # ---------------------------------------------------------------------------
 # Formulaire de contact public (/contact)
 # ---------------------------------------------------------------------------

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Opportunités, AubePilot admin{% endblock %}
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Opportunités</span>
+  <h1>Appels d'offres repris.</h1>
+  <p class="lead muted">{{ items|length }} fiche(s), toutes sources et tous statuts. Masquer une fiche la retire du site et du courriel hebdomadaire ; la collecte ne la republie pas.</p>
+</div>
+<table class="table" style="width: 100%; font-size: 14px;">
+  <thead><tr><th>Statut</th><th>Source</th><th>Titre</th><th>Organisme</th><th>Région</th><th>Clôture</th><th></th></tr></thead>
+  <tbody>
+  {% for o in items %}
+  <tr>
+    <td><span class="tag tag-{{ 'open' if o.status == 'published' else 'cancelled' }}">{{ o.status }}</span></td>
+    <td>{{ o.source }}</td>
+    <td><a href="{{ o.url_fr }}" target="_blank" rel="noopener nofollow">{{ o.title_fr[:90] }}</a></td>
+    <td>{{ o.org[:40] }}</td>
+    <td>{{ o.region }}</td>
+    <td>{{ o.closes_at or '—' }}</td>
+    <td>
+      <form method="post" action="{{ url_for('admin_opportunity_status', opp_id=o.id) }}">{{ csrf_input() }}
+        {% if o.status == 'hidden' %}<input type="hidden" name="status" value="published"><button class="ghost" type="submit">Republier</button>
+        {% else %}<input type="hidden" name="status" value="hidden"><button class="ghost" type="submit">Masquer</button>{% endif %}
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

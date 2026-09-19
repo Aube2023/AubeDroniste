@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+{# Appels d'offres publics repris de données ouvertes : titre, organisme,
+   région, clôture, résumé court, lien vers l'avis d'origine et sa source. #}
+<div class="search-head centered">
+  <span class="eyebrow">{{ t('opp.eyebrow') }}</span>
+  <h1>{{ t('opp.h1') }}</h1>
+  <p class="lead muted">{{ t('opp.lead') }}</p>
+</div>
+
+<form method="get" class="search-form centered" action="{{ url_for('opportunities') }}">
+  <div class="search-bar">
+    <label class="search-field grow">
+      <span>{{ t('opp.filter_q') }}</span>
+      <input name="q" value="{{ q }}" maxlength="80" placeholder="{{ t('opp.filter_q_ph') }}">
+    </label>
+    <label class="search-field">
+      <span>{{ t('opp.filter_region') }}</span>
+      <select name="region">
+        <option value="">{{ t('opp.all_regions') }}</option>
+        {% for r in regions %}<option value="{{ r.region }}"{% if r.region == region %} selected{% endif %}>{{ r.region }} ({{ r.n }})</option>{% endfor %}
+      </select>
+    </label>
+    <label class="search-field">
+      <span>{{ t('opp.filter_specialty') }}</span>
+      <select name="mission_type">
+        <option value="">{{ t('opp.all_specialties') }}</option>
+        {% for code, _label in mission_types %}<option value="{{ code }}"{% if code == specialty %} selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="cta" type="submit">{{ t('opp.filter_btn') }}</button>
+  </div>
+</form>
+
+<p class="muted small" style="text-align: center; margin: 10px 0 24px;">{{ t('opp.count', n=items|length) }}</p>
+
+{% if items %}
+<div class="grid-cards">
+  {% for o in items %}
+  <article class="mission-card" style="display: flex; flex-direction: column;">
+    <div class="header">
+      <span class="tag">{{ t('opp.kind_' ~ o.kind) }}</span>
+      <span class="tag tag-open">{{ o.region }}</span>
+    </div>
+    <h3><a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ o.title }}</a></h3>
+    <div class="coords">{{ o.org }}{% if o.city %} · {{ o.city }}{% endif %}</div>
+    {% if o.summary %}<p class="muted small" style="margin: 8px 0 0;">{{ o.summary }}</p>{% endif %}
+    {% if o.specialties %}
+    <div class="auth-chips" style="margin-top: 8px;">{% for c in o.specialties.split(',') if c %}<span class="auth-chip">{{ mission_label(c) }}</span>{% endfor %}</div>
+    {% endif %}
+    <div class="footer" style="margin-top: auto;">
+      <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
+      <a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ t('opp.view') }}</a>
+    </div>
+    <div class="muted small" style="margin-top: 6px;">{{ t('opp.source') }} {{ sources[o.source].label }}{% if o.notice_type %} · {{ o.notice_type }}{% endif %}</div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="text-align: center; padding: 40px 0;">
+  <strong>{{ t('opp.empty') }}</strong>
+  <p class="muted">{{ t('opp.empty_hint') }}</p>
+</div>
+{% endif %}
+
+<section class="section" style="margin-top: 48px;">
+  <p class="muted small" style="max-width: 72ch;">
+    {{ t('opp.about') }}
+    {% for code, s in sources.items() %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label }}</a> ({{ s.licence }}){{ ' · ' if not loop.last else '.' }}{% endfor %}
+    {{ t('opp.about_alerts') }}
+  </p>
+</section>
+{% endblock %}

@@ -137,6 +137,31 @@
 </section>
 {% endif %}
 
+{% if my_opportunities %}
+<section class="section" style="margin: 48px 0 32px;">
+  <span class="eyebrow">{{ t('opp.eyebrow') }}</span>
+  <h2>{{ t('opp.dash_h') }}</h2>
+  <p class="muted">{{ t('opp.dash_lead') }}</p>
+  <div class="grid-cards">
+    {% for o in my_opportunities %}
+    <a class="mission-card" href="{{ o.url }}" target="_blank" rel="noopener nofollow">
+      <div class="header">
+        <span class="tag">{{ t('opp.kind_' ~ o.kind) }}</span>
+        <span class="tag tag-open">{{ o.region }}</span>
+      </div>
+      <h3>{{ o.title }}</h3>
+      <div class="coords">{{ o.org }}</div>
+      <div class="footer">
+        <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
+        <span>{{ t('opp.source') }} {{ 'CanadaBuys' if o.source == 'canadabuys' else 'SEAO' }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <p style="margin-top: 14px;"><a class="ghost" href="{{ url_for('opportunities') }}">{{ t('opp.dash_all') }}</a></p>
+</section>
+{% endif %}
+
 {% if is_pilot and my_bids %}
 <section class="section" style="margin: 48px 0 32px;">
   <span class="eyebrow">{{ t('tpl.mes_offres') }}</span>

@@ -1,0 +1,11 @@
+[Unit]
+Description=AubePilot - opportunites, chaque nuit a 05:20 UTC
+
+[Timer]
+OnCalendar=*-*-* 05:20:00 UTC
+RandomizedDelaySec=10min
+Persistent=true
+Unit=aubepilot-opportunites.service
+
+[Install]
+WantedBy=timers.target

@@ -179,6 +179,8 @@ _ADD_COLUMNS = [
     # Demande reservee a un pilote (bouton « Réserver » / « Contacter ») :
     # invisible de l'annuaire des missions, de la carte et des alertes.
     ("missions", "is_private", "INTEGER NOT NULL DEFAULT 0"),
+    # Opportunites : categorie d'approvisionnement (ajoutee apres la table).
+    ("opportunities", "category", "TEXT NOT NULL DEFAULT ''"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
@@ -225,6 +227,7 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_pilot_profiles_no ON pilot_profiles(pilot_no)",
+    "CREATE INDEX IF NOT EXISTS idx_opp_status_close ON opportunities(status, closes_at)",
 ]
 
 
@@ -375,6 +378,33 @@ _ADD_TABLES = [
     status           TEXT NOT NULL DEFAULT 'open',
     handled_at       TEXT,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+)""",
+    # Opportunites : appels d'offres publics (cf. opportunities.py).
+    """CREATE TABLE IF NOT EXISTS opportunities (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    source        TEXT NOT NULL,                  -- canadabuys | seao
+    source_ref    TEXT NOT NULL,                  -- identifiant chez la source
+    kind          TEXT NOT NULL DEFAULT 'tender', -- tender | job
+    title_fr      TEXT NOT NULL,
+    title_en      TEXT NOT NULL,
+    summary_fr    TEXT NOT NULL DEFAULT '',       -- 400 caracteres max, jamais l'avis complet
+    summary_en    TEXT NOT NULL DEFAULT '',
+    org           TEXT NOT NULL DEFAULT '',       -- organisme / donneur d'ouvrage
+    country       TEXT NOT NULL DEFAULT 'Canada',
+    region        TEXT NOT NULL DEFAULT 'Canada', -- province de reference ou 'Canada'
+    regions_raw   TEXT NOT NULL DEFAULT '',
+    city          TEXT NOT NULL DEFAULT '',
+    url_fr        TEXT NOT NULL,                  -- lien vers l'avis d'origine
+    url_en        TEXT,
+    notice_type   TEXT NOT NULL DEFAULT '',
+    category      TEXT NOT NULL DEFAULT '',       -- services | goods | construction
+    specialties   TEXT NOT NULL DEFAULT '',       -- CSV codes MISSION_TYPES
+    published_at  TEXT,
+    closes_at     TEXT,
+    status        TEXT NOT NULL DEFAULT 'published', -- published | closed | hidden (admin)
+    first_seen_at TEXT NOT NULL,
+    last_seen_at  TEXT NOT NULL,
+    UNIQUE(source, source_ref)
 )""",
     # Numero de profil pose a la creation du profil pilote (cf. schema.sql).
     """CREATE TRIGGER IF NOT EXISTS trg_pilot_profiles_no AFTER INSERT ON pilot_profiles

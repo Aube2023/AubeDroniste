@@ -217,7 +217,7 @@ _static_ver_cache: dict = {}
 # sous /ru/faq en le declarant russe tromperait les moteurs.
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
-    "missions_search": None, "mission_detail": None, "schools": None,
+    "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
     "faq": seo.FAQ_LANGS,
@@ -919,6 +919,38 @@ def schools():
         "schools.html", schools=schools_list,
         seo=seo.schools_page(lang),
     )
+
+
+@app.route("/opportunites")
+def opportunities():
+    """Appels d'offres publics pour les pros du drone, repris de données
+    ouvertes (CanadaBuys, SEAO) avec leur source et un lien vers l'avis."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    region = (request.args.get("region") or "").strip()
+    specialty = (request.args.get("mission_type") or "").strip()
+    text = (request.args.get("q") or "").strip()[:80]
+    items = services.localize_opportunities(
+        services.list_opportunities(region=region, specialty=specialty, text=text), lang)
+    return render_template(
+        "opportunities.html", items=items, regions=services.opportunity_regions(),
+        region=region, specialty=specialty, q=text,
+        sources=__import__("opportunities").SOURCES,
+        seo=seo.opportunities_page(lang),
+    )
+
+
+@app.route("/admin/opportunites")
+@auth.admin_required
+def admin_opportunities():
+    return render_template("admin_opportunities.html",
+                           items=services.list_opportunities(limit=400, include_hidden=True))
+
+
+@app.route("/admin/opportunites/<int:opp_id>/statut", methods=["POST"])
+@auth.admin_required
+def admin_opportunity_status(opp_id):
+    services.set_opportunity_status(opp_id, request.form.get("status") or "hidden")
+    return redirect(url_for("admin_opportunities"))
 
 
 @app.route("/faq")
@@ -1730,6 +1762,7 @@ def dashboard():
         my_missions=services.list_missions_by_client(user["id"]) if is_client else [],
         my_bids=services.list_missions_by_pilot(user["id"]) if is_pilot else [],
         my_requests=services.list_requests_for_pilot(user["id"]) if is_pilot else [],
+        my_opportunities=services.opportunities_for_user(user, getattr(g, "lang", i18n.DEFAULT)) if is_pilot else [],
         my_bookings=services.list_bookings_for(user["id"]),
         unread=services.unread_count(user["id"]),
         admin_new_messages=(services.count_contact_messages("new")
