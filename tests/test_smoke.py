@@ -195,8 +195,9 @@ def test_run_migrations_is_safe_under_concurrency(client):
 
 def test_home_and_directory_embed_interactive_map(client):
     home = client.get("/").data.decode()
-    # Fond sombre de jour comme de nuit depuis le 2026-09-20.
-    assert 'id="aube-map"' in home and "tiles.openfreemap.org/styles/dark" in home
+    # Gris clair (positron) de jour, sombre en theme nuit : le noir permanent
+    # a ete essaye et retire le 2026-09-20 (« on voit pas grand-chose »).
+    assert 'id="aube-map"' in home and "tiles.openfreemap.org/styles/positron" in home
     assert "cartocdn" not in home
     directory = client.get("/pilotes").data.decode()
     assert 'id="aube-map"' in directory and 'window.AubeMap' in directory

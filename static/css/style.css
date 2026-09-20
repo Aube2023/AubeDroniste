@@ -2602,13 +2602,6 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-inline-start: 4px; }
 .pilot-card .map-pin:hover { opacity: 1; }
 .pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(var(--amber-rgb), .25); }
-/* Carte sombre de jour comme de nuit (2026-09-20) : le bloc carte + legende
-   est noir, texte clair, bouton « Tout afficher » en clair sur sombre. */
-.map-wrap.map-dark { background: #0e1016; border-color: #1f2230; color: #e9e9ec; }
-.map-wrap.map-dark .map-legend { border-top: 1px solid #1f2230; color: #d6d7de; }
-.map-wrap.map-dark .map-legend .muted { color: #9a9db0; }
-.map-wrap.map-dark .map-legend .ghost { background: transparent; color: #e9e9ec; border-color: #3a3d4c; }
-.map-wrap.map-dark .map-legend .ghost:hover { background: #1f2230; border-color: #5a5e72; color: #fff; }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
 @media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }
