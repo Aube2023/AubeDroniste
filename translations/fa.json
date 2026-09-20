@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "نهاد",
   "partners.kind.other": "سایر",
   "login.remember": "ورود خودکار",
-  "login.remember_hint": "در این دستگاه وارد می‌مانید (تا ۳۰ روز پس از آخرین بازدید). روی رایانه مشترک تیک را بردارید: نشست با بستن مرورگر پایان می‌یابد."
+  "login.remember_hint": "در این دستگاه وارد می‌مانید (تا ۳۰ روز پس از آخرین بازدید). روی رایانه مشترک تیک را بردارید: نشست با بستن مرورگر پایان می‌یابد.",
+  "register.step_n": "مرحله {n}",
+  "register.progress": "پیشرفت ثبت‌نام",
+  "register.required": "فیلد الزامی",
+  "register.prev": "قبلی",
+  "register.next": "بعدی",
+  "register.mismatch": "گذرواژه‌ها مطابقت ندارند."
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

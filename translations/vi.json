@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Tổ chức",
   "partners.kind.other": "Khác",
   "login.remember": "Đăng nhập tự động",
-  "login.remember_hint": "Bạn giữ đăng nhập trên thiết bị này (30 ngày sau lần truy cập cuối). Bỏ chọn trên máy dùng chung: phiên sẽ kết thúc khi đóng trình duyệt."
+  "login.remember_hint": "Bạn giữ đăng nhập trên thiết bị này (30 ngày sau lần truy cập cuối). Bỏ chọn trên máy dùng chung: phiên sẽ kết thúc khi đóng trình duyệt.",
+  "register.step_n": "Bước {n}",
+  "register.progress": "Tiến trình đăng ký",
+  "register.required": "Trường bắt buộc",
+  "register.prev": "Quay lại",
+  "register.next": "Tiếp theo",
+  "register.mismatch": "Mật khẩu không khớp."
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "機関",
   "partners.kind.other": "その他",
   "login.remember": "自動ログイン",
-  "login.remember_hint": "この端末ではログイン状態が保持されます（最終訪問から30日間）。共用のパソコンではチェックを外してください。ブラウザーを閉じるとセッションが終了します。"
+  "login.remember_hint": "この端末ではログイン状態が保持されます（最終訪問から30日間）。共用のパソコンではチェックを外してください。ブラウザーを閉じるとセッションが終了します。",
+  "register.step_n": "ステップ {n}",
+  "register.progress": "登録の進行状況",
+  "register.required": "必須項目",
+  "register.prev": "戻る",
+  "register.next": "次へ",
+  "register.mismatch": "パスワードが一致しません。"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

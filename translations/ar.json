@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "مؤسسة",
   "partners.kind.other": "أخرى",
   "login.remember": "تسجيل دخول تلقائي",
-  "login.remember_hint": "تبقى مسجل الدخول على هذا الجهاز (30 يومًا بعد آخر زيارة). ألغِ التحديد على جهاز مشترك: تنتهي الجلسة عند إغلاق المتصفح."
+  "login.remember_hint": "تبقى مسجل الدخول على هذا الجهاز (30 يومًا بعد آخر زيارة). ألغِ التحديد على جهاز مشترك: تنتهي الجلسة عند إغلاق المتصفح.",
+  "register.step_n": "الخطوة {n}",
+  "register.progress": "تقدم التسجيل",
+  "register.required": "حقل إلزامي",
+  "register.prev": "السابق",
+  "register.next": "التالي",
+  "register.mismatch": "كلمتا المرور غير متطابقتين."
  },
  "seo": {
   "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",

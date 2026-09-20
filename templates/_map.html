@@ -1,7 +1,9 @@
 {# Carte interactive MapLibre GL — pilotes + missions geolocalises.
    Fond de carte : OpenFreeMap (tuiles vectorielles OpenMapTiles / OpenStreetMap),
    gratuit, SANS cle d'API ni quota — CARTO exige une cle depuis 2026 (filigrane
-   « API KEY REQUIRED » sur les tuiles). Styles : positron (jour) / dark (nuit).
+   « API KEY REQUIRED » sur les tuiles). Style : dark, de jour comme de nuit
+   (demande du 2026-09-20, a l'image de Drone Network : les marqueurs colores
+   ressortent mieux sur un fond sombre).
    Marqueurs : pins « goutte » avec icone SVG (drone / chapeau d'ecole / drapeau
    mission), badge vérifié, et regroupement en pilule « N membres » quand des
    marqueurs se chevauchent — frequent : les pilotes situes par leur ville
@@ -97,9 +99,9 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   #aube-map .aube-traffic{bottom:30px}
 }
 </style>
-<div class="map-wrap card" style="padding:0;overflow:hidden;margin-bottom:24px;">
-  <div id="aube-map" style="height:{{ _height }};width:100%;background:var(--paper-3,#101014);" role="region" aria-label="{{ t('tpl.carte_interactive_des_pilotes_et_missions') }}"></div>
-  <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;font-size:.85rem;border-top:1px solid var(--rule,#222);">
+<div class="map-wrap card map-dark" style="padding:0;overflow:hidden;margin-bottom:24px;">
+  <div id="aube-map" style="height:{{ _height }};width:100%;background:#0e1016;" role="region" aria-label="{{ t('tpl.carte_interactive_des_pilotes_et_missions') }}"></div>
+  <div class="map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 16px;font-size:.85rem;">
     <span><span class="map-legend-icon" data-kind="pro" style="background:#3b82f6;"></span>{{ t('tpl.pilotes_pro') }}</span>
     <span><span class="map-legend-icon" data-kind="recreational" style="background:#14b8a6;"></span>{{ t('tpl.pilotes_recreatifs') }}</span>
     <span><span class="map-legend-icon" data-kind="school" style="background:#22c55e;"></span>{{ t('tpl.ecoles') }}</span>
@@ -149,10 +151,11 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   var ICONS = {};
   Object.keys(PATHS).forEach(function (k) { ICONS[k] = iconSvg(k, 'width:64%;height:64%;display:block'); });
 
-  // Fond de carte OpenFreeMap : vectoriel, gratuit, sans cle. Jour / nuit.
-  var DARK = document.documentElement.getAttribute('data-theme') === 'dark';
-  var STYLE = DARK ? 'https://tiles.openfreemap.org/styles/dark'
-                   : 'https://tiles.openfreemap.org/styles/positron';
+  // Fond de carte OpenFreeMap : vectoriel, gratuit, sans cle. Toujours le
+  // style sombre : les pins colores et les etiquettes claires y sont plus
+  // lisibles que sur le fond gris clair (positron), quel que soit le theme.
+  var DARK = true;
+  var STYLE = 'https://tiles.openfreemap.org/styles/dark';
   var map = new maplibregl.Map({
     container: 'aube-map',
     style: STYLE,

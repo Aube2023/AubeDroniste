@@ -160,3 +160,28 @@ def test_pilot_become_page_renders_for_client(make_user, auth_client):
     c = auth_client(user["id"])
     resp = c.get("/espace/pilote")
     assert resp.status_code == 200
+
+
+def test_inscription_en_assistant_trois_etapes(client):
+    """Inscription en une carte centrée, trois écrans (rôle, informations,
+    localisation) : pastilles d'étapes, libellés obligatoires marqués,
+    boutons Précédent/Suivant et envoi ; sans JS tout reste dans le formulaire."""
+    html = client.get("/inscription?role=pilot").data.decode()
+    assert 'class="wizard" id="register-form" data-start-step="1"' in html
+    assert html.count('class="wizard-pill"') == 3 and html.count('class="wizard-step"') == 3
+    assert 'data-nav="prev"' in html and 'data-nav="next"' in html and 'data-nav="submit"' in html
+    assert '<abbr class="req" title="Champ obligatoire">*</abbr>' in html
+    assert 'value="pilot" checked' in html
+    assert "auth-split" not in html            # plus de colonne de texte à côté
+
+
+def test_inscription_erreur_rouvre_l_etape_et_garde_la_saisie(client):
+    r = client.post("/inscription", data={
+        "role": "pilot", "kind": "school", "full_name": "École du Ciel", "username": "ecole_ciel",
+        "password": "motdepasse1", "confirm": "autre_chose1", "country": "Canada", "city": "Québec",
+    })
+    html = r.data.decode()
+    assert "Les mots de passe ne correspondent pas." in html
+    assert 'data-start-step="2"' in html
+    assert 'value="École du Ciel"' in html and 'value="ecole_ciel"' in html and 'value="Québec"' in html
+    assert 'value="Canada" selected' in html and 'value="school" checked' in html

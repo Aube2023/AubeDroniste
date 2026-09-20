@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "מוסד",
   "partners.kind.other": "אחר",
   "login.remember": "התחברות אוטומטית",
-  "login.remember_hint": "תישארו מחוברים במכשיר זה (30 יום מהביקור האחרון). במחשב משותף בטלו את הסימון: ההפעלה מסתיימת עם סגירת הדפדפן."
+  "login.remember_hint": "תישארו מחוברים במכשיר זה (30 יום מהביקור האחרון). במחשב משותף בטלו את הסימון: ההפעלה מסתיימת עם סגירת הדפדפן.",
+  "register.step_n": "שלב {n}",
+  "register.progress": "התקדמות ההרשמה",
+  "register.required": "שדה חובה",
+  "register.prev": "הקודם",
+  "register.next": "הבא",
+  "register.mismatch": "הסיסמאות אינן תואמות."
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",

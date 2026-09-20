@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Instituição",
   "partners.kind.other": "Outro",
   "login.remember": "Início de sessão automático",
-  "login.remember_hint": "Fica ligado neste dispositivo (30 dias após a última visita). Desmarque num computador partilhado: a sessão termina com o navegador."
+  "login.remember_hint": "Fica ligado neste dispositivo (30 dias após a última visita). Desmarque num computador partilhado: a sessão termina com o navegador.",
+  "register.step_n": "Etapa {n}",
+  "register.progress": "Progresso da inscrição",
+  "register.required": "Campo obrigatório",
+  "register.prev": "Anterior",
+  "register.next": "Seguinte",
+  "register.mismatch": "As palavras-passe não coincidem."
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

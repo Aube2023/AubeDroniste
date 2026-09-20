@@ -912,6 +912,12 @@ def _legal_seo(title_key):
     return page
 
 
+def _register_page(step: int = 2):
+    """Re-affiche l'inscription apres une erreur : valeurs saisies conservees
+    et assistant rouvert a l'etape concernee (2 = identite, 3 = captcha)."""
+    return render_template("register.html", seo=_register_seo(), form=request.form, start_step=step)
+
+
 def _register_seo():
     return seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="register.page_title",
                            description_key="register.lead")
@@ -1645,7 +1651,7 @@ def register():
         kind = _profile_kind(request.form.get("kind")) or "pro"
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
 
         # L'identifiant devient un compte systeme + une adresse @aubemail.com :
         # AubeMail n'accepte que [A-Za-z0-9_]. On refuse donc ici, avec un message
@@ -1663,13 +1669,13 @@ def register():
                 "(it is also your AubeMail address).",
                 "error",
             )
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
         if password != confirm:
             flash("Les mots de passe ne correspondent pas.", "error")
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
         if db.fetchone("SELECT 1 FROM users WHERE username=?", (username,)):
             flash("Cet identifiant est deja pris.", "error")
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
 
         # Inscriptions refusees depuis certains pays (cf. config).
         if country and country.strip().lower() in config.BLOCKED_REGISTRATION_COUNTRIES:
@@ -1681,14 +1687,14 @@ def register():
                 "Registrations from this country are not accepted at this time.",
                 "error",
             )
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
 
         # Anti-robot 1 : piege « honeypot ». Champ cache aux humains (hors
         # ecran, aria-hidden). Un robot qui remplit tous les champs le remplit
         # aussi -> on refuse en silence (le bot croit avoir reussi).
         if (request.form.get("website_confirm") or "").strip():
             log.warning("inscription honeypot declenchee ip=%s", request.remote_addr)
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(3)
 
         # Anti-robot 2 : AubeCaptcha. Inerte tant qu'aucune sitekey/secret
         # n'est configuree (variables d'env) -> inscription inchangee. Une fois
@@ -1702,7 +1708,7 @@ def register():
             if not ok_cap:
                 log.warning("aubecaptcha refuse a l'inscription : %s", raison)
                 flash(i18n.t("register.captcha_failed", getattr(g, "lang", i18n.DEFAULT)), "error")
-                return render_template("register.html", seo=_register_seo())
+                return _register_page(3)
 
         # SECURITE : si l'identifiant correspond a un compte systeme AubeMail
         # (mot de passe gere par PAM, prod Linux), l'inscription ne doit PAS
@@ -1718,7 +1724,7 @@ def register():
                 "de passe AubeMail pour compléter votre profil AubePilot.",
                 "error",
             )
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
 
         # Une nouvelle identite cree d'abord un VRAI compte AubeMail : c'est
         # l'identite et le mot de passe partages de tout l'ecosysteme Aube (le
@@ -1755,7 +1761,7 @@ def register():
                     "Please try again.",
                     "error",
                 )
-                return render_template("register.html", seo=_register_seo())
+                return _register_page(2)
 
         try:
             user_id = auth.create_user(
@@ -1786,7 +1792,7 @@ def register():
                 "puis revenez ici pour compléter votre profil pilote.",
                 "error",
             )
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
         except auth.InvalidUsernameError:
             # Filet : la route valide deja en amont, mais le garde-fou central
             # de create_user protege tous les autres chemins d'appel.
@@ -1799,7 +1805,7 @@ def register():
                 "letters, digits and the underscore « _ ».",
                 "error",
             )
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",

@@ -1577,6 +1577,82 @@ img.avatar { object-fit: cover; }
 }
 .auth-form .form-foot .small { color: var(--ink-dim); font-size: 13px; }
 
+/* ============ Inscription en assistant (une carte centrée, trois écrans) ============ */
+.wizard-page { max-width: 1040px; margin: 24px auto 0; }
+.wizard-head { text-align: center; margin: 0 auto 26px; max-width: 64ch; }
+.wizard-head .eyebrow { justify-content: center; }
+.wizard-head h1 { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.025em; line-height: 1.05; margin: 10px 0 12px; }
+.wizard-head .lead { margin: 0; font-size: 1.05rem; }
+.wizard {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 22px;
+  padding: 40px 48px 36px; position: relative;
+  box-shadow: 0 24px 60px rgba(20, 22, 31, .06);
+}
+@media (max-width: 720px) { .wizard { padding: 24px 18px 22px; border-radius: 16px; } }
+.wizard-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 36px; }
+@media (max-width: 720px) { .wizard-steps { grid-template-columns: 1fr; gap: 8px; } }
+.wizard-pill {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 16px 12px; border-radius: 999px; border: 1px solid var(--rule);
+  background: var(--paper-3); color: var(--ink-dim); cursor: pointer; text-align: center;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.wizard-pill .n { font: 700 11px/1 var(--mono); letter-spacing: .22em; text-transform: uppercase; }
+.wizard-pill .l { font: 500 13px/1.2 var(--sans); }
+.wizard-pill:disabled { cursor: default; opacity: .7; }
+.wizard-pill.done { background: var(--paper); color: var(--ink-soft); border-color: var(--rule); }
+.wizard-pill.on { background: var(--amber); color: var(--cta-fg); border-color: var(--amber); }
+.wizard-pill.on .n { opacity: .85; }
+@media (max-width: 720px) { .wizard-pill { flex-direction: row; justify-content: center; gap: 10px; padding: 12px 14px; } }
+
+.wizard-step h2 {
+  font: 700 clamp(1.5rem, 2.6vw, 2rem)/1.15 var(--display); letter-spacing: -.02em;
+  margin: 0 0 22px; color: var(--ink);
+}
+.wizard-sub { margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--rule); }
+.wizard-sub h2 { font-size: clamp(1.2rem, 2vw, 1.5rem); }
+.wizard-step .role-cards { margin: 0; }
+.wizard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; }
+@media (max-width: 720px) { .wizard-grid { grid-template-columns: 1fr; gap: 4px; } }
+/* Libellés en capitales espacées, astérisque rouge pour l'obligatoire. */
+.wizard .wl { margin: 10px 0 12px; }
+.wizard .wl .lbl {
+  display: block; margin-bottom: 4px;
+  font: 600 11.5px/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink);
+}
+.wizard .wl .lbl em { font-style: normal; text-transform: none; letter-spacing: 0; font: 400 12px/1.4 var(--sans); color: var(--ink-dim); }
+.wizard .req { color: var(--signal); text-decoration: none; font-weight: 700; }
+.wizard input:not([type=radio]):not([type=checkbox]), .wizard select, .wizard textarea {
+  margin-top: 6px; padding: 15px 16px; border-radius: 12px; font-size: 15.5px;
+}
+.wizard .input-suffix > input { margin-top: 0 !important; }
+.wizard .input-suffix { margin-top: 6px; }
+.wizard .field-hint { margin-top: 8px; }
+.wizard .phone-field { margin-top: 6px; }
+.wizard-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--rule);
+}
+.wizard-actions .req-note { font: 400 12px/1 var(--sans); color: var(--ink-dim); margin-inline-start: auto; }
+.wizard-actions .cta { min-width: 200px; justify-content: center; }
+/* L'attribut hidden doit gagner sur les display: grid/flex des blocs. */
+.wizard [hidden] { display: none !important; }
+.wizard .form-foot {
+  margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--rule);
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.wizard .form-foot .small { color: var(--ink-dim); font-size: 13px; }
+@media (max-width: 720px) {
+  .wizard .role-cards-kinds { grid-template-columns: 1fr; }
+  .wizard-actions .cta, .wizard-actions .ghost { width: 100%; }
+  .wizard-actions .req-note { width: 100%; text-align: end; margin: 0; }
+}
+/* Sans JavaScript : tous les écrans à la suite, boutons de navigation masqués. */
+.wizard:not(.is-wizard) .wizard-step + .wizard-step { margin-top: 36px; padding-top: 32px; border-top: 1px solid var(--rule); }
+.wizard:not(.is-wizard) [data-nav="prev"], .wizard:not(.is-wizard) [data-nav="next"] { display: none; }
+.wizard:not(.is-wizard) .wizard-pill { pointer-events: none; }
+
 /* Connexion automatique : case sous le mot de passe, texte d'aide en dessous. */
 .remember-me { margin-top: 10px; align-items: start; }
 .remember-me > span { display: inline-flex; flex-direction: column; gap: 2px; }
@@ -2526,6 +2602,13 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .pilot-card .map-pin { cursor: pointer; opacity: .55; font-size: .9em; margin-inline-start: 4px; }
 .pilot-card .map-pin:hover { opacity: 1; }
 .pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(var(--amber-rgb), .25); }
+/* Carte sombre de jour comme de nuit (2026-09-20) : le bloc carte + legende
+   est noir, texte clair, bouton « Tout afficher » en clair sur sombre. */
+.map-wrap.map-dark { background: #0e1016; border-color: #1f2230; color: #e9e9ec; }
+.map-wrap.map-dark .map-legend { border-top: 1px solid #1f2230; color: #d6d7de; }
+.map-wrap.map-dark .map-legend .muted { color: #9a9db0; }
+.map-wrap.map-dark .map-legend .ghost { background: transparent; color: #e9e9ec; border-color: #3a3d4c; }
+.map-wrap.map-dark .map-legend .ghost:hover { background: #1f2230; border-color: #5a5e72; color: #fff; }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
 @media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }

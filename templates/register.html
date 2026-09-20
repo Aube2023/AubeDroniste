@@ -1,179 +1,145 @@
 {% extends "base.html" %}
 {% block title %}{{ t('register.page_title') }} · AubePilot{% endblock %}
 {% block content %}
+{# Inscription en trois écrans (rôle, informations, localisation) dans une seule
+   carte centrée : pastilles d'étapes en tête, libellés en capitales avec
+   astérisque, champs larges. Sans JavaScript, les trois étapes s'affichent à
+   la suite et le bouton final reste actif (le script ne fait que masquer). #}
+{% set f = form or {} %}
+{% set sel = f.get('role') or request.args.get('role', 'client') %}
+{% set sel_kind = f.get('kind') or request.args.get('kind', 'pro') %}
+{% set eye_on %}<svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>{% endset %}
 
-<section class="auth-split">
-  <aside class="auth-aside">
+<section class="wizard-page">
+  <header class="wizard-head">
     <span class="eyebrow">{{ t('register.eyebrow') }}</span>
     <h1>{{ t('register.h1_simple') }}</h1>
     <p class="lead muted">{{ t('register.lead_simple') }}</p>
-    <ul class="checklist">
-      <li>{{ t('register.bullet_licences') }}</li>
-      <li>{{ t('register.bullet_search') }}</li>
-      <li>{{ t('register.bullet_fee') }}</li>
-    </ul>
-  </aside>
+  </header>
 
-  <form method="post" class="auth-form auth-steps">
-        {{ csrf_input() }}
+  <form method="post" class="wizard" id="register-form" data-start-step="{{ start_step or 1 }}" novalidate>
+    {{ csrf_input() }}
 
-    <fieldset class="fieldset-block auth-step">
-      <legend>{{ t('register.step_role') }}</legend>
+    <nav class="wizard-steps" aria-label="{{ t('register.progress') }}">
+      <button type="button" class="wizard-pill" data-goto="1"><span class="n">{{ t('register.step_n', n=1) }}</span><span class="l">{{ t('register.step_role') }}</span></button>
+      <button type="button" class="wizard-pill" data-goto="2"><span class="n">{{ t('register.step_n', n=2) }}</span><span class="l">{{ t('register.step_identity') }}</span></button>
+      <button type="button" class="wizard-pill" data-goto="3"><span class="n">{{ t('register.step_n', n=3) }}</span><span class="l">{{ t('register.step_base') }}</span></button>
+    </nav>
+
+    {# ===== Étape 1 : rôle (+ type de profil pour les pilotes) ===== #}
+    <section class="wizard-step" data-step="1">
+      <h2>{{ t('register.step_role') }}</h2>
       <div class="role-cards role-cards-3">
-        {% set sel = request.args.get('role','client') %}
         <label>
           <input type="radio" name="role" value="client" {% if sel=='client' %}checked{% endif %}>
-          <span class="role-card">
-            <span class="name">{{ t('register.role_client_name') }}</span>
-            <span class="desc">{{ t('register.role_client_desc') }}</span>
-          </span>
+          <span class="role-card"><span class="name">{{ t('register.role_client_name') }}</span><span class="desc">{{ t('register.role_client_desc') }}</span></span>
         </label>
         <label>
           <input type="radio" name="role" value="pilot" {% if sel=='pilot' %}checked{% endif %}>
-          <span class="role-card">
-            <span class="name">{{ t('register.role_pilot_name') }}</span>
-            <span class="desc">{{ t('register.role_pilot_desc') }}</span>
-          </span>
+          <span class="role-card"><span class="name">{{ t('register.role_pilot_name') }}</span><span class="desc">{{ t('register.role_pilot_desc') }}</span></span>
         </label>
         <label>
           <input type="radio" name="role" value="both" {% if sel=='both' %}checked{% endif %}>
-          <span class="role-card">
-            <span class="name">{{ t('register.role_both_name') }}</span>
-            <span class="desc">{{ t('register.role_both_desc') }}</span>
-          </span>
+          <span class="role-card"><span class="name">{{ t('register.role_both_name') }}</span><span class="desc">{{ t('register.role_both_desc') }}</span></span>
         </label>
       </div>
-    </fieldset>
 
-    {% set sel_kind = request.args.get('kind', 'pro') %}
-    <fieldset class="fieldset-block auth-step" id="kind-block">
-      <legend>{{ t('register.step_kind') }}</legend>
-      <div class="role-cards role-cards-kinds">
-        {% for code, lbl in profile_kinds %}
-        <label>
-          <input type="radio" name="kind" value="{{ code }}" {% if sel_kind == code %}checked{% endif %}>
-          <span class="role-card">
-            <span class="name">{{ kind_label(code) }}</span>
-            <span class="desc">{% if code == 'pro' %}{{ t('register.kind_pro_desc') }}{% elif code == 'recreational' %}{{ t('register.kind_rec_desc') }}{% elif code == 'company' %}{{ t('register.kind_company_desc') }}{% elif code == 'shop' %}{{ t('register.kind_shop_desc') }}{% else %}{{ t('register.kind_school_desc') }}{% endif %}</span>
-          </span>
-        </label>
-        {% endfor %}
-      </div>
-      <p class="muted small" style="margin: 0;">{{ t('register.kind_editable') }}</p>
-      <div id="school-extra" style="display:none; margin-top: 12px;">
-        <div class="grid-2">
-          <label><span data-kl="school">{{ t('register.school_website') }}</span><span data-kl="shop" hidden>{{ t('register.shop_website') }}</span> <span class="muted small">({{ t('register.optional') }})</span>
-            <input name="website" type="url" placeholder="https://votre-ecole.ca">
+      <div id="kind-block" class="wizard-sub">
+        <h2>{{ t('register.step_kind') }}</h2>
+        <div class="role-cards role-cards-kinds">
+          {% for code, lbl in profile_kinds %}
+          <label>
+            <input type="radio" name="kind" value="{{ code }}" {% if sel_kind == code %}checked{% endif %}>
+            <span class="role-card"><span class="name">{{ kind_label(code) }}</span><span class="desc">{% if code == 'pro' %}{{ t('register.kind_pro_desc') }}{% elif code == 'recreational' %}{{ t('register.kind_rec_desc') }}{% elif code == 'company' %}{{ t('register.kind_company_desc') }}{% elif code == 'shop' %}{{ t('register.kind_shop_desc') }}{% else %}{{ t('register.kind_school_desc') }}{% endif %}</span></span>
           </label>
-          <label><span data-kl="school">{{ t('register.school_courses') }}</span><span data-kl="shop" hidden>{{ t('register.shop_products') }}</span> <span class="muted small">({{ t('register.one_per_line_optional') }})</span>
-            <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)"></textarea>
-          </label>
+          {% endfor %}
         </div>
-        <p class="muted small" style="margin: 0;">{{ t('register.school_note') }}</p>
+        <p class="field-hint">{{ t('register.kind_editable') }}</p>
+        <div id="school-extra" class="wizard-grid" hidden>
+          <label class="wl"><span class="lbl"><span data-kl="school">{{ t('register.school_website') }}</span><span data-kl="shop" hidden>{{ t('register.shop_website') }}</span> <em>({{ t('register.optional') }})</em></span>
+            <input name="website" type="url" value="{{ f.get('website', '') }}" placeholder="https://votre-ecole.ca">
+          </label>
+          <label class="wl"><span class="lbl"><span data-kl="school">{{ t('register.school_courses') }}</span><span data-kl="shop" hidden>{{ t('register.shop_products') }}</span> <em>({{ t('register.one_per_line_optional') }})</em></span>
+            <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)">{{ f.get('school_programs', '') }}</textarea>
+          </label>
+          <p class="field-hint" style="grid-column: 1 / -1;">{{ t('register.school_note') }}</p>
+        </div>
       </div>
-    </fieldset>
-    <script nonce="{{ csp_nonce }}">
-      // Le type de profil ne concerne que les pilotes / mixtes.
-      (function () {
-        var block = document.getElementById('kind-block');
-        var radios = document.querySelectorAll('input[name="role"]');
-        var kindRadios = document.querySelectorAll('input[name="kind"]');
-        var extra = document.getElementById('school-extra');
-        function sync() {
-          var role = (document.querySelector('input[name="role"]:checked') || {}).value;
-          block.style.display = (role === 'client') ? 'none' : '';
-          var kind = (document.querySelector('input[name="kind"]:checked') || {}).value;
-          var org = (kind === 'school' || kind === 'shop');
-          if (extra) extra.style.display = (role !== 'client' && org) ? '' : 'none';
-          // Libellés adaptés : une boutique ne propose pas des « formations ».
-          document.querySelectorAll('[data-kl]').forEach(function (n) {
-            n.hidden = (n.getAttribute('data-kl') !== (kind === 'shop' ? 'shop' : 'school'));
-          });
-        }
-        radios.forEach(function (r) { r.addEventListener('change', sync); });
-        kindRadios.forEach(function (r) { r.addEventListener('change', sync); });
-        {% if request.args.get('kind') %}
-        var pilotRadio = document.querySelector('input[name="role"][value="pilot"]');
-        if (pilotRadio && (document.querySelector('input[name="role"]:checked') || {}).value === 'client') pilotRadio.checked = true;
-        {% endif %}
-        sync();
-      })();
-    </script>
+    </section>
 
-    <fieldset class="fieldset-block auth-step">
-      <legend>{{ t('register.step_identity') }}</legend>
-      <div class="grid-2">
-        <label>{{ t('register.full_name') }} <span class="muted small">({{ t('register.or_school_name') }})</span>
-          <input name="full_name" required placeholder="{{ t('register.full_name_ph') }}">
+    {# ===== Étape 2 : identité ===== #}
+    <section class="wizard-step" data-step="2">
+      <h2>{{ t('register.step_identity') }}</h2>
+      <div class="wizard-grid">
+        <label class="wl"><span class="lbl">{{ t('register.full_name') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr> <em>({{ t('register.or_school_name') }})</em></span>
+          <input name="full_name" required value="{{ f.get('full_name', '') }}" placeholder="{{ t('register.full_name_ph') }}" autocomplete="name">
         </label>
-        <label>{{ t('register.username') }} <span class="muted small">({{ t('register.aubemail_address')|lower }})</span>
+        <label class="wl"><span class="lbl">{{ t('register.username') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr> <em>({{ t('register.aubemail_address')|lower }})</em></span>
           <span class="input-suffix">
-            <input name="username" id="reg-username" required minlength="3" maxlength="32" pattern="[a-z0-9_]{3,32}" placeholder="sophie_tremblay" title="3 à 32 caractères : lettres minuscules, chiffres et « _ » uniquement" autocomplete="username">
+            <input name="username" id="reg-username" required minlength="3" maxlength="32" pattern="[a-z0-9_]{3,32}" value="{{ f.get('username', '') }}" placeholder="sophie_tremblay" title="3 à 32 caractères : lettres minuscules, chiffres et « _ » uniquement" autocomplete="username">
             <span>@aubemail.com</span>
           </span>
         </label>
-        <label>{{ t('register.password') }}
+        <label class="wl"><span class="lbl">{{ t('register.password') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr></span>
           <span class="password-field">
             <input type="password" name="password" required minlength="8" autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">
-              <svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
-            </button>
+            <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">{{ eye_on }}</button>
           </span>
           <span class="field-hint">{{ t('register.password_hint') }}</span>
         </label>
-        <label>{{ t('register.confirm_password') }}
+        <label class="wl"><span class="lbl">{{ t('register.confirm_password') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr></span>
           <span class="password-field">
             <input type="password" name="confirm" required minlength="8" autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">
-              <svg data-eye="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg data-eye="off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c7 0 10.5 6 10.5 6a17.4 17.4 0 0 1-3.4 4.3M6.2 6.2A17.3 17.3 0 0 0 1.5 12S5 18 12 18a10.4 10.4 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
-            </button>
+            <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">{{ eye_on }}</button>
           </span>
         </label>
+        <label class="wl" style="grid-column: 1 / -1;"><span class="lbl">{{ t('register.phone') }} <em>({{ t('register.optional') }})</em></span>
+          {% with phone_value = f.get('phone', '') %}{% include "_phone_field.html" %}{% endwith %}
+        </label>
       </div>
-      <label style="margin-top: 4px;">{{ t('register.phone') }} <span class="muted small">({{ t('register.optional') }})</span>
-        {% with phone_value = form.get('phone','') if form else '' %}{% include "_phone_field.html" %}{% endwith %}
-      </label>
-    </fieldset>
+    </section>
 
-    <fieldset class="fieldset-block auth-step">
-      <legend>{{ t('register.step_base') }}</legend>
-      <div class="grid-2">
-        <label>{{ t('register.country') }}
+    {# ===== Étape 3 : localisation + envoi ===== #}
+    <section class="wizard-step" data-step="3">
+      <h2>{{ t('register.step_base') }}</h2>
+      <div class="wizard-grid">
+        <label class="wl"><span class="lbl">{{ t('register.country') }}</span>
           <select name="country">
             <option value="">—</option>
-            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
-            <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}">{{ label }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}"{% if f.get('country') == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}"{% if f.get('country') == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
           </select>
         </label>
-        <label>{{ t('register.city') }}
-          <input name="city" placeholder="{{ t('register.city_ph') }}">
+        <label class="wl"><span class="lbl">{{ t('register.city') }}</span>
+          <input name="city" value="{{ f.get('city', '') }}" placeholder="{{ t('register.city_ph') }}" autocomplete="address-level2">
         </label>
       </div>
-      <input type="hidden" name="lat" value="">
-      <input type="hidden" name="lng" value="">
-      <div class="row-inline" style="margin-top: 10px;">
+      <input type="hidden" name="lat" value="{{ f.get('lat', '') }}">
+      <input type="hidden" name="lng" value="{{ f.get('lng', '') }}">
+      <div class="row-inline" style="margin-top: 14px;">
         <button type="button" class="ghost" data-action="use-location">⌖ {{ t('register.use_location') }}</button>
-        <span class="muted small">{{ t('register.location_hint') }}</span>
+        <span class="field-hint" style="margin: 0;">{{ t('register.location_hint') }}</span>
       </div>
-    </fieldset>
 
-    {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
-    <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px; height:0; overflow:hidden;">
-      <label>{{ t('register.honeypot') }}
-        <input type="text" name="website_confirm" tabindex="-1" autocomplete="off">
-      </label>
+      {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
+      <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px; height:0; overflow:hidden;">
+        <label>{{ t('register.honeypot') }}<input type="text" name="website_confirm" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      {% if aubecaptcha_sitekey %}
+      <div style="margin: 22px 0 0;">
+        <script src="{{ aubecaptcha_url }}/widget.js" async defer></script>
+        <div class="aubecaptcha" data-sitekey="{{ aubecaptcha_sitekey }}"></div>
+      </div>
+      {% endif %}
+    </section>
+
+    <div class="wizard-actions">
+      <button type="button" class="ghost" data-nav="prev">← {{ t('register.prev') }}</button>
+      <span class="req-note"><abbr class="req">*</abbr> {{ t('register.required') }}</span>
+      <button type="button" class="cta" data-nav="next">{{ t('register.next') }} →</button>
+      <button type="submit" class="cta" data-nav="submit">{{ t('register.create_account') }}</button>
     </div>
-
-    {% if aubecaptcha_sitekey %}
-    <div style="margin: 4px 0 16px;">
-      <script src="{{ aubecaptcha_url }}/widget.js" async defer></script>
-      <div class="aubecaptcha" data-sitekey="{{ aubecaptcha_sitekey }}"></div>
-    </div>
-    {% endif %}
-
-    <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ t('register.create_account') }}</button>
     <div class="form-foot">
       <span class="small">{{ t('register.already_member') }} <a href="{{ url_for('login') }}">{{ t('register.login_link') }}</a></span>
       <span class="small muted">{{ t('register.complete_later') }}</span>
@@ -183,15 +149,88 @@
 
 <script nonce="{{ csp_nonce }}">
 (function () {
-  // Identifiant : minuscules, chiffres et « _ » seulement, corrigé à la frappe.
-  var champUser = document.getElementById('reg-username');
-  if (champUser) {
-    champUser.addEventListener('input', function () {
-      var v = champUser.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-      if (v !== champUser.value) champUser.value = v;
+  var form = document.getElementById('register-form');
+  if (!form) return;
+  var steps = Array.prototype.slice.call(form.querySelectorAll('.wizard-step'));
+  var pills = Array.prototype.slice.call(form.querySelectorAll('.wizard-pill'));
+  var prev = form.querySelector('[data-nav="prev"]');
+  var next = form.querySelector('[data-nav="next"]');
+  var submit = form.querySelector('[data-nav="submit"]');
+  var kindBlock = document.getElementById('kind-block');
+  var extra = document.getElementById('school-extra');
+  var current = 1, reached = 1;
+
+  // Rôle / type de profil : le type ne concerne que les pilotes ; site et
+  // formations seulement les écoles et boutiques (libellés adaptés).
+  function syncRole() {
+    var role = (form.querySelector('input[name="role"]:checked') || {}).value;
+    kindBlock.hidden = (role === 'client');
+    var kind = (form.querySelector('input[name="kind"]:checked') || {}).value;
+    var org = (kind === 'school' || kind === 'shop');
+    extra.hidden = !(role !== 'client' && org);
+    form.querySelectorAll('[data-kl]').forEach(function (n) {
+      n.hidden = (n.getAttribute('data-kl') !== (kind === 'shop' ? 'shop' : 'school'));
     });
   }
+  form.querySelectorAll('input[name="role"], input[name="kind"]').forEach(function (r) { r.addEventListener('change', syncRole); });
+  {% if request.args.get('kind') and not form %}
+  (function () { var p = form.querySelector('input[name="role"][value="pilot"]'); if (p && (form.querySelector('input[name="role"]:checked') || {}).value === 'client') p.checked = true; })();
+  {% endif %}
+  syncRole();
+
+  // Identifiant : minuscules, chiffres et « _ » seulement, corrigé à la frappe.
+  var champUser = document.getElementById('reg-username');
+  champUser.addEventListener('input', function () {
+    var v = champUser.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (v !== champUser.value) champUser.value = v;
+  });
+
+  // Validation native de l'étape courante avant d'avancer.
+  function stepValid(n) {
+    var ok = true;
+    steps[n - 1].querySelectorAll('input, select, textarea').forEach(function (el) {
+      if (!ok || el.closest('[hidden]') || el.type === 'hidden') return;
+      if (!el.checkValidity()) { el.reportValidity(); ok = false; }
+    });
+    if (ok && n === 2) {
+      var pw = form.querySelector('input[name="password"]'), cf = form.querySelector('input[name="confirm"]');
+      if (pw.value !== cf.value) { cf.setCustomValidity(cf.getAttribute('data-mismatch')); cf.reportValidity(); cf.setCustomValidity(''); ok = false; }
+    }
+    return ok;
+  }
+  function show(n) {
+    current = n; if (n > reached) reached = n;
+    steps.forEach(function (s, i) { s.hidden = (i + 1 !== n); });
+    pills.forEach(function (p, i) {
+      p.classList.toggle('on', i + 1 === n);
+      p.classList.toggle('done', i + 1 < n);
+      p.disabled = (i + 1 > reached);
+    });
+    prev.hidden = (n === 1);
+    next.hidden = (n === steps.length);
+    submit.hidden = (n !== steps.length);
+    // Remonte au haut de la carte, sous la barre fixe (pas de saut a la 1re ouverture).
+    if (form.classList.contains('is-wizard')) {
+      window.scrollTo({ top: Math.max(0, form.getBoundingClientRect().top + window.scrollY - 96), behavior: 'smooth' });
+    }
+  }
+  next.addEventListener('click', function () { if (stepValid(current)) show(current + 1); });
+  prev.addEventListener('click', function () { show(current - 1); });
+  pills.forEach(function (p) {
+    p.addEventListener('click', function () {
+      var n = parseInt(p.getAttribute('data-goto'), 10);
+      if (n <= current || (n === current + 1 && stepValid(current))) show(n);
+    });
+  });
+  form.addEventListener('submit', function (e) {
+    for (var i = 1; i <= steps.length; i++) { if (!stepValid(i)) { e.preventDefault(); show(i); return; } }
+  });
+  form.querySelector('input[name="confirm"]').setAttribute('data-mismatch', {{ t('register.mismatch')|tojson }});
+
+  var start = parseInt(form.getAttribute('data-start-step'), 10) || 1;
+  reached = start;
+  show(start);
+  form.classList.add('is-wizard');
 })();
 </script>
-
 {% endblock %}

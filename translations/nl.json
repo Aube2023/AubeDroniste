@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Instelling",
   "partners.kind.other": "Overig",
   "login.remember": "Automatisch inloggen",
-  "login.remember_hint": "Je blijft ingelogd op dit apparaat (30 dagen na je laatste bezoek). Vink uit op een gedeelde computer: de sessie eindigt zodra de browser sluit."
+  "login.remember_hint": "Je blijft ingelogd op dit apparaat (30 dagen na je laatste bezoek). Vink uit op een gedeelde computer: de sessie eindigt zodra de browser sluit.",
+  "register.step_n": "Stap {n}",
+  "register.progress": "Voortgang van de registratie",
+  "register.required": "Verplicht veld",
+  "register.prev": "Vorige",
+  "register.next": "Volgende",
+  "register.mismatch": "De wachtwoorden komen niet overeen."
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

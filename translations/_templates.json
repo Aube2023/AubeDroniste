@@ -6719,5 +6719,71 @@
   "tr": "Bu cihazda oturumunuz açık kalır (son ziyaretinizden 30 gün sonrasına kadar). Ortak bir bilgisayarda işareti kaldırın: oturum tarayıcı kapanınca sona erer.",
   "ur": "آپ اس ڈیوائس پر لاگ ان رہتے ہیں (آخری وزٹ کے 30 دن بعد تک)۔ مشترکہ کمپیوٹر پر اسے ان چیک کریں: براؤزر بند ہوتے ہی سیشن ختم ہو جاتا ہے۔",
   "bn": "আপনি এই ডিভাইসে লগইন থাকবেন (শেষ ভিজিটের 30 দিন পর পর্যন্ত)। ভাগ করা কম্পিউটারে টিক তুলে দিন: ব্রাউজার বন্ধ হলেই সেশন শেষ হবে।"
+ },
+ "register.step_n": {
+  "fr": "Étape {n}",
+  "en": "Step {n}",
+  "es": "Paso {n}",
+  "ru": "Шаг {n}",
+  "hi": "चरण {n}",
+  "uk": "Крок {n}",
+  "tr": "Adım {n}",
+  "ur": "مرحلہ {n}",
+  "bn": "ধাপ {n}"
+ },
+ "register.progress": {
+  "fr": "Progression de l'inscription",
+  "en": "Sign-up progress",
+  "es": "Progreso del registro",
+  "ru": "Ход регистрации",
+  "hi": "पंजीकरण की प्रगति",
+  "uk": "Хід реєстрації",
+  "tr": "Kayıt ilerlemesi",
+  "ur": "رجسٹریشن کی پیش رفت",
+  "bn": "নিবন্ধনের অগ্রগতি"
+ },
+ "register.required": {
+  "fr": "Champ obligatoire",
+  "en": "Required field",
+  "es": "Campo obligatorio",
+  "ru": "Обязательное поле",
+  "hi": "आवश्यक फ़ील्ड",
+  "uk": "Обов'язкове поле",
+  "tr": "Zorunlu alan",
+  "ur": "لازمی خانہ",
+  "bn": "আবশ্যক ঘর"
+ },
+ "register.prev": {
+  "fr": "Précédent",
+  "en": "Back",
+  "es": "Anterior",
+  "ru": "Назад",
+  "hi": "पिछला",
+  "uk": "Назад",
+  "tr": "Geri",
+  "ur": "پچھلا",
+  "bn": "পূর্ববর্তী"
+ },
+ "register.next": {
+  "fr": "Suivant",
+  "en": "Next",
+  "es": "Siguiente",
+  "ru": "Далее",
+  "hi": "अगला",
+  "uk": "Далі",
+  "tr": "İleri",
+  "ur": "اگلا",
+  "bn": "পরবর্তী"
+ },
+ "register.mismatch": {
+  "fr": "Les mots de passe ne correspondent pas.",
+  "en": "The passwords do not match.",
+  "es": "Las contraseñas no coinciden.",
+  "ru": "Пароли не совпадают.",
+  "hi": "पासवर्ड मेल नहीं खाते।",
+  "uk": "Паролі не збігаються.",
+  "tr": "Şifreler eşleşmiyor.",
+  "ur": "پاس ورڈ مماثل نہیں ہیں۔",
+  "bn": "পাসওয়ার্ড মিলছে না।"
  }
 }

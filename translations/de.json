@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Institution",
   "partners.kind.other": "Sonstiges",
   "login.remember": "Angemeldet bleiben",
-  "login.remember_hint": "Sie bleiben auf diesem Gerät angemeldet (30 Tage nach Ihrem letzten Besuch). Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser."
+  "login.remember_hint": "Sie bleiben auf diesem Gerät angemeldet (30 Tage nach Ihrem letzten Besuch). Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser.",
+  "register.step_n": "Schritt {n}",
+  "register.progress": "Fortschritt der Registrierung",
+  "register.required": "Pflichtfeld",
+  "register.prev": "Zurück",
+  "register.next": "Weiter",
+  "register.mismatch": "Die Passwörter stimmen nicht überein."
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

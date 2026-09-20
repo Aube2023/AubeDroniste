@@ -195,7 +195,8 @@ def test_run_migrations_is_safe_under_concurrency(client):
 
 def test_home_and_directory_embed_interactive_map(client):
     home = client.get("/").data.decode()
-    assert 'id="aube-map"' in home and "tiles.openfreemap.org/styles/positron" in home
+    # Fond sombre de jour comme de nuit depuis le 2026-09-20.
+    assert 'id="aube-map"' in home and "tiles.openfreemap.org/styles/dark" in home
     assert "cartocdn" not in home
     directory = client.get("/pilotes").data.decode()
     assert 'id="aube-map"' in directory and 'window.AubeMap' in directory

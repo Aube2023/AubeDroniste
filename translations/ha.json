@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Hukuma",
   "partners.kind.other": "Sauran",
   "login.remember": "Shiga ta atomatik",
-  "login.remember_hint": "Za ka ci gaba da kasancewa a shige a wannan na'urar (kwanaki 30 bayan ziyararka ta ƙarshe). Cire alamar a kwamfutar da ake rabawa: zaman yana ƙarewa idan aka rufe burauza."
+  "login.remember_hint": "Za ka ci gaba da kasancewa a shige a wannan na'urar (kwanaki 30 bayan ziyararka ta ƙarshe). Cire alamar a kwamfutar da ake rabawa: zaman yana ƙarewa idan aka rufe burauza.",
+  "register.step_n": "Mataki na {n}",
+  "register.progress": "Ci gaban rajista",
+  "register.required": "Filin da ake buƙata",
+  "register.prev": "Baya",
+  "register.next": "Gaba",
+  "register.mismatch": "Kalmomin sirri ba su yi daidai ba."
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "机构",
   "partners.kind.other": "其他",
   "login.remember": "自动登录",
-  "login.remember_hint": "在此设备上保持登录（最后一次访问后 30 天内）。共用电脑请取消勾选：关闭浏览器即结束会话。"
+  "login.remember_hint": "在此设备上保持登录（最后一次访问后 30 天内）。共用电脑请取消勾选：关闭浏览器即结束会话。",
+  "register.step_n": "第 {n} 步",
+  "register.progress": "注册进度",
+  "register.required": "必填项",
+  "register.prev": "上一步",
+  "register.next": "下一步",
+  "register.mismatch": "两次输入的密码不一致。"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

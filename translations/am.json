@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "ተቋም",
   "partners.kind.other": "ሌላ",
   "login.remember": "ራስ-ሰር መግቢያ",
-  "login.remember_hint": "በዚህ መሣሪያ ላይ ገብተው ይቆያሉ (ከመጨረሻ ጉብኝትዎ በኋላ 30 ቀናት)። በጋራ ኮምፒውተር ላይ ምልክቱን ያንሱ፦ አሳሹ ሲዘጋ ክፍለ-ጊዜው ይጠናቀቃል።"
+  "login.remember_hint": "በዚህ መሣሪያ ላይ ገብተው ይቆያሉ (ከመጨረሻ ጉብኝትዎ በኋላ 30 ቀናት)። በጋራ ኮምፒውተር ላይ ምልክቱን ያንሱ፦ አሳሹ ሲዘጋ ክፍለ-ጊዜው ይጠናቀቃል።",
+  "register.step_n": "ደረጃ {n}",
+  "register.progress": "የምዝገባ ሂደት",
+  "register.required": "አስፈላጊ መስክ",
+  "register.prev": "ቀዳሚ",
+  "register.next": "ቀጣይ",
+  "register.mismatch": "የይለፍ ቃላቱ አይዛመዱም።"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",

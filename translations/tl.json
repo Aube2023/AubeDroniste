@@ -1280,7 +1280,13 @@
   "partners.kind.institution": "Institusyon",
   "partners.kind.other": "Iba pa",
   "login.remember": "Awtomatikong pag-login",
-  "login.remember_hint": "Mananatili kang naka-login sa device na ito (30 araw pagkatapos ng huling pagbisita). Alisin ang check sa shared na computer: magtatapos ang session kapag isinara ang browser."
+  "login.remember_hint": "Mananatili kang naka-login sa device na ito (30 araw pagkatapos ng huling pagbisita). Alisin ang check sa shared na computer: magtatapos ang session kapag isinara ang browser.",
+  "register.step_n": "Hakbang {n}",
+  "register.progress": "Progreso ng pagpaparehistro",
+  "register.required": "Kinakailangang field",
+  "register.prev": "Bumalik",
+  "register.next": "Susunod",
+  "register.mismatch": "Hindi magkatugma ang mga password."
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",
