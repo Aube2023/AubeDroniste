@@ -1195,7 +1195,7 @@ def contact_submit():
 
 # Les API JSON publiques (/api/near, /api/pilotes, /api/missions) ne sont pas
 # authentifiees : elles ne doivent exposer QUE ce que voit un visiteur anonyme
-# sur les pages HTML (nom masque « Prenom X. », coordonnees floutees). Les
+# sur les pages HTML (nom public, coordonnees arrondies a ~100 m). Les
 # routines de recherche renvoient les lignes brutes (nom complet, lat/lng
 # exacts, username, bio, nom du client, adresse de mission) pour l'usage
 # serveur : on les assainit ici avant serialisation (minimisation, Loi 25).
@@ -1203,9 +1203,9 @@ def _public_pilot_json(p: dict) -> dict:
     out = dict(p)
     # Nom public masque (les ecoles gardent leur raison sociale, non nominative).
     out["full_name"] = services.public_name(p)
-    # Coordonnees floutees ~11 km, comme /api/map — jamais l'adresse exacte.
-    out["lat"] = services._fuzz_coord(p.get("lat"), 1)
-    out["lng"] = services._fuzz_coord(p.get("lng"), 1)
+    # Coordonnees arrondies a ~100 m, comme la carte — jamais la porte exacte.
+    out["lat"] = services._fuzz_coord(p.get("lat"), 3)
+    out["lng"] = services._fuzz_coord(p.get("lng"), 3)
     out.pop("username", None)   # handle d'identite AubeMail -> pas public
     out.pop("bio", None)        # texte libre potentiellement nominatif
     return out

@@ -4,8 +4,8 @@
    « API KEY REQUIRED » sur les tuiles). Styles : positron (jour) / dark (nuit).
    Marqueurs : pins « goutte » avec icone SVG (drone / chapeau d'ecole / drapeau
    mission), badge vérifié, et regroupement en pilule « N membres » quand des
-   marqueurs se chevauchent — frequent car les coords pilotes sont floutees
-   (~11 km) : les pilotes d'une meme ville tombent au meme point.
+   marqueurs se chevauchent — frequent : les pilotes situes par leur ville
+   (sans GPS) tombent tous au centre de celle-ci.
    Parametres optionnels passes via include `with` / contexte :
      map_focus  : 'pilots' | 'missions' (recadrage prioritaire), defaut 'pilots'
      map_center : {lat, lng, label, radius_km} -> zone recherchee (code postal /
@@ -13,7 +13,7 @@
      map_height : hauteur CSS (defaut 440px)
    Interactif : zoom/deplacement, popup au clic, survol d'une carte pilote de la
    liste => marqueur mis en avant, `window.AubeMap.focus(id)` => vol vers le
-   marqueur + popup. Coords pilote floutees cote serveur (~11 km). #}
+   marqueur + popup. Coords pilote arrondies cote serveur a ~100 m. #}
 {% set _focus = map_focus|default('pilots') %}
 {% set _center = map_center|default({}) %}
 {% set _height = map_height|default('440px') %}
@@ -663,10 +663,11 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     d.addEventListener('mouseenter', function () { setScale(d, true); });
     d.addEventListener('mouseleave', function () { setScale(d, false); });
     // Les points du groupe partagent-ils tous ~la meme coordonnee ? (les
-    // pilotes d'une meme ville ont des coords floutees identiques -> zoomer
-    // ne les separera jamais : on liste directement les membres.)
+    // pilotes situes par leur ville ont des coords identiques -> zoomer ne
+    // les separera jamais : on liste directement les membres.) Seuil ~200 m,
+    // coherent avec l'arrondi a 100 m du serveur.
     var sameSpot = arr.every(function (pt) {
-      return Math.abs(pt.lngLat[0] - center[0]) < 0.02 && Math.abs(pt.lngLat[1] - center[1]) < 0.02;
+      return Math.abs(pt.lngLat[0] - center[0]) < 0.002 && Math.abs(pt.lngLat[1] - center[1]) < 0.002;
     });
     function showList() {
       var items = arr.map(function (pt) {

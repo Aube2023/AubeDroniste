@@ -6259,15 +6259,15 @@
   "bn": "আপনার পাসওয়ার্ড হলো আপনার"
  },
  "tpl.votre_position_sert_au_tri_par": {
-  "fr": "Votre position sert au tri par distance et aux alertes dans votre rayon ; sur la carte elle est floutée d'environ 10 km.",
-  "en": "Your location is used for distance sorting and radius alerts; on the map it is blurred by about 10 km.",
-  "es": "Su ubicación sirve para ordenar por distancia y para las alertas dentro de su radio; en el mapa se difumina unos 10 km.",
-  "ru": "Ваше местоположение используется для сортировки по расстоянию и уведомлений в вашем радиусе; на карте оно размыто примерно на 10 км.",
-  "hi": "आपका स्थान दूरी के अनुसार छाँटने और आपके दायरे में अलर्ट के लिए उपयोग होता है; मानचित्र पर इसे लगभग 10 किमी तक धुंधला किया जाता है।",
-  "uk": "Ваше місцеперебування використовується для сортування за відстанню та сповіщень у вашому радіусі; на карті воно розмите приблизно на 10 км.",
-  "tr": "Konumunuz mesafeye göre sıralama ve yarıçapınızdaki bildirimler için kullanılır; haritada yaklaşık 10 km bulanıklaştırılır.",
-  "ur": "آپ کا مقام فاصلے کے لحاظ سے ترتیب اور آپ کے دائرے میں اطلاعات کے لیے استعمال ہوتا ہے؛ نقشے پر اسے تقریباً 10 کلومیٹر تک دھندلا دیا جاتا ہے۔",
-  "bn": "আপনার অবস্থান দূরত্ব অনুযায়ী সাজানো ও আপনার ব্যাসার্ধের সতর্কবার্তার কাজে লাগে; মানচিত্রে এটি প্রায় 10 কিমি ঝাপসা করা হয়।"
+  "fr": "Votre position sert au tri par distance, aux alertes dans votre rayon et à votre marqueur sur la carte (arrondie à 100 m environ).",
+  "en": "Your location is used for distance sorting, radius alerts and your marker on the map (rounded to about 100 m).",
+  "es": "Su ubicación sirve para ordenar por distancia, para las alertas dentro de su radio y para su marcador en el mapa (redondeada a unos 100 m).",
+  "ru": "Ваше местоположение используется для сортировки по расстоянию, уведомлений в вашем радиусе и вашего маркера на карте (округлено примерно до 100 м).",
+  "hi": "आपका स्थान दूरी के अनुसार छाँटने, आपके दायरे में अलर्ट और मानचित्र पर आपके मार्कर के लिए उपयोग होता है (लगभग 100 मीटर तक पूर्णांकित)।",
+  "uk": "Ваше місцеперебування використовується для сортування за відстанню, сповіщень у вашому радіусі та вашого маркера на карті (округлено приблизно до 100 м).",
+  "tr": "Konumunuz mesafeye göre sıralama, yarıçapınızdaki bildirimler ve haritadaki işaretçiniz için kullanılır (yaklaşık 100 m'ye yuvarlanır).",
+  "ur": "آپ کا مقام فاصلے کے لحاظ سے ترتیب، آپ کے دائرے میں اطلاعات اور نقشے پر آپ کے مارکر کے لیے استعمال ہوتا ہے (تقریباً 100 میٹر تک گول کیا جاتا ہے)۔",
+  "bn": "আপনার অবস্থান দূরত্ব অনুযায়ী সাজানো, আপনার ব্যাসার্ধের সতর্কবার্তা ও মানচিত্রে আপনার মার্কারের কাজে লাগে (প্রায় 100 মিটারে গোল করা)।"
  },
  "tpl.vous_avez_plusieurs_aeronefs_des_cycles": {
   "fr": "Vous avez plusieurs aéronefs, des cycles d'entretien, des heures de vol à tracer ?",

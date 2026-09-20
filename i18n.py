@@ -623,15 +623,6 @@ _T = {
 
     "home.map.eyebrow":      {"fr": "Carte interactive", "en": "Interactive map", "es": "Mapa interactivo", "ru": "Интерактивная карта", "hi": "इंटरैक्टिव मानचित्र", "uk": "Інтерактивна карта", "tr": "Etkileşimli harita", "ur": "متعامل نقشہ", "bn": "ইন্টারঅ্যাকটিভ মানচিত্র"},
     "home.map.h":            {"fr": "Les pilotes et les missions, sur la carte.", "en": "Pilots and missions, on the map.", "es": "Los pilotos y las misiones, en el mapa.", "ru": "Пилоты и задания на карте.", "hi": "पायलट और मिशन, मानचित्र पर।", "uk": "Пілоти та місії на карті.", "tr": "Pilotlar ve görevler haritada.", "ur": "پائلٹ اور مشن، نقشے پر۔", "bn": "পাইলট ও মিশন, মানচিত্রে।"},
-    "home.map.lead":         {"fr": "Zoomez, déplacez, cliquez un marqueur pour ouvrir le profil ou la mission. Bleu : pilotes pro · turquoise : récréatifs · vert : écoles · orange : missions ouvertes. Les positions des pilotes sont floutées d'environ 10 km. Puis cliquez un pays pour filtrer.",
-                               "en": "Zoom, pan, click a marker to open the profile or the mission. Blue: pro pilots · teal: recreational · green: schools · orange: open missions. Pilot positions are blurred by about 10 km. Then click a country to filter.",
-                               "es": "Amplíe, desplace y haga clic en un marcador para abrir el perfil o la misión. Azul: pilotos profesionales · turquesa: recreativos · verde: escuelas · naranja: misiones abiertas. Las posiciones de los pilotos se difuminan unos 10 km. Luego haga clic en un país para filtrar.",
-                               "ru": "Приближайте, перемещайте карту, нажмите на маркер, чтобы открыть профиль или задание. Синий — профессиональные пилоты · бирюзовый — любители · зелёный — школы · оранжевый — открытые задания. Позиции пилотов смещены примерно на 10 км. Затем нажмите на страну, чтобы отфильтровать.",
-                               "hi": "ज़ूम करें, खिसकाएँ, प्रोफ़ाइल या मिशन खोलने के लिए किसी मार्कर पर क्लिक करें। नीला: पेशेवर पायलट · फ़िरोज़ी: शौकिया · हरा: स्कूल · नारंगी: खुले मिशन। पायलटों की स्थिति लगभग 10 किमी तक धुंधली की जाती है। फिर फ़िल्टर करने के लिए किसी देश पर क्लिक करें।",
-                               "uk": "Наближайте, пересувайте, натисніть маркер, щоб відкрити профіль або місію. Синій — професійні пілоти · бірюзовий — аматори · зелений — школи · помаранчевий — відкриті місії. Позиції пілотів розмиті приблизно на 10 км. Далі натисніть країну, щоб відфільтрувати.",
-                               "tr": "Yakınlaştırın, kaydırın, profili veya görevi açmak için bir işaretçiye tıklayın. Mavi: profesyonel pilotlar · turkuaz: hobi pilotları · yeşil: okullar · turuncu: açık görevler. Pilot konumları yaklaşık 10 km bulanıklaştırılır. Ardından filtrelemek için bir ülkeye tıklayın.",
-                               "ur": "زوم کریں، نقشہ گھمائیں، پروفائل یا مشن کھولنے کے لیے کسی نشان پر کلک کریں۔ نیلا: پیشہ ور پائلٹ · فیروزی: شوقیہ · سبز: اسکول · نارنجی: کھلے مشن۔ پائلٹ کے مقامات تقریباً 10 کلومیٹر تک دھندلا دیے جاتے ہیں۔ چھانٹنے کے لیے کسی ملک پر کلک کریں۔",
-                               "bn": "জুম করুন, মানচিত্র সরান, প্রোফাইল বা মিশন খুলতে কোনো মার্কারে ক্লিক করুন। নীল: পেশাদার পাইলট · সবুজাভ নীল: শখের · সবুজ: স্কুল · কমলা: খোলা মিশন। পাইলটের অবস্থান প্রায় 10 কিমি পর্যন্ত ঝাপসা করা হয়। ফিল্টার করতে কোনো দেশে ক্লিক করুন।"},
     "home.map.all":          {"fr": "Annuaire complet →",  "en": "Full directory →", "es": "Directorio completo →", "ru": "Полный каталог →", "hi": "पूरी निर्देशिका →", "uk": "Повний каталог →", "tr": "Tam rehber →", "ur": "مکمل ڈائریکٹری →", "bn": "সম্পূর্ণ তালিকা →"},
 
     "home.manifesto.eyebrow":{"fr": "Manifeste", "en": "Manifesto", "es": "Manifiesto", "ru": "Манифест", "hi": "घोषणापत्र", "uk": "Маніфест", "tr": "Manifesto", "ur": "منشور", "bn": "ইশতেহার"},
@@ -809,15 +800,6 @@ _T = {
                      "tr": "Çok dilli, mobil, izleyicisiz.",
                      "ur": "کثیر لسانی، موبائل، بغیر ٹریکر۔",
                      "bn": "বহুভাষিক, মোবাইল, ট্র্যাকারমুক্ত।"},
-    "home.why.6.p": {"fr": "Dans votre langue, thème jour et nuit, application Android et écran d'accueil iPhone. Aucune publicité, positions floutées sur la carte, coordonnées échangées seulement après paiement.",
-                     "en": "In your language, day and night themes, Android app and iPhone home screen. No ads, blurred positions on the map, contact details exchanged only after payment.",
-                     "es": "En su idioma, temas de día y de noche, aplicación Android y pantalla de inicio en iPhone. Sin publicidad, posiciones difuminadas, identidades reveladas solo tras el pago.",
-                     "ru": "На вашем языке, светлая и тёмная темы, приложение для Android и ярлык на экране iPhone. Без рекламы, размытые позиции, личности раскрываются только после оплаты.",
-                     "hi": "आपकी भाषा में, दिन और रात की थीम, Android ऐप और iPhone होम स्क्रीन। कोई विज्ञापन नहीं, धुंधली स्थितियाँ, पहचान केवल भुगतान के बाद प्रकट होती है।",
-                     "uk": "Вашою мовою, денна й нічна теми, застосунок для Android і ярлик на екрані iPhone. Без реклами, позиції розмиті, особи розкриваються лише після оплати.",
-                     "tr": "Kendi dilinizde, gündüz ve gece temaları, Android uygulaması ve iPhone ana ekran kısayolu. Reklam yok, konumlar bulanık, kimlikler yalnızca ödemeden sonra açılır.",
-                     "ur": "آپ کی زبان میں، دن اور رات کی تھیم، Android ایپ اور iPhone ہوم اسکرین۔ کوئی اشتہار نہیں، مقامات دھندلے، شناخت صرف ادائیگی کے بعد ظاہر ہوتی ہے۔",
-                     "bn": "আপনার ভাষায়, দিন ও রাতের থিম, Android অ্যাপ ও iPhone হোম স্ক্রিন। কোনো বিজ্ঞাপন নেই, অবস্থান ঝাপসা, পরিচয় প্রকাশ পায় কেবল অর্থপ্রদানের পরে।"},
 
     # ---- Landing : rejoindre le reseau
     "home.join.eyebrow":    {"fr": "Rejoindre le réseau", "en": "Join the network", "es": "Unirse a la red", "ru": "Присоединиться к сети", "hi": "नेटवर्क से जुड़ें", "uk": "Приєднатися до мережі", "tr": "Ağa katılın", "ur": "نیٹ ورک میں شامل ہوں", "bn": "নেটওয়ার্কে যোগ দিন"},

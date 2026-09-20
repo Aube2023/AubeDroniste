@@ -78,7 +78,7 @@ def test_media_serves_public_portfolio(client):
 
 
 # ---------------------------------------------------------------------------
-# /api/pilotes : nom masque, coords floutees, champs internes retires
+# /api/pilotes : coords arrondies a 100 m, champs internes retires
 # ---------------------------------------------------------------------------
 
 def test_api_pilotes_masks_pii(app_ctx, client, make_user):
@@ -92,8 +92,9 @@ def test_api_pilotes_masks_pii(app_ctx, client, make_user):
     # Nom complet public depuis le 2026-09-19 (comme les annuaires du secteur) ;
     # ce qui reste prive : identifiant, bio, position exacte.
     assert p["full_name"] == services.public_name(u) == u["full_name"]
-    # Coordonnees floutees a la grille ~11 km (1 decimale), pas la valeur exacte.
-    assert p["lat"] == round(45.501234, 1)
+    # Coordonnees arrondies a ~100 m (3 decimales) : bonne localisation sur la
+    # carte (decision du 2026-09-20), sans publier la valeur GPS brute.
+    assert p["lat"] == round(45.501234, 3)
     assert p["lat"] != 45.501234
     # Champs internes retires.
     assert "username" not in p

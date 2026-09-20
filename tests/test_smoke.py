@@ -93,14 +93,14 @@ def test_api_map_shape(client):
 
 
 def test_api_map_coords_are_fuzzed(client):
-    # Les coords pilote renvoyees sont arrondies a 1 decimale (~11 km) :
-    # confidentialite de l'adresse exacte. On verifie l'invariant sur tout
-    # marqueur pilote geolocalise present.
+    # Les coords pilote renvoyees sont arrondies a 3 decimales (~100 m) :
+    # bonne localisation sur la carte (2026-09-20) sans publier la valeur GPS
+    # brute. On verifie l'invariant sur tout marqueur pilote geolocalise.
     r = client.get("/api/map")
     for p in r.get_json()["pilots"]:
         if p.get("lat") is not None:
-            assert round(p["lat"], 1) == p["lat"]
-            assert round(p["lng"], 1) == p["lng"]
+            assert round(p["lat"], 3) == p["lat"]
+            assert round(p["lng"], 3) == p["lng"]
 
 
 def test_csp_allows_maplibre(client):

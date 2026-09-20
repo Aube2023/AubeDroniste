@@ -3524,10 +3524,13 @@ def near_geo(lat: float, lng: float, radius_km: int = 100, limit: int = 10) -> d
 
 
 def _fuzz_coord(value: Optional[float], decimals: int) -> Optional[float]:
-    """Floute une coordonnee en l'arrondissant a une grille grossiere.
+    """Arrondit une coordonnee a une grille.
 
-    decimals=1 -> ~11 km (niveau quartier/ville) : protege l'adresse exacte
-    du pilote tout en restant utile pour une carte mondiale.
+    Pilotes : decimals=3 -> ~100 m (depuis le 2026-09-20 ; le flou de ~11 km
+    d'avant posait le marqueur a plusieurs km du pilote, decision user : une
+    bonne localisation). Le pilote choisit lui-meme sa position (ville ou GPS)
+    et l'arrondi evite juste de publier la porte exacte.
+    Missions : decimals=2 -> ~1 km, l'adresse du chantier reste privee.
     """
     if value is None:
         return None
@@ -3555,8 +3558,8 @@ def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
             continue
         p_out.append({
             "id": p["id"],
-            "lat": _fuzz_coord(p["lat"], 1),
-            "lng": _fuzz_coord(p["lng"], 1),
+            "lat": _fuzz_coord(p["lat"], 3),
+            "lng": _fuzz_coord(p["lng"], 3),
             "country": p.get("country"),
             "rating": p.get("rating", {}),
             "verified": bool(p.get("is_verified")),
