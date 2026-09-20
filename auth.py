@@ -26,6 +26,7 @@ from config import (
     SECRET_KEY,
     SESSION_COOKIE_NAME,
     SESSION_LIFETIME_DAYS,
+    SESSION_SHORT_HOURS,
 )
 import db
 
@@ -324,13 +325,28 @@ def current_sid() -> Optional[str]:
 # Sessions
 # ---------------------------------------------------------------------------
 
-def create_session(user_id: int, user_agent: str = "", ip: str = "") -> str:
+def session_lifetime(persistent: bool) -> timedelta:
+    """Duree d'une session : un an (connexion automatique) ou une journee
+    (le cookie, lui, tombe des que le navigateur se ferme)."""
+    return (timedelta(days=SESSION_LIFETIME_DAYS) if persistent
+            else timedelta(hours=SESSION_SHORT_HOURS))
+
+
+def session_cookie_max_age(persistent: bool) -> Optional[int]:
+    """max_age du cookie : plein pour la connexion automatique, None (cookie
+    de session navigateur) sinon."""
+    return 60 * 60 * 24 * SESSION_LIFETIME_DAYS if persistent else None
+
+
+def create_session(user_id: int, user_agent: str = "", ip: str = "",
+                   persistent: bool = True) -> str:
     sid = secrets.token_urlsafe(32)
-    expires = datetime.now(timezone.utc) + timedelta(days=SESSION_LIFETIME_DAYS)
+    expires = datetime.now(timezone.utc) + session_lifetime(persistent)
     db.execute(
-        "INSERT INTO sessions (sid, user_id, expires_at, user_agent, ip) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (sid, user_id, expires.isoformat(timespec="seconds"), user_agent[:200], ip[:64]),
+        "INSERT INTO sessions (sid, user_id, expires_at, user_agent, ip, persistent) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (sid, user_id, expires.isoformat(timespec="seconds"), user_agent[:200], ip[:64],
+         1 if persistent else 0),
     )
     return _signer.dumps(sid)
 
@@ -354,7 +370,8 @@ def load_user_from_request() -> Optional[dict]:
     except BadSignature:
         return None
     row = db.fetchone(
-        "SELECT u.*, s.expires_at AS session_expires_at FROM sessions s "
+        "SELECT u.*, s.expires_at AS session_expires_at, "
+        "       COALESCE(s.persistent, 1) AS session_persistent FROM sessions s "
         "JOIN users u ON u.id = s.user_id "
         "WHERE s.sid=? AND s.expires_at > datetime('now') AND u.deleted_at IS NULL",
         (sid,),
@@ -362,19 +379,21 @@ def load_user_from_request() -> Optional[dict]:
     if not row:
         return None
     user = dict(row)
-    _maybe_extend_session(sid, token, user.pop("session_expires_at", None))
+    _maybe_extend_session(sid, token, user.pop("session_expires_at", None),
+                          bool(user.pop("session_persistent", 1)))
     db.execute("UPDATE users SET last_seen_at=datetime('now') WHERE id=?", (user["id"],))
     return user
 
 
-def _maybe_extend_session(sid: str, token: str, expires_at) -> None:
+def _maybe_extend_session(sid: str, token: str, expires_at, persistent: bool = True) -> None:
     """Renouvellement glissant : tant que l'utilisateur revient, sa session ne
-    meurt jamais (sinon elle expire 30 jours apres le LOGIN, meme pour un
+    meurt jamais (sinon elle expire un an apres le LOGIN, meme pour un
     utilisateur actif tous les jours — et il doit se reconnecter).
 
-    Au plus une extension par jour (des que l'echeance a ete entamee d'un
-    jour), pour ne pas ecrire en base a chaque requete. Le cookie est re-pose
-    cote reponse par app._refresh_session_cookie via g.refreshed_session_token.
+    Au plus une extension par jour (par heure pour une session sans connexion
+    automatique), pour ne pas ecrire en base a chaque requete. Le cookie est
+    re-pose cote reponse par app._refresh_session_cookie via
+    g.refreshed_session_token (sans duree si la session n'est pas persistante).
     """
     if not expires_at:
         return
@@ -385,14 +404,17 @@ def _maybe_extend_session(sid: str, token: str, expires_at) -> None:
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
     now = datetime.now(timezone.utc)
-    if current - now > timedelta(days=SESSION_LIFETIME_DAYS - 1):
-        return  # session posee/renouvelee il y a moins d'un jour
-    new_expires = now + timedelta(days=SESSION_LIFETIME_DAYS)
+    lifetime = session_lifetime(persistent)
+    step = timedelta(days=1) if persistent else timedelta(hours=1)
+    if current - now > lifetime - step:
+        return  # session posee/renouvelee il y a moins d'un pas
+    new_expires = now + lifetime
     db.execute(
         "UPDATE sessions SET expires_at=? WHERE sid=?",
         (new_expires.isoformat(timespec="seconds"), sid),
     )
     g.refreshed_session_token = token
+    g.refreshed_session_persistent = persistent
 
 
 def attach_user():

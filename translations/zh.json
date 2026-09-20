@@ -1278,7 +1278,9 @@
   "partners.kind.media": "媒体",
   "partners.kind.technology": "科技",
   "partners.kind.institution": "机构",
-  "partners.kind.other": "其他"
+  "partners.kind.other": "其他",
+  "login.remember": "自动登录",
+  "login.remember_hint": "在此设备上保持登录一年。共用电脑请取消勾选：关闭浏览器即结束会话。"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

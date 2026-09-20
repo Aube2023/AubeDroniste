@@ -38,6 +38,10 @@
       <div class="form-aside">
         <a href="{{ aubemail_url }}" target="_blank" rel="noopener">{{ t('login.forgot') }}&nbsp;?</a>
       </div>
+      <label class="check remember-me">
+        <input type="checkbox" name="remember" value="1" checked>
+        <span>{{ t('login.remember') }} <span class="muted small">{{ t('login.remember_hint') }}</span></span>
+      </label>
     </fieldset>
 
     <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ t('login.btn') }}</button>

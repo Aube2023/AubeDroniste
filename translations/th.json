@@ -1278,7 +1278,9 @@
   "partners.kind.media": "สื่อ",
   "partners.kind.technology": "เทคโนโลยี",
   "partners.kind.institution": "สถาบัน",
-  "partners.kind.other": "อื่น ๆ"
+  "partners.kind.other": "อื่น ๆ",
+  "login.remember": "เข้าสู่ระบบอัตโนมัติ",
+  "login.remember_hint": "คุณจะยังคงเข้าสู่ระบบบนอุปกรณ์นี้เป็นเวลาหนึ่งปี บนคอมพิวเตอร์ที่ใช้ร่วมกันให้ยกเลิกการเลือก: เซสชันจะสิ้นสุดเมื่อปิดเบราว์เซอร์"
  },
  "seo": {
   "home.title": "จ้างนักบินโดรนที่ได้รับใบอนุญาต — ใบเสนอราคาฟรี | AubePilot",

@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Tehnologie",
   "partners.kind.institution": "Instituție",
-  "partners.kind.other": "Altele"
+  "partners.kind.other": "Altele",
+  "login.remember": "Autentificare automată",
+  "login.remember_hint": "Rămâi conectat pe acest dispozitiv timp de un an. Debifează pe un calculator partajat: sesiunea se închide odată cu browserul."
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

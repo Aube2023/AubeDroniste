@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Truyền thông",
   "partners.kind.technology": "Công nghệ",
   "partners.kind.institution": "Tổ chức",
-  "partners.kind.other": "Khác"
+  "partners.kind.other": "Khác",
+  "login.remember": "Đăng nhập tự động",
+  "login.remember_hint": "Bạn giữ đăng nhập trên thiết bị này trong một năm. Bỏ chọn trên máy dùng chung: phiên sẽ kết thúc khi đóng trình duyệt."
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -6697,5 +6697,27 @@
   "tr": "Diğer",
   "ur": "دیگر",
   "bn": "অন্যান্য"
+ },
+ "login.remember": {
+  "fr": "Connexion automatique",
+  "en": "Stay signed in",
+  "es": "Inicio de sesión automático",
+  "ru": "Автоматический вход",
+  "hi": "स्वचालित लॉगिन",
+  "uk": "Автоматичний вхід",
+  "tr": "Otomatik giriş",
+  "ur": "خودکار لاگ ان",
+  "bn": "স্বয়ংক্রিয় লগইন"
+ },
+ "login.remember_hint": {
+  "fr": "Vous restez connecté sur cet appareil pendant un an. Décochez sur un ordinateur partagé : la session se ferme avec le navigateur.",
+  "en": "You stay signed in on this device for a year. Untick on a shared computer: the session ends when the browser closes.",
+  "es": "Permanece conectado en este dispositivo durante un año. Desmárquelo en un ordenador compartido: la sesión se cierra con el navegador.",
+  "ru": "Вы остаётесь в системе на этом устройстве в течение года. Снимите галочку на общем компьютере: сеанс закроется вместе с браузером.",
+  "hi": "आप इस डिवाइस पर एक साल तक लॉग इन रहते हैं। साझा कंप्यूटर पर इसे अनचेक करें: ब्राउज़र बंद होते ही सत्र समाप्त हो जाएगा।",
+  "uk": "Ви залишаєтеся в системі на цьому пристрої протягом року. Зніміть позначку на спільному комп'ютері: сеанс закриється разом із браузером.",
+  "tr": "Bu cihazda bir yıl boyunca oturumunuz açık kalır. Ortak bir bilgisayarda işareti kaldırın: oturum tarayıcı kapanınca sona erer.",
+  "ur": "آپ اس ڈیوائس پر ایک سال تک لاگ ان رہتے ہیں۔ مشترکہ کمپیوٹر پر اسے ان چیک کریں: براؤزر بند ہوتے ہی سیشن ختم ہو جاتا ہے۔",
+  "bn": "আপনি এই ডিভাইসে এক বছর লগইন থাকবেন। ভাগ করা কম্পিউটারে টিক তুলে দিন: ব্রাউজার বন্ধ হলেই সেশন শেষ হবে।"
  }
 }

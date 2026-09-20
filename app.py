@@ -82,7 +82,6 @@ from config import (
     SEARCH_RADIUS_CHOICES,
     SECRET_KEY,
     SESSION_COOKIE_NAME,
-    SESSION_LIFETIME_DAYS,
     SOCIAL_LINKS,
     STRIPE_PUBLISHABLE_KEY,
     UPLOAD_DIR,
@@ -297,7 +296,7 @@ def _refresh_session_cookie(resp):
         resp.set_cookie(
             SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
             secure=app.config.get("SESSION_COOKIE_SECURE", False),
-            max_age=60 * 60 * 24 * SESSION_LIFETIME_DAYS,
+            max_age=auth.session_cookie_max_age(getattr(g, "refreshed_session_persistent", True)),
         )
     return resp
 
@@ -1794,7 +1793,7 @@ def register():
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
                         secure=app.config.get("SESSION_COOKIE_SECURE", False),
-                        max_age=60 * 60 * 24 * 30)
+                        max_age=auth.session_cookie_max_age(True))
         flash("Bienvenue sur AubePilot.", "success")
         return resp
     return render_template("register.html", seo=_register_seo())
@@ -1834,11 +1833,16 @@ def login():
         # inutilisable.
         from flask import session as flask_session
         flask_session.clear()
-        token = auth.create_session(row["id"], request.user_agent.string, request.remote_addr or "")
+        # Connexion automatique (case cochee par defaut) : session d'un an,
+        # prolongee a chaque visite. Decochee (ordinateur partage) : cookie
+        # sans duree, qui tombe avec le navigateur.
+        remember = request.form.get("remember") == "1"
+        token = auth.create_session(row["id"], request.user_agent.string, request.remote_addr or "",
+                                    persistent=remember)
         resp = make_response(redirect(next_url))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
                         secure=app.config.get("SESSION_COOKIE_SECURE", False),
-                        max_age=60 * 60 * 24 * 30)
+                        max_age=auth.session_cookie_max_age(remember))
         return resp
     return render_template("login.html", next_url=next_url, seo=_login_seo())
 

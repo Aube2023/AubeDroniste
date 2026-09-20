@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Tecnologia",
   "partners.kind.institution": "Instituição",
-  "partners.kind.other": "Outro"
+  "partners.kind.other": "Outro",
+  "login.remember": "Início de sessão automático",
+  "login.remember_hint": "Fica ligado neste dispositivo durante um ano. Desmarque num computador partilhado: a sessão termina com o navegador."
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

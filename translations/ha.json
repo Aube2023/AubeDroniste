@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Kafofin watsa labarai",
   "partners.kind.technology": "Fasaha",
   "partners.kind.institution": "Hukuma",
-  "partners.kind.other": "Sauran"
+  "partners.kind.other": "Sauran",
+  "login.remember": "Shiga ta atomatik",
+  "login.remember_hint": "Za ka ci gaba da kasancewa a shige a wannan na'urar har shekara guda. Cire alamar a kwamfutar da ake rabawa: zaman yana ƙarewa idan aka rufe burauza."
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Μέσα ενημέρωσης",
   "partners.kind.technology": "Τεχνολογία",
   "partners.kind.institution": "Φορέας",
-  "partners.kind.other": "Άλλο"
+  "partners.kind.other": "Άλλο",
+  "login.remember": "Αυτόματη σύνδεση",
+  "login.remember_hint": "Παραμένετε συνδεδεμένοι σε αυτή τη συσκευή για έναν χρόνο. Αποεπιλέξτε σε κοινόχρηστο υπολογιστή: η συνεδρία κλείνει μαζί με το πρόγραμμα περιήγησης."
  },
  "seo": {
   "home.title": "Προσλάβετε πιστοποιημένο χειριστή drone — Δωρεάν προσφορές | AubePilot",

@@ -1278,7 +1278,9 @@
   "partners.kind.media": "ஊடகம்",
   "partners.kind.technology": "தொழில்நுட்பம்",
   "partners.kind.institution": "நிறுவனம்",
-  "partners.kind.other": "மற்றவை"
+  "partners.kind.other": "மற்றவை",
+  "login.remember": "தானியங்கி உள்நுழைவு",
+  "login.remember_hint": "இந்தச் சாதனத்தில் ஒரு வருடம் உள்நுழைந்திருப்பீர்கள். பகிரப்பட்ட கணினியில் தேர்வை நீக்குங்கள்: உலாவி மூடப்படும்போது அமர்வு முடிவடையும்."
  },
  "seo": {
   "home.title": "சான்றளிக்கப்பட்ட ட்ரோன் விமானி — இலவச விலைப்புள்ளி | AubePilot",

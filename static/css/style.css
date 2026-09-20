@@ -1577,6 +1577,9 @@ img.avatar { object-fit: cover; }
 }
 .auth-form .form-foot .small { color: var(--ink-dim); font-size: 13px; }
 
+/* Connexion automatique : case sous le mot de passe, texte d'aide en dessous. */
+.remember-me { margin-top: 10px; align-items: start; }
+.remember-me > span { display: inline-flex; flex-direction: column; gap: 2px; }
 /* Lien discret sous un champ (ex. « Mot de passe oublié ? ») */
 .form-aside { text-align: end; margin-top: 8px; }
 .form-aside a { font-size: 12.5px; }

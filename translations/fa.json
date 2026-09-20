@@ -1278,7 +1278,9 @@
   "partners.kind.media": "رسانه",
   "partners.kind.technology": "فناوری",
   "partners.kind.institution": "نهاد",
-  "partners.kind.other": "سایر"
+  "partners.kind.other": "سایر",
+  "login.remember": "ورود خودکار",
+  "login.remember_hint": "در این دستگاه تا یک سال وارد می‌مانید. روی رایانه مشترک تیک را بردارید: نشست با بستن مرورگر پایان می‌یابد."
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

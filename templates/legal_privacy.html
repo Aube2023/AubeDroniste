@@ -5,7 +5,7 @@
 <article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
 
 <h1>Politique de confidentialité</h1>
-<p class="muted small">Dernière mise à jour : 13 septembre 2026 · Version 1.1 (première version : 9 mai 2026)</p>
+<p class="muted small">Dernière mise à jour : 20 septembre 2026 · Version 1.2 (première version : 9 mai 2026)</p>
 
 <p class="lead">
 La présente politique décrit comment <strong>Aube Pilot</strong>, marque
@@ -32,7 +32,7 @@ le contacter à tout moment :
   <li><strong>Profil client</strong> : ville, pays, téléphone (facultatif).</li>
   <li><strong>Missions et offres</strong> : description, budget, dates, localisation, échanges.</li>
   <li><strong>Paiements</strong> : traités par Stripe Connect ; nous conservons l'identifiant Stripe et l'historique des transactions, jamais les coordonnées bancaires complètes.</li>
-  <li><strong>Données techniques</strong> : adresse IP et navigateur, à trois endroits seulement : les journaux d'accès du serveur (conservés 14 jours pour le serveur web, 4 semaines pour l'application), la session ouverte à la connexion (supprimée à son expiration, 30 jours au plus après votre dernière visite) et le message envoyé par le formulaire de contact (adresse IP effacée après 90 jours, le message reste pour le suivi).</li>
+  <li><strong>Données techniques</strong> : adresse IP et navigateur, à trois endroits seulement : les journaux d'accès du serveur (conservés 14 jours pour le serveur web, 4 semaines pour l'application), la session ouverte à la connexion (supprimée à son expiration : un an au plus après votre dernière visite avec la connexion automatique, 24 heures sans elle) et le message envoyé par le formulaire de contact (adresse IP effacée après 90 jours, le message reste pour le suivi).</li>
 </ul>
 
 <h2>3. Finalités du traitement</h2>
@@ -107,7 +107,7 @@ l'article 3.5 de la Loi 25.
 <h2>9. Cookies</h2>
 <p>
 Aube Pilot utilise un strict minimum de cookies : <code>aubepilot_sid</code>
-(identifiant de session signé, HttpOnly, 30 jours, prolongés tant que vous revenez) et
+(identifiant de session signé, HttpOnly ; avec la case « Connexion automatique » cochée à la connexion, un an prolongé tant que vous revenez ; sans elle, il disparaît à la fermeture du navigateur) et
 <code>session</code> (cookie signé qui porte le jeton contre la falsification de
 requêtes et les messages d'état d'une page à l'autre ; il disparaît à la
 fermeture du navigateur), tous deux strictement nécessaires au fonctionnement,

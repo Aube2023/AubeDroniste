@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Technologia",
   "partners.kind.institution": "Instytucja",
-  "partners.kind.other": "Inne"
+  "partners.kind.other": "Inne",
+  "login.remember": "Automatyczne logowanie",
+  "login.remember_hint": "Pozostajesz zalogowany na tym urządzeniu przez rok. Odznacz na wspólnym komputerze: sesja kończy się z zamknięciem przeglądarki."
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

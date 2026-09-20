@@ -1278,7 +1278,9 @@
   "partners.kind.media": "ሚዲያ",
   "partners.kind.technology": "ቴክኖሎጂ",
   "partners.kind.institution": "ተቋም",
-  "partners.kind.other": "ሌላ"
+  "partners.kind.other": "ሌላ",
+  "login.remember": "ራስ-ሰር መግቢያ",
+  "login.remember_hint": "በዚህ መሣሪያ ላይ ለአንድ ዓመት ገብተው ይቆያሉ። በጋራ ኮምፒውተር ላይ ምልክቱን ያንሱ፦ አሳሹ ሲዘጋ ክፍለ-ጊዜው ይጠናቀቃል።"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",

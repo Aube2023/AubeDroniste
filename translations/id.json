@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Teknologi",
   "partners.kind.institution": "Institusi",
-  "partners.kind.other": "Lainnya"
+  "partners.kind.other": "Lainnya",
+  "login.remember": "Masuk otomatis",
+  "login.remember_hint": "Anda tetap masuk di perangkat ini selama setahun. Hapus centang di komputer bersama: sesi berakhir saat peramban ditutup."
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

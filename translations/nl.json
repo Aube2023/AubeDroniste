@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Technologie",
   "partners.kind.institution": "Instelling",
-  "partners.kind.other": "Overig"
+  "partners.kind.other": "Overig",
+  "login.remember": "Automatisch inloggen",
+  "login.remember_hint": "Je blijft een jaar ingelogd op dit apparaat. Vink uit op een gedeelde computer: de sessie eindigt zodra de browser sluit."
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

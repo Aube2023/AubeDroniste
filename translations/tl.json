@@ -1278,7 +1278,9 @@
   "partners.kind.media": "Media",
   "partners.kind.technology": "Teknolohiya",
   "partners.kind.institution": "Institusyon",
-  "partners.kind.other": "Iba pa"
+  "partners.kind.other": "Iba pa",
+  "login.remember": "Awtomatikong pag-login",
+  "login.remember_hint": "Mananatili kang naka-login sa device na ito nang isang taon. Alisin ang check sa shared na computer: magtatapos ang session kapag isinara ang browser."
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",
