@@ -64,6 +64,11 @@ REQUIRE_AUBEMAIL = os.environ.get(
     "AUBEPILOT_REQUIRE_AUBEMAIL", "0",
 ).strip().lower() in ("1", "true", "yes", "on")
 
+# Meteo sur la carte (conditions Open-Meteo + radar RainViewer) : eteinte
+# depuis le 2026-09-20 (« pour l'instant on ne s'en sert pas »). Le code reste ;
+# AUBEPILOT_METEO_ENABLED=1 pour la rallumer (bouton, bulles, API, CSP, politique).
+METEO_ENABLED = os.environ.get("AUBEPILOT_METEO_ENABLED", "0").strip().lower() in ("1", "true", "yes", "on")
+
 # Fichiers
 MAX_UPLOAD_MB = 10
 ALLOWED_DOC_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}

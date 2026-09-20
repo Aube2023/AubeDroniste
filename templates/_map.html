@@ -126,6 +126,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   if (!el || typeof maplibregl === 'undefined') return;
   var LANG_PREFIX = {{ lang_prefix | tojson }};
   var L10N = {{ map_l10n | tojson }};
+  var METEO_ON = {{ 'true' if meteo_enabled else 'false' }};   // config.METEO_ENABLED
   var FOCUS = {{ ('"' ~ _focus ~ '"') | safe }};
   var CENTER = {{ (_center or none) | tojson }};
   var params = new URLSearchParams(window.location.search);
@@ -391,7 +392,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     return wrap;
   };
   MeteoToggle.prototype.onRemove = function () { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); };
-  map.addControl(new MeteoToggle(), 'top-right');
+  {% if meteo_enabled %}map.addControl(new MeteoToggle(), 'top-right');{% endif %}
 
   // ---- Trafic aerien ADS-B : situation reelle autour de la zone.
   // Relaye par notre serveur (adsb.lol, cache 10 s) ; sondage toutes les 15 s
@@ -561,6 +562,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   });
   // Dans une fenetre de marqueur ouverte : les conditions a ce point.
   function attachPopupMeteo(popup, lat, lng) {
+    if (!METEO_ON) return;
     popup.on('open', function () {
       var body = popup.getElement() && popup.getElement().querySelector('.aube-pop-body');
       if (!body || body.querySelector('.aube-pop-meteo')) return;

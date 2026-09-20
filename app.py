@@ -474,6 +474,7 @@ def _inject_globals():
         "seo_alternates": _seo_alternates(),
         "lang_suggestion": _lang_suggestion(),
         "map_l10n": _map_l10n(),
+        "meteo_enabled": config.METEO_ENABLED,
     }
 
 
@@ -1245,6 +1246,8 @@ def _public_mission_json(m: dict) -> dict:
 def api_meteo():
     """Conditions au point + verdict de vol (relais Open-Meteo, cache 10 min).
     204 si la source ne repond pas : la carte reste utilisable sans meteo."""
+    if not config.METEO_ENABLED:
+        abort(404)
     lat = _to_float(request.args.get("lat"))
     lng = _to_float(request.args.get("lng"))
     if lat is None or lng is None:
@@ -1277,6 +1280,8 @@ def api_adsb():
 @app.route("/api/meteo/radar")
 @security.rate_limit(per_minute=30, per_hour=300)
 def api_meteo_radar():
+    if not config.METEO_ENABLED:
+        abort(404)
     data = meteo.radar()
     if not data:
         return ("", 204)

@@ -124,6 +124,15 @@ def rate_limit(per_minute: int = 10, per_hour: int = 100, key: Optional[str] = N
 # Security headers
 # ---------------------------------------------------------------------------
 
+def _meteo_enabled() -> bool:
+    """Radar RainViewer dans la CSP seulement quand la meteo est allumee."""
+    try:
+        import config
+        return bool(config.METEO_ENABLED)
+    except Exception:
+        return False
+
+
 def apply_security_headers(resp):
     """after_request hook : pose les en-tetes de securite recommandes."""
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -154,7 +163,8 @@ def apply_security_headers(resp):
         "child-src 'self' blob:; "
         "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
         "connect-src 'self' https://api.stripe.com https://tiles.openfreemap.org "
-        "https://server.arcgisonline.com https://tilecache.rainviewer.com "
+        "https://server.arcgisonline.com "
+        + ("https://tilecache.rainviewer.com " if _meteo_enabled() else "") +
         "https://aubemail.com https://captcha.aubeetoilee.com; "
         "form-action 'self' https://checkout.stripe.com https://connect.stripe.com; "
         "frame-ancestors 'none'; "

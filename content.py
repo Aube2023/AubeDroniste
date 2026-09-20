@@ -308,12 +308,9 @@ _UPDATES = [
                "hebreo, persa, ruso, ucraniano, turco, hindi, nepalí, tamil, urdu, bengalí, "
                "tailandés, chino, japonés, coreano, vietnamita, indonesio, filipino, suajili, "
                "amárico y hausa."},
-        {"fr": "Carte : météo en direct avec verdict de vol, radar de précipitations, trafic aérien "
-               "autour de la zone et vue satellite.",
-         "en": "Map: live weather with a fly / no-fly verdict, precipitation radar, live air traffic "
-               "around the area and a satellite view.",
-         "es": "Mapa: meteorología en directo con veredicto de vuelo, radar de precipitaciones, tráfico "
-               "aéreo alrededor de la zona y vista satélite."},
+        {"fr": "Carte : trafic aérien en direct autour de la zone et vue satellite.",
+         "en": "Map: live air traffic around the area and a satellite view.",
+         "es": "Mapa: tráfico aéreo en directo alrededor de la zona y vista satélite."},
         {"fr": "Repères de confiance sur chaque fiche pilote : membre depuis, délai de réponse habituel, "
                "missions livrées.",
          "en": "Trust markers on every pilot page: member since, usual response time, missions delivered.",

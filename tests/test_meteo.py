@@ -72,7 +72,30 @@ def test_radar(monkeypatch):
     assert r["latest"]["path"] == "/v2/radar/9"
 
 
+def _allume(monkeypatch):
+    # La meteo est eteinte par defaut depuis le 2026-09-20 (config.METEO_ENABLED) ;
+    # les tests de l'API la rallument le temps du test.
+    import config
+    monkeypatch.setattr(config, "METEO_ENABLED", True)
+
+
+def test_meteo_eteinte_par_defaut(client):
+    # Interrupteur a zero : pas de bouton, pas de ligne dans les bulles, API
+    # absente, hote RainViewer hors CSP, politique sans mention meteo.
+    import config
+    assert config.METEO_ENABLED is False
+    assert client.get("/api/meteo?lat=45.5&lng=-73.6").status_code == 404
+    assert client.get("/api/meteo/radar").status_code == 404
+    r = client.get("/pilotes")
+    html = r.data.decode()
+    assert "new MeteoToggle()" not in html and "var METEO_ON = false" in html
+    assert "tilecache.rainviewer.com" not in r.headers.get("Content-Security-Policy", "")
+    priv = client.get("/confidentialite").data.decode()
+    assert "RainViewer" not in priv and "Open-Meteo" not in priv
+
+
 def test_api_meteo(client, monkeypatch):
+    _allume(monkeypatch)
     monkeypatch.setattr(meteo, "_get_json", lambda url: {"current": _cur()})
     meteo._cache.clear()
     assert client.get("/api/meteo").status_code == 400
@@ -85,6 +108,7 @@ def test_api_meteo(client, monkeypatch):
 
 
 def test_api_radar(client, monkeypatch):
+    _allume(monkeypatch)
     monkeypatch.setattr(meteo, "_get_json", lambda url: {
         "host": "https://tilecache.rainviewer.com", "radar": {"past": [{"time": 1, "path": "/v2/radar/a"}]}})
     meteo._cache.clear()
@@ -92,10 +116,11 @@ def test_api_radar(client, monkeypatch):
     assert r.status_code == 200 and r.get_json()["latest"]["path"] == "/v2/radar/a"
 
 
-def test_carte_embarque_le_bouton_et_les_libelles(client):
+def test_carte_embarque_le_bouton_et_les_libelles(client, monkeypatch):
+    _allume(monkeypatch)
     html = client.get("/pilotes").data.decode()
     assert '"meteo":' in html and "Conditions de vol" in html
-    assert "/api/meteo/radar" in html
+    assert "/api/meteo/radar" in html and "new MeteoToggle()" in html
     # la CSP laisse passer les tuiles radar, que MapLibre charge par fetch
     assert "tilecache.rainviewer.com" in client.get("/pilotes").headers.get("Content-Security-Policy", "")
     import json
