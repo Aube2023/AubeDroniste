@@ -1251,7 +1251,18 @@
   "opp.filter_country": "البلد",
   "opp.all_countries": "كل البلدان",
   "opp.name_recheck": "إذا غيّرت اسمك، تعود رخصك الموثّقة إلى المراجعة (48 ساعة).",
-  "opp.name_edit_in_settings": "تعديل اسمي في الإعدادات ←"
+  "opp.name_edit_in_settings": "تعديل اسمي في الإعدادات ←",
+  "tpl.image_de_couverture": "صورة الغلاف",
+  "tpl.couverture_intro": "صورة أفقية تُعرض كشريط في أعلى ملفك العام: منظر جوي، أرضك، فريقك.",
+  "tpl.couverture_format": "صورة أفقية (JPG/PNG/WebP، بحد أقصى {mb} م.ب، يُنصح بـ 1600 × 500 بكسل)",
+  "tpl.retirer_la_couverture": "هل تريد إزالة صورة الغلاف؟",
+  "tpl.retirer_la_couverture_2": "إزالة الغلاف",
+  "tpl.couverture_de": "صورة غلاف",
+  "cover.updated": "تم تحديث صورة الغلاف.",
+  "cover.removed": "تمت إزالة صورة الغلاف.",
+  "cover.bad_format": "الصيغة غير مقبولة. استخدم JPG أو PNG أو WebP.",
+  "cover.too_big": "الصورة كبيرة جدًا (بحد أقصى {mb} م.ب).",
+  "cover.no_file": "لم يتم اختيار أي ملف."
  },
  "seo": {
   "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",

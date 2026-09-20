@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     lng           REAL,
     role          TEXT NOT NULL DEFAULT 'client', -- 'client' | 'pilot' | 'both'
     avatar_path   TEXT,
+    cover_path    TEXT,                             -- image de couverture (bandeau paysage de la fiche)
     bio           TEXT,
     is_verified   INTEGER NOT NULL DEFAULT 0,
     is_admin      INTEGER NOT NULL DEFAULT 0,

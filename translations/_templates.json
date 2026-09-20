@@ -6378,5 +6378,126 @@
   "tr": "Aranan bölge",
   "ur": "تلاش کا علاقہ",
   "bn": "অনুসন্ধানের এলাকা"
+ },
+ "tpl.image_de_couverture": {
+  "fr": "Image de couverture",
+  "en": "Cover image",
+  "es": "Imagen de portada",
+  "ru": "Обложка профиля",
+  "hi": "कवर छवि",
+  "uk": "Обкладинка профілю",
+  "tr": "Kapak görseli",
+  "ur": "کور تصویر",
+  "bn": "কভার ছবি"
+ },
+ "tpl.couverture_intro": {
+  "fr": "Une photo en paysage, affichée en bandeau en haut de votre fiche publique : une vue aérienne, votre terrain, votre équipe.",
+  "en": "A landscape photo shown as a banner at the top of your public profile: an aerial view, your field, your team.",
+  "es": "Una foto apaisada que se muestra como banda en la parte superior de tu ficha pública: una vista aérea, tu terreno, tu equipo.",
+  "ru": "Горизонтальное фото, которое показывается полосой вверху вашего публичного профиля: вид с воздуха, ваша площадка, ваша команда.",
+  "hi": "एक लैंडस्केप फ़ोटो जो आपकी सार्वजनिक प्रोफ़ाइल के शीर्ष पर बैनर के रूप में दिखती है: हवाई दृश्य, आपका इलाका, आपकी टीम।",
+  "uk": "Горизонтальне фото, що показується смугою вгорі вашого публічного профілю: вид з повітря, ваш майданчик, ваша команда.",
+  "tr": "Herkese açık profilinizin üstünde şerit olarak gösterilen yatay bir fotoğraf: havadan bir görünüm, sahanız, ekibiniz.",
+  "ur": "ایک افقی تصویر جو آپ کے عوامی پروفائل کے اوپر بینر کے طور پر دکھائی جاتی ہے: فضائی منظر، آپ کا علاقہ، آپ کی ٹیم۔",
+  "bn": "একটি ল্যান্ডস্কেপ ছবি যা আপনার পাবলিক প্রোফাইলের উপরে ব্যানার হিসেবে দেখানো হয়: একটি আকাশ থেকে তোলা দৃশ্য, আপনার মাঠ, আপনার দল।"
+ },
+ "tpl.couverture_format": {
+  "fr": "Image paysage (JPG/PNG/WebP, max {mb} Mo, 1600 × 500 px conseillé)",
+  "en": "Landscape image (JPG/PNG/WebP, max {mb} MB, 1600 × 500 px recommended)",
+  "es": "Imagen apaisada (JPG/PNG/WebP, máx. {mb} MB, 1600 × 500 px recomendado)",
+  "ru": "Горизонтальное изображение (JPG/PNG/WebP, макс. {mb} МБ, рекомендуется 1600 × 500 px)",
+  "hi": "लैंडस्केप छवि (JPG/PNG/WebP, अधिकतम {mb} MB, 1600 × 500 px अनुशंसित)",
+  "uk": "Горизонтальне зображення (JPG/PNG/WebP, макс. {mb} МБ, рекомендовано 1600 × 500 px)",
+  "tr": "Yatay görsel (JPG/PNG/WebP, en fazla {mb} MB, 1600 × 500 px önerilir)",
+  "ur": "افقی تصویر (JPG/PNG/WebP، زیادہ سے زیادہ {mb} MB، 1600 × 500 px تجویز کردہ)",
+  "bn": "ল্যান্ডস্কেপ ছবি (JPG/PNG/WebP, সর্বোচ্চ {mb} MB, 1600 × 500 px প্রস্তাবিত)"
+ },
+ "tpl.retirer_la_couverture": {
+  "fr": "Retirer l'image de couverture ?",
+  "en": "Remove the cover image?",
+  "es": "¿Quitar la imagen de portada?",
+  "ru": "Убрать обложку?",
+  "hi": "कवर छवि हटाएँ?",
+  "uk": "Прибрати обкладинку?",
+  "tr": "Kapak görseli kaldırılsın mı?",
+  "ur": "کور تصویر ہٹائیں؟",
+  "bn": "কভার ছবি সরাবেন?"
+ },
+ "tpl.retirer_la_couverture_2": {
+  "fr": "Retirer la couverture",
+  "en": "Remove cover image",
+  "es": "Quitar la portada",
+  "ru": "Убрать обложку",
+  "hi": "कवर हटाएँ",
+  "uk": "Прибрати обкладинку",
+  "tr": "Kapağı kaldır",
+  "ur": "کور ہٹائیں",
+  "bn": "কভার সরান"
+ },
+ "tpl.couverture_de": {
+  "fr": "Image de couverture de",
+  "en": "Cover image of",
+  "es": "Imagen de portada de",
+  "ru": "Обложка:",
+  "hi": "कवर छवि:",
+  "uk": "Обкладинка:",
+  "tr": "Kapak görseli:",
+  "ur": "کور تصویر:",
+  "bn": "কভার ছবি:"
+ },
+ "cover.updated": {
+  "fr": "Image de couverture mise à jour.",
+  "en": "Cover image updated.",
+  "es": "Imagen de portada actualizada.",
+  "ru": "Обложка обновлена.",
+  "hi": "कवर छवि अपडेट हो गई।",
+  "uk": "Обкладинку оновлено.",
+  "tr": "Kapak görseli güncellendi.",
+  "ur": "کور تصویر اپ ڈیٹ ہو گئی۔",
+  "bn": "কভার ছবি আপডেট হয়েছে।"
+ },
+ "cover.removed": {
+  "fr": "Image de couverture retirée.",
+  "en": "Cover image removed.",
+  "es": "Imagen de portada eliminada.",
+  "ru": "Обложка убрана.",
+  "hi": "कवर छवि हटा दी गई।",
+  "uk": "Обкладинку прибрано.",
+  "tr": "Kapak görseli kaldırıldı.",
+  "ur": "کور تصویر ہٹا دی گئی۔",
+  "bn": "কভার ছবি সরানো হয়েছে।"
+ },
+ "cover.bad_format": {
+  "fr": "Format non accepté. Utiliser : JPG, PNG ou WebP.",
+  "en": "Format not accepted. Use JPG, PNG or WebP.",
+  "es": "Formato no aceptado. Usa JPG, PNG o WebP.",
+  "ru": "Формат не поддерживается. Используйте JPG, PNG или WebP.",
+  "hi": "फ़ॉर्मैट स्वीकार नहीं है। JPG, PNG या WebP का उपयोग करें।",
+  "uk": "Формат не підтримується. Використовуйте JPG, PNG або WebP.",
+  "tr": "Format kabul edilmiyor. JPG, PNG veya WebP kullanın.",
+  "ur": "فارمیٹ قبول نہیں۔ JPG، PNG یا WebP استعمال کریں۔",
+  "bn": "ফরম্যাট গ্রহণযোগ্য নয়। JPG, PNG বা WebP ব্যবহার করুন।"
+ },
+ "cover.too_big": {
+  "fr": "Image trop lourde (max {mb} Mo).",
+  "en": "Image too large (max {mb} MB).",
+  "es": "Imagen demasiado pesada (máx. {mb} MB).",
+  "ru": "Изображение слишком большое (макс. {mb} МБ).",
+  "hi": "छवि बहुत बड़ी है (अधिकतम {mb} MB)।",
+  "uk": "Зображення завелике (макс. {mb} МБ).",
+  "tr": "Görsel çok büyük (en fazla {mb} MB).",
+  "ur": "تصویر بہت بڑی ہے (زیادہ سے زیادہ {mb} MB)۔",
+  "bn": "ছবিটি খুব বড় (সর্বোচ্চ {mb} MB)।"
+ },
+ "cover.no_file": {
+  "fr": "Aucun fichier sélectionné.",
+  "en": "No file selected.",
+  "es": "Ningún archivo seleccionado.",
+  "ru": "Файл не выбран.",
+  "hi": "कोई फ़ाइल चुनी नहीं गई।",
+  "uk": "Файл не вибрано.",
+  "tr": "Dosya seçilmedi.",
+  "ur": "کوئی فائل منتخب نہیں کی گئی۔",
+  "bn": "কোনো ফাইল নির্বাচন করা হয়নি।"
  }
 }

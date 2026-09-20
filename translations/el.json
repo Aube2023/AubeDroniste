@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Χώρα",
   "opp.all_countries": "Όλες οι χώρες",
   "opp.name_recheck": "Αν αλλάξετε όνομα, τα επαληθευμένα πιστοποιητικά σας επιστρέφουν σε έλεγχο (48 ώρες).",
-  "opp.name_edit_in_settings": "Αλλαγή ονόματος στις ρυθμίσεις →"
+  "opp.name_edit_in_settings": "Αλλαγή ονόματος στις ρυθμίσεις →",
+  "tpl.image_de_couverture": "Εικόνα εξωφύλλου",
+  "tpl.couverture_intro": "Μια οριζόντια φωτογραφία που εμφανίζεται ως banner στην κορυφή του δημόσιου προφίλ σας: μια εναέρια λήψη, ο χώρος σας, η ομάδα σας.",
+  "tpl.couverture_format": "Οριζόντια εικόνα (JPG/PNG/WebP, έως {mb} MB, συνιστάται 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Αφαίρεση της εικόνας εξωφύλλου;",
+  "tpl.retirer_la_couverture_2": "Αφαίρεση εξωφύλλου",
+  "tpl.couverture_de": "Εικόνα εξωφύλλου:",
+  "cover.updated": "Η εικόνα εξωφύλλου ενημερώθηκε.",
+  "cover.removed": "Η εικόνα εξωφύλλου αφαιρέθηκε.",
+  "cover.bad_format": "Μη αποδεκτή μορφή. Χρησιμοποιήστε JPG, PNG ή WebP.",
+  "cover.too_big": "Η εικόνα είναι πολύ μεγάλη (έως {mb} MB).",
+  "cover.no_file": "Δεν επιλέχθηκε αρχείο."
  },
  "seo": {
   "home.title": "Προσλάβετε πιστοποιημένο χειριστή drone — Δωρεάν προσφορές | AubePilot",

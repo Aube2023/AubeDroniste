@@ -67,6 +67,7 @@ from config import (
     MAX_UPLOAD_MB,
     MAX_DELIVERABLE_MB,
     MAX_AVATAR_MB,
+    MAX_COVER_MB,
     MAX_PORTFOLIO_MB,
     MAX_PORTFOLIO_VIDEOS,
     ALLOWED_DELIVERABLE_EXT,
@@ -1334,11 +1335,15 @@ def pilot_detail(user_id):
     can_view_credentials = services.client_can_view_pilot_credentials(viewer_id, user_id)
     masked = profile["full_name"]   # nom complet public depuis le 2026-09-19
     public_name = profile["full_name"]
-    avatar = profile.get("avatar_path") or ""
-    avatar_url = (seo.CANONICAL_BASE + "/media/" + avatar[8:]) if avatar.startswith("uploads/") else None
+    # Apercu partage (og:image) : l'image de couverture d'abord (paysage, le
+    # format que LinkedIn et Facebook affichent sans recadrer), sinon la photo
+    # de profil, sinon la premiere realisation plutot que le logo generique.
+    avatar_url = None
+    for candidate in (profile.get("cover_path") or "", profile.get("avatar_path") or ""):
+        if candidate.startswith("uploads/"):
+            avatar_url = seo.CANONICAL_BASE + "/media/" + candidate[8:]
+            break
     if not avatar_url:
-        # Pas de photo de profil : l'apercu partage sur LinkedIn ou Facebook
-        # prend la premiere realisation plutot que le logo generique.
         cover = services.portfolio_cover(user_id)
         if cover:
             avatar_url = seo.CANONICAL_BASE + "/media/" + cover
@@ -1999,6 +2004,7 @@ def pilot_edit():
     return render_template(
         "pilot_edit.html",
         profile=profile,
+        max_cover_mb=MAX_COVER_MB,
         insurance_state=services.insurance_state(profile),
         vis=services.pilot_visibility(user["id"]),
         profile_views=services.profile_view_counts(user["id"]),
@@ -2707,6 +2713,56 @@ def pilot_delete_avatar():
     return redirect(url_for("pilot_edit"))
 
 
+# ---------------------------------------------------------------------------
+# Image de couverture (bandeau paysage en haut de la fiche publique)
+# ---------------------------------------------------------------------------
+
+def _remove_upload(rel) -> None:
+    """Efface du disque un chemin `uploads/...` (silencieux s'il manque)."""
+    if rel and rel.startswith("uploads/"):
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, rel[len("uploads/"):]))
+        except OSError:
+            pass
+
+
+@app.route("/espace/pilote/couverture", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=15, per_hour=60)
+def pilot_upload_cover():
+    user = g.user
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    f = request.files.get("cover")
+    if not f or not f.filename:
+        flash(i18n.t("cover.no_file", lang), "error")
+        return redirect(url_for("pilot_edit"))
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in ALLOWED_AVATAR_EXT:
+        flash(i18n.t("cover.bad_format", lang), "error")
+        return redirect(url_for("pilot_edit"))
+    f.stream.seek(0, os.SEEK_END)
+    size = f.stream.tell()
+    f.stream.seek(0)
+    if size > MAX_COVER_MB * 1024 * 1024:
+        flash(i18n.t("cover.too_big", lang, mb=MAX_COVER_MB), "error")
+        return redirect(url_for("pilot_edit"))
+    # Remplacement : l'ancienne image part du disque.
+    _remove_upload(services.clear_user_cover(user["id"]))
+    safe = f"cover_u{user['id']}_{int(time.time())}.{ext}"
+    f.save(os.path.join(UPLOAD_DIR, safe))
+    services.set_user_cover(user["id"], f"uploads/{safe}")
+    flash(i18n.t("cover.updated", lang), "success")
+    return redirect(url_for("pilot_edit"))
+
+
+@app.route("/espace/pilote/couverture/supprimer", methods=["POST"])
+@auth.login_required
+def pilot_delete_cover():
+    _remove_upload(services.clear_user_cover(g.user["id"]))
+    flash(i18n.t("cover.removed", getattr(g, "lang", i18n.DEFAULT)), "info")
+    return redirect(url_for("pilot_edit"))
+
+
 # Avatars et media portfolio servis depuis /media/<path>. Stockes
 # physiquement dans data/uploads/ (avec UPLOAD_DIR).
 # Types "actifs" refuses par /media : un SVG ou un HTML uploade comme avatar
@@ -2715,8 +2771,9 @@ def pilot_delete_avatar():
 _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 
 # /media est PUBLIC (aucune authentification). On n'y sert donc QUE des medias
-# publics par nature : avatars, photos de drone et pieces du portfolio (le
-# showreel affiche sur les fiches). Tout le reste est refuse en dur.
+# publics par nature : avatars, images de couverture, photos de drone et
+# pieces du portfolio (le showreel affiche sur les fiches). Tout le reste est
+# refuse en dur.
 # Les fichiers PRIVES vivent dans le meme UPLOAD_DIR mais ont chacun leur route
 # authentifiee avec controle du proprietaire, et ne doivent JAMAIS passer ici :
 #   - u<id>_cert_*         documents de brevet   -> pilot_certification_document
@@ -2725,7 +2782,7 @@ _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 # Sans cette liste blanche, /media/u1_cert_....pdf servait la piece d'identite
 # d'un pilote a n'importe quel visiteur (contournement total du controle).
 _MEDIA_PUBLIC_RE = re.compile(
-    r"^(?:avatar_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+)$"
+    r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+)$"
 )
 
 

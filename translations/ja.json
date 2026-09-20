@@ -1251,7 +1251,18 @@
   "opp.filter_country": "国",
   "opp.all_countries": "すべての国",
   "opp.name_recheck": "氏名を変更すると、認証済みの資格は再審査になります（48時間）。",
-  "opp.name_edit_in_settings": "設定で氏名を変更 →"
+  "opp.name_edit_in_settings": "設定で氏名を変更 →",
+  "tpl.image_de_couverture": "カバー画像",
+  "tpl.couverture_intro": "公開プロフィールの上部にバナーとして表示される横長の写真：空撮の眺め、あなたのフィールド、あなたのチーム。",
+  "tpl.couverture_format": "横長の画像（JPG/PNG/WebP、最大 {mb} MB、1600 × 500 px 推奨）",
+  "tpl.retirer_la_couverture": "カバー画像を削除しますか？",
+  "tpl.retirer_la_couverture_2": "カバーを削除",
+  "tpl.couverture_de": "カバー画像：",
+  "cover.updated": "カバー画像を更新しました。",
+  "cover.removed": "カバー画像を削除しました。",
+  "cover.bad_format": "この形式は使えません。JPG、PNG、WebP を使ってください。",
+  "cover.too_big": "画像が大きすぎます（最大 {mb} MB）。",
+  "cover.no_file": "ファイルが選択されていません。"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

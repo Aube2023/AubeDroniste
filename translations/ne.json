@@ -1251,7 +1251,18 @@
   "opp.filter_country": "देश",
   "opp.all_countries": "सबै देश",
   "opp.name_recheck": "नाम बदल्नुभयो भने प्रमाणित इजाजतपत्रहरू फेरि समीक्षामा जान्छन् (४८ घण्टा)।",
-  "opp.name_edit_in_settings": "सेटिङमा नाम बदल्नुहोस् →"
+  "opp.name_edit_in_settings": "सेटिङमा नाम बदल्नुहोस् →",
+  "tpl.image_de_couverture": "कभर तस्बिर",
+  "tpl.couverture_intro": "तपाईंको सार्वजनिक प्रोफाइलको माथि ब्यानरका रूपमा देखिने ल्यान्डस्केप फोटो: हवाई दृश्य, तपाईंको क्षेत्र, तपाईंको टोली।",
+  "tpl.couverture_format": "ल्यान्डस्केप तस्बिर (JPG/PNG/WebP, अधिकतम {mb} MB, 1600 × 500 px सिफारिस)",
+  "tpl.retirer_la_couverture": "कभर तस्बिर हटाउने?",
+  "tpl.retirer_la_couverture_2": "कभर हटाउनुहोस्",
+  "tpl.couverture_de": "कभर तस्बिर:",
+  "cover.updated": "कभर तस्बिर अद्यावधिक भयो।",
+  "cover.removed": "कभर तस्बिर हटाइयो।",
+  "cover.bad_format": "ढाँचा स्वीकार्य छैन। JPG, PNG वा WebP प्रयोग गर्नुहोस्।",
+  "cover.too_big": "तस्बिर धेरै ठूलो छ (अधिकतम {mb} MB)।",
+  "cover.no_file": "कुनै फाइल छानिएको छैन।"
  },
  "seo": {
   "home.title": "प्रमाणित ड्रोन पाइलट भाडामा — निःशुल्क कोटेसन | AubePilot",

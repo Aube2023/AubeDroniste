@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Ƙasa",
   "opp.all_countries": "Dukkan ƙasashe",
   "opp.name_recheck": "Idan ka canza suna, lasisin da aka tabbatar za a sake duba su (awa 48).",
-  "opp.name_edit_in_settings": "Canza sunana a saituna →"
+  "opp.name_edit_in_settings": "Canza sunana a saituna →",
+  "tpl.image_de_couverture": "Hoton bango",
+  "tpl.couverture_intro": "Hoton kwance da ake nunawa a matsayin tuta a saman bayanin martabarka na jama'a: kallon sama, filinka, ƙungiyarka.",
+  "tpl.couverture_format": "Hoton kwance (JPG/PNG/WebP, iyaka {mb} MB, ana ba da shawarar 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "A cire hoton bango?",
+  "tpl.retirer_la_couverture_2": "Cire bango",
+  "tpl.couverture_de": "Hoton bango na",
+  "cover.updated": "An sabunta hoton bango.",
+  "cover.removed": "An cire hoton bango.",
+  "cover.bad_format": "Ba a karɓi wannan tsarin ba. Yi amfani da JPG, PNG ko WebP.",
+  "cover.too_big": "Hoton ya yi girma sosai (iyaka {mb} MB).",
+  "cover.no_file": "Ba a zaɓi fayil ba."
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

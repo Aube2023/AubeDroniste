@@ -1251,7 +1251,18 @@
   "opp.filter_country": "ประเทศ",
   "opp.all_countries": "ทุกประเทศ",
   "opp.name_recheck": "หากคุณเปลี่ยนชื่อ ใบอนุญาตที่ผ่านการตรวจสอบจะถูกตรวจสอบใหม่ (48 ชม.)",
-  "opp.name_edit_in_settings": "แก้ไขชื่อในการตั้งค่า →"
+  "opp.name_edit_in_settings": "แก้ไขชื่อในการตั้งค่า →",
+  "tpl.image_de_couverture": "รูปภาพหน้าปก",
+  "tpl.couverture_intro": "ภาพแนวนอนที่แสดงเป็นแบนเนอร์ด้านบนของโปรไฟล์สาธารณะของคุณ: มุมมองทางอากาศ พื้นที่ของคุณ ทีมของคุณ",
+  "tpl.couverture_format": "ภาพแนวนอน (JPG/PNG/WebP สูงสุด {mb} MB แนะนำ 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "ลบรูปภาพหน้าปกหรือไม่",
+  "tpl.retirer_la_couverture_2": "ลบหน้าปก",
+  "tpl.couverture_de": "รูปภาพหน้าปกของ",
+  "cover.updated": "อัปเดตรูปภาพหน้าปกแล้ว",
+  "cover.removed": "ลบรูปภาพหน้าปกแล้ว",
+  "cover.bad_format": "ไม่รองรับรูปแบบนี้ โปรดใช้ JPG, PNG หรือ WebP",
+  "cover.too_big": "ไฟล์ภาพใหญ่เกินไป (สูงสุด {mb} MB)",
+  "cover.no_file": "ยังไม่ได้เลือกไฟล์"
  },
  "seo": {
   "home.title": "จ้างนักบินโดรนที่ได้รับใบอนุญาต — ใบเสนอราคาฟรี | AubePilot",

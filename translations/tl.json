@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Bansa",
   "opp.all_countries": "Lahat ng bansa",
   "opp.name_recheck": "Kapag binago mo ang pangalan mo, babalik sa pagsusuri ang mga beripikadong lisensya mo (48 oras).",
-  "opp.name_edit_in_settings": "Baguhin ang pangalan ko sa mga setting →"
+  "opp.name_edit_in_settings": "Baguhin ang pangalan ko sa mga setting →",
+  "tpl.image_de_couverture": "Larawang pantakip",
+  "tpl.couverture_intro": "Isang landscape na larawan na ipinapakita bilang banner sa itaas ng iyong pampublikong profile: isang aerial view, ang iyong lugar, ang iyong koponan.",
+  "tpl.couverture_format": "Landscape na larawan (JPG/PNG/WebP, max {mb} MB, inirerekomenda ang 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Alisin ang larawang pantakip?",
+  "tpl.retirer_la_couverture_2": "Alisin ang pantakip",
+  "tpl.couverture_de": "Larawang pantakip ni",
+  "cover.updated": "Na-update ang larawang pantakip.",
+  "cover.removed": "Inalis ang larawang pantakip.",
+  "cover.bad_format": "Hindi tinatanggap ang format. Gumamit ng JPG, PNG o WebP.",
+  "cover.too_big": "Masyadong malaki ang larawan (max {mb} MB).",
+  "cover.no_file": "Walang napiling file."
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",

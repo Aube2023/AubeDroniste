@@ -9,7 +9,14 @@
 {% set display_name = (pilot.business_name or pilot.full_name) if is_org else pilot.full_name %}
 {% block content %}
 
-<section class="flightbook-hero">
+<section class="flightbook-hero{% if pilot.cover_path %} has-cover{% endif %}">
+  {% if pilot.cover_path %}
+  {# Image de couverture : bandeau paysage, la photo de profil chevauche son bord bas. #}
+  <div class="flightbook-cover">
+    <img src="{{ url_for('media_file', filename=pilot.cover_path[8:]) }}"
+         alt="{{ t('tpl.couverture_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
+  </div>
+  {% endif %}
   <div class="flightbook-band">
     {% if pilot.avatar_path %}
     <img class="avatar big avatar-zoom" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"

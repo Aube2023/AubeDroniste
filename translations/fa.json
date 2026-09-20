@@ -1251,7 +1251,18 @@
   "opp.filter_country": "کشور",
   "opp.all_countries": "همهٔ کشورها",
   "opp.name_recheck": "اگر نام خود را تغییر دهید، گواهینامه‌های تأییدشدهٔ شما دوباره بررسی می‌شوند (۴۸ ساعت).",
-  "opp.name_edit_in_settings": "ویرایش نام در تنظیمات →"
+  "opp.name_edit_in_settings": "ویرایش نام در تنظیمات →",
+  "tpl.image_de_couverture": "تصویر کاور",
+  "tpl.couverture_intro": "یک عکس افقی که به‌صورت بنر در بالای پروفایل عمومی شما نمایش داده می‌شود: نمای هوایی، زمین شما، تیم شما.",
+  "tpl.couverture_format": "تصویر افقی (JPG/PNG/WebP، حداکثر {mb} مگابایت، ۱۶۰۰ × ۵۰۰ پیکسل توصیه می‌شود)",
+  "tpl.retirer_la_couverture": "تصویر کاور حذف شود؟",
+  "tpl.retirer_la_couverture_2": "حذف کاور",
+  "tpl.couverture_de": "تصویر کاور",
+  "cover.updated": "تصویر کاور به‌روزرسانی شد.",
+  "cover.removed": "تصویر کاور حذف شد.",
+  "cover.bad_format": "قالب پذیرفته نمی‌شود. از JPG، PNG یا WebP استفاده کنید.",
+  "cover.too_big": "تصویر بیش از حد بزرگ است (حداکثر {mb} مگابایت).",
+  "cover.no_file": "هیچ فایلی انتخاب نشده است."
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

@@ -1251,7 +1251,18 @@
   "opp.filter_country": "国家",
   "opp.all_countries": "所有国家",
   "opp.name_recheck": "若您更改姓名，已核验的执照将重新审核（48 小时）。",
-  "opp.name_edit_in_settings": "在设置中修改姓名 →"
+  "opp.name_edit_in_settings": "在设置中修改姓名 →",
+  "tpl.image_de_couverture": "封面图片",
+  "tpl.couverture_intro": "一张横向照片，作为横幅显示在您公开资料的顶部：航拍画面、您的场地、您的团队。",
+  "tpl.couverture_format": "横向图片（JPG/PNG/WebP，最大 {mb} MB，建议 1600 × 500 像素）",
+  "tpl.retirer_la_couverture": "移除封面图片？",
+  "tpl.retirer_la_couverture_2": "移除封面",
+  "tpl.couverture_de": "封面图片：",
+  "cover.updated": "封面图片已更新。",
+  "cover.removed": "封面图片已移除。",
+  "cover.bad_format": "不支持该格式。请使用 JPG、PNG 或 WebP。",
+  "cover.too_big": "图片过大（最大 {mb} MB）。",
+  "cover.no_file": "未选择文件。"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

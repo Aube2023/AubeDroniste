@@ -1251,7 +1251,18 @@
   "opp.filter_country": "País",
   "opp.all_countries": "Todos os países",
   "opp.name_recheck": "Se mudar de nome, as suas licenças verificadas voltam a revisão (48 h).",
-  "opp.name_edit_in_settings": "Alterar o meu nome nas definições →"
+  "opp.name_edit_in_settings": "Alterar o meu nome nas definições →",
+  "tpl.image_de_couverture": "Imagem de capa",
+  "tpl.couverture_intro": "Uma foto em paisagem exibida como faixa no topo do seu perfil público: uma vista aérea, o seu terreno, a sua equipa.",
+  "tpl.couverture_format": "Imagem em paisagem (JPG/PNG/WebP, máx. {mb} MB, 1600 × 500 px recomendado)",
+  "tpl.retirer_la_couverture": "Remover a imagem de capa?",
+  "tpl.retirer_la_couverture_2": "Remover a capa",
+  "tpl.couverture_de": "Imagem de capa de",
+  "cover.updated": "Imagem de capa atualizada.",
+  "cover.removed": "Imagem de capa removida.",
+  "cover.bad_format": "Formato não aceite. Use JPG, PNG ou WebP.",
+  "cover.too_big": "Imagem demasiado pesada (máx. {mb} MB).",
+  "cover.no_file": "Nenhum ficheiro selecionado."
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

@@ -59,6 +59,35 @@
   </div>
 </section>
 
+{# ===== Image de couverture : bandeau paysage en haut de la fiche ===== #}
+<section class="card" id="couverture">
+  <span class="eyebrow">{{ t('tpl.image_de_couverture') }}</span>
+  <p class="muted" style="margin: 8px 0 12px;">{{ t('tpl.couverture_intro') }}</p>
+  <div class="cover-uploader">
+    {% if profile.cover_path %}
+      <img class="cover-frame" src="{{ url_for('media_file', filename=profile.cover_path[8:]) }}"
+           alt="{{ t('tpl.couverture_de') }} {{ current_user.full_name }}">
+    {% else %}
+      <div class="cover-frame placeholder" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9.5" r="1.5"/></svg>
+      </div>
+    {% endif %}
+    <form method="post" action="{{ url_for('pilot_upload_cover') }}" enctype="multipart/form-data" class="inline-form">
+      {{ csrf_input() }}
+      <label>{{ t('tpl.couverture_format', mb=max_cover_mb) }}
+        <input name="cover" type="file" accept="image/jpeg,image/png,image/webp" required>
+      </label>
+      <button class="ghost" type="submit">{{ t('tpl.televerser') }}</button>
+    </form>
+    {% if profile.cover_path %}
+    <form method="post" action="{{ url_for('pilot_delete_cover') }}" style="margin-top: 8px;" data-confirm="{{ t('tpl.retirer_la_couverture') }}">
+      {{ csrf_input() }}
+      <button class="ghost danger" type="submit">{{ t('tpl.retirer_la_couverture_2') }}</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+
 {# ===== Realisations : la galerie publique du pilote ===== #}
 <section class="card">
   <div class="row-between" style="align-items: baseline; gap: 12px; flex-wrap: wrap;">

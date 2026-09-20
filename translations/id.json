@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Negara",
   "opp.all_countries": "Semua negara",
   "opp.name_recheck": "Jika Anda mengubah nama, lisensi terverifikasi Anda akan ditinjau ulang (48 jam).",
-  "opp.name_edit_in_settings": "Ubah nama di pengaturan →"
+  "opp.name_edit_in_settings": "Ubah nama di pengaturan →",
+  "tpl.image_de_couverture": "Gambar sampul",
+  "tpl.couverture_intro": "Foto lanskap yang ditampilkan sebagai spanduk di bagian atas profil publik Anda: pemandangan udara, lapangan Anda, tim Anda.",
+  "tpl.couverture_format": "Gambar lanskap (JPG/PNG/WebP, maks. {mb} MB, disarankan 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Hapus gambar sampul?",
+  "tpl.retirer_la_couverture_2": "Hapus sampul",
+  "tpl.couverture_de": "Gambar sampul",
+  "cover.updated": "Gambar sampul diperbarui.",
+  "cover.removed": "Gambar sampul dihapus.",
+  "cover.bad_format": "Format tidak diterima. Gunakan JPG, PNG, atau WebP.",
+  "cover.too_big": "Gambar terlalu besar (maks. {mb} MB).",
+  "cover.no_file": "Tidak ada berkas yang dipilih."
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

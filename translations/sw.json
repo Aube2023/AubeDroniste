@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Nchi",
   "opp.all_countries": "Nchi zote",
   "opp.name_recheck": "Ukibadilisha jina, leseni zako zilizothibitishwa zitakaguliwa upya (saa 48).",
-  "opp.name_edit_in_settings": "Badilisha jina langu kwenye mipangilio →"
+  "opp.name_edit_in_settings": "Badilisha jina langu kwenye mipangilio →",
+  "tpl.image_de_couverture": "Picha ya jalada",
+  "tpl.couverture_intro": "Picha ya mlalo inayoonyeshwa kama bango juu ya wasifu wako wa umma: mwonekano wa angani, eneo lako, timu yako.",
+  "tpl.couverture_format": "Picha ya mlalo (JPG/PNG/WebP, upeo {mb} MB, inashauriwa 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Ondoa picha ya jalada?",
+  "tpl.retirer_la_couverture_2": "Ondoa jalada",
+  "tpl.couverture_de": "Picha ya jalada ya",
+  "cover.updated": "Picha ya jalada imesasishwa.",
+  "cover.removed": "Picha ya jalada imeondolewa.",
+  "cover.bad_format": "Muundo haukubaliki. Tumia JPG, PNG au WebP.",
+  "cover.too_big": "Picha ni kubwa mno (upeo {mb} MB).",
+  "cover.no_file": "Hakuna faili iliyochaguliwa."
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

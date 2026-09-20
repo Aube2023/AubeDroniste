@@ -157,6 +157,9 @@ _ADD_COLUMNS = [
     ("bookings", "settled_offline_at", "TEXT"),
     # Palette d'accent choisie par le compte (cf. i18n.ACCENTS) ; NULL = « aube ».
     ("users", "accent", "TEXT"),
+    # Image de couverture : bandeau paysage en haut de la fiche publique,
+    # a cote de la photo de profil (2026-09-20).
+    ("users", "cover_path", "TEXT"),
     # Verrou metier additif pour serialiser les actions financieres Stripe
     # entre plusieurs workers sans modifier les comptes ou etats existants.
     ("bookings", "payment_action", "TEXT"),

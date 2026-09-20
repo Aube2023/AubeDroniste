@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Quốc gia",
   "opp.all_countries": "Tất cả quốc gia",
   "opp.name_recheck": "Nếu bạn đổi tên, các giấy phép đã xác minh sẽ được xét duyệt lại (48 giờ).",
-  "opp.name_edit_in_settings": "Đổi tên trong cài đặt →"
+  "opp.name_edit_in_settings": "Đổi tên trong cài đặt →",
+  "tpl.image_de_couverture": "Ảnh bìa",
+  "tpl.couverture_intro": "Một ảnh ngang hiển thị dưới dạng băng rôn ở đầu hồ sơ công khai của bạn: góc nhìn từ trên cao, địa bàn của bạn, đội ngũ của bạn.",
+  "tpl.couverture_format": "Ảnh ngang (JPG/PNG/WebP, tối đa {mb} MB, khuyến nghị 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Gỡ ảnh bìa?",
+  "tpl.retirer_la_couverture_2": "Gỡ ảnh bìa",
+  "tpl.couverture_de": "Ảnh bìa của",
+  "cover.updated": "Đã cập nhật ảnh bìa.",
+  "cover.removed": "Đã gỡ ảnh bìa.",
+  "cover.bad_format": "Định dạng không được chấp nhận. Dùng JPG, PNG hoặc WebP.",
+  "cover.too_big": "Ảnh quá nặng (tối đa {mb} MB).",
+  "cover.no_file": "Chưa chọn tệp nào."
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

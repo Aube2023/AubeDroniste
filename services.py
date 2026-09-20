@@ -3173,6 +3173,26 @@ def clear_user_avatar(user_id: int) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
+# Image de couverture (bandeau paysage de la fiche, a cote de la photo)
+# ---------------------------------------------------------------------------
+
+def set_user_cover(user_id: int, relative_path: str) -> None:
+    """relative_path = 'uploads/cover_u<id>_<ts>.jpg'. Stocke dans users.cover_path."""
+    db.execute("UPDATE users SET cover_path=? WHERE id=?", (relative_path, user_id))
+
+
+def clear_user_cover(user_id: int) -> Optional[str]:
+    """Vide users.cover_path et retourne l'ancien chemin (pour suppression
+    sur disque)."""
+    row = db.fetchone("SELECT cover_path FROM users WHERE id=?", (user_id,))
+    if not row or not row["cover_path"]:
+        return None
+    old = row["cover_path"]
+    db.execute("UPDATE users SET cover_path=NULL WHERE id=?", (user_id,))
+    return old
+
+
+# ---------------------------------------------------------------------------
 # Portfolio pilote (showreel)
 # ---------------------------------------------------------------------------
 
@@ -4351,7 +4371,7 @@ def delete_account(user_id: int) -> dict:
     blockers = account_deletion_blockers(user_id)
     if blockers:
         return {"ok": False, "blockers": blockers}
-    user = db.fetchone("SELECT username, avatar_path FROM users WHERE id=?", (user_id,))
+    user = db.fetchone("SELECT username, avatar_path, cover_path FROM users WHERE id=?", (user_id,))
     if not user:
         return {"ok": False, "blockers": ["compte introuvable"]}
     with db.transaction():
@@ -4368,7 +4388,7 @@ def delete_account(user_id: int) -> dict:
         db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,), commit=False)
         db.execute(
             "UPDATE users SET full_name='Compte supprimé', email=?, phone=NULL, bio=NULL, "
-            "avatar_path=NULL, lat=NULL, lng=NULL, city=NULL, is_verified=0, is_admin=0, "
+            "avatar_path=NULL, cover_path=NULL, lat=NULL, lng=NULL, city=NULL, is_verified=0, is_admin=0, "
             "notify_bids=0, notify_messages=0, notify_alerts=0, notify_news=0, "
             "deleted_at=datetime('now') WHERE id=?",
             (f"deleted-{user_id}@invalid.local", user_id), commit=False,
@@ -4381,10 +4401,12 @@ def delete_account(user_id: int) -> dict:
         auth.remove_local_password(user["username"])
     except Exception as exc:
         log.warning("suppression mdp local de %s : %s", user["username"], exc)
-    if user["avatar_path"]:
+    for rel in (user["avatar_path"], user["cover_path"]):
+        if not rel:
+            continue
         try:
             from config import DATA_DIR
-            os.remove(os.path.join(DATA_DIR, user["avatar_path"]))
+            os.remove(os.path.join(DATA_DIR, rel))
         except OSError:
             pass
     # Les fichiers televerses par la personne partent avec elle : brevets,
@@ -4398,13 +4420,13 @@ def delete_account(user_id: int) -> dict:
 
 def _remove_user_uploads(user_id: int) -> int:
     """Efface du disque tous les fichiers nommes d'apres l'utilisateur
-    (`u<id>_*`, `avatar_u<id>_*`, dossier `portfolio_u<id>/`). Retourne le
+    (`u<id>_*`, `avatar_u<id>_*`, `cover_u<id>_*`, dossier `portfolio_u<id>/`). Retourne le
     nombre de fichiers retires ; ne leve jamais (la suppression du compte est
     deja engagee en base)."""
     import shutil
     from config import UPLOAD_DIR
     removed = 0
-    prefixes = (f"u{user_id}_", f"avatar_u{user_id}_")
+    prefixes = (f"u{user_id}_", f"avatar_u{user_id}_", f"cover_u{user_id}_")
     try:
         for name in os.listdir(UPLOAD_DIR):
             full = os.path.join(UPLOAD_DIR, name)

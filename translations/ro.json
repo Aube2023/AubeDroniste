@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Țară",
   "opp.all_countries": "Toate țările",
   "opp.name_recheck": "Dacă vă schimbați numele, licențele verificate revin la verificare (48 h).",
-  "opp.name_edit_in_settings": "Modifică numele în setări →"
+  "opp.name_edit_in_settings": "Modifică numele în setări →",
+  "tpl.image_de_couverture": "Imagine de copertă",
+  "tpl.couverture_intro": "O fotografie în format peisaj afișată ca banner în partea de sus a profilului tău public: o vedere aeriană, terenul tău, echipa ta.",
+  "tpl.couverture_format": "Imagine în format peisaj (JPG/PNG/WebP, max. {mb} MB, recomandat 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Eliminați imaginea de copertă?",
+  "tpl.retirer_la_couverture_2": "Elimină coperta",
+  "tpl.couverture_de": "Imagine de copertă a",
+  "cover.updated": "Imaginea de copertă a fost actualizată.",
+  "cover.removed": "Imaginea de copertă a fost eliminată.",
+  "cover.bad_format": "Format neacceptat. Folosiți JPG, PNG sau WebP.",
+  "cover.too_big": "Imagine prea mare (max. {mb} MB).",
+  "cover.no_file": "Niciun fișier selectat."
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Land",
   "opp.all_countries": "Alle Länder",
   "opp.name_recheck": "Wenn Sie Ihren Namen ändern, gehen Ihre geprüften Lizenzen zurück in die Prüfung (48 h).",
-  "opp.name_edit_in_settings": "Namen in den Einstellungen ändern →"
+  "opp.name_edit_in_settings": "Namen in den Einstellungen ändern →",
+  "tpl.image_de_couverture": "Titelbild",
+  "tpl.couverture_intro": "Ein Querformat-Foto, das als Banner oben auf Ihrem öffentlichen Profil erscheint: eine Luftaufnahme, Ihr Gelände, Ihr Team.",
+  "tpl.couverture_format": "Querformat-Bild (JPG/PNG/WebP, max. {mb} MB, 1600 × 500 px empfohlen)",
+  "tpl.retirer_la_couverture": "Titelbild entfernen?",
+  "tpl.retirer_la_couverture_2": "Titelbild entfernen",
+  "tpl.couverture_de": "Titelbild von",
+  "cover.updated": "Titelbild aktualisiert.",
+  "cover.removed": "Titelbild entfernt.",
+  "cover.bad_format": "Format nicht zulässig. Bitte JPG, PNG oder WebP verwenden.",
+  "cover.too_big": "Bild zu groß (max. {mb} MB).",
+  "cover.no_file": "Keine Datei ausgewählt."
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

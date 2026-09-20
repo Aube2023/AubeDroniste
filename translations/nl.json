@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Land",
   "opp.all_countries": "Alle landen",
   "opp.name_recheck": "Als je je naam wijzigt, gaan je geverifieerde vliegbewijzen terug in beoordeling (48 u).",
-  "opp.name_edit_in_settings": "Mijn naam wijzigen in instellingen →"
+  "opp.name_edit_in_settings": "Mijn naam wijzigen in instellingen →",
+  "tpl.image_de_couverture": "Omslagfoto",
+  "tpl.couverture_intro": "Een liggende foto die als banner bovenaan je openbare profiel staat: een luchtopname, je terrein, je team.",
+  "tpl.couverture_format": "Liggende afbeelding (JPG/PNG/WebP, max. {mb} MB, 1600 × 500 px aanbevolen)",
+  "tpl.retirer_la_couverture": "Omslagfoto verwijderen?",
+  "tpl.retirer_la_couverture_2": "Omslag verwijderen",
+  "tpl.couverture_de": "Omslagfoto van",
+  "cover.updated": "Omslagfoto bijgewerkt.",
+  "cover.removed": "Omslagfoto verwijderd.",
+  "cover.bad_format": "Formaat niet toegestaan. Gebruik JPG, PNG of WebP.",
+  "cover.too_big": "Afbeelding te groot (max. {mb} MB).",
+  "cover.no_file": "Geen bestand gekozen."
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

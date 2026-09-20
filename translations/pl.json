@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Kraj",
   "opp.all_countries": "Wszystkie kraje",
   "opp.name_recheck": "Po zmianie nazwiska zweryfikowane uprawnienia wracają do weryfikacji (48 h).",
-  "opp.name_edit_in_settings": "Zmień nazwisko w ustawieniach →"
+  "opp.name_edit_in_settings": "Zmień nazwisko w ustawieniach →",
+  "tpl.image_de_couverture": "Zdjęcie w tle",
+  "tpl.couverture_intro": "Poziome zdjęcie wyświetlane jako baner u góry Twojego publicznego profilu: widok z lotu ptaka, Twój teren, Twój zespół.",
+  "tpl.couverture_format": "Obraz poziomy (JPG/PNG/WebP, maks. {mb} MB, zalecane 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Usunąć zdjęcie w tle?",
+  "tpl.retirer_la_couverture_2": "Usuń zdjęcie w tle",
+  "tpl.couverture_de": "Zdjęcie w tle:",
+  "cover.updated": "Zdjęcie w tle zaktualizowane.",
+  "cover.removed": "Zdjęcie w tle usunięte.",
+  "cover.bad_format": "Format nieobsługiwany. Użyj JPG, PNG lub WebP.",
+  "cover.too_big": "Obraz jest za duży (maks. {mb} MB).",
+  "cover.no_file": "Nie wybrano pliku."
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

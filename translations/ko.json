@@ -1251,7 +1251,18 @@
   "opp.filter_country": "국가",
   "opp.all_countries": "모든 국가",
   "opp.name_recheck": "이름을 변경하면 인증된 자격증이 다시 검토됩니다(48시간).",
-  "opp.name_edit_in_settings": "설정에서 이름 변경 →"
+  "opp.name_edit_in_settings": "설정에서 이름 변경 →",
+  "tpl.image_de_couverture": "커버 이미지",
+  "tpl.couverture_intro": "공개 프로필 상단에 배너로 표시되는 가로 사진: 항공 뷰, 작업 현장, 팀 사진.",
+  "tpl.couverture_format": "가로 이미지 (JPG/PNG/WebP, 최대 {mb} MB, 1600 × 500 px 권장)",
+  "tpl.retirer_la_couverture": "커버 이미지를 삭제할까요?",
+  "tpl.retirer_la_couverture_2": "커버 삭제",
+  "tpl.couverture_de": "커버 이미지:",
+  "cover.updated": "커버 이미지가 업데이트되었습니다.",
+  "cover.removed": "커버 이미지가 삭제되었습니다.",
+  "cover.bad_format": "지원하지 않는 형식입니다. JPG, PNG 또는 WebP를 사용하세요.",
+  "cover.too_big": "이미지가 너무 큽니다 (최대 {mb} MB).",
+  "cover.no_file": "선택된 파일이 없습니다."
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",

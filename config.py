@@ -65,6 +65,10 @@ ALLOWED_DOC_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}
 MAX_AVATAR_MB = 5
 ALLOWED_AVATAR_EXT = {"jpg", "jpeg", "png", "webp"}
 
+# Image de couverture (bandeau paysage de la fiche) : une photo aerienne
+# pese plus qu'un portrait, on tolere 8 Mo.
+MAX_COVER_MB = 8
+
 # Portfolio pilote (showreel public : photos + videos) :
 # 1 Go max par piece (peu de videos mais haute qualite : 4K/6K accepte),
 # formats etendus aux videos. Surchargable via env.

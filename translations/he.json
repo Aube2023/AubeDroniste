@@ -1251,7 +1251,18 @@
   "opp.filter_country": "מדינה",
   "opp.all_countries": "כל המדינות",
   "opp.name_recheck": "אם תשנו את השם, הרישיונות המאומתים שלכם יחזרו לבדיקה (48 שעות).",
-  "opp.name_edit_in_settings": "עריכת השם בהגדרות ←"
+  "opp.name_edit_in_settings": "עריכת השם בהגדרות ←",
+  "tpl.image_de_couverture": "תמונת נושא",
+  "tpl.couverture_intro": "תמונה לרוחב המוצגת כבאנר בראש הפרופיל הציבורי שלך: מבט אווירי, השטח שלך, הצוות שלך.",
+  "tpl.couverture_format": "תמונה לרוחב (JPG/PNG/WebP, עד {mb} MB, מומלץ 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "להסיר את תמונת הנושא?",
+  "tpl.retirer_la_couverture_2": "הסרת תמונת הנושא",
+  "tpl.couverture_de": "תמונת נושא של",
+  "cover.updated": "תמונת הנושא עודכנה.",
+  "cover.removed": "תמונת הנושא הוסרה.",
+  "cover.bad_format": "הפורמט אינו נתמך. יש להשתמש ב-JPG, PNG או WebP.",
+  "cover.too_big": "התמונה גדולה מדי (עד {mb} MB).",
+  "cover.no_file": "לא נבחר קובץ."
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",

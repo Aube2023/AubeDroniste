@@ -1251,7 +1251,18 @@
   "opp.filter_country": "አገር",
   "opp.all_countries": "ሁሉም አገሮች",
   "opp.name_recheck": "ስምዎን ከቀየሩ፣ የተረጋገጡ ፈቃዶችዎ እንደገና ይገመገማሉ (48 ሰዓት)።",
-  "opp.name_edit_in_settings": "ስሜን በቅንብሮች ውስጥ ቀይር →"
+  "opp.name_edit_in_settings": "ስሜን በቅንብሮች ውስጥ ቀይር →",
+  "tpl.image_de_couverture": "የሽፋን ምስል",
+  "tpl.couverture_intro": "በይፋዊ መገለጫዎ አናት ላይ እንደ ባነር የሚታይ አግድም ፎቶ፦ የአየር እይታ፣ የእርስዎ ሜዳ፣ የእርስዎ ቡድን።",
+  "tpl.couverture_format": "አግድም ምስል (JPG/PNG/WebP፣ ከፍተኛ {mb} ሜባ፣ 1600 × 500 ፒክስል ይመከራል)",
+  "tpl.retirer_la_couverture": "የሽፋን ምስሉ ይወገድ?",
+  "tpl.retirer_la_couverture_2": "ሽፋኑን አስወግድ",
+  "tpl.couverture_de": "የሽፋን ምስል፦",
+  "cover.updated": "የሽፋን ምስል ተዘምኗል።",
+  "cover.removed": "የሽፋን ምስል ተወግዷል።",
+  "cover.bad_format": "ቅርጸቱ ተቀባይነት የለውም። JPG፣ PNG ወይም WebP ይጠቀሙ።",
+  "cover.too_big": "ምስሉ በጣም ትልቅ ነው (ከፍተኛ {mb} ሜባ)።",
+  "cover.no_file": "ምንም ፋይል አልተመረጠም።"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",

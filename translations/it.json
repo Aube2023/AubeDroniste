@@ -1251,7 +1251,18 @@
   "opp.filter_country": "Paese",
   "opp.all_countries": "Tutti i paesi",
   "opp.name_recheck": "Se cambia nome, i Suoi attestati verificati tornano in revisione (48 h).",
-  "opp.name_edit_in_settings": "Modifica il nome nelle impostazioni →"
+  "opp.name_edit_in_settings": "Modifica il nome nelle impostazioni →",
+  "tpl.image_de_couverture": "Immagine di copertina",
+  "tpl.couverture_intro": "Una foto in orizzontale mostrata come banner in cima alla tua scheda pubblica: una vista aerea, il tuo terreno, la tua squadra.",
+  "tpl.couverture_format": "Immagine orizzontale (JPG/PNG/WebP, max {mb} MB, consigliato 1600 × 500 px)",
+  "tpl.retirer_la_couverture": "Rimuovere l'immagine di copertina?",
+  "tpl.retirer_la_couverture_2": "Rimuovi la copertina",
+  "tpl.couverture_de": "Immagine di copertina di",
+  "cover.updated": "Immagine di copertina aggiornata.",
+  "cover.removed": "Immagine di copertina rimossa.",
+  "cover.bad_format": "Formato non accettato. Usa JPG, PNG o WebP.",
+  "cover.too_big": "Immagine troppo pesante (max {mb} MB).",
+  "cover.no_file": "Nessun file selezionato."
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",
