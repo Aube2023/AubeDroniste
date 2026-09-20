@@ -185,3 +185,18 @@ def test_inscription_erreur_rouvre_l_etape_et_garde_la_saisie(client):
     assert 'data-start-step="2"' in html
     assert 'value="École du Ciel"' in html and 'value="ecole_ciel"' in html and 'value="Québec"' in html
     assert 'value="Canada" selected' in html and 'value="school" checked' in html
+
+
+def test_courriel_de_secours_optionnel_et_refus_cible(client):
+    """Champ « Courriel de secours » (AubeMail) à l'étape 2 ; une adresse
+    @aubemail.com ou mal formée est refusée avant toute création, l'assistant
+    rouvre l'étape 2 avec la saisie conservée."""
+    html = client.get("/inscription").data.decode()
+    assert 'name="recovery_email"' in html and "Courriel de secours" in html
+    r = client.post("/inscription", data={
+        "role": "client", "full_name": "Marie Roy", "username": "marie_roy_sec",
+        "password": "motdepasse1", "confirm": "motdepasse1", "recovery_email": "marie@aubemail.com",
+    })
+    html = r.data.decode()
+    assert "Ce courriel de secours n" in html and 'data-start-step="2"' in html
+    assert 'value="marie_roy_sec"' in html and 'value="marie@aubemail.com"' in html

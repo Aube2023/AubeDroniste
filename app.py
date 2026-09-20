@@ -1640,7 +1640,7 @@ def register():
             or recovery_email.lower().endswith("@aubemail.com")
         ):
             flash(i18n.t("tpl.recovery_email_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
-            return render_template("register.html", seo=_register_seo())
+            return _register_page(2)
         lat = _to_float(request.form.get("lat"))
         lng = _to_float(request.form.get("lng"))
 
@@ -1766,7 +1766,7 @@ def register():
                 log.info("inscription : secours refuse par AubeMail (%s) pour %r",
                          prov.get("reason"), username)
                 flash(i18n.t("tpl.recovery_email_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
-                return render_template("register.html", seo=_register_seo())
+                return _register_page(2)
             if not prov["ok"]:
                 log.error("inscription REFUSEE : provision AubeMail KO (%s) pour %r",
                           prov.get("reason"), username)

@@ -22,7 +22,9 @@
 
   <div class="cta-row" style="margin: 18px 0 0;">
     <a class="cta" href="{{ url_for('dashboard') }}">{{ t('tpl.rcodes_done') }}</a>
-    <button type="button" class="ghost" onclick="window.print()">{{ t('tpl.rcodes_print') }}</button>
+    <button type="button" class="ghost" id="rcodes-print">{{ t('tpl.rcodes_print') }}</button>
   </div>
 </div>
+{# CSP par nonce : pas de onclick en ligne. #}
+<script nonce="{{ csp_nonce }}">document.getElementById('rcodes-print').addEventListener('click', function () { window.print(); });</script>
 {% endblock %}
