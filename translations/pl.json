@@ -1286,7 +1286,17 @@
   "register.required": "Pole wymagane",
   "register.prev": "Wstecz",
   "register.next": "Dalej",
-  "register.mismatch": "Hasła nie są zgodne."
+  "register.mismatch": "Hasła nie są zgodne.",
+  "tpl.recovery_email_label": "Zapasowy adres e-mail",
+  "tpl.recovery_email_hint": "Do odzyskania hasła AubeMail, jeśli je zapomnisz. Zostanie tam wysłany link potwierdzający.",
+  "tpl.recovery_email_refused": "Ten zapasowy adres e-mail nie został przyjęty: sprawdź adres lub podaj inny (adresy jednorazowe i @aubemail.com są odrzucane).",
+  "tpl.rcodes_title": "Twoje kody odzyskiwania AubeMail",
+  "tpl.rcodes_lead": "Są wyświetlane tylko raz. Przechowuj je offline: każdy kod pozwala jednorazowo odzyskać dostęp do konta, jeśli zapomnisz hasła.",
+  "tpl.rcodes_verify_sent": "Link potwierdzający został wysłany na {email}. Kliknij go, aby włączyć odzyskiwanie przez e-mail.",
+  "tpl.rcodes_verify_failed": "Nie udało się wysłać linku potwierdzającego na {email}. Możesz wysłać go ponownie w ustawieniach AubeMail.",
+  "tpl.rcodes_no_email": "Bez zapasowego adresu e-mail te kody są jedynym sposobem odzyskania konta. Możesz go dodać w ustawieniach AubeMail.",
+  "tpl.rcodes_done": "Zapisałem(-am) je",
+  "tpl.rcodes_print": "Drukuj"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

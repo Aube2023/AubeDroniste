@@ -1286,7 +1286,17 @@
   "register.required": "Kinakailangang field",
   "register.prev": "Bumalik",
   "register.next": "Susunod",
-  "register.mismatch": "Hindi magkatugma ang mga password."
+  "register.mismatch": "Hindi magkatugma ang mga password.",
+  "tpl.recovery_email_label": "Recovery email",
+  "tpl.recovery_email_hint": "Para mabawi ang iyong AubeMail password kung makalimutan mo ito. Ipapadala roon ang confirmation link.",
+  "tpl.recovery_email_refused": "Hindi tinatanggap ang recovery email na ito: suriin ang address o gumamit ng iba (tinatanggihan ang disposable at @aubemail.com na address).",
+  "tpl.rcodes_title": "Ang iyong mga AubeMail recovery code",
+  "tpl.rcodes_lead": "Isang beses lang ipinapakita ang mga ito. Itago offline: bawat code ay nagbibigay-daan, nang isang beses, na mabawi ang access sa iyong account kung makalimutan mo ang password.",
+  "tpl.rcodes_verify_sent": "May ipinadalang confirmation link sa {email}. I-click ito para paganahin ang recovery sa pamamagitan ng email.",
+  "tpl.rcodes_verify_failed": "Hindi maipadala ang confirmation link sa {email}. Maaari mo itong ipadala muli mula sa AubeMail settings.",
+  "tpl.rcodes_no_email": "Kung walang recovery email, ang mga code na ito lang ang paraan para mabawi ang iyong account. Maaari kang magdagdag sa AubeMail settings.",
+  "tpl.rcodes_done": "Naitala ko na",
+  "tpl.rcodes_print": "I-print"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",

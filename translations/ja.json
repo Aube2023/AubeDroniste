@@ -1286,7 +1286,17 @@
   "register.required": "必須項目",
   "register.prev": "戻る",
   "register.next": "次へ",
-  "register.mismatch": "パスワードが一致しません。"
+  "register.mismatch": "パスワードが一致しません。",
+  "tpl.recovery_email_label": "復旧用メールアドレス",
+  "tpl.recovery_email_hint": "AubeMail のパスワードを忘れたときに復旧するためのものです。確認リンクが送信されます。",
+  "tpl.recovery_email_refused": "この復旧用メールアドレスは使用できません。アドレスを確認するか別のものを指定してください（使い捨てアドレスと @aubemail.com は不可）。",
+  "tpl.rcodes_title": "AubeMail の復旧コード",
+  "tpl.rcodes_lead": "表示は一度だけです。オフラインで保管してください。パスワードを忘れた場合、各コードで一度だけアカウントに再アクセスできます。",
+  "tpl.rcodes_verify_sent": "{email} に確認リンクを送信しました。クリックしてメールによる復旧を有効にしてください。",
+  "tpl.rcodes_verify_failed": "{email} に確認リンクを送信できませんでした。AubeMail の設定から再送信できます。",
+  "tpl.rcodes_no_email": "復旧用メールアドレスがない場合、これらのコードがアカウント復旧の唯一の手段です。AubeMail の設定から追加できます。",
+  "tpl.rcodes_done": "保存しました",
+  "tpl.rcodes_print": "印刷"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

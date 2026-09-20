@@ -1286,7 +1286,17 @@
   "register.required": "Wajib diisi",
   "register.prev": "Kembali",
   "register.next": "Lanjut",
-  "register.mismatch": "Kata sandi tidak cocok."
+  "register.mismatch": "Kata sandi tidak cocok.",
+  "tpl.recovery_email_label": "Email pemulihan",
+  "tpl.recovery_email_hint": "Untuk memulihkan kata sandi AubeMail jika Anda lupa. Tautan konfirmasi akan dikirim ke sana.",
+  "tpl.recovery_email_refused": "Email pemulihan ini tidak diterima: periksa alamatnya atau gunakan yang lain (alamat sekali pakai dan @aubemail.com ditolak).",
+  "tpl.rcodes_title": "Kode pemulihan AubeMail Anda",
+  "tpl.rcodes_lead": "Hanya ditampilkan sekali. Simpan secara offline: setiap kode memungkinkan Anda, satu kali, mendapatkan kembali akses ke akun jika lupa kata sandi.",
+  "tpl.rcodes_verify_sent": "Tautan konfirmasi telah dikirim ke {email}. Klik tautan itu untuk mengaktifkan pemulihan lewat email.",
+  "tpl.rcodes_verify_failed": "Tautan konfirmasi tidak dapat dikirim ke {email}. Anda dapat mengirim ulang dari pengaturan AubeMail.",
+  "tpl.rcodes_no_email": "Tanpa email pemulihan, kode ini adalah satu-satunya cara memulihkan akun Anda. Anda dapat menambahkannya di pengaturan AubeMail.",
+  "tpl.rcodes_done": "Sudah saya simpan",
+  "tpl.rcodes_print": "Cetak"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

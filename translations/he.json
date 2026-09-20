@@ -1286,7 +1286,17 @@
   "register.required": "שדה חובה",
   "register.prev": "הקודם",
   "register.next": "הבא",
-  "register.mismatch": "הסיסמאות אינן תואמות."
+  "register.mismatch": "הסיסמאות אינן תואמות.",
+  "tpl.recovery_email_label": "אימייל לשחזור",
+  "tpl.recovery_email_hint": "לשחזור סיסמת AubeMail אם תשכחו אותה. קישור אישור יישלח לכתובת זו.",
+  "tpl.recovery_email_refused": "אימייל השחזור הזה לא התקבל: בדקו את הכתובת או השתמשו באחרת (כתובות חד-פעמיות וכתובות @aubemail.com נדחות).",
+  "tpl.rcodes_title": "קודי השחזור של AubeMail שלכם",
+  "tpl.rcodes_lead": "הם מוצגים פעם אחת בלבד. שמרו אותם לא מקוון: כל קוד מאפשר, פעם אחת, לחזור לחשבון אם תשכחו את הסיסמה.",
+  "tpl.rcodes_verify_sent": "קישור אישור נשלח אל {email}. לחצו עליו כדי להפעיל שחזור באימייל.",
+  "tpl.rcodes_verify_failed": "לא ניתן היה לשלוח את קישור האישור אל {email}. תוכלו לשלוח אותו שוב מהגדרות AubeMail.",
+  "tpl.rcodes_no_email": "ללא אימייל לשחזור, הקודים האלה הם הדרך היחידה לשחזר את החשבון. אפשר להוסיף כתובת בהגדרות AubeMail.",
+  "tpl.rcodes_done": "שמרתי אותם",
+  "tpl.rcodes_print": "הדפסה"
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",

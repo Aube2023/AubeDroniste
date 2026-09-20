@@ -1286,7 +1286,17 @@
   "register.required": "Campo obrigatório",
   "register.prev": "Anterior",
   "register.next": "Seguinte",
-  "register.mismatch": "As palavras-passe não coincidem."
+  "register.mismatch": "As palavras-passe não coincidem.",
+  "tpl.recovery_email_label": "E-mail de recuperação",
+  "tpl.recovery_email_hint": "Para recuperar a sua palavra-passe AubeMail se a esquecer. Será enviado um link de confirmação.",
+  "tpl.recovery_email_refused": "Este e-mail de recuperação não é aceite: verifique o endereço ou use outro (endereços descartáveis e @aubemail.com são recusados).",
+  "tpl.rcodes_title": "Os seus códigos de recuperação AubeMail",
+  "tpl.rcodes_lead": "São mostrados apenas uma vez. Guarde-os offline: cada código permite, uma vez, recuperar o acesso à sua conta se esquecer a palavra-passe.",
+  "tpl.rcodes_verify_sent": "Foi enviado um link de confirmação para {email}. Clique nele para ativar a recuperação por e-mail.",
+  "tpl.rcodes_verify_failed": "Não foi possível enviar o link de confirmação para {email}. Poderá reenviá-lo nas definições do AubeMail.",
+  "tpl.rcodes_no_email": "Sem e-mail de recuperação, estes códigos são o seu único meio de recuperação. Pode adicionar um nas definições do AubeMail.",
+  "tpl.rcodes_done": "Já os guardei",
+  "tpl.rcodes_print": "Imprimir"
  },
  "seo": {
   "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",

@@ -6785,5 +6785,115 @@
   "tr": "Şifreler eşleşmiyor.",
   "ur": "پاس ورڈ مماثل نہیں ہیں۔",
   "bn": "পাসওয়ার্ড মিলছে না।"
+ },
+ "tpl.recovery_email_label": {
+  "fr": "Courriel de secours",
+  "en": "Recovery email",
+  "es": "Correo de recuperación",
+  "ru": "Резервный адрес эл. почты",
+  "hi": "रिकवरी ईमेल",
+  "uk": "Резервна електронна адреса",
+  "tr": "Kurtarma e-postası",
+  "ur": "بازیابی ای میل",
+  "bn": "রিকভারি ইমেইল"
+ },
+ "tpl.recovery_email_hint": {
+  "fr": "Pour récupérer votre mot de passe AubeMail si vous l'oubliez. Un lien de confirmation y sera envoyé.",
+  "en": "To recover your AubeMail password if you forget it. A confirmation link will be sent there.",
+  "es": "Para recuperar su contraseña de AubeMail si la olvida. Se enviará un enlace de confirmación.",
+  "ru": "Чтобы восстановить пароль AubeMail, если вы его забудете. Туда придёт ссылка для подтверждения.",
+  "hi": "यदि आप अपना AubeMail पासवर्ड भूल जाएँ तो उसे पुनः प्राप्त करने के लिए। वहाँ एक पुष्टि लिंक भेजा जाएगा।",
+  "uk": "Щоб відновити пароль AubeMail, якщо ви його забудете. Туди надійде посилання для підтвердження.",
+  "tr": "AubeMail parolanızı unutursanız kurtarmak için. Oraya bir onay bağlantısı gönderilecek.",
+  "ur": "اگر آپ اپنا AubeMail پاس ورڈ بھول جائیں تو اسے بازیافت کرنے کے لیے۔ وہاں ایک تصدیقی لنک بھیجا جائے گا۔",
+  "bn": "AubeMail পাসওয়ার্ড ভুলে গেলে তা পুনরুদ্ধারের জন্য। সেখানে একটি নিশ্চিতকরণ লিংক পাঠানো হবে।"
+ },
+ "tpl.recovery_email_refused": {
+  "fr": "Ce courriel de secours n'est pas accepté : vérifiez l'adresse, ou utilisez-en une autre (adresses jetables et adresses @aubemail.com refusées).",
+  "en": "This recovery email is not accepted: check the address, or use another one (disposable and @aubemail.com addresses are refused).",
+  "es": "Este correo de recuperación no se acepta: revise la dirección o use otra (se rechazan las direcciones desechables y @aubemail.com).",
+  "ru": "Этот резервный адрес не принят: проверьте адрес или укажите другой (одноразовые адреса и адреса @aubemail.com не допускаются).",
+  "hi": "यह रिकवरी ईमेल स्वीकार नहीं है: पता जाँचें या दूसरा उपयोग करें (डिस्पोज़ेबल और @aubemail.com पते अस्वीकृत हैं)।",
+  "uk": "Цю резервну адресу не прийнято: перевірте адресу або вкажіть іншу (одноразові адреси та адреси @aubemail.com не приймаються).",
+  "tr": "Bu kurtarma e-postası kabul edilmedi: adresi kontrol edin veya başka bir adres kullanın (tek kullanımlık ve @aubemail.com adresleri reddedilir).",
+  "ur": "یہ بازیابی ای میل قبول نہیں: پتہ چیک کریں یا دوسرا استعمال کریں (عارضی اور @aubemail.com پتے مسترد ہیں)۔",
+  "bn": "এই রিকভারি ইমেইল গ্রহণযোগ্য নয়: ঠিকানাটি যাচাই করুন বা অন্যটি ব্যবহার করুন (ডিসপোজেবল ও @aubemail.com ঠিকানা প্রত্যাখ্যাত)।"
+ },
+ "tpl.rcodes_title": {
+  "fr": "Vos codes de récupération AubeMail",
+  "en": "Your AubeMail recovery codes",
+  "es": "Sus códigos de recuperación de AubeMail",
+  "ru": "Ваши коды восстановления AubeMail",
+  "hi": "आपके AubeMail रिकवरी कोड",
+  "uk": "Ваші коди відновлення AubeMail",
+  "tr": "AubeMail kurtarma kodlarınız",
+  "ur": "آپ کے AubeMail بازیابی کوڈ",
+  "bn": "আপনার AubeMail রিকভারি কোড"
+ },
+ "tpl.rcodes_lead": {
+  "fr": "Ils s'affichent une seule fois. Gardez-les hors ligne : chaque code permet, une fois, de retrouver l'accès à votre compte si vous oubliez votre mot de passe.",
+  "en": "They are shown only once. Keep them offline: each code lets you regain access to your account once if you forget your password.",
+  "es": "Se muestran una sola vez. Guárdelos fuera de línea: cada código permite, una vez, recuperar el acceso a su cuenta si olvida su contraseña.",
+  "ru": "Они показываются только один раз. Храните их офлайн: каждый код позволяет один раз восстановить доступ к аккаунту, если вы забудете пароль.",
+  "hi": "ये केवल एक बार दिखाए जाते हैं। इन्हें ऑफ़लाइन रखें: पासवर्ड भूलने पर हर कोड एक बार आपके खाते तक पहुँच वापस दिलाता है।",
+  "uk": "Вони показуються лише один раз. Зберігайте їх офлайн: кожен код дозволяє один раз відновити доступ до облікового запису, якщо ви забудете пароль.",
+  "tr": "Yalnızca bir kez gösterilirler. Çevrimdışı saklayın: parolanızı unutursanız her kod, hesabınıza bir kez yeniden erişmenizi sağlar.",
+  "ur": "یہ صرف ایک بار دکھائے جاتے ہیں۔ انہیں آف لائن رکھیں: پاس ورڈ بھول جانے پر ہر کوڈ ایک بار آپ کے اکاؤنٹ تک رسائی واپس دلاتا ہے۔",
+  "bn": "এগুলো শুধু একবার দেখানো হয়। অফলাইনে রাখুন: পাসওয়ার্ড ভুলে গেলে প্রতিটি কোড একবার আপনার অ্যাকাউন্টে প্রবেশ ফিরিয়ে দেয়।"
+ },
+ "tpl.rcodes_verify_sent": {
+  "fr": "Un lien de confirmation a été envoyé à {email}. Cliquez-le pour activer la récupération par courriel.",
+  "en": "A confirmation link was sent to {email}. Click it to enable recovery by email.",
+  "es": "Se envió un enlace de confirmación a {email}. Haga clic en él para activar la recuperación por correo.",
+  "ru": "Ссылка для подтверждения отправлена на {email}. Перейдите по ней, чтобы включить восстановление по эл. почте.",
+  "hi": "{email} पर एक पुष्टि लिंक भेजा गया है। ईमेल से रिकवरी सक्रिय करने के लिए उस पर क्लिक करें।",
+  "uk": "Посилання для підтвердження надіслано на {email}. Перейдіть за ним, щоб увімкнути відновлення електронною поштою.",
+  "tr": "{email} adresine bir onay bağlantısı gönderildi. E-posta ile kurtarmayı etkinleştirmek için tıklayın.",
+  "ur": "{email} پر ایک تصدیقی لنک بھیجا گیا ہے۔ ای میل سے بازیابی فعال کرنے کے لیے اس پر کلک کریں۔",
+  "bn": "{email} ঠিকানায় একটি নিশ্চিতকরণ লিংক পাঠানো হয়েছে। ইমেইলে রিকভারি চালু করতে সেটিতে ক্লিক করুন।"
+ },
+ "tpl.rcodes_verify_failed": {
+  "fr": "Le lien de confirmation n'a pas pu être envoyé à {email}. Vous pourrez le renvoyer depuis les réglages d'AubeMail.",
+  "en": "The confirmation link could not be sent to {email}. You can resend it from AubeMail settings.",
+  "es": "No se pudo enviar el enlace de confirmación a {email}. Podrá reenviarlo desde los ajustes de AubeMail.",
+  "ru": "Не удалось отправить ссылку для подтверждения на {email}. Её можно отправить повторно в настройках AubeMail.",
+  "hi": "{email} पर पुष्टि लिंक नहीं भेजा जा सका। आप इसे AubeMail की सेटिंग्स से दोबारा भेज सकते हैं।",
+  "uk": "Не вдалося надіслати посилання для підтвердження на {email}. Ви зможете надіслати його повторно в налаштуваннях AubeMail.",
+  "tr": "Onay bağlantısı {email} adresine gönderilemedi. AubeMail ayarlarından yeniden gönderebilirsiniz.",
+  "ur": "{email} پر تصدیقی لنک نہیں بھیجا جا سکا۔ آپ اسے AubeMail کی ترتیبات سے دوبارہ بھیج سکتے ہیں۔",
+  "bn": "{email} ঠিকানায় নিশ্চিতকরণ লিংক পাঠানো যায়নি। AubeMail সেটিংস থেকে আবার পাঠাতে পারবেন।"
+ },
+ "tpl.rcodes_no_email": {
+  "fr": "Sans courriel de secours, ces codes sont votre seul moyen de récupération. Vous pourrez en ajouter un dans les réglages d'AubeMail.",
+  "en": "Without a recovery email, these codes are your only way to recover your account. You can add one in AubeMail settings.",
+  "es": "Sin correo de recuperación, estos códigos son su único medio de recuperación. Podrá añadir uno en los ajustes de AubeMail.",
+  "ru": "Без резервного адреса эти коды — единственный способ восстановить аккаунт. Его можно добавить в настройках AubeMail.",
+  "hi": "रिकवरी ईमेल के बिना ये कोड ही आपका एकमात्र रिकवरी साधन हैं। आप AubeMail की सेटिंग्स में एक जोड़ सकते हैं।",
+  "uk": "Без резервної адреси ці коди — єдиний спосіб відновити обліковий запис. Її можна додати в налаштуваннях AubeMail.",
+  "tr": "Kurtarma e-postası olmadan bu kodlar tek kurtarma yolunuzdur. AubeMail ayarlarından bir tane ekleyebilirsiniz.",
+  "ur": "بازیابی ای میل کے بغیر یہ کوڈ ہی آپ کی بازیابی کا واحد ذریعہ ہیں۔ آپ AubeMail کی ترتیبات میں ایک شامل کر سکتے ہیں۔",
+  "bn": "রিকভারি ইমেইল ছাড়া এই কোডগুলোই আপনার একমাত্র পুনরুদ্ধারের উপায়। AubeMail সেটিংসে একটি যোগ করতে পারবেন।"
+ },
+ "tpl.rcodes_done": {
+  "fr": "Je les ai notés",
+  "en": "I have saved them",
+  "es": "Los he guardado",
+  "ru": "Я их сохранил(а)",
+  "hi": "मैंने इन्हें नोट कर लिया",
+  "uk": "Я їх зберіг(ла)",
+  "tr": "Kaydettim",
+  "ur": "میں نے نوٹ کر لیے",
+  "bn": "আমি এগুলো সংরক্ষণ করেছি"
+ },
+ "tpl.rcodes_print": {
+  "fr": "Imprimer",
+  "en": "Print",
+  "es": "Imprimir",
+  "ru": "Распечатать",
+  "hi": "प्रिंट करें",
+  "uk": "Роздрукувати",
+  "tr": "Yazdır",
+  "ur": "پرنٹ کریں",
+  "bn": "প্রিন্ট করুন"
  }
 }

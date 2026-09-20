@@ -1286,7 +1286,17 @@
   "register.required": "Câmp obligatoriu",
   "register.prev": "Înapoi",
   "register.next": "Înainte",
-  "register.mismatch": "Parolele nu se potrivesc."
+  "register.mismatch": "Parolele nu se potrivesc.",
+  "tpl.recovery_email_label": "E-mail de recuperare",
+  "tpl.recovery_email_hint": "Pentru a vă recupera parola AubeMail dacă o uitați. Un link de confirmare va fi trimis acolo.",
+  "tpl.recovery_email_refused": "Acest e-mail de recuperare nu este acceptat: verificați adresa sau folosiți alta (adresele de unică folosință și cele @aubemail.com sunt refuzate).",
+  "tpl.rcodes_title": "Codurile dvs. de recuperare AubeMail",
+  "tpl.rcodes_lead": "Se afișează o singură dată. Păstrați-le offline: fiecare cod vă permite, o singură dată, să vă recuperați accesul la cont dacă uitați parola.",
+  "tpl.rcodes_verify_sent": "Un link de confirmare a fost trimis la {email}. Faceți clic pe el pentru a activa recuperarea prin e-mail.",
+  "tpl.rcodes_verify_failed": "Linkul de confirmare nu a putut fi trimis la {email}. Îl puteți retrimite din setările AubeMail.",
+  "tpl.rcodes_no_email": "Fără e-mail de recuperare, aceste coduri sunt singura dvs. cale de recuperare. Puteți adăuga unul în setările AubeMail.",
+  "tpl.rcodes_done": "Le-am salvat",
+  "tpl.rcodes_print": "Tipărește"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

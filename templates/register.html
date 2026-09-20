@@ -93,8 +93,12 @@
             <button type="button" class="password-toggle" aria-label="{{ t('register.show_password') }}" aria-pressed="false">{{ eye_on }}</button>
           </span>
         </label>
-        <label class="wl" style="grid-column: 1 / -1;"><span class="lbl">{{ t('register.phone') }} <em>({{ t('register.optional') }})</em></span>
+        <label class="wl"><span class="lbl">{{ t('register.phone') }} <em>({{ t('register.optional') }})</em></span>
           {% with phone_value = f.get('phone', '') %}{% include "_phone_field.html" %}{% endwith %}
+        </label>
+        <label class="wl"><span class="lbl">{{ t('tpl.recovery_email_label') }} <em>({{ t('register.optional') }})</em></span>
+          <input type="email" name="recovery_email" maxlength="254" autocomplete="email" inputmode="email" placeholder="marie@exemple.com" value="{{ f.get('recovery_email', '') }}">
+          <span class="field-hint">{{ t('tpl.recovery_email_hint') }}</span>
         </label>
       </div>
     </section>

@@ -1630,6 +1630,17 @@ def register():
         country = (request.form.get("country") or "").strip()
         city = (request.form.get("city") or "").strip()
         phone = (request.form.get("phone") or "").strip()
+        # Adresse de secours du compte AubeMail (optionnelle). Sans elle, « mot
+        # de passe oublie » ne peut rien envoyer : AubePilot n'a pas de reset a
+        # lui, il renvoie vers AubeMail. Validee ici pour la forme, par AubeMail
+        # pour le reste (jetable, deja partagee) AVANT toute creation.
+        recovery_email = (request.form.get("recovery_email") or "").strip()[:254]
+        if recovery_email and (
+            not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", recovery_email)
+            or recovery_email.lower().endswith("@aubemail.com")
+        ):
+            flash(i18n.t("tpl.recovery_email_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
+            return render_template("register.html", seo=_register_seo())
         lat = _to_float(request.form.get("lat"))
         lng = _to_float(request.form.get("lng"))
 
@@ -1736,6 +1747,7 @@ def register():
         # Un compte PAM/AubeMail deja existant et authentifie ci-dessus ne doit
         # surtout pas etre reprovisionne : cela pourrait echouer ou modifier un
         # vrai compte alors que seule la creation du profil AubePilot est voulue.
+        prov = None  # rempli si AubeMail provisionne le compte (codes de recuperation)
         if not config.ALLOW_LOCAL_ACCOUNTS and not existing_aubemail:
             import aubemail_client
             _fr = getattr(g, "lang", i18n.DEFAULT) == "fr"
@@ -1746,7 +1758,15 @@ def register():
                 # et le journal des inscriptions cote AubeMail.
                 client_ip=security.client_ip(),
                 user_agent=request.user_agent.string,
+                recovery_email=recovery_email or None,
             )
+            if not prov["ok"] and prov.get("field") == "recovery_email":
+                # Seule l'adresse de secours est refusee : rien n'a ete cree,
+                # la personne corrige et renvoie le formulaire.
+                log.info("inscription : secours refuse par AubeMail (%s) pour %r",
+                         prov.get("reason"), username)
+                flash(i18n.t("tpl.recovery_email_refused", getattr(g, "lang", i18n.DEFAULT)), "error")
+                return render_template("register.html", seo=_register_seo())
             if not prov["ok"]:
                 log.error("inscription REFUSEE : provision AubeMail KO (%s) pour %r",
                           prov.get("reason"), username)
@@ -1807,13 +1827,45 @@ def register():
             )
             return _register_page(2)
         token = auth.create_session(user_id, request.user_agent.string, request.remote_addr or "")
-        resp = make_response(redirect(url_for("dashboard")))
+        # Codes de recuperation AubeMail rendus par la creation du compte : a
+        # montrer UNE fois. Ils transitent par la session Flask (cookie signe,
+        # quelques secondes, vides a l'affichage) jusqu'a /espace/codes-aubemail.
+        codes = list((prov or {}).get("recovery_codes") or [])
+        if codes:
+            from flask import session as flask_session
+            flask_session["aubemail_recovery_codes"] = codes[:20]
+            flask_session["aubemail_recovery_email"] = recovery_email or ""
+            flask_session["aubemail_recovery_verify_sent"] = bool(prov.get("recovery_verify_sent"))
+            dest = url_for("aubemail_recovery_codes")
+        else:
+            dest = url_for("dashboard")
+        resp = make_response(redirect(dest))
         resp.set_cookie(SESSION_COOKIE_NAME, token, httponly=True, samesite="Lax",
                         secure=app.config.get("SESSION_COOKIE_SECURE", False),
                         max_age=auth.session_cookie_max_age(True))
         flash("Bienvenue sur AubePilot.", "success")
         return resp
     return render_template("register.html", seo=_register_seo())
+
+
+@app.route("/espace/codes-aubemail")
+@auth.login_required
+def aubemail_recovery_codes():
+    """Affiche UNE fois les codes de recuperation AubeMail recus a la creation
+    du compte (puis les retire de la session). Sans codes en attente, renvoie
+    au tableau de bord : la page n'est pas un endroit ou revenir les lire."""
+    from flask import session as flask_session
+    codes = flask_session.pop("aubemail_recovery_codes", None) or []
+    email = flask_session.pop("aubemail_recovery_email", "") or ""
+    verify_sent = bool(flask_session.pop("aubemail_recovery_verify_sent", False))
+    if not codes:
+        return redirect(url_for("dashboard"))
+    resp = make_response(render_template(
+        "aubemail_recovery_codes.html", codes=codes, recovery_email=email,
+        verify_sent=verify_sent))
+    # Jamais en cache : ce sont des secrets a usage unique.
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @app.route("/connexion", methods=["GET", "POST"])

@@ -1286,7 +1286,17 @@
   "register.required": "አስፈላጊ መስክ",
   "register.prev": "ቀዳሚ",
   "register.next": "ቀጣይ",
-  "register.mismatch": "የይለፍ ቃላቱ አይዛመዱም።"
+  "register.mismatch": "የይለፍ ቃላቱ አይዛመዱም።",
+  "tpl.recovery_email_label": "የመልሶ ማግኛ ኢሜይል",
+  "tpl.recovery_email_hint": "የAubeMail የይለፍ ቃልዎን ከረሱ መልሰው ለማግኘት። የማረጋገጫ አገናኝ ወደዚያ ይላካል።",
+  "tpl.recovery_email_refused": "ይህ የመልሶ ማግኛ ኢሜይል አልተቀበለም፦ አድራሻውን ያረጋግጡ ወይም ሌላ ይጠቀሙ (ጊዜያዊ አድራሻዎችና የ@aubemail.com አድራሻዎች አይፈቀዱም)።",
+  "tpl.rcodes_title": "የእርስዎ የAubeMail መልሶ ማግኛ ኮዶች",
+  "tpl.rcodes_lead": "አንድ ጊዜ ብቻ ይታያሉ። ከመስመር ውጭ ያስቀምጧቸው፦ የይለፍ ቃልዎን ከረሱ እያንዳንዱ ኮድ አንድ ጊዜ ወደ መለያዎ እንዲመለሱ ያስችላል።",
+  "tpl.rcodes_verify_sent": "የማረጋገጫ አገናኝ ወደ {email} ተልኳል። በኢሜይል መልሶ ማግኘትን ለማንቃት ይጫኑት።",
+  "tpl.rcodes_verify_failed": "የማረጋገጫ አገናኙን ወደ {email} መላክ አልተቻለም። ከAubeMail ቅንብሮች እንደገና መላክ ይችላሉ።",
+  "tpl.rcodes_no_email": "የመልሶ ማግኛ ኢሜይል ከሌለ እነዚህ ኮዶች መለያዎን መልሰው ለማግኘት ብቸኛ መንገድዎ ናቸው። በAubeMail ቅንብሮች አንድ ማከል ይችላሉ።",
+  "tpl.rcodes_done": "አስቀምጫቸዋለሁ",
+  "tpl.rcodes_print": "አትም"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",
