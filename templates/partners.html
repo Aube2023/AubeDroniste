@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{# Partenaires : ecoles, assureurs, boutiques, associations, medias... geres
+   dans /admin/partenaires. La page n'existe pour le public qu'a partir du
+   premier partenaire actif ; l'admin la previsualise avant. #}
+{% block content %}
+
+{% if preview %}
+<div class="flash flash-info" role="status" style="margin-top: 16px;">{{ t('partners.preview') }}</div>
+{% endif %}
+
+<section class="section-header centered" style="margin-top: 32px;">
+  <span class="eyebrow">{{ t('partners.nav') }}</span>
+  <h1>{{ t('partners.h1') }}</h1>
+  <p class="lead muted">{{ t('partners.lead') }}</p>
+</section>
+
+{% if partners %}
+<div class="grid-cards partner-grid">
+  {% for p in partners %}
+  <article class="partner-card kind-{{ p.kind }}">
+    <div class="partner-logo">
+      {% if p.logo_path %}
+      <img src="{{ url_for('media_file', filename=p.logo_path[8:]) }}" alt="{{ p.name }}" loading="lazy">
+      {% else %}
+      <span aria-hidden="true">{{ p.name[:1] }}</span>
+      {% endif %}
+    </div>
+    <div class="partner-body">
+      <span class="tag">{{ t('partners.kind.' ~ p.kind) }}</span>
+      <h2>{{ p.name }}</h2>
+      {% if p.city or p.country %}<div class="loc">{% if p.city %}{{ p.city }}{% endif %}{% if p.city and p.country %} · {% endif %}{% if p.country %}{{ country_name(p.country) }}{% endif %}</div>{% endif %}
+      {% set txt = blurb(p) %}
+      {% if txt %}<p class="muted">{{ txt }}</p>{% endif %}
+      {% if p.url %}<a class="ghost" href="{{ p.url }}" target="_blank" rel="noopener sponsored">{{ t('partners.visit') }} ↗</a>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+
+<section class="card partner-become">
+  <span class="eyebrow">{{ t('partners.become_h') }}</span>
+  <p class="lead" style="margin: 8px 0 16px;">{{ t('partners.become_p') }}</p>
+  <a class="cta" href="{{ url_for('contact_form') }}">{{ t('partners.become_cta') }} →</a>
+</section>
+
+{% endblock %}

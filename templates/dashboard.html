@@ -223,6 +223,7 @@
     <a class="ghost" href="{{ url_for('admin_insurances') }}">{{ t('tpl.assurances_a_verifier') }}{% if admin_pending_insurances %} · <strong>{{ admin_pending_insurances }} {{ t('tpl.en_attente') }}</strong>{% endif %} &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_visits') }}">{{ t('tpl.provenance_des_visiteurs') }} &rarr;</a>
     <a class="ghost" href="{{ url_for('admin_stripe') }}">{{ t('tpl.etat_de_stripe') }} &rarr;</a>
+    <a class="ghost" href="{{ url_for('admin_partners') }}">{{ t('partners.nav') }} &rarr;</a>
   </div>
 </section>
 {% endif %}

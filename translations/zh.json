@@ -1262,7 +1262,25 @@
   "cover.removed": "封面图片已移除。",
   "cover.bad_format": "不支持该格式。请使用 JPG、PNG 或 WebP。",
   "cover.too_big": "图片过大（最大 {mb} MB）。",
-  "cover.no_file": "未选择文件。"
+  "cover.no_file": "未选择文件。",
+  "partners.nav": "合作伙伴",
+  "partners.h1": "我们的合作伙伴",
+  "partners.lead": "支持 AubePilot 及其飞手的学校、保险公司、商店、协会、媒体和科技企业。",
+  "partners.visit": "访问网站",
+  "partners.become_h": "成为合作伙伴",
+  "partners.become_p": "您为无人机飞手或其客户提供服务？给我们写信，一起看看能共同打造什么。",
+  "partners.become_cta": "联系我们",
+  "partners.home_eyebrow": "他们信任我们",
+  "partners.home_all": "全部合作伙伴",
+  "partners.preview": "管理员预览：此页面尚未公开。",
+  "partners.kind.insurance": "保险",
+  "partners.kind.training": "培训",
+  "partners.kind.shop": "商店",
+  "partners.kind.association": "协会",
+  "partners.kind.media": "媒体",
+  "partners.kind.technology": "科技",
+  "partners.kind.institution": "机构",
+  "partners.kind.other": "其他"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "比较{specialty}领域的持证无人机飞手：执照、设备、评价和价格。免费报价，资金托管安全付款。",
   "landing_specialty.description_place": "比较{place}的{specialty}持证无人机飞手：执照、设备、评价和价格。免费报价，资金托管安全付款。",
   "opportunities_page.title": "加拿大无人机招标与合同 | AubePilot",
-  "opportunities_page.description": "面向无人机飞手、LiDAR、摄影测量与巡检的公共招标，按省份分类，附截止日期和公告链接。免费，每晚更新。"
+  "opportunities_page.description": "面向无人机飞手、LiDAR、摄影测量与巡检的公共招标，按省份分类，附截止日期和公告链接。免费，每晚更新。",
+  "partners_page.title": "我们的合作伙伴 | AubePilot",
+  "partners_page.description": "支持 AubePilot 网络及其无人机飞手的学校、保险公司、商店、协会和媒体。"
  },
  "countries": {
   "Afghanistan": "阿富汗",

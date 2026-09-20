@@ -1262,7 +1262,25 @@
   "cover.removed": "Titelbild entfernt.",
   "cover.bad_format": "Format nicht zulässig. Bitte JPG, PNG oder WebP verwenden.",
   "cover.too_big": "Bild zu groß (max. {mb} MB).",
-  "cover.no_file": "Keine Datei ausgewählt."
+  "cover.no_file": "Keine Datei ausgewählt.",
+  "partners.nav": "Partner",
+  "partners.h1": "Unsere Partner",
+  "partners.lead": "Schulen, Versicherer, Shops, Verbände, Medien und Technologieanbieter, die AubePilot und seine Piloten unterstützen.",
+  "partners.visit": "Website besuchen",
+  "partners.become_h": "Partner werden",
+  "partners.become_p": "Sie arbeiten mit Drohnenpiloten oder deren Kunden? Schreiben Sie uns, dann schauen wir gemeinsam, was wir aufbauen können.",
+  "partners.become_cta": "Schreiben Sie uns",
+  "partners.home_eyebrow": "Sie vertrauen uns",
+  "partners.home_all": "Alle Partner",
+  "partners.preview": "Admin-Vorschau: Diese Seite ist noch nicht öffentlich.",
+  "partners.kind.insurance": "Versicherung",
+  "partners.kind.training": "Ausbildung",
+  "partners.kind.shop": "Shop",
+  "partners.kind.association": "Verband",
+  "partners.kind.media": "Medien",
+  "partners.kind.technology": "Technologie",
+  "partners.kind.institution": "Institution",
+  "partners.kind.other": "Sonstiges"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",
@@ -1298,7 +1316,9 @@
   "part107_page.title": "Part-107-Drohnenpiloten in den USA — FAA-geprüft | AubePilot",
   "part107_page.description": "Finden Sie einen FAA-Part-107-zertifizierten Drohnenpiloten per ZIP-Code und vergleichen Sie Angebote, oder tragen Sie Ihr Zertifikat ein: im FAA-Register geprüft, als Abzeichen angezeigt, weltweit sichtbar.",
   "opportunities_page.title": "Drohnen-Ausschreibungen und -Aufträge in Kanada | AubePilot",
-  "opportunities_page.description": "Öffentliche Ausschreibungen für Drohnenpiloten, LiDAR, Photogrammetrie und Inspektion, nach Provinz, mit Frist und Link. Kostenlos, jede Nacht aktualisiert."
+  "opportunities_page.description": "Öffentliche Ausschreibungen für Drohnenpiloten, LiDAR, Photogrammetrie und Inspektion, nach Provinz, mit Frist und Link. Kostenlos, jede Nacht aktualisiert.",
+  "partners_page.title": "Unsere Partner | AubePilot",
+  "partners_page.description": "Schulen, Versicherer, Shops, Verbände und Medien, die das AubePilot-Netzwerk und seine Drohnenpiloten unterstützen."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

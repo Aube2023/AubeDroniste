@@ -1262,7 +1262,25 @@
   "cover.removed": "Zdjęcie w tle usunięte.",
   "cover.bad_format": "Format nieobsługiwany. Użyj JPG, PNG lub WebP.",
   "cover.too_big": "Obraz jest za duży (maks. {mb} MB).",
-  "cover.no_file": "Nie wybrano pliku."
+  "cover.no_file": "Nie wybrano pliku.",
+  "partners.nav": "Partnerzy",
+  "partners.h1": "Nasi partnerzy",
+  "partners.lead": "Szkoły, ubezpieczyciele, sklepy, stowarzyszenia, media i firmy technologiczne wspierające AubePilot i jego pilotów.",
+  "partners.visit": "Odwiedź stronę",
+  "partners.become_h": "Zostań partnerem",
+  "partners.become_p": "Pracujesz z pilotami dronów lub ich klientami? Napisz do nas, wspólnie zobaczymy, co możemy zbudować.",
+  "partners.become_cta": "Napisz do nas",
+  "partners.home_eyebrow": "Zaufali nam",
+  "partners.home_all": "Wszyscy nasi partnerzy",
+  "partners.preview": "Podgląd administratora: ta strona nie jest jeszcze publiczna.",
+  "partners.kind.insurance": "Ubezpieczenia",
+  "partners.kind.training": "Szkolenia",
+  "partners.kind.shop": "Sklep",
+  "partners.kind.association": "Stowarzyszenie",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Technologia",
+  "partners.kind.institution": "Instytucja",
+  "partners.kind.other": "Inne"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Porównaj certyfikowanych pilotów dronów: {specialty}. Uprawnienia, sprzęt, opinie i stawki. Bezpłatne wyceny, bezpieczna płatność z depozytem.",
   "landing_specialty.description_place": "Porównaj certyfikowanych pilotów dronów: {specialty}, {place}. Uprawnienia, sprzęt, opinie i stawki. Bezpłatne wyceny, bezpieczna płatność z depozytem.",
   "opportunities_page.title": "Przetargi i kontrakty dronowe w Kanadzie | AubePilot",
-  "opportunities_page.description": "Przetargi publiczne dla pilotów dronów (LiDAR, fotogrametria, inspekcje) według prowincji, z datą zamknięcia i linkiem do ogłoszenia. Bezpłatnie, co noc."
+  "opportunities_page.description": "Przetargi publiczne dla pilotów dronów (LiDAR, fotogrametria, inspekcje) według prowincji, z datą zamknięcia i linkiem do ogłoszenia. Bezpłatnie, co noc.",
+  "partners_page.title": "Nasi partnerzy | AubePilot",
+  "partners_page.description": "Szkoły, ubezpieczyciele, sklepy, stowarzyszenia i media wspierające sieć AubePilot i jej pilotów dronów."
  },
  "countries": {
   "Afghanistan": "Afganistan",

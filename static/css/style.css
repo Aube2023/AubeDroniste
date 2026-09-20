@@ -2150,6 +2150,35 @@ a.bid-name:hover { color: var(--amber); }
 }
 .avatar-uploader .uploader-body { flex: 1; min-width: 240px; }
 
+/* ---- Partenaires : page publique + bandeau de logos a l'accueil ---- */
+.partner-grid { margin-top: 32px; }
+.partner-card {
+  display: grid; grid-template-columns: 88px 1fr; gap: 16px; align-items: start;
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 14px; padding: 18px;
+}
+.partner-logo {
+  width: 88px; height: 88px; border-radius: 12px; background: #fff;
+  border: 1px solid var(--rule); display: grid; place-items: center; overflow: hidden;
+  font: 700 2rem/1 var(--serif); color: var(--amber);
+}
+.partner-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+.partner-body h2 { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; margin: 6px 0 4px; }
+.partner-body .loc { font: 500 11px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
+.partner-body p { margin: 0 0 10px; }
+.partner-body .ghost { white-space: nowrap; }
+.partner-become { margin-top: 40px; text-align: center; padding: 40px 24px; }
+.partner-become .eyebrow { justify-content: center; }
+.partner-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.partner-tile {
+  display: grid; place-items: center; width: 168px; height: 84px; padding: 12px;
+  background: #fff; border: 1px solid var(--rule); border-radius: 12px; color: var(--ink);
+  font: 600 14px/1.2 var(--display); text-align: center; text-decoration: none;
+  transition: border-color .15s, transform .15s;
+}
+.partner-tile:hover { border-color: var(--amber); transform: translateY(-2px); }
+.partner-tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
+@media (max-width: 520px) { .partner-card { grid-template-columns: 64px 1fr; } .partner-logo { width: 64px; height: 64px; } }
+
 /* ---- espace pilote : image de couverture ---- */
 .cover-uploader { margin-top: 8px; }
 .cover-uploader .cover-frame {
@@ -2441,6 +2470,25 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .doc-preview img { display: block; max-width: 100%; max-height: 640px; margin: 0 auto; }
 
 /* --- annuaire : onglets par type de profil + badges --- */
+/* Accueil direct : la carte puis les pilotes tout de suite sous le bandeau,
+   en-tetes sur une ligne, sections rapprochees. */
+.hero-band.hero-compact { margin-bottom: 0; padding: 40px 24px 34px; }
+.hero-band.hero-compact h1 { font-size: clamp(1.7rem, 3.6vw, 2.7rem); }
+.hero-band.hero-compact .lead { margin-top: 12px; }
+.hero-band.hero-compact .hero-search { margin-top: 20px; }
+.hero-band.hero-compact .hero-actions { margin-top: 14px; }
+/* Carte pleine largeur (memes marges symetriques que le bandeau). */
+.map-bleed { width: 100vw; max-width: 100vw; margin: 0 calc(50% - 50vw); }
+.map-bleed .map-wrap { border-radius: 0; border-left: 0; border-right: 0; border-top: 0; margin-bottom: 0 !important; }
+.map-bleed #aube-map { border-radius: 0 !important; }
+#carte.section-tight { margin-top: 0; margin-bottom: 28px; }
+@media (max-width: 760px) { .map-bleed .map-wrap #aube-map, .map-bleed #aube-map { height: 58vh !important; min-height: 380px; } }
+#pays.section-tight { margin-top: 0; }
+.section.section-tight { margin: 36px 0 44px; }
+.section.section-tight + .section.section-tight { margin-top: 0; }
+.section-line { align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.section-line h2 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+#pilotes .dir-tabs { margin-bottom: 16px; }
 .dir-tabs {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin: 0 0 12px; padding: 6px;

@@ -1262,7 +1262,25 @@
   "cover.removed": "Η εικόνα εξωφύλλου αφαιρέθηκε.",
   "cover.bad_format": "Μη αποδεκτή μορφή. Χρησιμοποιήστε JPG, PNG ή WebP.",
   "cover.too_big": "Η εικόνα είναι πολύ μεγάλη (έως {mb} MB).",
-  "cover.no_file": "Δεν επιλέχθηκε αρχείο."
+  "cover.no_file": "Δεν επιλέχθηκε αρχείο.",
+  "partners.nav": "Συνεργάτες",
+  "partners.h1": "Οι συνεργάτες μας",
+  "partners.lead": "Σχολές, ασφαλιστές, καταστήματα, σύλλογοι, μέσα ενημέρωσης και εταιρείες τεχνολογίας που στηρίζουν το AubePilot και τους πιλότους του.",
+  "partners.visit": "Επίσκεψη ιστότοπου",
+  "partners.become_h": "Γίνετε συνεργάτης",
+  "partners.become_p": "Συνεργάζεστε με πιλότους drone ή με τους πελάτες τους; Γράψτε μας και ας δούμε μαζί τι μπορούμε να χτίσουμε.",
+  "partners.become_cta": "Γράψτε μας",
+  "partners.home_eyebrow": "Μας εμπιστεύονται",
+  "partners.home_all": "Όλοι οι συνεργάτες μας",
+  "partners.preview": "Προεπισκόπηση διαχειριστή: αυτή η σελίδα δεν είναι ακόμη δημόσια.",
+  "partners.kind.insurance": "Ασφάλιση",
+  "partners.kind.training": "Εκπαίδευση",
+  "partners.kind.shop": "Κατάστημα",
+  "partners.kind.association": "Σύλλογος",
+  "partners.kind.media": "Μέσα ενημέρωσης",
+  "partners.kind.technology": "Τεχνολογία",
+  "partners.kind.institution": "Φορέας",
+  "partners.kind.other": "Άλλο"
  },
  "seo": {
   "home.title": "Προσλάβετε πιστοποιημένο χειριστή drone — Δωρεάν προσφορές | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Συγκρίνετε πιστοποιημένους χειριστές drone για {specialty}: πιστοποιητικά, εξοπλισμός, αξιολογήσεις και τιμές. Δωρεάν προσφορές, ασφαλής πληρωμή σε μεσεγγύηση.",
   "landing_specialty.description_place": "Πιστοποιημένοι χειριστές drone για {specialty} στην περιοχή {place}: πιστοποιητικά, εξοπλισμός, αξιολογήσεις, τιμές. Δωρεάν προσφορές, πληρωμή σε μεσεγγύηση.",
   "opportunities_page.title": "Διαγωνισμοί και συμβάσεις για drone στον Καναδά | AubePilot",
-  "opportunities_page.description": "Δημόσιοι διαγωνισμοί για χειριστές drone (LiDAR, φωτογραμμετρία, επιθεώρηση) ανά επαρχία, με ημερομηνία λήξης και σύνδεσμο. Δωρεάν, καθημερινή ενημέρωση."
+  "opportunities_page.description": "Δημόσιοι διαγωνισμοί για χειριστές drone (LiDAR, φωτογραμμετρία, επιθεώρηση) ανά επαρχία, με ημερομηνία λήξης και σύνδεσμο. Δωρεάν, καθημερινή ενημέρωση.",
+  "partners_page.title": "Οι συνεργάτες μας | AubePilot",
+  "partners_page.description": "Σχολές, ασφαλιστές, καταστήματα, σύλλογοι και μέσα ενημέρωσης που στηρίζουν το δίκτυο AubePilot και τους πιλότους drone του."
  },
  "countries": {
   "Afghanistan": "Αφγανιστάν",

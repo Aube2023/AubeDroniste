@@ -538,6 +538,26 @@ CREATE TABLE IF NOT EXISTS user_blocks (
 );
 CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON user_blocks(blocked_user_id);
 
+-- Partenaires (ecoles, assureurs, boutiques, associations, medias...) geres
+-- par l'admin. La section publique /partenaires n'apparait qu'a partir du
+-- premier partenaire actif.
+CREATE TABLE IF NOT EXISTS partners (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'other',   -- insurance | training | shop | association | media | technology | institution | other
+    url         TEXT,
+    logo_path   TEXT,                             -- uploads/partner_<id>_<ts>.<ext> (servi par /media)
+    blurb       TEXT,                             -- une phrase, en francais
+    blurb_en    TEXT,
+    blurb_es    TEXT,
+    country     TEXT,
+    city        TEXT,
+    is_active   INTEGER NOT NULL DEFAULT 0,       -- 0 = prepare en coulisses, invisible du public
+    sort_order  INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT
+);
+
 -- Signalements (profil, mission, conversation) examines par l'admin.
 CREATE TABLE IF NOT EXISTS reports (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,

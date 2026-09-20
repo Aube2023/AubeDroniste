@@ -3,9 +3,8 @@
 
 {# Hero : bandeau sombre pleine largeur, contenu centré, recherche en une ligne.
    Sobre et lisible dans les deux thèmes ; aucun décor ailleurs sur le site. #}
-<section class="hero hero-band">
+<section class="hero hero-band hero-compact">
   <div class="hero-inner">
-    <span class="hero-badge"><i></i>{{ t('home.eyebrow') }}</span>
     <h1>{{ t('home.h1_a') }}<br>{{ t('home.h1_b') }} <em>{{ t('home.h1_b_em') }}</em></h1>
     <p class="lead"><a class="hero-link" href="{{ url_for('pilots_search') }}">{{ t('home.lead_short') }}</a></p>
     <form class="hero-search" method="get" action="{{ url_for('pilots_search') }}" aria-label="{{ t('home.search_title') }}">
@@ -41,6 +40,76 @@
   <div class="made-in" role="img" title="{{ t('nav.made_in') }}" aria-label="{{ t('nav.made_in') }}">
     <span class="ca">🇨🇦</span><svg class="qc-flag" viewBox="0 0 900 600" aria-hidden="true"><rect width="900" height="600" fill="#003da5"/><rect x="375" width="150" height="600" fill="#fff"/><rect y="225" width="900" height="150" fill="#fff"/><g fill="#fff"><use href="#qc-lis" x="112" y="37"/><use href="#qc-lis" x="637" y="37"/><use href="#qc-lis" x="112" y="412"/><use href="#qc-lis" x="637" y="412"/></g></svg>
     <span class="made-in-txt">{{ t('nav.made_in') }}</span>
+  </div>
+</section>
+
+{# Carte et pilotes en tete de page (demande du 2026-09-20) : ce que le visiteur cherche d'abord. #}
+<section class="section section-tight" id="carte">
+  {# Direct comme un annuaire : la carte pleine largeur tout de suite sous le
+     bandeau, en grand ; titre et lien viennent dessous. #}
+  <div class="map-bleed">
+    {% set map_height = 'clamp(460px, 64vh, 760px)' %}{% include "_map.html" with context %}
+  </div>
+</section>
+
+<section class="section section-tight" id="pilotes">
+  <div class="row-between section-line">
+    <h2>{{ t('home.featured.h') }}</h2>
+    <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.featured.all') }}</a>
+  </div>
+  <nav class="dir-tabs" aria-label="{{ t('tpl.type_de_profil') }}">
+    <a href="{{ url_for('pilots_search') }}">{{ t('tpl.tous') }} <span class="n">{{ kind_counts.all }}</span></a>
+    <a href="{{ url_for('pilots_search', kind='pro') }}">{{ t('tpl.pilotes_pro') }} <span class="n">{{ kind_counts.pro }}</span></a>
+    <a href="{{ url_for('pilots_search', kind='recreational') }}">{{ t('tpl.pilotes_recreatifs') }} <span class="n">{{ kind_counts.recreational }}</span></a>
+    <a href="{{ url_for('pilots_search', kind='company') }}">{{ t('tpl.entreprises') }} <span class="n">{{ kind_counts.company }}</span></a>
+    <a href="{{ url_for('pilots_search', kind='school') }}">{{ t('tpl.ecoles') }} <span class="n">{{ kind_counts.school }}</span></a>
+    <a href="{{ url_for('pilots_search', kind='shop') }}">{{ t('tpl.boutiques') }} <span class="n">{{ kind_counts.shop }}</span></a>
+  </nav>
+  <div class="grid-cards">
+    {% for p in featured_pilots %}
+    {% set masked = public_name(p) %}
+    <a class="pilot-card kind-{{ p.kind or 'pro' }}{% if p.cover_path %} has-cover{% endif %}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+      <div class="strip">
+        <span class="callsign">nº {{ p.pilot_no or p.id }}</span>
+        <span class="fh">{% if p.rating.count %}{{ t('common.reviews', n=p.rating.count) }}{% else %}{{ t('common.new_pilot') }}{% endif %}</span>
+      </div>
+      {% if p.cover_path %}
+      <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
+      {% endif %}
+      <div class="body">
+        {% if p.avatar_path %}
+        <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
+             alt="Photo pilote" loading="lazy" style="object-fit: cover;">
+        {% else %}
+        <div class="avatar">{{ masked[:1] }}</div>
+        {% endif %}
+        <div>
+          <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
+          <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}</div>
+          {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
+        </div>
+      </div>
+      <div class="foot">
+        <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
+        <span>{% if p.hourly_rate %}{{ t('common.per_hour', amount=p.hourly_rate|int, currency=p.p_currency) }}{% else %}{{ t('common.no_quote') }}{% endif %}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section section-tight" id="pays">
+  <div class="country-grid">
+    {% for c in country_breakdown %}
+    <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
+      <div class="country-name">{{ c.country }}</div>
+      <div class="country-stats">
+        {{ t('tpl.n_pilotes', n=c.pilots) }} ·
+        {{ t('tpl.n_missions', n=c.missions) }}
+      </div>
+      <span class="arrow">→</span>
+    </a>
+    {% endfor %}
   </div>
 </section>
 
@@ -134,74 +203,6 @@
 </section>
 
 
-<section class="section">
-  <div class="section-header centered">
-    <span class="eyebrow">{{ t('home.featured.eyebrow') }}</span>
-    <h2>{{ t('home.featured.h') }}</h2>
-    <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.featured.all') }}</a>
-  </div>
-  <div class="grid-cards">
-    {% for p in featured_pilots %}
-    {% set masked = public_name(p) %}
-    <a class="pilot-card kind-{{ p.kind or 'pro' }}{% if p.cover_path %} has-cover{% endif %}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
-      <div class="strip">
-        <span class="callsign">nº {{ p.pilot_no or p.id }}</span>
-        <span class="fh">{% if p.rating.count %}{{ t('common.reviews', n=p.rating.count) }}{% else %}{{ t('common.new_pilot') }}{% endif %}</span>
-      </div>
-      {% if p.cover_path %}
-      <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
-      {% endif %}
-      <div class="body">
-        {% if p.avatar_path %}
-        <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
-             alt="Photo pilote" loading="lazy" style="object-fit: cover;">
-        {% else %}
-        <div class="avatar">{{ masked[:1] }}</div>
-        {% endif %}
-        <div>
-          <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
-          <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}</div>
-          {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
-        </div>
-      </div>
-      <div class="foot">
-        <span class="rating">{% if p.rating.count %}★ {{ '%.1f' % p.rating.avg }}{% else %}— · —{% endif %}</span>
-        <span>{% if p.hourly_rate %}{{ t('common.per_hour', amount=p.hourly_rate|int, currency=p.p_currency) }}{% else %}{{ t('common.no_quote') }}{% endif %}</span>
-      </div>
-    </a>
-    {% else %}
-    <div class="empty-state">
-      <strong>{{ t('tpl.aucun_pilote_pour_le_moment') }}</strong>
-      <p>{{ t('tpl.soyez_le_premier_pilote_certifie_reference') }}</p>
-      <div class="actions-row">
-        <a href="{{ url_for('register') }}?role=pilot" class="cta">{{ t('home.cta_pilot') }}</a>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="section">
-  <div class="section-header centered">
-    <span class="eyebrow">{{ t('home.map.eyebrow') }}</span>
-    <h2>{{ t('home.map.h') }}</h2>
-    <p class="muted">{{ t('home.map.lead') }}</p>
-    <a href="{{ url_for('pilots_search') }}" class="ghost">{{ t('home.map.all') }}</a>
-  </div>
-  {% set map_height = '480px' %}{% include "_map.html" with context %}
-  <div class="country-grid">
-    {% for c in country_breakdown %}
-    <a class="country-tile" href="{{ url_for('pilots_search', country=c.country) }}">
-      <div class="country-name">{{ c.country }}</div>
-      <div class="country-stats">
-        {{ t('tpl.n_pilotes', n=c.pilots) }} ·
-        {{ t('tpl.n_missions', n=c.missions) }}
-      </div>
-      <span class="arrow">→</span>
-    </a>
-    {% endfor %}
-  </div>
-</section>
 
 <section class="section" id="rejoindre">
   <div class="section-header centered">
@@ -285,6 +286,24 @@
     {% endfor %}
   </div>
 </section>
+
+{% if home_partners %}
+{# Logos des partenaires actifs (section ouverte par l'admin ; rien avant). #}
+<section class="section" id="partenaires">
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('partners.home_eyebrow') }}</span>
+    <h2>{{ t('partners.nav') }}</h2>
+  </div>
+  <div class="partner-strip">
+    {% for p in home_partners %}
+    <a class="partner-tile" href="{{ p.url or url_for('partners') }}" {% if p.url %}target="_blank" rel="noopener sponsored"{% endif %} title="{{ p.name }}">
+      {% if p.logo_path %}<img src="{{ url_for('media_file', filename=p.logo_path[8:]) }}" alt="{{ p.name }}" loading="lazy">{% else %}<span>{{ p.name }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  <p style="text-align: center; margin-top: 18px;"><a class="ghost" href="{{ url_for('partners') }}">{{ t('partners.home_all') }} →</a></p>
+</section>
+{% endif %}
 
 <section class="section" id="faq">
   <div class="section-header centered">

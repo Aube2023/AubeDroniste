@@ -210,6 +210,7 @@
       <a href="{{ url_for('index') }}#comment-ca-marche">{{ t('footer.how') }}</a>
       <a href="{{ url_for('updates') }}">{{ t('footer.updates') }}</a>
       <a href="{{ url_for('faq') }}">{{ t('footer.faq') }}</a>
+      {% if partners_visible %}<a href="{{ url_for('partners') }}">{{ t('partners.nav') }}</a>{% endif %}
       <a href="{{ url_for('contact_form') }}">{{ t('footer.contact') }}</a>
     </nav>
     {% if social_links %}

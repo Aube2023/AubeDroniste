@@ -1262,7 +1262,25 @@
   "cover.removed": "कभर तस्बिर हटाइयो।",
   "cover.bad_format": "ढाँचा स्वीकार्य छैन। JPG, PNG वा WebP प्रयोग गर्नुहोस्।",
   "cover.too_big": "तस्बिर धेरै ठूलो छ (अधिकतम {mb} MB)।",
-  "cover.no_file": "कुनै फाइल छानिएको छैन।"
+  "cover.no_file": "कुनै फाइल छानिएको छैन।",
+  "partners.nav": "साझेदारहरू",
+  "partners.h1": "हाम्रा साझेदारहरू",
+  "partners.lead": "AubePilot र यसका पाइलटहरूलाई सहयोग गर्ने विद्यालय, बीमा कम्पनी, पसल, संघ, सञ्चारमाध्यम र प्रविधि कम्पनीहरू।",
+  "partners.visit": "वेबसाइट हेर्नुहोस्",
+  "partners.become_h": "साझेदार बन्नुहोस्",
+  "partners.become_p": "के तपाईं ड्रोन पाइलट वा तिनका ग्राहकहरूसँग काम गर्नुहुन्छ? हामीलाई लेख्नुहोस्, सँगै के बनाउन सकिन्छ हेरौं।",
+  "partners.become_cta": "हामीलाई लेख्नुहोस्",
+  "partners.home_eyebrow": "उनीहरू हामीमाथि भरोसा गर्छन्",
+  "partners.home_all": "हाम्रा सबै साझेदारहरू",
+  "partners.preview": "प्रशासक पूर्वावलोकन: यो पृष्ठ अझै सार्वजनिक छैन।",
+  "partners.kind.insurance": "बीमा",
+  "partners.kind.training": "तालिम",
+  "partners.kind.shop": "पसल",
+  "partners.kind.association": "संघ",
+  "partners.kind.media": "सञ्चारमाध्यम",
+  "partners.kind.technology": "प्रविधि",
+  "partners.kind.institution": "संस्था",
+  "partners.kind.other": "अन्य"
  },
  "seo": {
   "home.title": "प्रमाणित ड्रोन पाइलट भाडामा — निःशुल्क कोटेसन | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "{specialty} का लागि प्रमाणित ड्रोन पाइलट तुलना गर्नुहोस्: इजाजतपत्र, उपकरण, समीक्षा र दर। निःशुल्क कोटेसन, सुरक्षित एस्क्रो भुक्तानी।",
   "landing_specialty.description_place": "{place} मा {specialty} का लागि प्रमाणित ड्रोन पाइलट तुलना गर्नुहोस्: इजाजतपत्र, उपकरण, समीक्षा र दर। निःशुल्क कोटेसन, सुरक्षित एस्क्रो भुक्तानी।",
   "opportunities_page.title": "क्यानाडामा ड्रोन बोलपत्र र ठेक्का | AubePilot",
-  "opportunities_page.description": "ड्रोन पाइलट, LiDAR, फोटोग्रामेट्री र निरीक्षणका लागि सार्वजनिक बोलपत्र, प्रदेशअनुसार, बन्द हुने मिति र सूचनाको लिङ्कसहित। निःशुल्क, हरेक रात अद्यावधिक।"
+  "opportunities_page.description": "ड्रोन पाइलट, LiDAR, फोटोग्रामेट्री र निरीक्षणका लागि सार्वजनिक बोलपत्र, प्रदेशअनुसार, बन्द हुने मिति र सूचनाको लिङ्कसहित। निःशुल्क, हरेक रात अद्यावधिक।",
+  "partners_page.title": "हाम्रा साझेदारहरू | AubePilot",
+  "partners_page.description": "AubePilot सञ्जाल र यसका ड्रोन पाइलटहरूलाई सहयोग गर्ने विद्यालय, बीमा कम्पनी, पसल, संघ र सञ्चारमाध्यमहरू।"
  },
  "countries": {
   "Afghanistan": "अफगानिस्तान",

@@ -1262,7 +1262,25 @@
   "cover.removed": "Omslagfoto verwijderd.",
   "cover.bad_format": "Formaat niet toegestaan. Gebruik JPG, PNG of WebP.",
   "cover.too_big": "Afbeelding te groot (max. {mb} MB).",
-  "cover.no_file": "Geen bestand gekozen."
+  "cover.no_file": "Geen bestand gekozen.",
+  "partners.nav": "Partners",
+  "partners.h1": "Onze partners",
+  "partners.lead": "Scholen, verzekeraars, winkels, verenigingen, media en technologiebedrijven die AubePilot en zijn piloten steunen.",
+  "partners.visit": "Website bezoeken",
+  "partners.become_h": "Partner worden",
+  "partners.become_p": "Werk je met dronepiloten of hun klanten? Schrijf ons en dan bekijken we samen wat we kunnen opbouwen.",
+  "partners.become_cta": "Schrijf ons",
+  "partners.home_eyebrow": "Zij vertrouwen ons",
+  "partners.home_all": "Al onze partners",
+  "partners.preview": "Beheerdersvoorbeeld: deze pagina is nog niet openbaar.",
+  "partners.kind.insurance": "Verzekering",
+  "partners.kind.training": "Opleiding",
+  "partners.kind.shop": "Winkel",
+  "partners.kind.association": "Vereniging",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Technologie",
+  "partners.kind.institution": "Instelling",
+  "partners.kind.other": "Overig"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Vergelijk gecertificeerde dronepiloten voor {specialty}: vliegbewijzen, uitrusting, beoordelingen en tarieven. Gratis offertes, veilige betaling in escrow.",
   "landing_specialty.description_place": "Vergelijk gecertificeerde dronepiloten voor {specialty} in {place}: vliegbewijzen, uitrusting, beoordelingen en tarieven. Gratis offertes, veilige betaling in escrow.",
   "opportunities_page.title": "Drone-aanbestedingen en -contracten in Canada | AubePilot",
-  "opportunities_page.description": "Openbare drone-aanbestedingen (LiDAR, fotogrammetrie, inspectie) per provincie, met sluitingsdatum en link naar de aankondiging. Gratis, dagelijks bijgewerkt."
+  "opportunities_page.description": "Openbare drone-aanbestedingen (LiDAR, fotogrammetrie, inspectie) per provincie, met sluitingsdatum en link naar de aankondiging. Gratis, dagelijks bijgewerkt.",
+  "partners_page.title": "Onze partners | AubePilot",
+  "partners_page.description": "Scholen, verzekeraars, winkels, verenigingen en media die het AubePilot-netwerk en zijn dronepiloten steunen."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

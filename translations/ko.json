@@ -1262,7 +1262,25 @@
   "cover.removed": "커버 이미지가 삭제되었습니다.",
   "cover.bad_format": "지원하지 않는 형식입니다. JPG, PNG 또는 WebP를 사용하세요.",
   "cover.too_big": "이미지가 너무 큽니다 (최대 {mb} MB).",
-  "cover.no_file": "선택된 파일이 없습니다."
+  "cover.no_file": "선택된 파일이 없습니다.",
+  "partners.nav": "파트너",
+  "partners.h1": "우리의 파트너",
+  "partners.lead": "AubePilot과 파일럿들을 지원하는 학교, 보험사, 상점, 협회, 미디어 및 기술 기업.",
+  "partners.visit": "웹사이트 방문",
+  "partners.become_h": "파트너 되기",
+  "partners.become_p": "드론 파일럿이나 그 고객과 함께 일하시나요? 저희에게 연락 주시면 함께 만들어 갈 수 있는 것을 알아보겠습니다.",
+  "partners.become_cta": "문의하기",
+  "partners.home_eyebrow": "우리를 신뢰하는 파트너",
+  "partners.home_all": "모든 파트너 보기",
+  "partners.preview": "관리자 미리보기: 이 페이지는 아직 공개되지 않았습니다.",
+  "partners.kind.insurance": "보험",
+  "partners.kind.training": "교육",
+  "partners.kind.shop": "상점",
+  "partners.kind.association": "협회",
+  "partners.kind.media": "미디어",
+  "partners.kind.technology": "기술",
+  "partners.kind.institution": "기관",
+  "partners.kind.other": "기타"
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "{specialty} 분야 인증 드론 조종자 비교: 자격증, 장비, 후기, 요금. 무료 견적, 안전한 에스크로 결제.",
   "landing_specialty.description_place": "{place}의 {specialty} 인증 드론 조종자 비교: 자격증, 장비, 후기, 요금. 무료 견적, 안전한 에스크로 결제.",
   "opportunities_page.title": "캐나다 드론 입찰 공고와 계약 | AubePilot",
-  "opportunities_page.description": "드론 조종자, LiDAR, 사진측량, 점검을 위한 공공 입찰 공고를 주별로 정리했습니다. 마감일과 공고 링크 포함. 무료, 매일 밤 업데이트."
+  "opportunities_page.description": "드론 조종자, LiDAR, 사진측량, 점검을 위한 공공 입찰 공고를 주별로 정리했습니다. 마감일과 공고 링크 포함. 무료, 매일 밤 업데이트.",
+  "partners_page.title": "우리의 파트너 | AubePilot",
+  "partners_page.description": "AubePilot 네트워크와 드론 파일럿을 지원하는 학교, 보험사, 상점, 협회 및 미디어."
  },
  "countries": {
   "Afghanistan": "아프가니스탄",

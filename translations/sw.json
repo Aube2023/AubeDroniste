@@ -1262,7 +1262,25 @@
   "cover.removed": "Picha ya jalada imeondolewa.",
   "cover.bad_format": "Muundo haukubaliki. Tumia JPG, PNG au WebP.",
   "cover.too_big": "Picha ni kubwa mno (upeo {mb} MB).",
-  "cover.no_file": "Hakuna faili iliyochaguliwa."
+  "cover.no_file": "Hakuna faili iliyochaguliwa.",
+  "partners.nav": "Washirika",
+  "partners.h1": "Washirika wetu",
+  "partners.lead": "Shule, bima, maduka, vyama, vyombo vya habari na kampuni za teknolojia zinazounga mkono AubePilot na marubani wake.",
+  "partners.visit": "Tembelea tovuti",
+  "partners.become_h": "Kuwa mshirika",
+  "partners.become_p": "Je, unafanya kazi na marubani wa ndege zisizo na rubani au wateja wao? Tuandikie, tuone pamoja tunachoweza kujenga.",
+  "partners.become_cta": "Tuandikie",
+  "partners.home_eyebrow": "Wanatuamini",
+  "partners.home_all": "Washirika wetu wote",
+  "partners.preview": "Onyesho la awali la msimamizi: ukurasa huu bado si wa umma.",
+  "partners.kind.insurance": "Bima",
+  "partners.kind.training": "Mafunzo",
+  "partners.kind.shop": "Duka",
+  "partners.kind.association": "Chama",
+  "partners.kind.media": "Vyombo vya habari",
+  "partners.kind.technology": "Teknolojia",
+  "partners.kind.institution": "Taasisi",
+  "partners.kind.other": "Nyingine"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Linganisha marubani wa droni walioidhinishwa kwa {specialty}: leseni, vifaa, maoni na bei. Nukuu za bei bure, malipo salama ya amana.",
   "landing_specialty.description_place": "Linganisha marubani wa droni walioidhinishwa kwa {specialty} {place}: leseni, vifaa, maoni na bei. Nukuu za bei bure, malipo salama ya amana.",
   "opportunities_page.title": "Zabuni na mikataba ya droni nchini Kanada | AubePilot",
-  "opportunities_page.description": "Zabuni za umma kwa marubani wa droni, LiDAR, fotogrametria na ukaguzi, kwa jimbo, na tarehe ya kufunga na kiungo cha tangazo. Bure, husasishwa kila usiku."
+  "opportunities_page.description": "Zabuni za umma kwa marubani wa droni, LiDAR, fotogrametria na ukaguzi, kwa jimbo, na tarehe ya kufunga na kiungo cha tangazo. Bure, husasishwa kila usiku.",
+  "partners_page.title": "Washirika wetu | AubePilot",
+  "partners_page.description": "Shule, bima, maduka, vyama na vyombo vya habari vinavyounga mkono mtandao wa AubePilot na marubani wake wa ndege zisizo na rubani."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

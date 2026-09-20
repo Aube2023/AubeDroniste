@@ -219,6 +219,7 @@ _static_ver_cache: dict = {}
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
     "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None,
+    "partners": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
     "faq": seo.FAQ_LANGS,
@@ -443,6 +444,8 @@ def _inject_globals():
         "contact_email": CONTACT_EMAIL,
         "contact_reply_hours": CONTACT_REPLY_HOURS,
         "social_links": SOCIAL_LINKS,
+        # Section partenaires : invisible tant qu'aucun partenaire n'est actif.
+        "partners_visible": services.partners_visible(),
         "search_radius_choices": SEARCH_RADIUS_CHOICES,
         # Economie plateforme : surface unique (jamais "20 %"/"80 %" en dur en vue)
         "platform_fee_pct": int(PLATFORM_FEE_PCT),
@@ -736,7 +739,9 @@ def index():
         "index.html",
         home_opportunities=services.localize_opportunities(services.list_opportunities(limit=4), getattr(g, "lang", i18n.DEFAULT)),
         stats=services.public_stats(),
-        featured_pilots=services.featured_pilots(8),
+        featured_pilots=services.featured_pilots(12),
+        kind_counts=services.count_pilots_by_kind(),
+        home_partners=services.list_partners(),
         latest_missions=services.latest_missions(8),
         country_breakdown=services.country_breakdown(12),
         faq_entries=content.faq(getattr(g, "lang", i18n.DEFAULT), featured_only=True),
@@ -825,6 +830,8 @@ def _sitemap_entries() -> list:
         return endpoint_langs(endpoint) or (i18n.DEFAULT,)
 
     entries = [(path, "", prio, freq, langs_of(path)) for path, prio, freq in seo.PUBLIC_ROUTES]
+    if services.partners_visible():
+        entries.append(("/partenaires", "", "0.5", "monthly", langs_of("/partenaires")))
     all_langs = tuple(i18n.SUPPORTED)
     for p in services.sitemap_pilots():
         entries.append((f"/pilotes/{p['id']}", str(p.get("lastmod") or "")[:10], "0.7", "weekly", all_langs))
@@ -921,6 +928,99 @@ def schools():
         "schools.html", schools=schools_list,
         seo=seo.schools_page(lang),
     )
+
+
+@app.route("/partenaires")
+def partners():
+    """Page publique des partenaires. Tant qu'aucun partenaire n'est actif,
+    elle n'existe pas pour le public (404) ; l'admin la previsualise."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    visible = services.partners_visible()
+    is_admin = bool(getattr(g, "user", None) and g.user.get("is_admin"))
+    if not visible and not is_admin:
+        abort(404)
+    items = services.list_partners(active_only=visible)
+    return render_template(
+        "partners.html", partners=items, preview=not visible,
+        blurb=lambda p: services.partner_blurb(p, lang),
+        seo=seo.partners_page(lang),
+    )
+
+
+_PARTNER_LOGO_EXT = {"png", "jpg", "jpeg", "webp"}
+MAX_PARTNER_LOGO_MB = 2
+
+
+def _save_partner_logo(partner_id: int):
+    """Enregistre le logo du champ `logo` ; retourne 'uploads/...' ou None.
+    Pas de SVG : /media refuse les formats actifs (script possible)."""
+    f = request.files.get("logo")
+    if not (f and f.filename):
+        return None
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in _PARTNER_LOGO_EXT:
+        flash("Logo : PNG, JPG ou WebP seulement.", "error")
+        return None
+    f.stream.seek(0, os.SEEK_END)
+    size = f.stream.tell()
+    f.stream.seek(0)
+    if size > MAX_PARTNER_LOGO_MB * 1024 * 1024:
+        flash(f"Logo trop lourd (max {MAX_PARTNER_LOGO_MB} Mo).", "error")
+        return None
+    safe = f"partner_{partner_id}_{int(time.time())}.{ext}"
+    f.save(os.path.join(UPLOAD_DIR, safe))
+    return f"uploads/{safe}"
+
+
+@app.route("/admin/partenaires")
+@auth.admin_required
+def admin_partners():
+    return render_template(
+        "admin_partners.html",
+        partners=services.list_partners(active_only=False),
+        kinds=services.PARTNER_KINDS,
+        visible=services.partners_visible(),
+        max_logo_mb=MAX_PARTNER_LOGO_MB,
+    )
+
+
+@app.route("/admin/partenaires", methods=["POST"])
+@auth.admin_required
+def admin_partner_create():
+    pid = services.create_partner(request.form)
+    if not pid:
+        flash("Le nom du partenaire est obligatoire.", "error")
+        return redirect(url_for("admin_partners"))
+    logo = _save_partner_logo(pid)
+    if logo:
+        services.set_partner_logo(pid, logo)
+    flash("Partenaire ajouté.", "success")
+    return redirect(url_for("admin_partners"))
+
+
+@app.route("/admin/partenaires/<int:partner_id>", methods=["POST"])
+@auth.admin_required
+def admin_partner_update(partner_id):
+    if not services.get_partner(partner_id):
+        abort(404)
+    if not services.update_partner(partner_id, request.form):
+        flash("Le nom du partenaire est obligatoire.", "error")
+        return redirect(url_for("admin_partners"))
+    logo = _save_partner_logo(partner_id)
+    if logo:
+        _remove_upload(services.set_partner_logo(partner_id, logo))
+    elif request.form.get("remove_logo"):
+        _remove_upload(services.set_partner_logo(partner_id, None))
+    flash("Partenaire mis à jour.", "success")
+    return redirect(url_for("admin_partners"))
+
+
+@app.route("/admin/partenaires/<int:partner_id>/supprimer", methods=["POST"])
+@auth.admin_required
+def admin_partner_delete(partner_id):
+    _remove_upload(services.delete_partner(partner_id))
+    flash("Partenaire supprimé.", "info")
+    return redirect(url_for("admin_partners"))
 
 
 @app.route("/opportunites")
@@ -2771,9 +2871,9 @@ def pilot_delete_cover():
 _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 
 # /media est PUBLIC (aucune authentification). On n'y sert donc QUE des medias
-# publics par nature : avatars, images de couverture, photos de drone et
-# pieces du portfolio (le showreel affiche sur les fiches). Tout le reste est
-# refuse en dur.
+# publics par nature : avatars, images de couverture, photos de drone, pieces
+# du portfolio (le showreel affiche sur les fiches) et logos des partenaires.
+# Tout le reste est refuse en dur.
 # Les fichiers PRIVES vivent dans le meme UPLOAD_DIR mais ont chacun leur route
 # authentifiee avec controle du proprietaire, et ne doivent JAMAIS passer ici :
 #   - u<id>_cert_*         documents de brevet   -> pilot_certification_document
@@ -2782,7 +2882,7 @@ _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 # Sans cette liste blanche, /media/u1_cert_....pdf servait la piece d'identite
 # d'un pilote a n'importe quel visiteur (contournement total du controle).
 _MEDIA_PUBLIC_RE = re.compile(
-    r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+)$"
+    r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+|partner_\d+_[^/]+)$"
 )
 
 

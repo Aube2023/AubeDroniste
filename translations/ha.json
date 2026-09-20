@@ -1262,7 +1262,25 @@
   "cover.removed": "An cire hoton bango.",
   "cover.bad_format": "Ba a karɓi wannan tsarin ba. Yi amfani da JPG, PNG ko WebP.",
   "cover.too_big": "Hoton ya yi girma sosai (iyaka {mb} MB).",
-  "cover.no_file": "Ba a zaɓi fayil ba."
+  "cover.no_file": "Ba a zaɓi fayil ba.",
+  "partners.nav": "Abokan hulɗa",
+  "partners.h1": "Abokan hulɗarmu",
+  "partners.lead": "Makarantu, kamfanonin inshora, shaguna, ƙungiyoyi, kafofin watsa labarai da kamfanonin fasaha da ke tallafa wa AubePilot da matukan ta.",
+  "partners.visit": "Ziyarci shafin",
+  "partners.become_h": "Zama abokin hulɗa",
+  "partners.become_p": "Kuna aiki da matukan jirgi mara matuki ko abokan cinikinsu? Ku rubuto mana, mu ga tare abin da za mu iya ginawa.",
+  "partners.become_cta": "Rubuto mana",
+  "partners.home_eyebrow": "Sun amince da mu",
+  "partners.home_all": "Duk abokan hulɗarmu",
+  "partners.preview": "Samfurin gani na admin: wannan shafi bai zama na jama'a ba tukuna.",
+  "partners.kind.insurance": "Inshora",
+  "partners.kind.training": "Horo",
+  "partners.kind.shop": "Shago",
+  "partners.kind.association": "Ƙungiya",
+  "partners.kind.media": "Kafofin watsa labarai",
+  "partners.kind.technology": "Fasaha",
+  "partners.kind.institution": "Hukuma",
+  "partners.kind.other": "Sauran"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Kwatanta matuƙan drone masu lasisi don {specialty}: lasisi, kayan aiki, sharhi da farashi. Ƙiyasi kyauta, biya cikin riƙon amana.",
   "landing_specialty.description_place": "Kwatanta matuƙan drone masu lasisi don {specialty} a {place}: lasisi, kayan aiki, sharhi da farashi. Ƙiyasi kyauta, biya cikin riƙon amana.",
   "opportunities_page.title": "Tanda da kwangilolin drone a Kanada | AubePilot",
-  "opportunities_page.description": "Tanda na gwamnati ga matuƙan drone, LiDAR, photogrammetry da bincike, bisa lardi, tare da ranar rufewa da mahaɗin sanarwar. Kyauta, ana sabuntawa kowane dare."
+  "opportunities_page.description": "Tanda na gwamnati ga matuƙan drone, LiDAR, photogrammetry da bincike, bisa lardi, tare da ranar rufewa da mahaɗin sanarwar. Kyauta, ana sabuntawa kowane dare.",
+  "partners_page.title": "Abokan hulɗarmu | AubePilot",
+  "partners_page.description": "Makarantu, kamfanonin inshora, shaguna, ƙungiyoyi da kafofin watsa labarai da ke tallafa wa hanyar sadarwar AubePilot da matukan jirgin ta."
  },
  "countries": {
   "Afghanistan": "Afganistan",

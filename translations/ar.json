@@ -1262,7 +1262,25 @@
   "cover.removed": "تمت إزالة صورة الغلاف.",
   "cover.bad_format": "الصيغة غير مقبولة. استخدم JPG أو PNG أو WebP.",
   "cover.too_big": "الصورة كبيرة جدًا (بحد أقصى {mb} م.ب).",
-  "cover.no_file": "لم يتم اختيار أي ملف."
+  "cover.no_file": "لم يتم اختيار أي ملف.",
+  "partners.nav": "الشركاء",
+  "partners.h1": "شركاؤنا",
+  "partners.lead": "المدارس وشركات التأمين والمتاجر والجمعيات ووسائل الإعلام والشركات التقنية التي تدعم AubePilot وطياريها.",
+  "partners.visit": "زيارة الموقع",
+  "partners.become_h": "كن شريكًا",
+  "partners.become_p": "هل تعمل مع طياري الدرون أو عملائهم؟ راسلنا ولنرَ معًا ما يمكننا بناؤه.",
+  "partners.become_cta": "راسلنا",
+  "partners.home_eyebrow": "يثقون بنا",
+  "partners.home_all": "كل شركائنا",
+  "partners.preview": "معاينة للإدارة فقط: هذه الصفحة ليست عامة بعد.",
+  "partners.kind.insurance": "تأمين",
+  "partners.kind.training": "تدريب",
+  "partners.kind.shop": "متجر",
+  "partners.kind.association": "جمعية",
+  "partners.kind.media": "إعلام",
+  "partners.kind.technology": "تقنية",
+  "partners.kind.institution": "مؤسسة",
+  "partners.kind.other": "أخرى"
  },
  "seo": {
   "home.title": "استئجار طيار درون معتمد — عروض أسعار مجانية | AubePilot",
@@ -1298,7 +1316,9 @@
   "part107_page.title": "طيّارو درون Part 107 في الولايات المتحدة — رخصة FAA موثّقة | AubePilot",
   "part107_page.description": "اعثر على طيّار درون معتمد FAA Part 107 بالرمز البريدي وقارن عروض الأسعار، أو سجّل رخصتك: تُراجَع في سجل FAA، تُعرض كشارة، ظاهرة في العالم كله.",
   "opportunities_page.title": "مناقصات وعقود الدرون في كندا | AubePilot",
-  "opportunities_page.description": "المناقصات العامة لطياري الدرون، LiDAR، المسح التصويري والفحص، مصنفة حسب المقاطعة، مع تاريخ الإغلاق ورابط الإعلان. مجانًا، تُحدَّث كل ليلة."
+  "opportunities_page.description": "المناقصات العامة لطياري الدرون، LiDAR، المسح التصويري والفحص، مصنفة حسب المقاطعة، مع تاريخ الإغلاق ورابط الإعلان. مجانًا، تُحدَّث كل ليلة.",
+  "partners_page.title": "شركاؤنا | AubePilot",
+  "partners_page.description": "المدارس وشركات التأمين والمتاجر والجمعيات ووسائل الإعلام التي تدعم شبكة AubePilot وطياري الدرون فيها."
  },
  "countries": {
   "Afghanistan": "أفغانستان",

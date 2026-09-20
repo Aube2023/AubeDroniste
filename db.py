@@ -289,6 +289,24 @@ _ADD_TABLES = [
     url           TEXT NOT NULL,
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 )""",
+    # Partenaires geres par l'admin (section publique masquee tant qu'aucun
+    # n'est actif).
+    """CREATE TABLE IF NOT EXISTS partners (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'other',   -- insurance | training | shop | association | media | technology | institution | other
+    url         TEXT,
+    logo_path   TEXT,                             -- uploads/partner_<id>_<ts>.<ext> (servi par /media)
+    blurb       TEXT,                             -- une phrase, en francais
+    blurb_en    TEXT,
+    blurb_es    TEXT,
+    country     TEXT,
+    city        TEXT,
+    is_active   INTEGER NOT NULL DEFAULT 0,       -- 0 = prepare en coulisses, invisible du public
+    sort_order  INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT
+)""",
     # Provenance des visiteurs, par jour et par pays. AUCUNE IP n'est stockee :
     # le pays est resolu a la volee (geoip.py) puis jete, seul l'agregat reste.
     """CREATE TABLE IF NOT EXISTS visit_countries (

@@ -1262,7 +1262,25 @@
   "cover.removed": "Imaginea de copertă a fost eliminată.",
   "cover.bad_format": "Format neacceptat. Folosiți JPG, PNG sau WebP.",
   "cover.too_big": "Imagine prea mare (max. {mb} MB).",
-  "cover.no_file": "Niciun fișier selectat."
+  "cover.no_file": "Niciun fișier selectat.",
+  "partners.nav": "Parteneri",
+  "partners.h1": "Partenerii noștri",
+  "partners.lead": "Școli, asigurători, magazine, asociații, media și companii de tehnologie care susțin AubePilot și piloții săi.",
+  "partners.visit": "Vizitează site-ul",
+  "partners.become_h": "Deveniți partener",
+  "partners.become_p": "Lucrați cu piloți de drone sau cu clienții lor? Scrieți-ne și să vedem împreună ce putem construi.",
+  "partners.become_cta": "Scrieți-ne",
+  "partners.home_eyebrow": "Au încredere în noi",
+  "partners.home_all": "Toți partenerii noștri",
+  "partners.preview": "Previzualizare pentru administrare: această pagină nu este încă publică.",
+  "partners.kind.insurance": "Asigurări",
+  "partners.kind.training": "Formare",
+  "partners.kind.shop": "Magazin",
+  "partners.kind.association": "Asociație",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Tehnologie",
+  "partners.kind.institution": "Instituție",
+  "partners.kind.other": "Altele"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Comparați piloții de dronă certificați pentru {specialty}: licențe, echipamente, recenzii și tarife. Oferte gratuite, plată securizată în escrow.",
   "landing_specialty.description_place": "Comparați piloții de dronă certificați pentru {specialty} în {place}: licențe, echipamente, recenzii și tarife. Oferte gratuite, plată securizată în escrow.",
   "opportunities_page.title": "Licitații și contracte pentru drone în Canada | AubePilot",
-  "opportunities_page.description": "Licitații publice pentru piloți de dronă (LiDAR, fotogrametrie, inspecție) pe provincii, cu data de închidere și link către anunț. Gratuit, actualizat zilnic."
+  "opportunities_page.description": "Licitații publice pentru piloți de dronă (LiDAR, fotogrametrie, inspecție) pe provincii, cu data de închidere și link către anunț. Gratuit, actualizat zilnic.",
+  "partners_page.title": "Partenerii noștri | AubePilot",
+  "partners_page.description": "Școli, asigurători, magazine, asociații și media care susțin rețeaua AubePilot și piloții săi de drone."
  },
  "countries": {
   "Afghanistan": "Afganistan",

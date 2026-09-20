@@ -1262,7 +1262,25 @@
   "cover.removed": "Đã gỡ ảnh bìa.",
   "cover.bad_format": "Định dạng không được chấp nhận. Dùng JPG, PNG hoặc WebP.",
   "cover.too_big": "Ảnh quá nặng (tối đa {mb} MB).",
-  "cover.no_file": "Chưa chọn tệp nào."
+  "cover.no_file": "Chưa chọn tệp nào.",
+  "partners.nav": "Đối tác",
+  "partners.h1": "Đối tác của chúng tôi",
+  "partners.lead": "Trường học, công ty bảo hiểm, cửa hàng, hiệp hội, truyền thông và các đơn vị công nghệ đồng hành cùng AubePilot và các phi công.",
+  "partners.visit": "Xem trang web",
+  "partners.become_h": "Trở thành đối tác",
+  "partners.become_p": "Bạn đồng hành cùng phi công drone hoặc khách hàng của họ? Hãy viết cho chúng tôi, cùng xem có thể xây dựng điều gì.",
+  "partners.become_cta": "Viết cho chúng tôi",
+  "partners.home_eyebrow": "Họ tin tưởng chúng tôi",
+  "partners.home_all": "Tất cả đối tác",
+  "partners.preview": "Bản xem trước dành cho quản trị: trang này chưa công khai.",
+  "partners.kind.insurance": "Bảo hiểm",
+  "partners.kind.training": "Đào tạo",
+  "partners.kind.shop": "Cửa hàng",
+  "partners.kind.association": "Hiệp hội",
+  "partners.kind.media": "Truyền thông",
+  "partners.kind.technology": "Công nghệ",
+  "partners.kind.institution": "Tổ chức",
+  "partners.kind.other": "Khác"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",
@@ -1298,7 +1316,9 @@
   "part107_page.title": "Phi công drone Part 107 tại Hoa Kỳ — FAA đã xác minh | AubePilot",
   "part107_page.description": "Tìm phi công drone có chứng chỉ FAA Part 107 theo mã ZIP và so sánh báo giá, hoặc đăng chứng chỉ của bạn: được kiểm tra trong sổ đăng ký FAA, hiển thị dưới dạng huy hiệu, nhìn thấy trên toàn thế giới.",
   "opportunities_page.title": "Gói thầu và hợp đồng drone tại Canada | AubePilot",
-  "opportunities_page.description": "Gói thầu công cho phi công drone, LiDAR, quang trắc và kiểm tra, theo tỉnh bang, kèm ngày đóng thầu và liên kết đến thông báo. Miễn phí, cập nhật mỗi đêm."
+  "opportunities_page.description": "Gói thầu công cho phi công drone, LiDAR, quang trắc và kiểm tra, theo tỉnh bang, kèm ngày đóng thầu và liên kết đến thông báo. Miễn phí, cập nhật mỗi đêm.",
+  "partners_page.title": "Đối tác của chúng tôi | AubePilot",
+  "partners_page.description": "Trường học, công ty bảo hiểm, cửa hàng, hiệp hội và truyền thông đồng hành cùng mạng lưới AubePilot và các phi công drone."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

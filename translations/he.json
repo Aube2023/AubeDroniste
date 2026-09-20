@@ -1262,7 +1262,25 @@
   "cover.removed": "תמונת הנושא הוסרה.",
   "cover.bad_format": "הפורמט אינו נתמך. יש להשתמש ב-JPG, PNG או WebP.",
   "cover.too_big": "התמונה גדולה מדי (עד {mb} MB).",
-  "cover.no_file": "לא נבחר קובץ."
+  "cover.no_file": "לא נבחר קובץ.",
+  "partners.nav": "שותפים",
+  "partners.h1": "השותפים שלנו",
+  "partners.lead": "בתי ספר, מבטחים, חנויות, עמותות, כלי תקשורת וחברות טכנולוגיה שתומכים ב-AubePilot ובטייסים שלה.",
+  "partners.visit": "לאתר",
+  "partners.become_h": "להצטרף כשותף",
+  "partners.become_p": "אתם עובדים עם טייסי רחפנים או עם הלקוחות שלהם? כתבו לנו ונראה יחד מה אפשר לבנות.",
+  "partners.become_cta": "כתבו לנו",
+  "partners.home_eyebrow": "סומכים עלינו",
+  "partners.home_all": "כל השותפים שלנו",
+  "partners.preview": "תצוגה מקדימה למנהלים: הדף עדיין אינו ציבורי.",
+  "partners.kind.insurance": "ביטוח",
+  "partners.kind.training": "הכשרה",
+  "partners.kind.shop": "חנות",
+  "partners.kind.association": "עמותה",
+  "partners.kind.media": "תקשורת",
+  "partners.kind.technology": "טכנולוגיה",
+  "partners.kind.institution": "מוסד",
+  "partners.kind.other": "אחר"
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "השוו טייסי רחפנים מוסמכים ל-{specialty}: רישיונות, ציוד, חוות דעת ותעריפים. הצעות מחיר חינם, תשלום מאובטח בנאמנות.",
   "landing_specialty.description_place": "השוו טייסי רחפנים מוסמכים ל-{specialty} ב-{place}: רישיונות, ציוד, חוות דעת ותעריפים. הצעות מחיר חינם, תשלום מאובטח בנאמנות.",
   "opportunities_page.title": "מכרזים וחוזים בתחום הרחפנים בקנדה | AubePilot",
-  "opportunities_page.description": "מכרזים ציבוריים לטייסי רחפנים, LiDAR, פוטוגרמטריה ובדיקות, לפי מחוז, עם תאריך סגירה וקישור למודעה. חינם, מתעדכן מדי לילה."
+  "opportunities_page.description": "מכרזים ציבוריים לטייסי רחפנים, LiDAR, פוטוגרמטריה ובדיקות, לפי מחוז, עם תאריך סגירה וקישור למודעה. חינם, מתעדכן מדי לילה.",
+  "partners_page.title": "השותפים שלנו | AubePilot",
+  "partners_page.description": "בתי ספר, מבטחים, חנויות, עמותות וכלי תקשורת שתומכים ברשת AubePilot ובטייסי הרחפנים שלה."
  },
  "countries": {
   "Afghanistan": "אפגניסטן",

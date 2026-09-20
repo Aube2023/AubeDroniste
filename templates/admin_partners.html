@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Partenaires, AubePilot admin{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 24px;">
+  <span class="eyebrow">Admin · Partenaires</span>
+  <h1>Partenaires.</h1>
+  <p class="lead muted">
+    {{ partners|length }} partenaire(s) enregistré(s).
+    {% if visible %}La section publique est <strong>en ligne</strong> : <a href="{{ url_for('partners') }}">/partenaires</a>, lien dans le pied de page et logos à l'accueil.
+    {% else %}La section publique est <strong>masquée</strong> : elle n'apparaîtra (page, pied de page, accueil, sitemap) qu'au premier partenaire coché « actif ». <a href="{{ url_for('partners') }}">Prévisualiser la page →</a>{% endif %}
+  </p>
+</div>
+
+{% set kind_labels = {'insurance': 'Assurance', 'training': 'Formation', 'shop': 'Boutique', 'association': 'Association',
+                      'media': 'Média', 'technology': 'Technologie', 'institution': 'Institution', 'other': 'Autre'} %}
+
+{% macro partner_fields(p) %}
+  <div class="grid-2">
+    <label>Nom <input name="name" value="{{ p.name if p else '' }}" required maxlength="120"></label>
+    <label>Type
+      <select name="kind">{% for k in kinds %}<option value="{{ k }}" {% if p and p.kind == k %}selected{% endif %}>{{ kind_labels[k] }}</option>{% endfor %}</select>
+    </label>
+    <label>Site web <input name="url" value="{{ p.url or '' if p else '' }}" placeholder="https://…" maxlength="300"></label>
+    <label>Ordre d'affichage <input name="sort_order" type="number" value="{{ p.sort_order if p else 0 }}" min="0" step="1"></label>
+    <label>Ville <input name="city" value="{{ p.city or '' if p else '' }}" maxlength="80"></label>
+    <label>Pays <input name="country" value="{{ p.country or '' if p else '' }}" maxlength="80" placeholder="Canada"></label>
+  </div>
+  <label>Phrase (français) <input name="blurb" value="{{ p.blurb or '' if p else '' }}" maxlength="240" placeholder="Ce que le partenaire apporte aux pilotes ou aux clients"></label>
+  <div class="grid-2">
+    <label>Phrase (anglais) <input name="blurb_en" value="{{ p.blurb_en or '' if p else '' }}" maxlength="240"></label>
+    <label>Phrase (espagnol) <input name="blurb_es" value="{{ p.blurb_es or '' if p else '' }}" maxlength="240"></label>
+  </div>
+  <div class="grid-2">
+    <label>Logo (PNG/JPG/WebP, max {{ max_logo_mb }} Mo, carré ou large) <input name="logo" type="file" accept="image/png,image/jpeg,image/webp"></label>
+    <label class="check" style="align-self: end;"><input type="checkbox" name="is_active" value="1" {% if p and p.is_active %}checked{% endif %}> Actif (visible du public)</label>
+  </div>
+{% endmacro %}
+
+<section class="card">
+  <span class="eyebrow">Ajouter un partenaire</span>
+  <form method="post" action="{{ url_for('admin_partner_create') }}" enctype="multipart/form-data" style="margin-top: 12px;">
+    {{ csrf_input() }}
+    {{ partner_fields(none) }}
+    <button class="cta" type="submit">Ajouter</button>
+  </form>
+</section>
+
+{% for p in partners %}
+<section class="card" id="partenaire-{{ p.id }}">
+  <div class="row-between" style="align-items: start; gap: 12px; flex-wrap: wrap;">
+    <div style="display: flex; gap: 14px; align-items: center;">
+      {% if p.logo_path %}<img src="{{ url_for('media_file', filename=p.logo_path[8:]) }}" alt="" style="width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--rule); border-radius: 10px; background: #fff;">{% endif %}
+      <div>
+        <h2 style="margin: 0 0 4px;">{{ p.name }}</h2>
+        <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">#{{ p.id }} · {{ kind_labels.get(p.kind, p.kind) }} · {{ 'actif' if p.is_active else 'masqué' }}{% if p.url %} · <a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.url }}</a>{% endif %}</div>
+      </div>
+    </div>
+    <span class="tag {{ 'tag-open' if p.is_active else '' }}">{{ 'Actif' if p.is_active else 'Masqué' }}</span>
+  </div>
+  <details style="margin-top: 12px;">
+    <summary class="muted" style="cursor: pointer;">Modifier</summary>
+    <form method="post" action="{{ url_for('admin_partner_update', partner_id=p.id) }}" enctype="multipart/form-data" style="margin-top: 12px;">
+      {{ csrf_input() }}
+      {{ partner_fields(p) }}
+      {% if p.logo_path %}<label class="check"><input type="checkbox" name="remove_logo" value="1"> Retirer le logo actuel</label>{% endif %}
+      <div class="actions-row" style="margin-top: 12px;">
+        <button class="cta" type="submit">Enregistrer</button>
+      </div>
+    </form>
+    <form method="post" action="{{ url_for('admin_partner_delete', partner_id=p.id) }}" style="margin-top: 10px;" data-confirm="Supprimer ce partenaire ?">
+      {{ csrf_input() }}
+      <button class="ghost danger" type="submit">Supprimer</button>
+    </form>
+  </details>
+</section>
+{% endfor %}
+
+{% endblock %}

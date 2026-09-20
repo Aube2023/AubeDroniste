@@ -1262,7 +1262,25 @@
   "cover.removed": "Immagine di copertina rimossa.",
   "cover.bad_format": "Formato non accettato. Usa JPG, PNG o WebP.",
   "cover.too_big": "Immagine troppo pesante (max {mb} MB).",
-  "cover.no_file": "Nessun file selezionato."
+  "cover.no_file": "Nessun file selezionato.",
+  "partners.nav": "Partner",
+  "partners.h1": "I nostri partner",
+  "partners.lead": "Scuole, assicuratori, negozi, associazioni, media e aziende tecnologiche che sostengono AubePilot e i suoi piloti.",
+  "partners.visit": "Visita il sito",
+  "partners.become_h": "Diventa partner",
+  "partners.become_p": "Lavori con piloti di droni o con i loro clienti? Scrivici e vediamo insieme cosa possiamo costruire.",
+  "partners.become_cta": "Scrivici",
+  "partners.home_eyebrow": "Si fidano di noi",
+  "partners.home_all": "Tutti i nostri partner",
+  "partners.preview": "Anteprima riservata all'amministrazione: questa pagina non è ancora pubblica.",
+  "partners.kind.insurance": "Assicurazione",
+  "partners.kind.training": "Formazione",
+  "partners.kind.shop": "Negozio",
+  "partners.kind.association": "Associazione",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Tecnologia",
+  "partners.kind.institution": "Istituzione",
+  "partners.kind.other": "Altro"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Piloti di drone certificati per {specialty}: attestati, attrezzatura, recensioni e tariffe a confronto. Preventivi gratuiti, pagamento sicuro in garanzia.",
   "landing_specialty.description_place": "Piloti di drone certificati per {specialty}, {place}: attestati, attrezzatura, recensioni e tariffe. Preventivi gratuiti, pagamento in garanzia.",
   "opportunities_page.title": "Gare d'appalto e contratti per droni in Canada | AubePilot",
-  "opportunities_page.description": "Gare d'appalto pubbliche per piloti di drone, LiDAR, fotogrammetria e ispezione, per provincia, con scadenza e link all'avviso. Gratis, aggiornato ogni notte."
+  "opportunities_page.description": "Gare d'appalto pubbliche per piloti di drone, LiDAR, fotogrammetria e ispezione, per provincia, con scadenza e link all'avviso. Gratis, aggiornato ogni notte.",
+  "partners_page.title": "I nostri partner | AubePilot",
+  "partners_page.description": "Scuole, assicuratori, negozi, associazioni e media che sostengono la rete AubePilot e i suoi piloti di droni."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

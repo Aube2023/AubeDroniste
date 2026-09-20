@@ -1262,7 +1262,25 @@
   "cover.removed": "Gambar sampul dihapus.",
   "cover.bad_format": "Format tidak diterima. Gunakan JPG, PNG, atau WebP.",
   "cover.too_big": "Gambar terlalu besar (maks. {mb} MB).",
-  "cover.no_file": "Tidak ada berkas yang dipilih."
+  "cover.no_file": "Tidak ada berkas yang dipilih.",
+  "partners.nav": "Mitra",
+  "partners.h1": "Mitra kami",
+  "partners.lead": "Sekolah, perusahaan asuransi, toko, asosiasi, media, dan pelaku teknologi yang mendukung AubePilot dan para pilotnya.",
+  "partners.visit": "Kunjungi situs",
+  "partners.become_h": "Menjadi mitra",
+  "partners.become_p": "Anda mendampingi pilot drone atau klien mereka? Tulis kepada kami, mari lihat bersama apa yang bisa dibangun.",
+  "partners.become_cta": "Hubungi kami",
+  "partners.home_eyebrow": "Mereka mempercayai kami",
+  "partners.home_all": "Semua mitra kami",
+  "partners.preview": "Pratinjau admin: halaman ini belum publik.",
+  "partners.kind.insurance": "Asuransi",
+  "partners.kind.training": "Pelatihan",
+  "partners.kind.shop": "Toko",
+  "partners.kind.association": "Asosiasi",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Teknologi",
+  "partners.kind.institution": "Institusi",
+  "partners.kind.other": "Lainnya"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",
@@ -1298,7 +1316,9 @@
   "part107_page.title": "Pilot drone Part 107 di Amerika Serikat — terverifikasi FAA | AubePilot",
   "part107_page.description": "Temukan pilot drone bersertifikat FAA Part 107 lewat kode ZIP dan bandingkan penawaran, atau daftarkan sertifikat Anda: diperiksa di registri FAA, ditampilkan sebagai lencana, terlihat di seluruh dunia.",
   "opportunities_page.title": "Tender dan kontrak drone di Kanada | AubePilot",
-  "opportunities_page.description": "Tender publik untuk pilot drone, LiDAR, fotogrametri, dan inspeksi, menurut provinsi, dengan tanggal penutupan dan tautan. Gratis, diperbarui setiap malam."
+  "opportunities_page.description": "Tender publik untuk pilot drone, LiDAR, fotogrametri, dan inspeksi, menurut provinsi, dengan tanggal penutupan dan tautan. Gratis, diperbarui setiap malam.",
+  "partners_page.title": "Mitra kami | AubePilot",
+  "partners_page.description": "Sekolah, perusahaan asuransi, toko, asosiasi, dan media yang mendukung jaringan AubePilot dan para pilot drone-nya."
  },
  "countries": {
   "Afghanistan": "Afganistan",

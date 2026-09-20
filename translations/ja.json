@@ -1262,7 +1262,25 @@
   "cover.removed": "カバー画像を削除しました。",
   "cover.bad_format": "この形式は使えません。JPG、PNG、WebP を使ってください。",
   "cover.too_big": "画像が大きすぎます（最大 {mb} MB）。",
-  "cover.no_file": "ファイルが選択されていません。"
+  "cover.no_file": "ファイルが選択されていません。",
+  "partners.nav": "パートナー",
+  "partners.h1": "私たちのパートナー",
+  "partners.lead": "AubePilot とそのパイロットを支える学校、保険会社、ショップ、協会、メディア、テクノロジー企業。",
+  "partners.visit": "サイトを見る",
+  "partners.become_h": "パートナーになる",
+  "partners.become_p": "ドローンパイロットやそのクライアントに関わる事業をお持ちですか？ぜひご連絡ください。一緒に何ができるか考えましょう。",
+  "partners.become_cta": "お問い合わせ",
+  "partners.home_eyebrow": "私たちを支えるパートナー",
+  "partners.home_all": "すべてのパートナー",
+  "partners.preview": "管理者プレビュー：このページはまだ公開されていません。",
+  "partners.kind.insurance": "保険",
+  "partners.kind.training": "トレーニング",
+  "partners.kind.shop": "ショップ",
+  "partners.kind.association": "協会",
+  "partners.kind.media": "メディア",
+  "partners.kind.technology": "テクノロジー",
+  "partners.kind.institution": "機関",
+  "partners.kind.other": "その他"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "{specialty}の認定ドローンパイロットを比較：資格、機材、レビュー、料金。無料見積もり、安全なエスクロー決済。",
   "landing_specialty.description_place": "{place}で{specialty}に対応する認定ドローンパイロットを比較：資格、機材、レビュー、料金。無料見積もり、安全なエスクロー決済。",
   "opportunities_page.title": "カナダのドローン入札・契約案件 | AubePilot",
-  "opportunities_page.description": "ドローンパイロット、LiDAR、写真測量、点検の公共入札を州ごとに掲載。締切日と公告へのリンク付き。無料、毎晩更新。"
+  "opportunities_page.description": "ドローンパイロット、LiDAR、写真測量、点検の公共入札を州ごとに掲載。締切日と公告へのリンク付き。無料、毎晩更新。",
+  "partners_page.title": "私たちのパートナー | AubePilot",
+  "partners_page.description": "AubePilot ネットワークとそのドローンパイロットを支える学校、保険会社、ショップ、協会、メディア。"
  },
  "countries": {
   "Afghanistan": "アフガニスタン",

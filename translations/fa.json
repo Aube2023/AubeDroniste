@@ -1262,7 +1262,25 @@
   "cover.removed": "تصویر کاور حذف شد.",
   "cover.bad_format": "قالب پذیرفته نمی‌شود. از JPG، PNG یا WebP استفاده کنید.",
   "cover.too_big": "تصویر بیش از حد بزرگ است (حداکثر {mb} مگابایت).",
-  "cover.no_file": "هیچ فایلی انتخاب نشده است."
+  "cover.no_file": "هیچ فایلی انتخاب نشده است.",
+  "partners.nav": "شرکا",
+  "partners.h1": "شرکای ما",
+  "partners.lead": "مدارس، بیمه‌گران، فروشگاه‌ها، انجمن‌ها، رسانه‌ها و شرکت‌های فناوری که از AubePilot و خلبانانش پشتیبانی می‌کنند.",
+  "partners.visit": "مشاهده وب‌سایت",
+  "partners.become_h": "شریک شوید",
+  "partners.become_p": "با خلبانان پهپاد یا مشتریان آن‌ها کار می‌کنید؟ برای ما بنویسید تا با هم ببینیم چه می‌توانیم بسازیم.",
+  "partners.become_cta": "برای ما بنویسید",
+  "partners.home_eyebrow": "به ما اعتماد دارند",
+  "partners.home_all": "همه شرکای ما",
+  "partners.preview": "پیش‌نمایش مدیریت: این صفحه هنوز عمومی نیست.",
+  "partners.kind.insurance": "بیمه",
+  "partners.kind.training": "آموزش",
+  "partners.kind.shop": "فروشگاه",
+  "partners.kind.association": "انجمن",
+  "partners.kind.media": "رسانه",
+  "partners.kind.technology": "فناوری",
+  "partners.kind.institution": "نهاد",
+  "partners.kind.other": "سایر"
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "خلبانان پهپاد دارای مجوز برای {specialty} را مقایسه کنید: گواهینامه‌ها، تجهیزات، نظرات و تعرفه‌ها. پیش‌فاکتور رایگان، پرداخت امن امانی.",
   "landing_specialty.description_place": "خلبانان پهپاد دارای مجوز برای {specialty} در {place} را مقایسه کنید: گواهینامه‌ها، تجهیزات، نظرات و تعرفه‌ها. پیش‌فاکتور رایگان، پرداخت امن امانی.",
   "opportunities_page.title": "مناقصه‌ها و قراردادهای پهپادی در کانادا | AubePilot",
-  "opportunities_page.description": "مناقصه‌های عمومی برای خلبانان پهپاد، LiDAR، فتوگرامتری و بازرسی، بر اساس استان، با تاریخ پایان مهلت و پیوند به آگهی. رایگان، هر شب به‌روز می‌شود."
+  "opportunities_page.description": "مناقصه‌های عمومی برای خلبانان پهپاد، LiDAR، فتوگرامتری و بازرسی، بر اساس استان، با تاریخ پایان مهلت و پیوند به آگهی. رایگان، هر شب به‌روز می‌شود.",
+  "partners_page.title": "شرکای ما | AubePilot",
+  "partners_page.description": "مدارس، بیمه‌گران، فروشگاه‌ها، انجمن‌ها و رسانه‌هایی که از شبکه AubePilot و خلبانان پهپاد آن پشتیبانی می‌کنند."
  },
  "countries": {
   "Afghanistan": "افغانستان",

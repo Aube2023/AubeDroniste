@@ -1262,7 +1262,25 @@
   "cover.removed": "Inalis ang larawang pantakip.",
   "cover.bad_format": "Hindi tinatanggap ang format. Gumamit ng JPG, PNG o WebP.",
   "cover.too_big": "Masyadong malaki ang larawan (max {mb} MB).",
-  "cover.no_file": "Walang napiling file."
+  "cover.no_file": "Walang napiling file.",
+  "partners.nav": "Mga kasosyo",
+  "partners.h1": "Ang aming mga kasosyo",
+  "partners.lead": "Mga paaralan, insurer, tindahan, asosasyon, media at kumpanyang teknolohiya na sumusuporta sa AubePilot at sa mga piloto nito.",
+  "partners.visit": "Bisitahin ang site",
+  "partners.become_h": "Maging kasosyo",
+  "partners.become_p": "Kasama mo ba ang mga piloto ng drone o ang kanilang mga kliyente? Sumulat sa amin at sama-sama nating tingnan kung ano ang maitatayo.",
+  "partners.become_cta": "Sumulat sa amin",
+  "partners.home_eyebrow": "Nagtitiwala sila sa amin",
+  "partners.home_all": "Lahat ng aming kasosyo",
+  "partners.preview": "Preview para sa admin: hindi pa pampubliko ang pahinang ito.",
+  "partners.kind.insurance": "Insurance",
+  "partners.kind.training": "Pagsasanay",
+  "partners.kind.shop": "Tindahan",
+  "partners.kind.association": "Asosasyon",
+  "partners.kind.media": "Media",
+  "partners.kind.technology": "Teknolohiya",
+  "partners.kind.institution": "Institusyon",
+  "partners.kind.other": "Iba pa"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "Ikumpara ang mga sertipikadong piloto ng drone para sa {specialty}: lisensya, gamit, review at presyo. Libreng quote, secure na bayad sa escrow.",
   "landing_specialty.description_place": "Ikumpara ang mga sertipikadong piloto ng drone para sa {specialty} sa {place}: lisensya, gamit, review at presyo. Libreng quote, secure na bayad sa escrow.",
   "opportunities_page.title": "Mga tender at kontrata para sa drone sa Canada | AubePilot",
-  "opportunities_page.description": "Pampublikong tender para sa drone pilot (LiDAR, photogrammetry, inspeksyon) ayon sa probinsya, may deadline at link sa abiso. Libre, updated gabi-gabi."
+  "opportunities_page.description": "Pampublikong tender para sa drone pilot (LiDAR, photogrammetry, inspeksyon) ayon sa probinsya, may deadline at link sa abiso. Libre, updated gabi-gabi.",
+  "partners_page.title": "Ang aming mga kasosyo | AubePilot",
+  "partners_page.description": "Mga paaralan, insurer, tindahan, asosasyon at media na sumusuporta sa network ng AubePilot at sa mga piloto ng drone nito."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

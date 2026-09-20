@@ -3193,6 +3193,112 @@ def clear_user_cover(user_id: int) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
+# Partenaires (section publique geree par l'admin)
+# ---------------------------------------------------------------------------
+
+PARTNER_KINDS = ("insurance", "training", "shop", "association", "media",
+                 "technology", "institution", "other")
+
+
+def list_partners(active_only: bool = True) -> list:
+    q = "SELECT * FROM partners "
+    if active_only:
+        q += "WHERE is_active=1 "
+    q += "ORDER BY sort_order ASC, name COLLATE NOCASE ASC, id ASC"
+    return [dict(r) for r in db.fetchall(q)]
+
+
+def partners_visible() -> bool:
+    """La section publique (page, pied de page, accueil, sitemap) n'existe
+    qu'a partir du premier partenaire actif : on prepare en coulisses, rien
+    ne s'affiche avant."""
+    return db.fetchone("SELECT 1 FROM partners WHERE is_active=1 LIMIT 1") is not None
+
+
+def get_partner(partner_id: int) -> Optional[dict]:
+    row = db.fetchone("SELECT * FROM partners WHERE id=?", (partner_id,))
+    return dict(row) if row else None
+
+
+def _partner_fields(data: dict) -> dict:
+    kind = (data.get("kind") or "other").strip()
+    url = (data.get("url") or "").strip()
+    if url and not url.lower().startswith(("http://", "https://")):
+        url = "https://" + url
+    try:
+        order = int(data.get("sort_order") or 0)
+    except (TypeError, ValueError):
+        order = 0
+    return {
+        "name": (data.get("name") or "").strip()[:120],
+        "kind": kind if kind in PARTNER_KINDS else "other",
+        "url": url[:300] or None,
+        "blurb": (data.get("blurb") or "").strip()[:240] or None,
+        "blurb_en": (data.get("blurb_en") or "").strip()[:240] or None,
+        "blurb_es": (data.get("blurb_es") or "").strip()[:240] or None,
+        "country": (data.get("country") or "").strip()[:80] or None,
+        "city": (data.get("city") or "").strip()[:80] or None,
+        "is_active": 1 if data.get("is_active") in (1, "1", True, "on") else 0,
+        "sort_order": order,
+    }
+
+
+def create_partner(data: dict) -> Optional[int]:
+    f = _partner_fields(data)
+    if not f["name"]:
+        return None
+    cur = db.execute(
+        "INSERT INTO partners (name, kind, url, blurb, blurb_en, blurb_es, country, city, "
+        "is_active, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (f["name"], f["kind"], f["url"], f["blurb"], f["blurb_en"], f["blurb_es"],
+         f["country"], f["city"], f["is_active"], f["sort_order"]),
+    )
+    return cur.lastrowid
+
+
+def update_partner(partner_id: int, data: dict) -> bool:
+    f = _partner_fields(data)
+    if not f["name"]:
+        return False
+    db.execute(
+        "UPDATE partners SET name=?, kind=?, url=?, blurb=?, blurb_en=?, blurb_es=?, "
+        "country=?, city=?, is_active=?, sort_order=?, updated_at=datetime('now') WHERE id=?",
+        (f["name"], f["kind"], f["url"], f["blurb"], f["blurb_en"], f["blurb_es"],
+         f["country"], f["city"], f["is_active"], f["sort_order"], partner_id),
+    )
+    return True
+
+
+def set_partner_logo(partner_id: int, relative_path: Optional[str]) -> Optional[str]:
+    """Pose (ou retire, avec None) le logo ; retourne l'ancien chemin."""
+    row = db.fetchone("SELECT logo_path FROM partners WHERE id=?", (partner_id,))
+    if not row:
+        return None
+    db.execute("UPDATE partners SET logo_path=?, updated_at=datetime('now') WHERE id=?",
+               (relative_path, partner_id))
+    return row["logo_path"]
+
+
+def delete_partner(partner_id: int) -> Optional[str]:
+    """Supprime le partenaire ; retourne le chemin du logo a effacer du disque."""
+    row = db.fetchone("SELECT logo_path FROM partners WHERE id=?", (partner_id,))
+    if not row:
+        return None
+    db.execute("DELETE FROM partners WHERE id=?", (partner_id,))
+    return row["logo_path"]
+
+
+def partner_blurb(p: dict, lang: str) -> str:
+    """Phrase du partenaire dans la langue de la page : en/es si renseignees,
+    sinon le francais (les fiches sont ecrites par l'admin, pas traduites)."""
+    if lang == "en" and p.get("blurb_en"):
+        return p["blurb_en"]
+    if lang == "es" and p.get("blurb_es"):
+        return p["blurb_es"]
+    return p.get("blurb") or p.get("blurb_en") or ""
+
+
+# ---------------------------------------------------------------------------
 # Portfolio pilote (showreel)
 # ---------------------------------------------------------------------------
 

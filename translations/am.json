@@ -1262,7 +1262,25 @@
   "cover.removed": "የሽፋን ምስል ተወግዷል።",
   "cover.bad_format": "ቅርጸቱ ተቀባይነት የለውም። JPG፣ PNG ወይም WebP ይጠቀሙ።",
   "cover.too_big": "ምስሉ በጣም ትልቅ ነው (ከፍተኛ {mb} ሜባ)።",
-  "cover.no_file": "ምንም ፋይል አልተመረጠም።"
+  "cover.no_file": "ምንም ፋይል አልተመረጠም።",
+  "partners.nav": "አጋሮች",
+  "partners.h1": "አጋሮቻችን",
+  "partners.lead": "AubePilotን እና አብራሪዎቹን የሚደግፉ ትምህርት ቤቶች፣ መድን ሰጪዎች፣ ሱቆች፣ ማህበራት፣ ሚዲያዎች እና የቴክኖሎጂ ተቋማት።",
+  "partners.visit": "ድረ-ገጹን ይጎብኙ",
+  "partners.become_h": "አጋር ይሁኑ",
+  "partners.become_p": "ከድሮን አብራሪዎች ወይም ከደንበኞቻቸው ጋር ይሰራሉ? ይጻፉልን፤ አብረን ምን መገንባት እንደምንችል እንይ።",
+  "partners.become_cta": "ይጻፉልን",
+  "partners.home_eyebrow": "ያምኑናል",
+  "partners.home_all": "ሁሉም አጋሮቻችን",
+  "partners.preview": "የአስተዳደር ቅድመ-እይታ፦ ይህ ገጽ ገና ለሕዝብ አልተከፈተም።",
+  "partners.kind.insurance": "መድን",
+  "partners.kind.training": "ስልጠና",
+  "partners.kind.shop": "ሱቅ",
+  "partners.kind.association": "ማህበር",
+  "partners.kind.media": "ሚዲያ",
+  "partners.kind.technology": "ቴክኖሎጂ",
+  "partners.kind.institution": "ተቋም",
+  "partners.kind.other": "ሌላ"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "ለ{specialty} የተመሰከረላቸውን የድሮን አብራሪዎች ያነጻጽሩ፦ ፈቃዶች፣ መሣሪያዎች፣ ግምገማዎችና ዋጋዎች። ነጻ የዋጋ ግምት፣ ደህንነቱ የተጠበቀ የአደራ ክፍያ።",
   "landing_specialty.description_place": "በ{place} ለ{specialty} የተመሰከረላቸውን የድሮን አብራሪዎች ያነጻጽሩ፦ ፈቃዶች፣ መሣሪያዎች፣ ግምገማዎችና ዋጋዎች። ነጻ የዋጋ ግምት፣ ደህንነቱ የተጠበቀ የአደራ ክፍያ።",
   "opportunities_page.title": "በካናዳ የድሮን ጨረታዎችና ውሎች | AubePilot",
-  "opportunities_page.description": "ለድሮን አብራሪዎች፣ LiDAR፣ ፎቶግራሜትሪና ምርመራ የሚሆኑ የመንግሥት ጨረታዎች፣ በክፍለ ሀገር የተደረደሩ፣ ከመዝጊያ ቀንና ከማስታወቂያው አገናኝ ጋር። ነጻ፣ በየሌሊቱ ይታደሳል።"
+  "opportunities_page.description": "ለድሮን አብራሪዎች፣ LiDAR፣ ፎቶግራሜትሪና ምርመራ የሚሆኑ የመንግሥት ጨረታዎች፣ በክፍለ ሀገር የተደረደሩ፣ ከመዝጊያ ቀንና ከማስታወቂያው አገናኝ ጋር። ነጻ፣ በየሌሊቱ ይታደሳል።",
+  "partners_page.title": "አጋሮቻችን | AubePilot",
+  "partners_page.description": "የAubePilot አውታረ መረብን እና የድሮን አብራሪዎቹን የሚደግፉ ትምህርት ቤቶች፣ መድን ሰጪዎች፣ ሱቆች፣ ማህበራት እና ሚዲያዎች።"
  },
  "countries": {
   "Afghanistan": "አፍጋኒስታን",

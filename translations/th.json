@@ -1262,7 +1262,25 @@
   "cover.removed": "ลบรูปภาพหน้าปกแล้ว",
   "cover.bad_format": "ไม่รองรับรูปแบบนี้ โปรดใช้ JPG, PNG หรือ WebP",
   "cover.too_big": "ไฟล์ภาพใหญ่เกินไป (สูงสุด {mb} MB)",
-  "cover.no_file": "ยังไม่ได้เลือกไฟล์"
+  "cover.no_file": "ยังไม่ได้เลือกไฟล์",
+  "partners.nav": "พันธมิตร",
+  "partners.h1": "พันธมิตรของเรา",
+  "partners.lead": "โรงเรียน บริษัทประกัน ร้านค้า สมาคม สื่อ และบริษัทเทคโนโลยีที่สนับสนุน AubePilot และนักบิน",
+  "partners.visit": "เยี่ยมชมเว็บไซต์",
+  "partners.become_h": "ร่วมเป็นพันธมิตร",
+  "partners.become_p": "คุณทำงานร่วมกับนักบินโดรนหรือลูกค้าของพวกเขาหรือไม่ เขียนถึงเรา แล้วมาดูกันว่าเราจะสร้างอะไรร่วมกันได้",
+  "partners.become_cta": "เขียนถึงเรา",
+  "partners.home_eyebrow": "พวกเขาไว้วางใจเรา",
+  "partners.home_all": "พันธมิตรทั้งหมดของเรา",
+  "partners.preview": "ตัวอย่างสำหรับผู้ดูแล: หน้านี้ยังไม่เปิดสาธารณะ",
+  "partners.kind.insurance": "ประกันภัย",
+  "partners.kind.training": "การฝึกอบรม",
+  "partners.kind.shop": "ร้านค้า",
+  "partners.kind.association": "สมาคม",
+  "partners.kind.media": "สื่อ",
+  "partners.kind.technology": "เทคโนโลยี",
+  "partners.kind.institution": "สถาบัน",
+  "partners.kind.other": "อื่น ๆ"
  },
  "seo": {
   "home.title": "จ้างนักบินโดรนที่ได้รับใบอนุญาต — ใบเสนอราคาฟรี | AubePilot",
@@ -1298,7 +1316,9 @@
   "landing_specialty.description": "เปรียบเทียบนักบินโดรนที่ได้รับใบอนุญาตสำหรับ {specialty}: ใบอนุญาต อุปกรณ์ รีวิว และราคา ใบเสนอราคาฟรี ชำระเงินปลอดภัยผ่านเอสโครว์",
   "landing_specialty.description_place": "เปรียบเทียบนักบินโดรนที่ได้รับใบอนุญาตสำหรับ {specialty} ใน {place}: ใบอนุญาต อุปกรณ์ รีวิว และราคา ใบเสนอราคาฟรี ชำระเงินปลอดภัยผ่านเอสโครว์",
   "opportunities_page.title": "ประกวดราคาและสัญญางานโดรนในแคนาดา | AubePilot",
-  "opportunities_page.description": "ประกาศประกวดราคาภาครัฐสำหรับนักบินโดรน LiDAR โฟโตแกรมเมตรี และการตรวจสอบ จัดตามรัฐ พร้อมวันปิดรับและลิงก์ไปยังประกาศ ฟรี อัปเดตทุกคืน"
+  "opportunities_page.description": "ประกาศประกวดราคาภาครัฐสำหรับนักบินโดรน LiDAR โฟโตแกรมเมตรี และการตรวจสอบ จัดตามรัฐ พร้อมวันปิดรับและลิงก์ไปยังประกาศ ฟรี อัปเดตทุกคืน",
+  "partners_page.title": "พันธมิตรของเรา | AubePilot",
+  "partners_page.description": "โรงเรียน บริษัทประกัน ร้านค้า สมาคม และสื่อที่สนับสนุนเครือข่าย AubePilot และนักบินโดรน"
  },
  "countries": {
   "Afghanistan": "อัฟกานิสถาน",

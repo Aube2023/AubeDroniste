@@ -6499,5 +6499,203 @@
   "tr": "Dosya seçilmedi.",
   "ur": "کوئی فائل منتخب نہیں کی گئی۔",
   "bn": "কোনো ফাইল নির্বাচন করা হয়নি।"
+ },
+ "partners.nav": {
+  "fr": "Partenaires",
+  "en": "Partners",
+  "es": "Socios",
+  "ru": "Партнёры",
+  "hi": "साझेदार",
+  "uk": "Партнери",
+  "tr": "Ortaklar",
+  "ur": "شراکت دار",
+  "bn": "অংশীদার"
+ },
+ "partners.h1": {
+  "fr": "Nos partenaires",
+  "en": "Our partners",
+  "es": "Nuestros socios",
+  "ru": "Наши партнёры",
+  "hi": "हमारे साझेदार",
+  "uk": "Наші партнери",
+  "tr": "Ortaklarımız",
+  "ur": "ہمارے شراکت دار",
+  "bn": "আমাদের অংশীদার"
+ },
+ "partners.lead": {
+  "fr": "Écoles, assureurs, boutiques, associations, médias et acteurs de la technologie qui soutiennent AubePilot et ses pilotes.",
+  "en": "Schools, insurers, shops, associations, media and technology players that support AubePilot and its pilots.",
+  "es": "Escuelas, aseguradoras, tiendas, asociaciones, medios y empresas tecnológicas que apoyan a AubePilot y a sus pilotos.",
+  "ru": "Школы, страховщики, магазины, ассоциации, СМИ и технологические компании, которые поддерживают AubePilot и её пилотов.",
+  "hi": "स्कूल, बीमाकर्ता, दुकानें, संघ, मीडिया और तकनीकी कंपनियाँ जो AubePilot और उसके पायलटों का समर्थन करती हैं।",
+  "uk": "Школи, страховики, магазини, асоціації, медіа та технологічні компанії, що підтримують AubePilot і її пілотів.",
+  "tr": "AubePilot'u ve pilotlarını destekleyen okullar, sigortacılar, mağazalar, dernekler, medya ve teknoloji şirketleri.",
+  "ur": "اسکول، انشورنس کمپنیاں، دکانیں، انجمنیں، میڈیا اور ٹیکنالوجی ادارے جو AubePilot اور اس کے پائلٹس کی حمایت کرتے ہیں۔",
+  "bn": "স্কুল, বীমাকারী, দোকান, সমিতি, গণমাধ্যম ও প্রযুক্তি প্রতিষ্ঠান যারা AubePilot ও এর পাইলটদের সমর্থন করে।"
+ },
+ "partners.visit": {
+  "fr": "Visiter le site",
+  "en": "Visit website",
+  "es": "Visitar el sitio",
+  "ru": "Перейти на сайт",
+  "hi": "वेबसाइट देखें",
+  "uk": "Перейти на сайт",
+  "tr": "Siteyi ziyaret et",
+  "ur": "ویب سائٹ دیکھیں",
+  "bn": "ওয়েবসাইট দেখুন"
+ },
+ "partners.become_h": {
+  "fr": "Devenir partenaire",
+  "en": "Become a partner",
+  "es": "Ser socio",
+  "ru": "Стать партнёром",
+  "hi": "साझेदार बनें",
+  "uk": "Стати партнером",
+  "tr": "Ortak olun",
+  "ur": "شراکت دار بنیں",
+  "bn": "অংশীদার হোন"
+ },
+ "partners.become_p": {
+  "fr": "Vous accompagnez des pilotes de drone ou leurs clients ? Écrivez-nous : on regarde ensemble ce qu'on peut construire.",
+  "en": "Do you work with drone pilots or their clients? Write to us and let's see what we can build together.",
+  "es": "¿Acompaña a pilotos de drones o a sus clientes? Escríbanos y veamos juntos qué podemos construir.",
+  "ru": "Вы работаете с пилотами дронов или их клиентами? Напишите нам, и мы вместе посмотрим, что можно построить.",
+  "hi": "क्या आप ड्रोन पायलटों या उनके ग्राहकों के साथ काम करते हैं? हमें लिखें, साथ मिलकर देखते हैं क्या बनाया जा सकता है।",
+  "uk": "Ви працюєте з пілотами дронів або їхніми клієнтами? Напишіть нам, і разом подивимося, що можна побудувати.",
+  "tr": "Drone pilotlarıyla veya müşterileriyle mi çalışıyorsunuz? Bize yazın, neler kurabileceğimize birlikte bakalım.",
+  "ur": "کیا آپ ڈرون پائلٹس یا ان کے کلائنٹس کے ساتھ کام کرتے ہیں؟ ہمیں لکھیں، مل کر دیکھتے ہیں کیا بنایا جا سکتا ہے۔",
+  "bn": "আপনি কি ড্রোন পাইলট বা তাদের ক্লায়েন্টদের সঙ্গে কাজ করেন? আমাদের লিখুন, একসঙ্গে দেখি কী গড়ে তোলা যায়।"
+ },
+ "partners.become_cta": {
+  "fr": "Nous écrire",
+  "en": "Write to us",
+  "es": "Escríbanos",
+  "ru": "Написать нам",
+  "hi": "हमें लिखें",
+  "uk": "Написати нам",
+  "tr": "Bize yazın",
+  "ur": "ہمیں لکھیں",
+  "bn": "আমাদের লিখুন"
+ },
+ "partners.home_eyebrow": {
+  "fr": "Ils nous font confiance",
+  "en": "They trust us",
+  "es": "Confían en nosotros",
+  "ru": "Нам доверяют",
+  "hi": "वे हम पर भरोसा करते हैं",
+  "uk": "Нам довіряють",
+  "tr": "Bize güveniyorlar",
+  "ur": "وہ ہم پر بھروسہ کرتے ہیں",
+  "bn": "তারা আমাদের ওপর আস্থা রাখে"
+ },
+ "partners.home_all": {
+  "fr": "Tous nos partenaires",
+  "en": "All our partners",
+  "es": "Todos nuestros socios",
+  "ru": "Все наши партнёры",
+  "hi": "हमारे सभी साझेदार",
+  "uk": "Усі наші партнери",
+  "tr": "Tüm ortaklarımız",
+  "ur": "ہمارے تمام شراکت دار",
+  "bn": "আমাদের সব অংশীদার"
+ },
+ "partners.preview": {
+  "fr": "Aperçu réservé à l'administration : cette page n'est pas encore publique.",
+  "en": "Admin preview: this page is not public yet.",
+  "es": "Vista previa reservada a la administración: esta página aún no es pública.",
+  "ru": "Предпросмотр для администратора: эта страница ещё не опубликована.",
+  "hi": "केवल प्रशासन के लिए पूर्वावलोकन: यह पेज अभी सार्वजनिक नहीं है।",
+  "uk": "Попередній перегляд для адміністратора: ця сторінка ще не публічна.",
+  "tr": "Yönetici önizlemesi: bu sayfa henüz herkese açık değil.",
+  "ur": "ایڈمن پیش نظارہ: یہ صفحہ ابھی عوامی نہیں ہے۔",
+  "bn": "অ্যাডমিন প্রিভিউ: এই পাতাটি এখনও সর্বসাধারণের জন্য নয়।"
+ },
+ "partners.kind.insurance": {
+  "fr": "Assurance",
+  "en": "Insurance",
+  "es": "Seguros",
+  "ru": "Страхование",
+  "hi": "बीमा",
+  "uk": "Страхування",
+  "tr": "Sigorta",
+  "ur": "انشورنس",
+  "bn": "বীমা"
+ },
+ "partners.kind.training": {
+  "fr": "Formation",
+  "en": "Training",
+  "es": "Formación",
+  "ru": "Обучение",
+  "hi": "प्रशिक्षण",
+  "uk": "Навчання",
+  "tr": "Eğitim",
+  "ur": "تربیت",
+  "bn": "প্রশিক্ষণ"
+ },
+ "partners.kind.shop": {
+  "fr": "Boutique",
+  "en": "Shop",
+  "es": "Tienda",
+  "ru": "Магазин",
+  "hi": "दुकान",
+  "uk": "Магазин",
+  "tr": "Mağaza",
+  "ur": "دکان",
+  "bn": "দোকান"
+ },
+ "partners.kind.association": {
+  "fr": "Association",
+  "en": "Association",
+  "es": "Asociación",
+  "ru": "Ассоциация",
+  "hi": "संघ",
+  "uk": "Асоціація",
+  "tr": "Dernek",
+  "ur": "انجمن",
+  "bn": "সমিতি"
+ },
+ "partners.kind.media": {
+  "fr": "Média",
+  "en": "Media",
+  "es": "Medios",
+  "ru": "СМИ",
+  "hi": "मीडिया",
+  "uk": "Медіа",
+  "tr": "Medya",
+  "ur": "میڈیا",
+  "bn": "গণমাধ্যম"
+ },
+ "partners.kind.technology": {
+  "fr": "Technologie",
+  "en": "Technology",
+  "es": "Tecnología",
+  "ru": "Технологии",
+  "hi": "प्रौद्योगिकी",
+  "uk": "Технології",
+  "tr": "Teknoloji",
+  "ur": "ٹیکنالوجی",
+  "bn": "প্রযুক্তি"
+ },
+ "partners.kind.institution": {
+  "fr": "Institution",
+  "en": "Institution",
+  "es": "Institución",
+  "ru": "Организация",
+  "hi": "संस्था",
+  "uk": "Установа",
+  "tr": "Kurum",
+  "ur": "ادارہ",
+  "bn": "প্রতিষ্ঠান"
+ },
+ "partners.kind.other": {
+  "fr": "Autre",
+  "en": "Other",
+  "es": "Otro",
+  "ru": "Другое",
+  "hi": "अन्य",
+  "uk": "Інше",
+  "tr": "Diğer",
+  "ur": "دیگر",
+  "bn": "অন্যান্য"
  }
 }
