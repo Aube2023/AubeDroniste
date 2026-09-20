@@ -62,3 +62,14 @@ def test_purge_sessions_expirees_et_ip_de_contact(make_user, app_ctx):
     assert db.fetchone("SELECT 1 FROM sessions WHERE sid='hyg_new'") is not None
     assert db.fetchone("SELECT ip FROM contact_messages WHERE body='vieux'")["ip"] is None
     assert db.fetchone("SELECT ip FROM contact_messages WHERE body='recent'")["ip"] == "198.51.100.2"
+
+
+def test_page_publique_de_suppression_de_compte(client):
+    # Google Play exige un lien, accessible sans connexion, qui explique
+    # comment supprimer son compte ; bilingue FR/EN, relie a la politique.
+    r = client.get("/supprimer-mon-compte")
+    assert r.status_code == 200
+    html = r.data.decode()
+    assert "Supprimer mon compte AubePilot" in html and "Delete my AubePilot account" in html
+    assert "support@aubemail.com" in html and "/espace/parametres" in html
+    assert 'id="suppression"' in client.get("/confidentialite").data.decode()

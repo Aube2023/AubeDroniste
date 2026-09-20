@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{# Page publique, sans connexion, exigee par Google Play (« URL de suppression
+   du compte ») : comment supprimer son compte dans l'app ou par courriel, ce
+   qui est efface, ce qui est conserve et pourquoi. Bilingue FR / EN sur une
+   seule page, comme les courriels ; les pages legales sont hors i18n. #}
+{% block title %}Supprimer mon compte · AubePilot{% endblock %}
+{% block content %}
+
+<article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
+
+<h1>Supprimer mon compte AubePilot</h1>
+<p class="muted small">Delete my AubePilot account · English below</p>
+
+<h2>Depuis l'application ou le site</h2>
+<ol>
+  <li>Connectez-vous, ouvrez <strong>Espace → Paramètres</strong> (<a href="{{ url_for('settings') }}">/espace/parametres</a>).</li>
+  <li>Dans le bloc <strong>« Vos données »</strong>, tapez <code>SUPPRIMER</code> puis appuyez sur <strong>Supprimer mon compte</strong>.</li>
+  <li>La suppression est immédiate. Si une mission ou un paiement est en cours, l'écran l'indique : elle redevient possible dès que c'est terminé.</li>
+</ol>
+
+<h2>Par courriel</h2>
+<p>
+Écrivez à <a href="mailto:support@aubemail.com?subject=Suppression%20de%20mon%20compte%20AubePilot">support@aubemail.com</a>
+depuis l'adresse liée à votre compte, en indiquant votre identifiant. Nous confirmons
+la suppression sous 30 jours au plus.
+</p>
+
+<h2>Ce qui est effacé</h2>
+<p>
+Nom, courriel, téléphone, photo de profil et de couverture, position, présentation,
+et tous les documents téléversés : brevets, justificatifs d'identité, attestation
+d'assurance, photos de drones, portfolio. Le compte ne peut plus se connecter ni
+apparaître nulle part (annuaire, carte, moteurs de recherche).
+</p>
+
+<h2>Ce qui est conservé, et pourquoi</h2>
+<p>
+Les missions, devis, réservations, messages et avis restent, <strong>anonymisés</strong>
+(« Compte supprimé »), pour l'autre partie à la transaction et pour les obligations
+légales (factures, comptabilité). Aucune donnée n'est conservée à des fins de
+marketing. Votre compte AubeMail, lui, se gère sur <a href="https://aubemail.com">aubemail.com</a>.
+</p>
+<p class="muted small">Détails dans la <a href="{{ url_for('page_privacy') }}#suppression">politique de confidentialité</a>, section 7.</p>
+
+<hr style="margin: 40px 0;">
+
+<h2>From the app or the website</h2>
+<ol>
+  <li>Sign in, open <strong>My space → Settings</strong> (<a href="{{ url_for('settings') }}">/espace/parametres</a>).</li>
+  <li>In the <strong>"Your data"</strong> block, type <code>SUPPRIMER</code> then tap <strong>Delete my account</strong>.</li>
+  <li>Deletion is immediate. If a mission or a payment is in progress, the screen says so: it becomes possible again once it is over.</li>
+</ol>
+
+<h2>By email</h2>
+<p>
+Write to <a href="mailto:support@aubemail.com?subject=Delete%20my%20AubePilot%20account">support@aubemail.com</a>
+from the address linked to your account, with your username. We confirm the
+deletion within 30 days at most.
+</p>
+
+<h2>What is deleted</h2>
+<p>
+Name, email, phone, profile and cover photos, location, bio, and every uploaded
+document: licences, identity proofs, insurance certificate, drone photos, portfolio.
+The account can no longer sign in or appear anywhere (directory, map, search engines).
+</p>
+
+<h2>What is kept, and why</h2>
+<p>
+Missions, quotes, bookings, messages and reviews remain, <strong>anonymised</strong>
+("Deleted account"), for the other party to the transaction and for legal
+obligations (invoices, accounting). Nothing is kept for marketing. Your AubeMail
+account itself is managed on <a href="https://aubemail.com">aubemail.com</a>.
+</p>
+
+</article>
+{% endblock %}

@@ -870,6 +870,17 @@ def page_privacy():
     return render_template("legal_privacy.html", seo=_legal_seo("footer.privacy"))
 
 
+@app.route("/supprimer-mon-compte")
+def page_account_delete():
+    """Page publique de suppression de compte (exigee par Google Play : un
+    lien accessible sans connexion qui explique comment supprimer son compte
+    et ce qui est efface). Bilingue FR/EN, hors i18n comme les pages legales."""
+    page = seo.simple_page(i18n.DEFAULT, title_key="tpl.supprimer_mon_compte")
+    page["description"] = ("Comment supprimer votre compte AubePilot depuis l'application ou par courriel, "
+                           "ce qui est effacé et ce qui est conservé. How to delete your AubePilot account.")
+    return render_template("account_delete.html", seo=page)
+
+
 @app.route("/mentions-legales")
 def page_legal():
     return render_template("legal_notice.html", seo=_legal_seo("footer.legal"))
