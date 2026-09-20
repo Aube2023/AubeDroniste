@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Hukuma",
   "partners.kind.other": "Sauran",
   "login.remember": "Shiga ta atomatik",
-  "login.remember_hint": "Za ka ci gaba da kasancewa a shige a wannan na'urar (kwanaki 30 bayan ziyararka ta ƙarshe). Cire alamar a kwamfutar da ake rabawa: zaman yana ƙarewa idan aka rufe burauza."
+  "login.remember_hint": "Za ka ci gaba da kasancewa a shige a wannan na'urar (kwanaki 30 bayan ziyararka ta ƙarshe). Cire alamar a kwamfutar da ake rabawa: zaman yana ƙarewa idan aka rufe burauza.",
+  "tpl.recovery_email_label": "Imel na dawo da asusu",
+  "tpl.recovery_email_hint": "Don dawo da kalmar sirrin AubeMail idan ka manta. Za a aika hanyar tabbatarwa can.",
+  "tpl.recovery_email_refused": "Ba a karɓi wannan imel ɗin dawo da asusu ba: duba adireshin ko yi amfani da wani (an ƙi adiresoshin wucin gadi da na @aubemail.com).",
+  "tpl.rcodes_title": "Lambobin dawo da asusun AubeMail naka",
+  "tpl.rcodes_lead": "Ana nuna su sau ɗaya kawai. Ajiye su ba tare da intanet ba: kowace lamba tana ba ka damar, sau ɗaya, dawo da shiga asusunka idan ka manta kalmar sirri.",
+  "tpl.rcodes_verify_sent": "An aika hanyar tabbatarwa zuwa {email}. Danna ta don kunna dawo da asusu ta imel.",
+  "tpl.rcodes_verify_failed": "Ba a iya aika hanyar tabbatarwa zuwa {email} ba. Za ka iya sake aika ta daga saitunan AubeMail.",
+  "tpl.rcodes_no_email": "Ba tare da imel na dawo da asusu ba, waɗannan lambobin ne kaɗai hanyar dawo da asusunka. Za ka iya ƙara ɗaya a saitunan AubeMail.",
+  "tpl.rcodes_done": "Na adana su",
+  "tpl.rcodes_print": "Buga"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

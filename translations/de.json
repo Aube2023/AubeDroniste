@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Institution",
   "partners.kind.other": "Sonstiges",
   "login.remember": "Angemeldet bleiben",
-  "login.remember_hint": "Sie bleiben auf diesem Gerät angemeldet (30 Tage nach Ihrem letzten Besuch). Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser."
+  "login.remember_hint": "Sie bleiben auf diesem Gerät angemeldet (30 Tage nach Ihrem letzten Besuch). Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser.",
+  "tpl.recovery_email_label": "Wiederherstellungs-E-Mail",
+  "tpl.recovery_email_hint": "Um Ihr AubeMail-Passwort wiederherzustellen, falls Sie es vergessen. Ein Bestätigungslink wird dorthin gesendet.",
+  "tpl.recovery_email_refused": "Diese Wiederherstellungs-E-Mail wird nicht akzeptiert: Prüfen Sie die Adresse oder verwenden Sie eine andere (Wegwerfadressen und @aubemail.com-Adressen werden abgelehnt).",
+  "tpl.rcodes_title": "Ihre AubeMail-Wiederherstellungscodes",
+  "tpl.rcodes_lead": "Sie werden nur einmal angezeigt. Bewahren Sie sie offline auf: Jeder Code ermöglicht einmalig den Zugriff auf Ihr Konto, falls Sie Ihr Passwort vergessen.",
+  "tpl.rcodes_verify_sent": "Ein Bestätigungslink wurde an {email} gesendet. Klicken Sie darauf, um die Wiederherstellung per E-Mail zu aktivieren.",
+  "tpl.rcodes_verify_failed": "Der Bestätigungslink konnte nicht an {email} gesendet werden. Sie können ihn in den AubeMail-Einstellungen erneut senden.",
+  "tpl.rcodes_no_email": "Ohne Wiederherstellungs-E-Mail sind diese Codes Ihre einzige Möglichkeit zur Wiederherstellung. Sie können eine in den AubeMail-Einstellungen hinzufügen.",
+  "tpl.rcodes_done": "Ich habe sie gespeichert",
+  "tpl.rcodes_print": "Drucken"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

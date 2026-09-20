@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "机构",
   "partners.kind.other": "其他",
   "login.remember": "自动登录",
-  "login.remember_hint": "在此设备上保持登录（最后一次访问后 30 天内）。共用电脑请取消勾选：关闭浏览器即结束会话。"
+  "login.remember_hint": "在此设备上保持登录（最后一次访问后 30 天内）。共用电脑请取消勾选：关闭浏览器即结束会话。",
+  "tpl.recovery_email_label": "恢复邮箱",
+  "tpl.recovery_email_hint": "用于在忘记 AubeMail 密码时找回密码。确认链接将发送到该邮箱。",
+  "tpl.recovery_email_refused": "此恢复邮箱不被接受：请检查地址或改用其他邮箱（一次性邮箱和 @aubemail.com 地址均被拒绝）。",
+  "tpl.rcodes_title": "您的 AubeMail 恢复代码",
+  "tpl.rcodes_lead": "仅显示一次。请离线保存：如果忘记密码，每个代码可让您重新进入账户一次。",
+  "tpl.rcodes_verify_sent": "确认链接已发送至 {email}。点击该链接即可启用邮箱找回。",
+  "tpl.rcodes_verify_failed": "确认链接无法发送至 {email}。您可以在 AubeMail 设置中重新发送。",
+  "tpl.rcodes_no_email": "没有恢复邮箱时，这些代码是您找回账户的唯一途径。您可以在 AubeMail 设置中添加恢复邮箱。",
+  "tpl.rcodes_done": "我已保存",
+  "tpl.rcodes_print": "打印"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

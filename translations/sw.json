@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Taasisi",
   "partners.kind.other": "Nyingine",
   "login.remember": "Ingia kiotomatiki",
-  "login.remember_hint": "Unabaki umeingia kwenye kifaa hiki (siku 30 baada ya ziara yako ya mwisho). Ondoa alama kwenye kompyuta ya pamoja: kipindi kinaisha kivinjari kikifungwa."
+  "login.remember_hint": "Unabaki umeingia kwenye kifaa hiki (siku 30 baada ya ziara yako ya mwisho). Ondoa alama kwenye kompyuta ya pamoja: kipindi kinaisha kivinjari kikifungwa.",
+  "tpl.recovery_email_label": "Barua pepe ya urejeshaji",
+  "tpl.recovery_email_hint": "Kurejesha nenosiri lako la AubeMail ukilisahau. Kiungo cha uthibitisho kitatumwa huko.",
+  "tpl.recovery_email_refused": "Barua pepe hii ya urejeshaji haikubaliwi: angalia anwani au tumia nyingine (anwani za muda na za @aubemail.com zinakataliwa).",
+  "tpl.rcodes_title": "Nambari zako za urejeshaji za AubeMail",
+  "tpl.rcodes_lead": "Zinaonyeshwa mara moja tu. Zihifadhi nje ya mtandao: kila nambari inakuwezesha, mara moja, kurejesha ufikiaji wa akaunti yako ukisahau nenosiri.",
+  "tpl.rcodes_verify_sent": "Kiungo cha uthibitisho kimetumwa kwa {email}. Kibofye ili kuwezesha urejeshaji kwa barua pepe.",
+  "tpl.rcodes_verify_failed": "Kiungo cha uthibitisho hakikuweza kutumwa kwa {email}. Unaweza kukituma tena kutoka mipangilio ya AubeMail.",
+  "tpl.rcodes_no_email": "Bila barua pepe ya urejeshaji, nambari hizi ndizo njia yako pekee ya kurejesha akaunti. Unaweza kuongeza moja katika mipangilio ya AubeMail.",
+  "tpl.rcodes_done": "Nimezihifadhi",
+  "tpl.rcodes_print": "Chapisha"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

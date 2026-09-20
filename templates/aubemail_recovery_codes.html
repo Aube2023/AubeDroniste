@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t('tpl.rcodes_title') }} · AubePilot{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 680px; margin: 0 auto;">
+  <span class="eyebrow">{{ t('tpl.securite') }} · AubeMail</span>
+  <h1 style="font-size: 1.5rem; margin: 4px 0 10px;">{{ t('tpl.rcodes_title') }}</h1>
+  <p class="lead muted">{{ t('tpl.rcodes_lead') }}</p>
+
+  <ol class="mono" style="columns: 2; column-gap: 24px; font-size: 1.05rem; line-height: 2; letter-spacing: .04em; padding-inline-start: 1.6em; margin: 18px 0;">
+    {% for c in codes %}<li>{{ c }}</li>{% endfor %}
+  </ol>
+
+  {% if recovery_email %}
+    {% if verify_sent %}
+    <div class="flash flash-info" style="margin: 12px 0;">{{ t('tpl.rcodes_verify_sent', email=recovery_email) }}</div>
+    {% else %}
+    <div class="flash flash-error" style="margin: 12px 0;">{{ t('tpl.rcodes_verify_failed', email=recovery_email) }}</div>
+    {% endif %}
+  {% else %}
+    <div class="flash flash-info" style="margin: 12px 0;">{{ t('tpl.rcodes_no_email') }}</div>
+  {% endif %}
+
+  <div class="cta-row" style="margin: 18px 0 0;">
+    <a class="cta" href="{{ url_for('dashboard') }}">{{ t('tpl.rcodes_done') }}</a>
+    <button type="button" class="ghost" onclick="window.print()">{{ t('tpl.rcodes_print') }}</button>
+  </div>
+</div>
+{% endblock %}

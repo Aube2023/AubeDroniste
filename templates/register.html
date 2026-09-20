@@ -135,6 +135,10 @@
       <label style="margin-top: 4px;">{{ t('register.phone') }} <span class="muted small">({{ t('register.optional') }})</span>
         {% with phone_value = form.get('phone','') if form else '' %}{% include "_phone_field.html" %}{% endwith %}
       </label>
+      <label style="margin-top: 4px;">{{ t('tpl.recovery_email_label') }} <span class="muted small">({{ t('register.optional') }})</span>
+        <input type="email" name="recovery_email" maxlength="254" autocomplete="email" inputmode="email" placeholder="marie@exemple.com" value="{{ request.form.get('recovery_email', '') }}">
+        <span class="field-hint">{{ t('tpl.recovery_email_hint') }}</span>
+      </label>
     </fieldset>
 
     <fieldset class="fieldset-block auth-step">

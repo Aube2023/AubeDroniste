@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Instelling",
   "partners.kind.other": "Overig",
   "login.remember": "Automatisch inloggen",
-  "login.remember_hint": "Je blijft ingelogd op dit apparaat (30 dagen na je laatste bezoek). Vink uit op een gedeelde computer: de sessie eindigt zodra de browser sluit."
+  "login.remember_hint": "Je blijft ingelogd op dit apparaat (30 dagen na je laatste bezoek). Vink uit op een gedeelde computer: de sessie eindigt zodra de browser sluit.",
+  "tpl.recovery_email_label": "Herstel-e-mailadres",
+  "tpl.recovery_email_hint": "Om uw AubeMail-wachtwoord te herstellen als u het vergeet. Er wordt een bevestigingslink naartoe gestuurd.",
+  "tpl.recovery_email_refused": "Dit herstel-e-mailadres wordt niet geaccepteerd: controleer het adres of gebruik een ander (wegwerpadressen en @aubemail.com-adressen worden geweigerd).",
+  "tpl.rcodes_title": "Uw AubeMail-herstelcodes",
+  "tpl.rcodes_lead": "Ze worden maar één keer getoond. Bewaar ze offline: elke code geeft u eenmalig weer toegang tot uw account als u uw wachtwoord vergeet.",
+  "tpl.rcodes_verify_sent": "Er is een bevestigingslink gestuurd naar {email}. Klik erop om herstel via e-mail in te schakelen.",
+  "tpl.rcodes_verify_failed": "De bevestigingslink kon niet naar {email} worden gestuurd. U kunt hem opnieuw versturen vanuit de AubeMail-instellingen.",
+  "tpl.rcodes_no_email": "Zonder herstel-e-mailadres zijn deze codes uw enige manier om uw account te herstellen. U kunt er een toevoegen in de AubeMail-instellingen.",
+  "tpl.rcodes_done": "Ik heb ze bewaard",
+  "tpl.rcodes_print": "Afdrukken"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

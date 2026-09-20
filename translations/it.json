@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Istituzione",
   "partners.kind.other": "Altro",
   "login.remember": "Accesso automatico",
-  "login.remember_hint": "Resti connesso su questo dispositivo (30 giorni dopo l'ultima visita). Deseleziona su un computer condiviso: la sessione termina con il browser."
+  "login.remember_hint": "Resti connesso su questo dispositivo (30 giorni dopo l'ultima visita). Deseleziona su un computer condiviso: la sessione termina con il browser.",
+  "tpl.recovery_email_label": "Email di recupero",
+  "tpl.recovery_email_hint": "Per recuperare la password AubeMail se la dimentichi. Vi sarà inviato un link di conferma.",
+  "tpl.recovery_email_refused": "Questa email di recupero non è accettata: controlla l'indirizzo o usane un altro (indirizzi usa e getta e @aubemail.com rifiutati).",
+  "tpl.rcodes_title": "I tuoi codici di recupero AubeMail",
+  "tpl.rcodes_lead": "Vengono mostrati una sola volta. Conservali offline: ogni codice permette, una volta, di riottenere l'accesso all'account se dimentichi la password.",
+  "tpl.rcodes_verify_sent": "Un link di conferma è stato inviato a {email}. Cliccalo per attivare il recupero via email.",
+  "tpl.rcodes_verify_failed": "Impossibile inviare il link di conferma a {email}. Potrai rinviarlo dalle impostazioni di AubeMail.",
+  "tpl.rcodes_no_email": "Senza email di recupero, questi codici sono il tuo unico mezzo di recupero. Potrai aggiungerne una nelle impostazioni di AubeMail.",
+  "tpl.rcodes_done": "Li ho salvati",
+  "tpl.rcodes_print": "Stampa"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",

@@ -1280,7 +1280,17 @@
   "partners.kind.institution": "Tổ chức",
   "partners.kind.other": "Khác",
   "login.remember": "Đăng nhập tự động",
-  "login.remember_hint": "Bạn giữ đăng nhập trên thiết bị này (30 ngày sau lần truy cập cuối). Bỏ chọn trên máy dùng chung: phiên sẽ kết thúc khi đóng trình duyệt."
+  "login.remember_hint": "Bạn giữ đăng nhập trên thiết bị này (30 ngày sau lần truy cập cuối). Bỏ chọn trên máy dùng chung: phiên sẽ kết thúc khi đóng trình duyệt.",
+  "tpl.recovery_email_label": "Email khôi phục",
+  "tpl.recovery_email_hint": "Để khôi phục mật khẩu AubeMail nếu bạn quên. Một liên kết xác nhận sẽ được gửi đến đó.",
+  "tpl.recovery_email_refused": "Email khôi phục này không được chấp nhận: kiểm tra địa chỉ hoặc dùng địa chỉ khác (địa chỉ dùng một lần và @aubemail.com bị từ chối).",
+  "tpl.rcodes_title": "Mã khôi phục AubeMail của bạn",
+  "tpl.rcodes_lead": "Chúng chỉ hiển thị một lần. Hãy lưu ngoại tuyến: mỗi mã cho phép lấy lại quyền truy cập tài khoản một lần nếu bạn quên mật khẩu.",
+  "tpl.rcodes_verify_sent": "Một liên kết xác nhận đã được gửi đến {email}. Nhấp vào đó để bật khôi phục qua email.",
+  "tpl.rcodes_verify_failed": "Không thể gửi liên kết xác nhận đến {email}. Bạn có thể gửi lại từ phần cài đặt AubeMail.",
+  "tpl.rcodes_no_email": "Không có email khôi phục, các mã này là cách duy nhất để khôi phục tài khoản. Bạn có thể thêm email trong cài đặt AubeMail.",
+  "tpl.rcodes_done": "Tôi đã lưu lại",
+  "tpl.rcodes_print": "In"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",
