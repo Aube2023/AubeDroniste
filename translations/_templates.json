@@ -6710,14 +6710,14 @@
   "bn": "স্বয়ংক্রিয় লগইন"
  },
  "login.remember_hint": {
-  "fr": "Vous restez connecté sur cet appareil pendant un an. Décochez sur un ordinateur partagé : la session se ferme avec le navigateur.",
-  "en": "You stay signed in on this device for a year. Untick on a shared computer: the session ends when the browser closes.",
-  "es": "Permanece conectado en este dispositivo durante un año. Desmárquelo en un ordenador compartido: la sesión se cierra con el navegador.",
-  "ru": "Вы остаётесь в системе на этом устройстве в течение года. Снимите галочку на общем компьютере: сеанс закроется вместе с браузером.",
-  "hi": "आप इस डिवाइस पर एक साल तक लॉग इन रहते हैं। साझा कंप्यूटर पर इसे अनचेक करें: ब्राउज़र बंद होते ही सत्र समाप्त हो जाएगा।",
-  "uk": "Ви залишаєтеся в системі на цьому пристрої протягом року. Зніміть позначку на спільному комп'ютері: сеанс закриється разом із браузером.",
-  "tr": "Bu cihazda bir yıl boyunca oturumunuz açık kalır. Ortak bir bilgisayarda işareti kaldırın: oturum tarayıcı kapanınca sona erer.",
-  "ur": "آپ اس ڈیوائس پر ایک سال تک لاگ ان رہتے ہیں۔ مشترکہ کمپیوٹر پر اسے ان چیک کریں: براؤزر بند ہوتے ہی سیشن ختم ہو جاتا ہے۔",
-  "bn": "আপনি এই ডিভাইসে এক বছর লগইন থাকবেন। ভাগ করা কম্পিউটারে টিক তুলে দিন: ব্রাউজার বন্ধ হলেই সেশন শেষ হবে।"
+  "fr": "Vous restez connecté sur cet appareil (30 jours après votre dernière visite). Décochez sur un ordinateur partagé : la session se ferme avec le navigateur.",
+  "en": "You stay signed in on this device (30 days after your last visit). Untick on a shared computer: the session ends when the browser closes.",
+  "es": "Permanece conectado en este dispositivo (30 días después de su última visita). Desmárquelo en un ordenador compartido: la sesión se cierra con el navegador.",
+  "ru": "Вы остаётесь в системе на этом устройстве (30 дней после последнего визита). Снимите галочку на общем компьютере: сеанс закроется вместе с браузером.",
+  "hi": "आप इस डिवाइस पर लॉग इन रहते हैं (अंतिम विज़िट के 30 दिन बाद तक)। साझा कंप्यूटर पर इसे अनचेक करें: ब्राउज़र बंद होते ही सत्र समाप्त हो जाएगा।",
+  "uk": "Ви залишаєтеся в системі на цьому пристрої (30 днів після останнього візиту). Зніміть позначку на спільному комп'ютері: сеанс закриється разом із браузером.",
+  "tr": "Bu cihazda oturumunuz açık kalır (son ziyaretinizden 30 gün sonrasına kadar). Ortak bir bilgisayarda işareti kaldırın: oturum tarayıcı kapanınca sona erer.",
+  "ur": "آپ اس ڈیوائس پر لاگ ان رہتے ہیں (آخری وزٹ کے 30 دن بعد تک)۔ مشترکہ کمپیوٹر پر اسے ان چیک کریں: براؤزر بند ہوتے ہی سیشن ختم ہو جاتا ہے۔",
+  "bn": "আপনি এই ডিভাইসে লগইন থাকবেন (শেষ ভিজিটের 30 দিন পর পর্যন্ত)। ভাগ করা কম্পিউটারে টিক তুলে দিন: ব্রাউজার বন্ধ হলেই সেশন শেষ হবে।"
  }
 }

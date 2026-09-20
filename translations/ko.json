@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "기관",
   "partners.kind.other": "기타",
   "login.remember": "자동 로그인",
-  "login.remember_hint": "이 기기에서 1년 동안 로그인 상태가 유지됩니다. 공용 컴퓨터에서는 체크를 해제하세요. 브라우저를 닫으면 세션이 종료됩니다."
+  "login.remember_hint": "이 기기에서 로그인 상태가 유지됩니다 (마지막 방문 후 30일). 공용 컴퓨터에서는 체크를 해제하세요. 브라우저를 닫으면 세션이 종료됩니다."
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",

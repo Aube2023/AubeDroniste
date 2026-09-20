@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "機関",
   "partners.kind.other": "その他",
   "login.remember": "自動ログイン",
-  "login.remember_hint": "この端末では1年間ログイン状態が保持されます。共用のパソコンではチェックを外してください。ブラウザーを閉じるとセッションが終了します。"
+  "login.remember_hint": "この端末ではログイン状態が保持されます（最終訪問から30日間）。共用のパソコンではチェックを外してください。ブラウザーを閉じるとセッションが終了します。"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "Taasisi",
   "partners.kind.other": "Nyingine",
   "login.remember": "Ingia kiotomatiki",
-  "login.remember_hint": "Unabaki umeingia kwenye kifaa hiki kwa mwaka mmoja. Ondoa alama kwenye kompyuta ya pamoja: kipindi kinaisha kivinjari kikifungwa."
+  "login.remember_hint": "Unabaki umeingia kwenye kifaa hiki (siku 30 baada ya ziara yako ya mwisho). Ondoa alama kwenye kompyuta ya pamoja: kipindi kinaisha kivinjari kikifungwa."
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

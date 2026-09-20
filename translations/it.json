@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "Istituzione",
   "partners.kind.other": "Altro",
   "login.remember": "Accesso automatico",
-  "login.remember_hint": "Resti connesso su questo dispositivo per un anno. Deseleziona su un computer condiviso: la sessione termina con il browser."
+  "login.remember_hint": "Resti connesso su questo dispositivo (30 giorni dopo l'ultima visita). Deseleziona su un computer condiviso: la sessione termina con il browser."
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",

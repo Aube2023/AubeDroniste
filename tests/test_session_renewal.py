@@ -4,8 +4,8 @@ Le probleme d'origine : la session (cookie + ligne en base) expirait 30 jours
 apres le LOGIN, meme pour un utilisateur actif tous les jours — qui devait
 donc se reconnecter. Desormais toute requete authentifiee dont l'echeance est
 entamee d'au moins un jour repousse l'expiration en base ET re-pose le cookie
-avec un max_age complet (un an depuis la « connexion automatique » du
-2026-09-20 ; sans la case, cookie de navigateur et 24 h glissantes).
+avec un max_age complet (30 jours glissants ; sans la case « connexion
+automatique » du 2026-09-20, cookie de navigateur et 24 h glissantes).
 
 NB conftest : jamais d'import db/app/auth au niveau module (la DB temp doit
 etre posee avant l'import des modules projet).
@@ -44,19 +44,19 @@ def test_aging_session_is_extended_and_cookie_reset(app_ctx, make_user, auth_cli
     resp = client.get("/espace")
     assert resp.status_code == 200
 
-    # cookie re-pose avec un max_age complet (un an)
+    # cookie re-pose avec un max_age complet (30 jours)
     cookies = _sid_cookies(resp)
     assert cookies, "le cookie de session doit etre re-pose"
-    assert "Max-Age=31536000" in cookies[0]
+    assert "Max-Age=2592000" in cookies[0]
 
-    # echeance repoussee en base a ~un an
+    # echeance repoussee en base a ~30 jours
     new_expires = datetime.fromisoformat(_session_row(user["id"])["expires_at"])
     remaining = new_expires - datetime.now(timezone.utc)
-    assert remaining > timedelta(days=364)
+    assert remaining > timedelta(days=29)
 
 
 def test_fresh_session_is_not_rewritten(app_ctx, make_user, auth_client):
-    """Session posee a l'instant (un an plein) : aucune ecriture inutile."""
+    """Session posee a l'instant (30 j pleins) : aucune ecriture inutile."""
     user = make_user("fresh")
     client = auth_client(user["id"])
     before = _session_row(user["id"])["expires_at"]
@@ -92,14 +92,14 @@ def _login(app, username, password, remember):
     return c, c.post("/connexion", data=data)
 
 
-def test_case_cochee_session_un_an(app, app_ctx, make_user):
+def test_case_cochee_session_30_jours(app, app_ctx, make_user):
     user = make_user("auto_on")
     c, resp = _login(app, user["username"], user["_password"], remember=True)
     assert resp.status_code == 302
     cookie = _sid_cookies(resp)[0]
-    assert "Max-Age=31536000" in cookie
+    assert "Max-Age=2592000" in cookie
     row = _session_row(user["id"])
-    assert row["expires_at"] and datetime.fromisoformat(row["expires_at"]) - datetime.now(timezone.utc) > timedelta(days=364)
+    assert row["expires_at"] and datetime.fromisoformat(row["expires_at"]) - datetime.now(timezone.utc) > timedelta(days=29)
     import db
     assert db.fetchone("SELECT persistent FROM sessions WHERE sid=?", (row["sid"],))["persistent"] == 1
     assert c.get("/espace").status_code == 200

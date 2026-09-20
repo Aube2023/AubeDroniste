@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "Instituție",
   "partners.kind.other": "Altele",
   "login.remember": "Autentificare automată",
-  "login.remember_hint": "Rămâi conectat pe acest dispozitiv timp de un an. Debifează pe un calculator partajat: sesiunea se închide odată cu browserul."
+  "login.remember_hint": "Rămâi conectat pe acest dispozitiv (30 de zile după ultima vizită). Debifează pe un calculator partajat: sesiunea se închide odată cu browserul."
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

@@ -1280,7 +1280,7 @@
   "partners.kind.institution": "Institution",
   "partners.kind.other": "Sonstiges",
   "login.remember": "Angemeldet bleiben",
-  "login.remember_hint": "Sie bleiben auf diesem Gerät ein Jahr lang angemeldet. Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser."
+  "login.remember_hint": "Sie bleiben auf diesem Gerät angemeldet (30 Tage nach Ihrem letzten Besuch). Auf einem geteilten Computer abwählen: die Sitzung endet mit dem Browser."
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

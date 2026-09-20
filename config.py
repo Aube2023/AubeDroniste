@@ -45,10 +45,13 @@ SECRET_KEY = os.environ.get("AUBEPILOT_SECRET", "change-me-in-prod-aubepilot-202
 # La validation de production (refuse la cle par defaut hors dev) est faite
 # dans security.assert_production_ready() au demarrage de l'app.
 SESSION_COOKIE_NAME = "aubepilot_sid"
-# Connexion automatique (case cochee par defaut a la connexion) : un an,
-# prolonge a chaque visite. Sans la case : la session tombe avec le navigateur
-# (cookie sans duree) et expire en base apres SESSION_SHORT_HOURS d'inactivite.
-SESSION_LIFETIME_DAYS = 365
+# Connexion automatique (case cochee par defaut a la connexion) : 30 jours,
+# prolonges a chaque visite (glissant : seul un mois sans aucune visite
+# redemande le mot de passe ; un an jugé trop long par le user le 2026-09-20,
+# 14 j = Django/GitHub, 30 j = « se souvenir de moi » usuel). Sans la case :
+# la session tombe avec le navigateur (cookie sans duree) et expire en base
+# apres SESSION_SHORT_HOURS d'inactivite.
+SESSION_LIFETIME_DAYS = 30
 SESSION_SHORT_HOURS = 24
 
 EMAIL_DOMAIN = "aubemail.com"

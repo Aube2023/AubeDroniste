@@ -157,7 +157,7 @@ _ADD_COLUMNS = [
     ("bookings", "settled_offline_at", "TEXT"),
     # Palette d'accent choisie par le compte (cf. i18n.ACCENTS) ; NULL = « aube ».
     ("users", "accent", "TEXT"),
-    # Connexion automatique : 1 = session d'un an prolongee a chaque visite,
+    # Connexion automatique : 1 = session de 30 jours prolongee a chaque visite,
     # 0 = session le temps du navigateur (case decochee a la connexion).
     ("sessions", "persistent", "INTEGER NOT NULL DEFAULT 1"),
     # Image de couverture : bandeau paysage en haut de la fiche publique,

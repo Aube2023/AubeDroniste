@@ -326,8 +326,8 @@ def current_sid() -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 def session_lifetime(persistent: bool) -> timedelta:
-    """Duree d'une session : un an (connexion automatique) ou une journee
-    (le cookie, lui, tombe des que le navigateur se ferme)."""
+    """Duree d'une session : 30 jours glissants (connexion automatique) ou
+    une journee (le cookie, lui, tombe des que le navigateur se ferme)."""
     return (timedelta(days=SESSION_LIFETIME_DAYS) if persistent
             else timedelta(hours=SESSION_SHORT_HOURS))
 
@@ -387,7 +387,7 @@ def load_user_from_request() -> Optional[dict]:
 
 def _maybe_extend_session(sid: str, token: str, expires_at, persistent: bool = True) -> None:
     """Renouvellement glissant : tant que l'utilisateur revient, sa session ne
-    meurt jamais (sinon elle expire un an apres le LOGIN, meme pour un
+    meurt jamais (sinon elle expire 30 jours apres le LOGIN, meme pour un
     utilisateur actif tous les jours — et il doit se reconnecter).
 
     Au plus une extension par jour (par heure pour une session sans connexion

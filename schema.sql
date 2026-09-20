@@ -383,7 +383,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at   TEXT NOT NULL,
     user_agent   TEXT,
     ip           TEXT,
-    persistent   INTEGER NOT NULL DEFAULT 1        -- 1 = connexion automatique (un an), 0 = le temps du navigateur
+    persistent   INTEGER NOT NULL DEFAULT 1        -- 1 = connexion automatique (30 j glissants), 0 = le temps du navigateur
 );
 CREATE INDEX IF NOT EXISTS idx_sess_user ON sessions(user_id);
 
