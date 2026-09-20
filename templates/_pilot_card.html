@@ -2,13 +2,16 @@
    Partagee entre /pilotes et les pages d'atterrissage (pays, ville, specialite). #}
 {% set fr = (lang == 'fr') %}
 {% set masked = public_name(p) %}
-  <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}" data-pilot-id="{{ p.id }}">
+  <a class="pilot-card kind-{{ p.kind or 'pro' }}{% if p.cover_path %} has-cover{% endif %}" href="{{ url_for('pilot_detail', user_id=p.id) }}" data-pilot-id="{{ p.id }}">
     <div class="strip">
       <span class="callsign">nº {{ p.pilot_no or p.id }} <span class="map-pin" title="{{ t('tpl.voir_sur_la_carte') }}">📍</span></span>
       <span class="fh">
         {% if p.distance_km is not none %}<span class="distance-chip">≈ {{ p.distance_km|round|int }} km</span> · {% endif %}{% if p.is_available %}<span class="dot-ok">{{ t('tpl.dispo') }}</span> · {% endif %}{% if p.rating.count %}{{ p.rating.count }} {{ t('tpl.avis') }}{% else %}{{ t('tpl.nouveau') }}{% endif %}
       </span>
     </div>
+    {% if p.cover_path %}
+    <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
+    {% endif %}
     <div class="body">
       {% if p.avatar_path %}
       <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"

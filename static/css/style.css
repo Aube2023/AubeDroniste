@@ -686,6 +686,20 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
   font: 500 12px/1 var(--mono);
 }
 .pilot-card .foot .rating { color: var(--amber); }
+/* Image de couverture sur la carte : bandeau sous la bande d'en-tête, la
+   photo ronde chevauche son bord bas (même repère que la fiche). */
+.pilot-card.has-cover { grid-template-rows: auto auto 1fr auto; }
+.pilot-card .cover {
+  aspect-ratio: 16 / 6; max-height: 120px; overflow: hidden;
+  background: var(--paper-3); border-bottom: 1px solid var(--rule);
+}
+.pilot-card .cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pilot-card.has-cover .body { padding-top: 12px; }
+.pilot-card.has-cover .body .avatar {
+  margin-top: -40px;
+  box-shadow: 0 0 0 3px var(--paper-2);
+  background: var(--paper);
+}
 
 .avatar {
   width: 56px; height: 56px;

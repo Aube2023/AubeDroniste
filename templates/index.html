@@ -143,11 +143,14 @@
   <div class="grid-cards">
     {% for p in featured_pilots %}
     {% set masked = public_name(p) %}
-    <a class="pilot-card kind-{{ p.kind or 'pro' }}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+    <a class="pilot-card kind-{{ p.kind or 'pro' }}{% if p.cover_path %} has-cover{% endif %}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
       <div class="strip">
         <span class="callsign">nº {{ p.pilot_no or p.id }}</span>
         <span class="fh">{% if p.rating.count %}{{ t('common.reviews', n=p.rating.count) }}{% else %}{{ t('common.new_pilot') }}{% endif %}</span>
       </div>
+      {% if p.cover_path %}
+      <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
+      {% endif %}
       <div class="body">
         {% if p.avatar_path %}
         <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"

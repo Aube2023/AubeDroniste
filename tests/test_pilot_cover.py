@@ -97,3 +97,28 @@ def test_suppression_du_compte_efface_la_couverture(make_user, auth_client, app_
     assert services.delete_account(u["id"])["ok"]
     assert db.fetchone("SELECT cover_path FROM users WHERE id=?", (u["id"],))["cover_path"] is None
     assert not os.path.exists(path)
+
+
+def test_couverture_sur_les_cartes_et_la_carte(make_user, auth_client, app_ctx, client):
+    import db
+    import services
+    u = make_user("cover_cartes", role="pilot", country="Canada", city="Montréal", lat=45.5, lng=-73.6)
+    db.execute("UPDATE pilot_profiles SET is_available=1 WHERE user_id=?", (u["id"],))
+    # Sans couverture : carte de l'annuaire sans bandeau, bulle sans image.
+    html = client.get("/pilotes").data.decode()
+    card = html.split(f'data-pilot-id="{u["id"]}"')[1].split("</a>")[0]
+    assert '<div class="cover">' not in card
+    _upload(auth_client(u["id"]))
+    rel = db.fetchone("SELECT cover_path FROM users WHERE id=?", (u["id"],))["cover_path"]
+    html = client.get("/pilotes").data.decode()
+    head, card = html.split(f'data-pilot-id="{u["id"]}"')
+    assert "has-cover" in head[-160:]                 # classe sur la balise <a> de cette carte
+    card = card.split("</a>")[0]
+    assert '<div class="cover"><img src="/media/' + rel[8:] in card
+    # Pilotes vedettes de l'accueil (la base de test est partagee : on
+    # verifie la donnee, pas les 8 premiers affiches) et charge utile de la carte.
+    feat = [p for p in services.featured_pilots(1000) if p["id"] == u["id"]]
+    assert feat and feat[0]["cover_path"] == rel
+    markers = services.map_markers(country="Canada")
+    mine = [p for p in markers["pilots"] if p["id"] == u["id"]]
+    assert mine and mine[0]["cover"] == "/media/" + rel[8:]

@@ -1374,7 +1374,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
     _text = (text or "").strip().lower()   # recherche libre (search box / ?q=)
     q = [
         "SELECT u.id, p.pilot_no, u.username, u.full_name, u.country, u.city, u.lat, u.lng, "
-        "       u.is_verified, u.avatar_path, u.bio, u.last_seen_at, "
+        "       u.is_verified, u.avatar_path, u.cover_path, u.bio, u.last_seen_at, "
         "       p.headline, p.hourly_rate, p.daily_rate, p.currency AS p_currency, "
         "       p.travel_radius_km, p.is_available, p.insurance, p.languages, "
         "       COALESCE(p.insurance_status, 'none') AS insurance_status, "
@@ -3335,7 +3335,7 @@ def featured_pilots(limit: int = 6) -> list:
     """Pilotes vedettes, avec rating folde dans la requete principale (1 query)."""
     rows = db.fetchall(
         "SELECT u.id, p.pilot_no, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
-        "       p.headline, p.hourly_rate, p.currency AS p_currency, "
+        "       u.cover_path, p.headline, p.hourly_rate, p.currency AS p_currency, "
         "       COALESCE(p.kind, 'pro') AS kind, p.business_name, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
         "       COALESCE(r.review_count, 0) AS rating_count "
@@ -3467,6 +3467,9 @@ def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
             # Photo publique (meme route /media que les cartes de l'annuaire).
             "avatar": ("/media/" + p["avatar_path"][8:])
                       if (p.get("avatar_path") or "").startswith("uploads/") else None,
+            # Image de couverture (bandeau paysage de la bulle).
+            "cover": ("/media/" + p["cover_path"][8:])
+                     if (p.get("cover_path") or "").startswith("uploads/") else None,
         })
     m_out = []
     for m in missions:

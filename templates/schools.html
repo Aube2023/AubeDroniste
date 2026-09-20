@@ -49,11 +49,14 @@
   </div>
   <div class="grid-cards">
     {% for p in schools %}
-    <a class="pilot-card kind-school" href="{{ url_for('pilot_detail', user_id=p.id) }}">
+    <a class="pilot-card kind-school{% if p.cover_path %} has-cover{% endif %}" href="{{ url_for('pilot_detail', user_id=p.id) }}">
       <div class="strip">
         <span class="callsign">{{ t('schools.card_badge') }}</span>
         <span class="fh">{% if p.rating.count %}{{ t('schools.card_reviews', n=p.rating.count) }}{% else %}{{ t('schools.card_new') }}{% endif %}</span>
       </div>
+      {% if p.cover_path %}
+      <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
+      {% endif %}
       <div class="body">
         {% if p.avatar_path %}
         <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}" alt="" loading="lazy">
