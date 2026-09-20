@@ -212,3 +212,13 @@ def test_application_mobile_sans_barre_web(client):
     app = client.get("/", headers={"User-Agent": "AubePilotMobile/1.4 (Android)"}).data.decode()
     assert 'class="mobile-tabs"' not in app and '<html lang="fr" dir="ltr" data-lang-prefix="" class="in-app"' in app
     client.get("/lang/fr")
+
+
+def test_selecteur_de_fond_de_carte(client):
+    # Cinq fonds OpenFreeMap au choix du visiteur, gris par defaut de jour ;
+    # le changement de style garde nos couches (transformStyle).
+    home = client.get("/").data.decode()
+    for s in ("styles/positron", "styles/dark", "styles/fiord", "styles/liberty", "styles/bright"):
+        assert "tiles.openfreemap.org/" + s in home
+    assert "aube_map_style" in home and "transformStyle" in home and "aube-style-ctrl" in home
+    assert '"styles": {"gris": "Gris", "noir": "Noir"' in home.replace("&#34;", '"') or '"gris": "Gris"' in home

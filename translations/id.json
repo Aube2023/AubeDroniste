@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Tautan konfirmasi tidak dapat dikirim ke {email}. Anda dapat mengirim ulang dari pengaturan AubeMail.",
   "tpl.rcodes_no_email": "Tanpa email pemulihan, kode ini adalah satu-satunya cara memulihkan akun Anda. Anda dapat menambahkannya di pengaturan AubeMail.",
   "tpl.rcodes_done": "Sudah saya simpan",
-  "tpl.rcodes_print": "Cetak"
+  "tpl.rcodes_print": "Cetak",
+  "map.style_label": "Latar peta",
+  "map.style_gris": "Abu-abu",
+  "map.style_noir": "Hitam",
+  "map.style_nuit": "Biru malam",
+  "map.style_couleurs": "Berwarna",
+  "map.style_clair": "Terang"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",

@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "{email} முகவரிக்கு உறுதிப்படுத்தும் இணைப்பை அனுப்ப முடியவில்லை. AubeMail அமைப்புகளிலிருந்து மீண்டும் அனுப்பலாம்.",
   "tpl.rcodes_no_email": "மீட்பு மின்னஞ்சல் இல்லாமல், இந்தக் குறியீடுகளே உங்கள் கணக்கை மீட்க ஒரே வழி. AubeMail அமைப்புகளில் ஒன்றைச் சேர்க்கலாம்.",
   "tpl.rcodes_done": "சேமித்துவிட்டேன்",
-  "tpl.rcodes_print": "அச்சிடு"
+  "tpl.rcodes_print": "அச்சிடு",
+  "map.style_label": "வரைபடப் பின்னணி",
+  "map.style_gris": "சாம்பல்",
+  "map.style_noir": "கருப்பு",
+  "map.style_nuit": "இரவு நீலம்",
+  "map.style_couleurs": "வண்ணம்",
+  "map.style_clair": "வெளிர்"
  },
  "seo": {
   "home.title": "சான்றளிக்கப்பட்ட ட்ரோன் விமானி — இலவச விலைப்புள்ளி | AubePilot",

@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "ไม่สามารถส่งลิงก์ยืนยันไปที่ {email} ได้ คุณสามารถส่งใหม่ได้จากการตั้งค่า AubeMail",
   "tpl.rcodes_no_email": "หากไม่มีอีเมลสำหรับกู้คืน รหัสเหล่านี้คือวิธีเดียวในการกู้คืนบัญชี คุณสามารถเพิ่มอีเมลได้ในการตั้งค่า AubeMail",
   "tpl.rcodes_done": "บันทึกแล้ว",
-  "tpl.rcodes_print": "พิมพ์"
+  "tpl.rcodes_print": "พิมพ์",
+  "map.style_label": "พื้นหลังแผนที่",
+  "map.style_gris": "เทา",
+  "map.style_noir": "ดำ",
+  "map.style_nuit": "น้ำเงินเข้ม",
+  "map.style_couleurs": "สี",
+  "map.style_clair": "สว่าง"
  },
  "seo": {
   "home.title": "จ้างนักบินโดรนที่ได้รับใบอนุญาต — ใบเสนอราคาฟรี | AubePilot",

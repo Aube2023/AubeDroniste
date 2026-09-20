@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "{email} मा पुष्टि लिंक पठाउन सकिएन। AubeMail सेटिङबाट फेरि पठाउन सक्नुहुन्छ।",
   "tpl.rcodes_no_email": "रिकभरी इमेल बिना यी कोडहरू नै खाता पुनः प्राप्त गर्ने एक मात्र उपाय हुन्। AubeMail सेटिङमा एउटा थप्न सक्नुहुन्छ।",
   "tpl.rcodes_done": "मैले सुरक्षित गरें",
-  "tpl.rcodes_print": "प्रिन्ट गर्नुहोस्"
+  "tpl.rcodes_print": "प्रिन्ट गर्नुहोस्",
+  "map.style_label": "नक्साको पृष्ठभूमि",
+  "map.style_gris": "खैरो",
+  "map.style_noir": "कालो",
+  "map.style_nuit": "रात्रि नीलो",
+  "map.style_couleurs": "रंगीन",
+  "map.style_clair": "उज्यालो"
  },
  "seo": {
   "home.title": "प्रमाणित ड्रोन पाइलट भाडामा — निःशुल्क कोटेसन | AubePilot",

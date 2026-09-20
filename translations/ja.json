@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "{email} に確認リンクを送信できませんでした。AubeMail の設定から再送信できます。",
   "tpl.rcodes_no_email": "復旧用メールアドレスがない場合、これらのコードがアカウント復旧の唯一の手段です。AubeMail の設定から追加できます。",
   "tpl.rcodes_done": "保存しました",
-  "tpl.rcodes_print": "印刷"
+  "tpl.rcodes_print": "印刷",
+  "map.style_label": "地図の背景",
+  "map.style_gris": "グレー",
+  "map.style_noir": "ブラック",
+  "map.style_nuit": "ナイトブルー",
+  "map.style_couleurs": "カラー",
+  "map.style_clair": "ライト"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",

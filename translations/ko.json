@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "{email} 주소로 확인 링크를 보내지 못했습니다. AubeMail 설정에서 다시 보낼 수 있습니다.",
   "tpl.rcodes_no_email": "복구 이메일이 없으면 이 코드가 계정을 복구할 유일한 수단입니다. AubeMail 설정에서 추가할 수 있습니다.",
   "tpl.rcodes_done": "저장했습니다",
-  "tpl.rcodes_print": "인쇄"
+  "tpl.rcodes_print": "인쇄",
+  "map.style_label": "지도 배경",
+  "map.style_gris": "회색",
+  "map.style_noir": "검정",
+  "map.style_nuit": "짙은 파랑",
+  "map.style_couleurs": "컬러",
+  "map.style_clair": "밝게"
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",

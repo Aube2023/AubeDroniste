@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Ba a iya aika hanyar tabbatarwa zuwa {email} ba. Za ka iya sake aika ta daga saitunan AubeMail.",
   "tpl.rcodes_no_email": "Ba tare da imel na dawo da asusu ba, waɗannan lambobin ne kaɗai hanyar dawo da asusunka. Za ka iya ƙara ɗaya a saitunan AubeMail.",
   "tpl.rcodes_done": "Na adana su",
-  "tpl.rcodes_print": "Buga"
+  "tpl.rcodes_print": "Buga",
+  "map.style_label": "Bayan taswira",
+  "map.style_gris": "Toka",
+  "map.style_noir": "Baƙi",
+  "map.style_nuit": "Shuɗin dare",
+  "map.style_couleurs": "Mai launi",
+  "map.style_clair": "Haske"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",

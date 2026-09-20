@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Hindi maipadala ang confirmation link sa {email}. Maaari mo itong ipadala muli mula sa AubeMail settings.",
   "tpl.rcodes_no_email": "Kung walang recovery email, ang mga code na ito lang ang paraan para mabawi ang iyong account. Maaari kang magdagdag sa AubeMail settings.",
   "tpl.rcodes_done": "Naitala ko na",
-  "tpl.rcodes_print": "I-print"
+  "tpl.rcodes_print": "I-print",
+  "map.style_label": "Background ng mapa",
+  "map.style_gris": "Kulay-abo",
+  "map.style_noir": "Itim",
+  "map.style_nuit": "Asul na gabi",
+  "map.style_couleurs": "May kulay",
+  "map.style_clair": "Maliwanag"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",

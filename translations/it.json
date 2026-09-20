@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Impossibile inviare il link di conferma a {email}. Potrai rinviarlo dalle impostazioni di AubeMail.",
   "tpl.rcodes_no_email": "Senza email di recupero, questi codici sono il tuo unico mezzo di recupero. Potrai aggiungerne una nelle impostazioni di AubeMail.",
   "tpl.rcodes_done": "Li ho salvati",
-  "tpl.rcodes_print": "Stampa"
+  "tpl.rcodes_print": "Stampa",
+  "map.style_label": "Sfondo della mappa",
+  "map.style_gris": "Grigio",
+  "map.style_noir": "Nero",
+  "map.style_nuit": "Blu notte",
+  "map.style_couleurs": "Colori",
+  "map.style_clair": "Chiaro"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",

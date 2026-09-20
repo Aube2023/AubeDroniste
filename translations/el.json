@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Δεν ήταν δυνατή η αποστολή του συνδέσμου επιβεβαίωσης στο {email}. Μπορείτε να τον ξαναστείλετε από τις ρυθμίσεις του AubeMail.",
   "tpl.rcodes_no_email": "Χωρίς email ανάκτησης, αυτοί οι κωδικοί είναι ο μόνος τρόπος να ανακτήσετε τον λογαριασμό σας. Μπορείτε να προσθέσετε ένα στις ρυθμίσεις του AubeMail.",
   "tpl.rcodes_done": "Τους αποθήκευσα",
-  "tpl.rcodes_print": "Εκτύπωση"
+  "tpl.rcodes_print": "Εκτύπωση",
+  "map.style_label": "Φόντο χάρτη",
+  "map.style_gris": "Γκρι",
+  "map.style_noir": "Μαύρο",
+  "map.style_nuit": "Μπλε νύχτας",
+  "map.style_couleurs": "Έγχρωμο",
+  "map.style_clair": "Φωτεινό"
  },
  "seo": {
   "home.title": "Προσλάβετε πιστοποιημένο χειριστή drone — Δωρεάν προσφορές | AubePilot",

@@ -6895,5 +6895,71 @@
   "tr": "Yazdır",
   "ur": "پرنٹ کریں",
   "bn": "প্রিন্ট করুন"
+ },
+ "map.style_label": {
+  "fr": "Fond de carte",
+  "en": "Map background",
+  "es": "Fondo del mapa",
+  "ru": "Фон карты",
+  "hi": "मानचित्र की पृष्ठभूमि",
+  "uk": "Фон мапи",
+  "tr": "Harita arka planı",
+  "ur": "نقشے کا پس منظر",
+  "bn": "মানচিত্রের পটভূমি"
+ },
+ "map.style_gris": {
+  "fr": "Gris",
+  "en": "Grey",
+  "es": "Gris",
+  "ru": "Серый",
+  "hi": "ग्रे",
+  "uk": "Сірий",
+  "tr": "Gri",
+  "ur": "سرمئی",
+  "bn": "ধূসর"
+ },
+ "map.style_noir": {
+  "fr": "Noir",
+  "en": "Black",
+  "es": "Negro",
+  "ru": "Чёрный",
+  "hi": "काला",
+  "uk": "Чорний",
+  "tr": "Siyah",
+  "ur": "سیاہ",
+  "bn": "কালো"
+ },
+ "map.style_nuit": {
+  "fr": "Bleu nuit",
+  "en": "Night blue",
+  "es": "Azul noche",
+  "ru": "Тёмно-синий",
+  "hi": "रात्रि नीला",
+  "uk": "Темно-синій",
+  "tr": "Gece mavisi",
+  "ur": "گہرا نیلا",
+  "bn": "গাঢ় নীল"
+ },
+ "map.style_couleurs": {
+  "fr": "Couleurs",
+  "en": "Colour",
+  "es": "Colores",
+  "ru": "Цветная",
+  "hi": "रंगीन",
+  "uk": "Кольорова",
+  "tr": "Renkli",
+  "ur": "رنگین",
+  "bn": "রঙিন"
+ },
+ "map.style_clair": {
+  "fr": "Clair",
+  "en": "Light",
+  "es": "Claro",
+  "ru": "Светлая",
+  "hi": "हल्का",
+  "uk": "Світла",
+  "tr": "Açık",
+  "ur": "ہلکا",
+  "bn": "হালকা"
  }
 }

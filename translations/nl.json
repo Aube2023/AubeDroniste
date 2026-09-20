@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "De bevestigingslink kon niet naar {email} worden gestuurd. U kunt hem opnieuw versturen vanuit de AubeMail-instellingen.",
   "tpl.rcodes_no_email": "Zonder herstel-e-mailadres zijn deze codes uw enige manier om uw account te herstellen. U kunt er een toevoegen in de AubeMail-instellingen.",
   "tpl.rcodes_done": "Ik heb ze bewaard",
-  "tpl.rcodes_print": "Afdrukken"
+  "tpl.rcodes_print": "Afdrukken",
+  "map.style_label": "Kaartachtergrond",
+  "map.style_gris": "Grijs",
+  "map.style_noir": "Zwart",
+  "map.style_nuit": "Nachtblauw",
+  "map.style_couleurs": "Kleur",
+  "map.style_clair": "Licht"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",

@@ -513,6 +513,9 @@ def _map_l10n() -> dict:
         "members": t("map.members"), "radius": t("map.radius"),
         "points": t("map.points", n="{n}"), "sat": t("map.satellite"), "plan": t("map.plan"),
         "toSat": t("map.to_satellite"), "toPlan": t("map.to_plan"), "mission": t("map.mission"),
+        # Selecteur de fond de carte (gris, noir, bleu nuit, couleurs, clair).
+        "styleLabel": t("map.style_label"),
+        "styles": {k: t(f"map.style_{k}") for k in ("gris", "noir", "nuit", "couleurs", "clair")},
         "reviews": t("common.reviews", n="{n}"), "new": t("common.new_pilot"),
         "verified": t("common.verified"), "urgent": t("common.urgent"),
         "kinds": {k: t(f"kind.{k}.short") for k in ("pro", "recreational", "school", "company", "shop")},

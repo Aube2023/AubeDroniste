@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "پیوند تأیید به {email} فرستاده نشد. می‌توانید آن را از تنظیمات AubeMail دوباره بفرستید.",
   "tpl.rcodes_no_email": "بدون ایمیل بازیابی، این کدها تنها راه بازیابی حساب شما هستند. می‌توانید یکی را در تنظیمات AubeMail اضافه کنید.",
   "tpl.rcodes_done": "آنها را ذخیره کردم",
-  "tpl.rcodes_print": "چاپ"
+  "tpl.rcodes_print": "چاپ",
+  "map.style_label": "پس‌زمینه نقشه",
+  "map.style_gris": "خاکستری",
+  "map.style_noir": "سیاه",
+  "map.style_nuit": "آبی شب",
+  "map.style_couleurs": "رنگی",
+  "map.style_clair": "روشن"
  },
  "seo": {
   "home.title": "استخدام خلبان پهپاد دارای مجوز — پیش‌فاکتور رایگان | AubePilot",

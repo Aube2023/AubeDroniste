@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Linkul de confirmare nu a putut fi trimis la {email}. Îl puteți retrimite din setările AubeMail.",
   "tpl.rcodes_no_email": "Fără e-mail de recuperare, aceste coduri sunt singura dvs. cale de recuperare. Puteți adăuga unul în setările AubeMail.",
   "tpl.rcodes_done": "Le-am salvat",
-  "tpl.rcodes_print": "Tipărește"
+  "tpl.rcodes_print": "Tipărește",
+  "map.style_label": "Fundal hartă",
+  "map.style_gris": "Gri",
+  "map.style_noir": "Negru",
+  "map.style_nuit": "Albastru noapte",
+  "map.style_couleurs": "Color",
+  "map.style_clair": "Deschis"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",

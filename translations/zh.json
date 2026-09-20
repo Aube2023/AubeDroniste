@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "确认链接无法发送至 {email}。您可以在 AubeMail 设置中重新发送。",
   "tpl.rcodes_no_email": "没有恢复邮箱时，这些代码是您找回账户的唯一途径。您可以在 AubeMail 设置中添加恢复邮箱。",
   "tpl.rcodes_done": "我已保存",
-  "tpl.rcodes_print": "打印"
+  "tpl.rcodes_print": "打印",
+  "map.style_label": "地图底图",
+  "map.style_gris": "灰色",
+  "map.style_noir": "黑色",
+  "map.style_nuit": "深蓝",
+  "map.style_couleurs": "彩色",
+  "map.style_clair": "浅色"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",

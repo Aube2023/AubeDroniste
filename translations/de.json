@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Der Bestätigungslink konnte nicht an {email} gesendet werden. Sie können ihn in den AubeMail-Einstellungen erneut senden.",
   "tpl.rcodes_no_email": "Ohne Wiederherstellungs-E-Mail sind diese Codes Ihre einzige Möglichkeit zur Wiederherstellung. Sie können eine in den AubeMail-Einstellungen hinzufügen.",
   "tpl.rcodes_done": "Ich habe sie gespeichert",
-  "tpl.rcodes_print": "Drucken"
+  "tpl.rcodes_print": "Drucken",
+  "map.style_label": "Kartenhintergrund",
+  "map.style_gris": "Grau",
+  "map.style_noir": "Schwarz",
+  "map.style_nuit": "Nachtblau",
+  "map.style_couleurs": "Farbig",
+  "map.style_clair": "Hell"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",

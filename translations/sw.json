@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Kiungo cha uthibitisho hakikuweza kutumwa kwa {email}. Unaweza kukituma tena kutoka mipangilio ya AubeMail.",
   "tpl.rcodes_no_email": "Bila barua pepe ya urejeshaji, nambari hizi ndizo njia yako pekee ya kurejesha akaunti. Unaweza kuongeza moja katika mipangilio ya AubeMail.",
   "tpl.rcodes_done": "Nimezihifadhi",
-  "tpl.rcodes_print": "Chapisha"
+  "tpl.rcodes_print": "Chapisha",
+  "map.style_label": "Mandhari ya ramani",
+  "map.style_gris": "Kijivu",
+  "map.style_noir": "Nyeusi",
+  "map.style_nuit": "Bluu ya usiku",
+  "map.style_couleurs": "Rangi",
+  "map.style_clair": "Angavu"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",

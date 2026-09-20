@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Nie udało się wysłać linku potwierdzającego na {email}. Możesz wysłać go ponownie w ustawieniach AubeMail.",
   "tpl.rcodes_no_email": "Bez zapasowego adresu e-mail te kody są jedynym sposobem odzyskania konta. Możesz go dodać w ustawieniach AubeMail.",
   "tpl.rcodes_done": "Zapisałem(-am) je",
-  "tpl.rcodes_print": "Drukuj"
+  "tpl.rcodes_print": "Drukuj",
+  "map.style_label": "Tło mapy",
+  "map.style_gris": "Szary",
+  "map.style_noir": "Czarny",
+  "map.style_nuit": "Granat",
+  "map.style_couleurs": "Kolorowa",
+  "map.style_clair": "Jasna"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",

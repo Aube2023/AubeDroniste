@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "Không thể gửi liên kết xác nhận đến {email}. Bạn có thể gửi lại từ phần cài đặt AubeMail.",
   "tpl.rcodes_no_email": "Không có email khôi phục, các mã này là cách duy nhất để khôi phục tài khoản. Bạn có thể thêm email trong cài đặt AubeMail.",
   "tpl.rcodes_done": "Tôi đã lưu lại",
-  "tpl.rcodes_print": "In"
+  "tpl.rcodes_print": "In",
+  "map.style_label": "Nền bản đồ",
+  "map.style_gris": "Xám",
+  "map.style_noir": "Đen",
+  "map.style_nuit": "Xanh đêm",
+  "map.style_couleurs": "Màu",
+  "map.style_clair": "Sáng"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",

@@ -1296,7 +1296,13 @@
   "tpl.rcodes_verify_failed": "לא ניתן היה לשלוח את קישור האישור אל {email}. תוכלו לשלוח אותו שוב מהגדרות AubeMail.",
   "tpl.rcodes_no_email": "ללא אימייל לשחזור, הקודים האלה הם הדרך היחידה לשחזר את החשבון. אפשר להוסיף כתובת בהגדרות AubeMail.",
   "tpl.rcodes_done": "שמרתי אותם",
-  "tpl.rcodes_print": "הדפסה"
+  "tpl.rcodes_print": "הדפסה",
+  "map.style_label": "רקע המפה",
+  "map.style_gris": "אפור",
+  "map.style_noir": "שחור",
+  "map.style_nuit": "כחול לילה",
+  "map.style_couleurs": "צבעוני",
+  "map.style_clair": "בהיר"
  },
  "seo": {
   "home.title": "שכירת טייס רחפן מוסמך — הצעות מחיר חינם | AubePilot",
