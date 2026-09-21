@@ -197,7 +197,7 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return json.dumps(_adzuna_payload() if "/jobs/ca/" in url else {"results": []}).encode("utf-8")
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
-    monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key")
+    monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key"); monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
     # Liens : tout répond sauf l'avis SEAO (mort) -> retiré du site.
     monkeypatch.setattr(opp, "link_status", lambda url: 404 if "seao.gouv.qc.ca/avis/1" in url else 200)

@@ -102,9 +102,14 @@ JOB_DAYS = 30                  # une offre sans date de fin est proposée 30 jou
 # par pays et par nuit ; sans clé la source est sautée proprement.
 ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "").strip()
 ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY", "").strip()
-ADZUNA_API = ("https://api.adzuna.com/v1/api/jobs/{cc}/search/1?app_id={app_id}&app_key={app_key}"
+ADZUNA_API = ("https://api.adzuna.com/v1/api/jobs/{cc}/search/{page}?app_id={app_id}&app_key={app_key}"
               "&results_per_page=50&what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Drohne%20dron"
               "&max_days_old=30&sort_by=date&content-type=application/json")
+# `what_or` cherche aussi dans le descriptif (« drone » incident) : 1 offre sur
+# 20 environ a le mot dans l'intitulé. On lit jusqu'à 6 pages de 50 par pays,
+# les plus récentes d'abord, et on espace les appels (accès d'essai : 25/min).
+ADZUNA_PAGES = 6
+ADZUNA_PAUSE = 1.5
 ADZUNA_COUNTRIES = {"ca": "Canada", "us": "États-Unis", "gb": "Royaume-Uni", "fr": "France", "de": "Allemagne",
                     "es": "Espagne", "it": "Italie", "nl": "Pays-Bas", "be": "Belgique", "ch": "Suisse", "at": "Autriche",
                     "pl": "Pologne", "au": "Australie", "nz": "Nouvelle-Zélande", "br": "Brésil", "mx": "Mexique",
@@ -1116,19 +1121,30 @@ def parse_adzuna(data: dict, country: str) -> list:
 
 
 def collect_adzuna(conn) -> dict:
+    """Tous les téléchargements d'abord, une seule écriture ensuite : la
+    connexion garde le verrou SQLite dès la première insertion jusqu'au
+    commit, et ~100 appels espacés durent plusieurs minutes."""
+    import time
     if not (ADZUNA_APP_ID and ADZUNA_APP_KEY):
         return {"skipped": "ADZUNA_APP_ID / ADZUNA_APP_KEY absents"}
-    n = errors = 0
+    items: list = []
+    errors = calls = 0
     for cc, country in ADZUNA_COUNTRIES.items():
-        url = ADZUNA_API.format(cc=cc, app_id=ADZUNA_APP_ID, app_key=ADZUNA_APP_KEY)
-        try:
-            data = json.loads(_fetch(url, timeout=60).decode("utf-8"))
-        except Exception as exc:
-            log.warning("adzuna %s: %s", cc, exc)
-            errors += 1
-            continue
-        n += _upsert_many(conn, parse_adzuna(data, country))
-    return {"items": n, "countries": len(ADZUNA_COUNTRIES), "errors": errors}
+        for page in range(1, ADZUNA_PAGES + 1):
+            url = ADZUNA_API.format(cc=cc, page=page, app_id=ADZUNA_APP_ID, app_key=ADZUNA_APP_KEY)
+            if calls:
+                time.sleep(ADZUNA_PAUSE)
+            calls += 1
+            try:
+                data = json.loads(_fetch(url, timeout=60).decode("utf-8"))
+            except Exception as exc:
+                log.warning("adzuna %s p%d: %s", cc, page, exc)
+                errors += 1
+                break
+            items.extend(parse_adzuna(data, country))
+            if len(data.get("results") or []) < 50:
+                break
+    return {"items": _upsert_many(conn, items), "countries": len(ADZUNA_COUNTRIES), "calls": calls, "errors": errors}
 
 
 # ---------------------------------------------------------------------------
