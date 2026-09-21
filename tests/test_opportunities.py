@@ -106,6 +106,57 @@ def test_parse_emplois_jobbank_et_adzuna():
     assert "topographie" in j["specialties"] and j["closes_at"] == "2026-10-19"
 
 
+GH_ZIPLINE = json.dumps({"jobs": [
+    {"id": 1, "title": "Drone Maintenance Technician", "location": {"name": "Pea Ridge, Arkansas, USA"}, "absolute_url": "https://www.zipline.com/open-roles/1", "first_published": "2026-09-14T10:00:00-04:00"},
+    {"id": 2, "title": "Flight Test Operator, Amarillo", "location": {"name": "Amarillo, Texas, USA"}, "absolute_url": "https://www.zipline.com/open-roles/2", "first_published": "2026-09-03T10:00:00-04:00"},
+    {"id": 3, "title": "Account Executive", "location": {"name": "Houston, Texas, USA"}, "absolute_url": "https://www.zipline.com/open-roles/3", "first_published": "2026-08-18T10:00:00-04:00"},
+    {"id": 4, "title": "Business Operations Lead", "location": {"name": "South San Francisco, California, USA"}, "absolute_url": "https://www.zipline.com/open-roles/4", "first_published": "2026-08-18T10:00:00-04:00"},
+    {"id": 5, "title": "Flight Operations Specialist", "location": {"name": "Kigali, Rwanda"}, "absolute_url": "https://www.zipline.com/open-roles/5", "first_published": "2026-09-01T10:00:00-04:00"},
+]}).encode("utf-8")
+TT_DELAIR = b"""<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:tt="https://teamtailor.com/locations"><channel><title>Delair</title>
+<item><title>T\xc3\xa9l\xc3\xa9pilote Drone \xe2\x80\x93 Responsable Formation H/F</title><pubDate>Fri, 11 Sep 2026 16:31:59 +0200</pubDate><link>https://delair.teamtailor.com/jobs/8367931-telepilote</link><remoteStatus>onsite</remoteStatus><guid>2ef3ef1f</guid><tt:locations><tt:location><tt:name>Toulouse</tt:name><tt:city>Lab\xc3\xa8ge</tt:city><tt:country>France</tt:country></tt:location></tt:locations></item>
+<item><title>Key Account Manager for Security and Defense H/F</title><pubDate>Wed, 16 Sep 2026 17:14:40 +0200</pubDate><link>https://delair.teamtailor.com/jobs/8390613-kam</link><remoteStatus>onsite</remoteStatus><guid>194609e7</guid></item>
+</channel></rss>"""
+LV_SHIELD = json.dumps([
+    {"id": "a1", "text": "Drone Operator (R5145)", "categories": {"location": "Kyiv", "commitment": "International EOR"}, "country": "UA", "hostedUrl": "https://jobs.lever.co/shieldai/a1", "createdAt": 1781000000000},
+    {"id": "a2", "text": "Flight Test Engineer", "categories": {"location": "Dallas, Texas"}, "country": "US", "hostedUrl": "https://jobs.lever.co/shieldai/a2", "createdAt": 1781000000000},
+]).encode("utf-8")
+
+
+def _usajobs_payload():
+    return {"SearchResult": {"SearchResultItems": [
+        {"MatchedObjectId": "830001", "MatchedObjectDescriptor": {
+            "PositionID": "USDA-1", "PositionTitle": "Unmanned Aircraft Systems (UAS) Pilot", "PositionURI": "https://www.usajobs.gov/job/830001",
+            "PositionLocationDisplay": "Boise, Idaho", "PositionLocation": [{"CityName": "Boise, Idaho", "CountrySubDivisionCode": "Idaho"}],
+            "OrganizationName": "Forest Service", "DepartmentName": "Department of Agriculture",
+            "PublicationStartDate": "2026-09-15", "ApplicationCloseDate": "2026-10-06",
+            "PositionSchedule": [{"Name": "Full-time"}], "PositionOfferingType": [{"Name": "Permanent"}],
+            "PositionRemuneration": [{"MinimumRange": "59966.0", "MaximumRange": "77955.0", "RateIntervalCode": "PA"}],
+            "UserArea": {"Details": {"JobSummary": "This position serves as a UAS pilot supporting wildfire operations and aerial mapping missions."}}}},
+        {"MatchedObjectId": "830002", "MatchedObjectDescriptor": {"PositionID": "X-2", "PositionTitle": "Budget Analyst", "PositionURI": "https://www.usajobs.gov/job/830002",
+            "PositionLocation": [], "OrganizationName": "X", "PublicationStartDate": "2026-09-15", "UserArea": {"Details": {"JobSummary": "drone drone"}}}},
+    ]}}
+
+
+def test_parse_emplois_usajobs_et_pages_carrieres():
+    jobs = opp.parse_usajobs(_usajobs_payload())
+    assert [j["source_ref"] for j in jobs] == ["830001"]   # « drone » dans le résumé seul : écarté
+    j = jobs[0]
+    assert j["country"] == "États-Unis" and j["region"] == "Idaho" and j["org"] == "Forest Service"
+    assert j["closes_at"] == "2026-10-06" and j["summary_en"].endswith("(59,966–77,955 USD)") and "feux_foret" in j["specialties"]
+    assert j["notice_type"] == "Full-time, Permanent"
+
+    z = opp.parse_employer_board("greenhouse", GH_ZIPLINE, "zipline", "Zipline", False, "États-Unis")
+    assert [i["title_en"] for i in z] == ["Drone Maintenance Technician", "Flight Test Operator, Amarillo", "Flight Operations Specialist"]
+    assert z[0]["region"] == "Arkansas" and z[0]["city"] == "Pea Ridge" and z[0]["source_ref"] == "zipline:1" and z[0]["closes_at"] is None
+    assert z[2]["country"] == "Rwanda" and z[2]["org"] == "Zipline"
+    d = opp.parse_employer_board("teamtailor", TT_DELAIR, "delair", "Delair", False, "France")
+    assert len(d) == 1 and d[0]["title_fr"].startswith("Télépilote Drone") and d[0]["country"] == "France" and d[0]["city"] == "Labège"
+    assert d[0]["published_at"] == "2026-09-11" and d[0]["notice_type"] == "onsite"
+    sh = opp.parse_employer_board("lever", LV_SHIELD, "shieldai", "Shield AI", True, "États-Unis")
+    assert [(i["title_en"], i["country"], i["city"]) for i in sh] == [("Drone Operator (R5145)", "Ukraine", "Kyiv")]   # strict : « Flight Test Engineer » ne parle pas de drone
+
+
 def _secop_rows():
     return [{"nombre_del_procedimiento": "LEVANTAMIENTO TOPOGRAFICO CON DRON Y FOTOGRAMETRIA", "descripci_n_del_procedimiento": "Levantamiento aereo con dron RTK",
              "id_del_proceso": "CO1.REQ.1", "entidad": "ALCALDIA DE MEDELLIN", "departamento_entidad": "Antioquia", "ciudad_entidad": "Medellín",
@@ -198,7 +249,19 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
         if url.startswith("https://www.guichetemplois.gc.ca/jobsearch/feed/"):
             return JB_FR if "searchstring=drone&" in url else b'<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
         if url.startswith("https://api.adzuna.com/"):
-            return json.dumps(_adzuna_payload() if "/jobs/ca/" in url else {"results": []}).encode("utf-8")
+            return json.dumps(_adzuna_payload() if "/jobs/ca/" in url and "what_or" in url else {"results": []}).encode("utf-8")
+        if url.startswith("https://boards-api.greenhouse.io/v1/boards/flyzipline/"):
+            return GH_ZIPLINE
+        if url.startswith("https://delair.teamtailor.com/"):
+            return TT_DELAIR
+        if url.startswith("https://api.lever.co/v0/postings/shieldai"):
+            return LV_SHIELD
+        if url.startswith(("https://boards-api.greenhouse.io/", "https://api.ashbyhq.com/", "https://apply.workable.com/")):
+            return b'{"jobs": []}'
+        if url.startswith("https://api.lever.co/"):
+            return b"[]"
+        if ".jobs.personio.de/" in url:
+            return b"<workzag-jobs></workzag-jobs>"
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
     monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key"); monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0)
@@ -211,10 +274,13 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     assert report["austender"]["items"] == 1 and report["gets"]["items"] == 1 and report["secop"]["items"] == 1
     assert "skipped" in report["samgov"]   # pas de clé SAM.gov en test
     assert report["jobbank"] == {"items": 2, "seen": 4, "errors": 0} and report["adzuna"]["items"] == 1
-    assert report["published"] == 10   # 8 avis + 3 emplois, moins l'avis au lien mort
+    assert "skipped" in report["usajobs"]   # pas de clé USAJOBS en test
+    assert report["employers"]["items"] == 5 and report["employers"]["errors"] == 0 and report["employers"]["closed"] == 0
+    assert report["published"] == 15   # 8 avis + 8 emplois, moins l'avis au lien mort
     # Emplois : page à part, onglet vers les appels d'offres, jamais mélangés
     jobs_html = client.get("/emplois").get_data(as_text=True)
     assert "Technicien/technicienne de drones" in jobs_html and "Drone Pilot / Surveyor" in jobs_html
+    assert "Drone Maintenance Technician" in jobs_html and "zipline.com/open-roles/1" in jobs_html and "Télépilote Drone" in jobs_html
     assert "Levé LiDAR" not in jobs_html and "guichetemplois.gc.ca/jobsearch/jobposting/50315643" in jobs_html
     assert "Salaire : 32,00 $ de l&#39;heure" in jobs_html and "Publiée le 2026-09-18" in jobs_html
     assert 'href="/opportunites"' in jobs_html and 'href="/emplois" class="on"' in jobs_html
@@ -232,9 +298,13 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     assert "Relevé photogrammétrique du littoral" in client.get("/opportunites?country=France").get_data(as_text=True)
     assert "Drone survey of coastal defences" in client.get("/en/opportunites?country=Royaume-Uni").get_data(as_text=True)
     client.set_cookie("aube_lang", "fr", domain="localhost.localdomain")
-    # deuxième passe : rien ne casse, le fichier SEAO déjà lu n'est pas relu
+    # deuxième passe : rien ne casse, le fichier SEAO déjà lu n'est pas relu ;
+    # un poste retiré de la page carrières de Zipline est clos
+    monkeypatch.setitem(globals(), "GH_ZIPLINE", json.dumps({"jobs": json.loads(GH_ZIPLINE)["jobs"][1:]}).encode("utf-8"))
     report2 = opp.collect()
-    assert report2["seao"]["files"] == 0 and report2["published"] == report["published"]
+    assert report2["seao"]["files"] == 0 and report2["employers"]["closed"] == 1 and report2["published"] == report["published"] - 1
+    with client.application.app_context():
+        assert db.fetchone("SELECT status FROM opportunities WHERE source_ref='zipline:1'")["status"] == "closed"
 
     assert report["links"]["broken"] == 1 and report["links"]["ok"] >= 4
     html = client.get("/opportunites").get_data(as_text=True)

@@ -4636,7 +4636,8 @@ def localize_opportunities(items: list, lang: str) -> list:
         o["source_label"] = {"canadabuys": "CanadaBuys", "seao": "SEAO", "ted": "TED", "boamp": "BOAMP",
                              "contractsfinder": "Contracts Finder", "austender": "AusTender", "gets": "GETS",
                              "secop": "SECOP II", "samgov": "SAM.gov",
-                             "jobbank": "Guichet-Emplois" if fr else "Job Bank", "adzuna": "Adzuna"}.get(o.get("source"), o.get("source"))
+                             "jobbank": "Guichet-Emplois" if fr else "Job Bank", "adzuna": "Adzuna", "usajobs": "USAJOBS",
+                             "employers": "page carrières de l'employeur" if fr else "employer careers page"}.get(o.get("source"), o.get("source"))
         o["source_url"] = {"jobbank": "https://www.guichetemplois.gc.ca/" if fr else "https://www.jobbank.gc.ca/",
                            "adzuna": "https://www.adzuna.com/"}.get(o.get("source"), "")   # attribution demandée par ces sources
     return items

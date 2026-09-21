@@ -2,7 +2,7 @@
 # et courriel hebdomadaire du lundi. Installé dans /etc/systemd/system/ ; la
 # minuterie associée est aubepilot-opportunites.timer.
 [Unit]
-Description=AubePilot - collecte des opportunites (9 portails publics + emplois Guichet-Emplois, cles SAM.gov et Adzuna optionnelles)
+Description=AubePilot - collecte des opportunites (9 portails publics + emplois : Guichet-Emplois, pages carrieres, Adzuna/USAJOBS sur cle, SAM.gov optionnel)
 After=network-online.target
 Wants=network-online.target
 

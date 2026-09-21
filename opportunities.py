@@ -70,6 +70,11 @@ SOURCES = {
                 "url": "https://www.guichetemplois.gc.ca/", "kind": "job"},
     "adzuna": {"label": "Adzuna (19 pays)", "licence": "API officielle, attribution « Jobs by Adzuna »",
                "url": "https://www.adzuna.com/", "kind": "job"},
+    "usajobs": {"label": "USAJOBS (États-Unis, emplois fédéraux)", "licence": "API officielle de l'Office of Personnel Management, données publiques",
+                "url": "https://www.usajobs.gov/", "kind": "job"},
+    "employers": {"label": "Pages carrières d'employeurs du drone (Zipline, Skydio, Auterion, Elroy Air, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI)",
+                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor), lien vers l'offre chez l'employeur",
+                  "url": "https://pilot.aubeetoilee.com/emplois", "kind": "job"},
 }
 for _s in SOURCES.values():
     _s.setdefault("kind", "tender")
@@ -113,13 +118,65 @@ def job_matches(title: str) -> bool:
 ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "").strip()
 ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY", "").strip()
 ADZUNA_API = ("https://api.adzuna.com/v1/api/jobs/{cc}/search/{page}?app_id={app_id}&app_key={app_key}"
-              "&results_per_page=50&what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Drohne%20dron"
-              "&max_days_old=30&sort_by=date&content-type=application/json")
-# `what_or` cherche aussi dans le descriptif (« drone » incident) : 1 offre sur
-# 20 environ a le mot dans l'intitulé. On lit jusqu'à 6 pages de 50 par pays,
-# les plus récentes d'abord, et on espace les appels (accès d'essai : 25/min).
-ADZUNA_PAGES = 6
+              "&results_per_page=50&{query}&max_days_old=30&sort_by=date&content-type=application/json")
+# Deux balayages par pays, les plus récentes d'abord, jusqu'à ADZUNA_PAGES
+# pages de 50 chacun :
+# - `title_only=<terme>` (mot dans l'intitulé, racinisé : « drone » trouve
+#   « Drones ») : aux États-Unis, 223 offres « drone » contre 3 retenues sur la
+#   première page du balayage large ; « UAS » y ramène aussi « UA » (filtré) ;
+# - `what_or=…` (large, descriptif compris) : garde le Canada, où title_only
+#   « drone » répond 0 alors que des intitulés « Drone Pilot » existent.
+# Les appels sont espacés (accès d'essai : 25/min) et plafonnés par nuit.
+ADZUNA_TITLE_TERMS = ("drone", "UAV", "RPAS")
+ADZUNA_EXTRA_TERMS = {"fr": ("télépilote",), "be": ("télépilote",), "ch": ("télépilote", "Drohne"), "ca": ("télépilote",),
+                      "de": ("Drohne",), "at": ("Drohne",), "es": ("dron",), "mx": ("dron",), "pl": ("dron",)}
+ADZUNA_WIDE = "what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Drohne%20dron"
+ADZUNA_PAGES = 5
 ADZUNA_PAUSE = 1.5
+ADZUNA_MAX_CALLS = 220
+# USAJOBS : API officielle (clé gratuite : developer.usajobs.gov/apirequest,
+# envoyée par courriel ; l'API veut aussi l'adresse dans User-Agent).
+USAJOBS_API = ("https://data.usajobs.gov/api/search?Keyword={kw}&ResultsPerPage=250&SortField=OpenDate&SortDirection=Desc")
+USAJOBS_KEY = os.environ.get("USAJOBS_API_KEY", "").strip()
+USAJOBS_EMAIL = os.environ.get("USAJOBS_EMAIL", "").strip()
+USAJOBS_TERMS = ("drone", "UAS", "unmanned aircraft", "remotely piloted")
+# Employeurs du drone : leurs pages carrières exposent un flux public prévu
+# pour la republication (API « job board » de leur outil de recrutement).
+# strict=True (industriels de défense aux milliers de postes) : seul un
+# intitulé qui parle de drone est gardé ; sinon, aussi les métiers de terrain
+# et d'aéronef (vol, essais, maintenance, opérations) hors fonctions support.
+EMPLOYER_BOARDS = (
+    # (clé, ATS, identifiant chez l'ATS, employeur, strict, pays par défaut si le lieu ne le dit pas)
+    ("zipline", "greenhouse", "flyzipline", "Zipline", False, "États-Unis"),
+    ("auterion", "greenhouse", "auterion", "Auterion", False, "Suisse"),
+    ("anduril", "greenhouse", "andurilindustries", "Anduril Industries", True, "États-Unis"),
+    ("skydio", "ashby", "skydio", "Skydio", False, "États-Unis"),
+    ("elroyair", "lever", "elroyair", "Elroy Air", False, "États-Unis"),
+    ("shieldai", "lever", "shieldai", "Shield AI", True, "États-Unis"),
+    ("flyability", "workable", "flyability", "Flyability", False, "Suisse"),
+    ("pix4d", "workable", "pix4d", "Pix4D", False, "Suisse"),
+    ("wingcopter", "personio", "wingcopter", "Wingcopter", False, "Allemagne"),
+    ("delair", "teamtailor", "delair", "Delair", False, "France"),
+)
+ATS_URLS = {
+    "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs",
+    "ashby": "https://api.ashbyhq.com/posting-api/job-board/{slug}",
+    "lever": "https://api.lever.co/v0/postings/{slug}?mode=json",
+    "workable": "https://apply.workable.com/api/v1/widget/accounts/{slug}",
+    "personio": "https://{slug}.jobs.personio.de/xml",
+    "teamtailor": "https://{slug}.teamtailor.com/jobs.rss",
+}
+EMPLOYER_ROLE = re.compile(
+    r"\b(pilot\w*|pilote\w*|t[ée]l[ée]pilot\w*|flight (?:test|ops|operations?|engineer\w*|technician\w*|instructor\w*|controls?)|"
+    r"test pilot|aircraft|airframe|avionic\w*|payload\w*|propulsion|maintenance technician|"
+    r"field (?:service|support|technician|engineer|operations?|ops)\w*|mission (?:operator|specialist|planner)\w*|operator\w*|"
+    r"composite\w*|assembly technician|inspection\w*|survey\w*|mapping|lidar|photogramm\w*|geomat\w*|"
+    r"instructor\w*|training specialist|site lead|remote operations?|ground (?:control|station)|gcs)\b", re.I)
+EMPLOYER_EXCLUDE = re.compile(
+    r"recruit\w*|business operations|revenue|marketing|\bsales\b|account (?:executive|manager)|finance|accountant|legal|counsel|"
+    r"people operations|human resources|\bHR\b|payroll|talent|customer success|software engineer|data (?:engineer|scientist)|"
+    r"machine learning|perception|product manager|designer|procurement|supply chain|buyer|planner\b(?! *\))|"
+    r"security clearance officer|facilities|receptionist|executive assistant|operations (?:analyst|program|manager|lead)", re.I)
 ADZUNA_COUNTRIES = {"ca": "Canada", "us": "États-Unis", "gb": "Royaume-Uni", "fr": "France", "de": "Allemagne",
                     "es": "Espagne", "it": "Italie", "nl": "Pays-Bas", "be": "Belgique", "ch": "Suisse", "at": "Autriche",
                     "pl": "Pologne", "au": "Australie", "nz": "Nouvelle-Zélande", "br": "Brésil", "mx": "Mexique",
@@ -1133,26 +1190,246 @@ def collect_adzuna(conn) -> dict:
     connexion garde le verrou SQLite dès la première insertion jusqu'au
     commit, et ~100 appels espacés durent plusieurs minutes."""
     import time
+    import urllib.parse
     if not (ADZUNA_APP_ID and ADZUNA_APP_KEY):
         return {"skipped": "ADZUNA_APP_ID / ADZUNA_APP_KEY absents"}
     items: list = []
     errors = calls = 0
     for cc, country in ADZUNA_COUNTRIES.items():
-        for page in range(1, ADZUNA_PAGES + 1):
-            url = ADZUNA_API.format(cc=cc, page=page, app_id=ADZUNA_APP_ID, app_key=ADZUNA_APP_KEY)
-            if calls:
-                time.sleep(ADZUNA_PAUSE)
-            calls += 1
+        queries = ["title_only=" + urllib.parse.quote(t) for t in ADZUNA_TITLE_TERMS + ADZUNA_EXTRA_TERMS.get(cc, ())]
+        queries.append(ADZUNA_WIDE)
+        for query in queries:
+            for page in range(1, ADZUNA_PAGES + 1):
+                if calls >= ADZUNA_MAX_CALLS:
+                    break
+                url = ADZUNA_API.format(cc=cc, page=page, query=query, app_id=ADZUNA_APP_ID, app_key=ADZUNA_APP_KEY)
+                if calls:
+                    time.sleep(ADZUNA_PAUSE)
+                calls += 1
+                try:
+                    data = json.loads(_fetch(url, timeout=60).decode("utf-8"))
+                except Exception as exc:
+                    log.warning("adzuna %s %s p%d: %s", cc, query[:24], page, exc)
+                    errors += 1
+                    time.sleep(ADZUNA_PAUSE * 4)   # 500/503 passagers côté Adzuna : on souffle avant la suite
+                    break
+                items.extend(parse_adzuna(data, country))
+                if len(data.get("results") or []) < 50:
+                    break
+    seen: set = set()
+    unique = [it for it in items if not (it["source_ref"] in seen or seen.add(it["source_ref"]))]
+    return {"items": _upsert_many(conn, unique), "countries": len(ADZUNA_COUNTRIES), "calls": calls, "errors": errors}
+
+
+# ---------------------------------------------------------------------------
+# Emplois : USAJOBS (fédéral américain, API officielle sur clé)
+# ---------------------------------------------------------------------------
+
+def _fetch_headers(url: str, headers: dict, timeout: int = 60) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **headers})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read()
+
+
+def parse_usajobs(data: dict) -> list:
+    items = []
+    for it in ((data or {}).get("SearchResult") or {}).get("SearchResultItems") or []:
+        d = it.get("MatchedObjectDescriptor") or {}
+        title = re.sub(r"\s+", " ", d.get("PositionTitle") or "").strip()
+        url = (d.get("PositionURI") or "").strip()
+        if not url or not job_matches(title):
+            continue
+        locs = d.get("PositionLocation") or []
+        first = locs[0] if locs else {}
+        state = first.get("CountrySubDivisionCode") or ""
+        region = US_STATES.get(state, state) if len(locs) == 1 else "États-Unis"
+        pay = (d.get("PositionRemuneration") or [{}])[0]
+        salary = ""
+        if pay.get("MinimumRange"):
             try:
-                data = json.loads(_fetch(url, timeout=60).decode("utf-8"))
-            except Exception as exc:
-                log.warning("adzuna %s p%d: %s", cc, page, exc)
-                errors += 1
-                break
-            items.extend(parse_adzuna(data, country))
-            if len(data.get("results") or []) < 50:
-                break
-    return {"items": _upsert_many(conn, items), "countries": len(ADZUNA_COUNTRIES), "calls": calls, "errors": errors}
+                salary = f" ({int(float(pay['MinimumRange'])):,}–{int(float(pay.get('MaximumRange') or pay['MinimumRange'])):,} USD)"
+            except ValueError:
+                salary = ""
+        summary = summarize(((d.get("UserArea") or {}).get("Details") or {}).get("JobSummary") or "")
+        notice = ", ".join(x.get("Name", "") for x in (d.get("PositionSchedule") or []) + (d.get("PositionOfferingType") or []) if x.get("Name"))
+        items.append({
+            "source": "usajobs", "source_ref": str(it.get("MatchedObjectId") or d.get("PositionID") or url), "kind": "job",
+            "title_fr": title, "title_en": title, "summary_fr": summary + salary, "summary_en": summary + salary,
+            "org": d.get("OrganizationName") or d.get("DepartmentName") or "", "country": "États-Unis",
+            "region": region or "États-Unis", "regions_raw": d.get("PositionLocationDisplay") or "",
+            "city": first.get("CityName") or "" if len(locs) == 1 else "",
+            "url_fr": url, "url_en": url, "notice_type": notice, "category": "job",
+            "specialties": specialties_for(title + " " + summary),
+            "published_at": _iso_date(d.get("PublicationStartDate") or ""),
+            "closes_at": _iso_date(d.get("ApplicationCloseDate") or "") or _plus_days(_iso_date(d.get("PublicationStartDate") or ""), JOB_DAYS),
+        })
+    return items
+
+
+def collect_usajobs(conn) -> dict:
+    import urllib.parse
+    if not (USAJOBS_KEY and USAJOBS_EMAIL):
+        return {"skipped": "USAJOBS_API_KEY / USAJOBS_EMAIL absents"}
+    headers = {"Host": "data.usajobs.gov", "User-Agent": USAJOBS_EMAIL, "Authorization-Key": USAJOBS_KEY}
+    items: list = []
+    errors = 0
+    for term in USAJOBS_TERMS:
+        try:
+            data = json.loads(_fetch_headers(USAJOBS_API.format(kw=urllib.parse.quote(term)), headers).decode("utf-8"))
+        except Exception as exc:
+            log.warning("usajobs %s: %s", term, exc)
+            errors += 1
+            continue
+        items.extend(parse_usajobs(data))
+    seen: set = set()
+    unique = [it for it in items if not (it["source_ref"] in seen or seen.add(it["source_ref"]))]
+    return {"items": _upsert_many(conn, unique), "errors": errors}
+
+
+# ---------------------------------------------------------------------------
+# Emplois : pages carrières d'employeurs du drone (flux publics de leur ATS)
+# ---------------------------------------------------------------------------
+
+_COUNTRY_ALIASES = {"usa": "États-Unis", "us": "États-Unis", "u.s.": "États-Unis", "united states": "États-Unis",
+                    "united states of america": "États-Unis", "uk": "Royaume-Uni", "united kingdom": "Royaume-Uni",
+                    "england": "Royaume-Uni", "scotland": "Royaume-Uni", "deutschland": "Allemagne", "germany": "Allemagne",
+                    "schweiz": "Suisse", "switzerland": "Suisse", "españa": "Espagne", "spain": "Espagne", "italia": "Italie",
+                    "italy": "Italie", "brasil": "Brésil", "brazil": "Brésil", "nederland": "Pays-Bas", "netherlands": "Pays-Bas",
+                    "österreich": "Autriche", "austria": "Autriche", "côte d’ivoire": "Côte d'Ivoire", "ivory coast": "Côte d'Ivoire",
+                    "rwanda": "Rwanda", "ghana": "Ghana", "nigeria": "Nigeria", "kenya": "Kenya", "japan": "Japon", "finland": "Finlande",
+                    "singapore": "Singapour", "taiwan": "Taïwan", "france": "France", "canada": "Canada", "belgium": "Belgique",
+                    "australia": "Australie", "india": "Inde", "mexico": "Mexique", "poland": "Pologne"}
+_US_STATE_NAMES = {v.lower(): v for v in US_STATES.values()}
+
+
+def _country_from_location(loc: str, hint: str = "") -> tuple:
+    """(pays de référence, région) d'après « Houston, Texas, USA », « Byron,
+    CA » + hint « US », « Zurich, Switzerland », « Arlington, Virginia »."""
+    import i18n
+    names = {v.lower(): k for k, v in i18n._COUNTRY_NAMES.get("en", {}).items()}
+    names.update({k.lower(): k for k in i18n._COUNTRY_NAMES.get("en", {})})
+    names.update(_COUNTRY_ALIASES)
+    parts = [p.strip() for p in re.split(r"[;,/·]", loc or "") if p.strip()]
+    country, region = "", ""
+    for p in reversed(parts):
+        low = p.lower()
+        if low in names:
+            country = names[low]
+            break
+    for p in parts:
+        low = p.lower()
+        if low in _US_STATE_NAMES:
+            country, region = "États-Unis", _US_STATE_NAMES[low]
+            break
+        if p.upper() in US_STATES and (country == "États-Unis" or (hint or "").upper() == "US"):
+            country, region = "États-Unis", US_STATES[p.upper()]
+            break
+    if not country and hint:
+        import geoip
+        country = names.get(hint.lower()) or (geoip.country_fr(hint) if len(hint) == 2 and geoip.country_fr(hint) != hint.upper() else "")
+    if country == "Canada":
+        region = normalize_region(loc)[0]
+    return country, region
+
+
+def _employer_keep(title: str, strict: bool) -> bool:
+    if strict:
+        return job_matches(title)
+    if not title or JOB_NOISE.search(title) or NOISE.search(title):
+        return False
+    return bool(KEYWORDS.search(title) or (EMPLOYER_ROLE.search(title) and not EMPLOYER_EXCLUDE.search(title)))
+
+
+def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict: bool, default_country: str = "") -> list:
+    """Normalise le flux d'un ATS en fiches : (titre, lieu, pays hint, lien,
+    date, type de contrat)."""
+    rows: list = []
+    if ats == "greenhouse":
+        for j in (json.loads(raw.decode("utf-8")).get("jobs") or []):
+            rows.append((j.get("title"), (j.get("location") or {}).get("name"), "", j.get("absolute_url"),
+                         j.get("first_published") or j.get("updated_at"), "", str(j.get("id"))))
+    elif ats == "ashby":
+        for j in (json.loads(raw.decode("utf-8")).get("jobs") or []):
+            addr = ((j.get("address") or {}).get("postalAddress") or {})
+            loc = j.get("location") or ""
+            rows.append((j.get("title"), loc, addr.get("addressCountry") or "", j.get("jobUrl"), j.get("publishedAt"),
+                         (j.get("employmentType") or "").replace("FullTime", "full time").replace("PartTime", "part time"), j.get("id")))
+    elif ats == "lever":
+        for j in json.loads(raw.decode("utf-8")):
+            cats = j.get("categories") or {}
+            created = j.get("createdAt")
+            when = datetime.utcfromtimestamp(created / 1000).date().isoformat() if isinstance(created, (int, float)) else ""
+            rows.append((j.get("text"), cats.get("location") or "", j.get("country") or "", j.get("hostedUrl"), when,
+                         cats.get("commitment") or "", j.get("id")))
+    elif ats == "workable":
+        for j in (json.loads(raw.decode("utf-8")).get("jobs") or []):
+            loc = ", ".join(x for x in (j.get("city"), j.get("state"), j.get("country")) if x)
+            rows.append((j.get("title"), loc, j.get("country") or "", j.get("url"), j.get("published_on"),
+                         (j.get("employment_type") or "").lower(), j.get("shortcode")))
+    elif ats == "personio":
+        import xml.etree.ElementTree as ET
+        for pos in ET.fromstring(raw).iter("position"):
+            pid = (pos.findtext("id") or "").strip()
+            rows.append((pos.findtext("name"), pos.findtext("office") or "", "", f"https://{board}.jobs.personio.de/job/{pid}",
+                         pos.findtext("createdAt"), ", ".join(x for x in (pos.findtext("employmentType"), pos.findtext("schedule")) if x), pid))
+    elif ats == "teamtailor":
+        import xml.etree.ElementTree as ET
+        ns = "{https://teamtailor.com/locations}"
+        for it in ET.fromstring(raw).iter("item"):
+            loc = ", ".join(x for x in (it.findtext(f"{ns}locations/{ns}location/{ns}city"), it.findtext(f"{ns}locations/{ns}location/{ns}country")) if x)
+            remote = it.findtext("remoteStatus") or ""
+            rows.append((it.findtext("title"), loc, it.findtext(f"{ns}locations/{ns}location/{ns}country") or "", it.findtext("link"),
+                         _rss_date(it.findtext("pubDate") or ""), remote if remote in ("onsite", "hybrid", "remote") else "",
+                         it.findtext("guid") or it.findtext("link")))
+    items = []
+    for title, loc, hint, url, when, contract, ref in rows:
+        title = re.sub(r"\s+", " ", title or "").strip()
+        if not url or not ref or not _employer_keep(title, strict):
+            continue
+        country, region = _country_from_location(loc or "", hint)
+        anywhere = bool(re.search(r"remote|international|anywhere", loc or "", re.I))
+        if not country:
+            country = "International" if anywhere else (default_country or "International")
+        published = _iso_date(when or "")
+        city = (loc or "").split(",")[0].strip() if loc and not anywhere else ""
+        items.append({
+            "source": "employers", "source_ref": f"{board}:{ref}", "kind": "job",
+            "title_fr": title, "title_en": title, "summary_fr": "", "summary_en": "",
+            "org": employer, "country": country, "region": region or country,
+            "regions_raw": loc or "", "city": city if city.lower() != country.lower() else "",
+            "url_fr": url, "url_en": url, "notice_type": contract or "", "category": "job",
+            "specialties": specialties_for(title),
+            # une page carrières ne liste que des postes ouverts : pas de date de
+            # fin, la fiche est close quand elle disparaît du flux (collect_employers)
+            "published_at": published, "closes_at": None,
+        })
+    return items
+
+
+def collect_employers(conn) -> dict:
+    items: list = []
+    errors = 0
+    per_board: dict = {}
+    for board, ats, slug, employer, strict, default_country in EMPLOYER_BOARDS:
+        try:
+            raw = _fetch(ATS_URLS[ats].format(slug=slug), timeout=60)
+            got = parse_employer_board(ats, raw, board, employer, strict, default_country)
+        except Exception as exc:
+            log.warning("employeur %s (%s): %s", board, ats, exc)
+            errors += 1
+            continue
+        per_board[board] = len(got)
+        items.extend(got)
+    seen = {it["source_ref"] for it in items}
+    n = _upsert_many(conn, items)
+    # un poste retiré de la page carrières (flux lu sans erreur) est clos
+    closed = 0
+    for board in per_board:
+        for (opp_id, ref) in conn.execute("SELECT id, source_ref FROM opportunities WHERE source='employers' AND source_ref LIKE ? "
+                                          "AND status='published'", (board + ":%",)).fetchall():
+            if ref not in seen:
+                conn.execute("UPDATE opportunities SET status='closed' WHERE id=?", (opp_id,)); closed += 1
+    return {"items": n, "boards": per_board, "closed": closed, "errors": errors}
 
 
 # ---------------------------------------------------------------------------
@@ -1161,6 +1438,9 @@ def collect_adzuna(conn) -> dict:
 
 LINK_OK = (200, 202, 203, 301, 302, 303, 307, 308)
 LINK_TIMEOUT = 20
+# Adzuna répond 403 à tout robot sur ses pages de redirection : l'API (30 jours
+# glissants) et la date de fin de la fiche font foi, pas le contrôle du lien.
+LINK_CHECK_SKIP = ("adzuna",)
 
 
 def link_status(url: str) -> int:
@@ -1193,7 +1473,8 @@ def verify_links(limit: int = 120) -> dict:
     with db.standalone() as conn:
         rows = conn.execute(
             "SELECT id, url_fr, url_en FROM opportunities WHERE status='published' "
-            "ORDER BY link_checked_at IS NOT NULL, link_checked_at LIMIT ?", (limit,)).fetchall()
+            f"AND source NOT IN ({','.join('?' * len(LINK_CHECK_SKIP))}) "
+            "ORDER BY link_checked_at IS NOT NULL, link_checked_at LIMIT ?", (*LINK_CHECK_SKIP, limit)).fetchall()
     results = []
     for oid, url_fr, url_en in rows:
         code = link_status(url_fr)
@@ -1263,7 +1544,8 @@ def collect(verify: bool = True) -> dict:
     for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
                      ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder),
                      ("austender", collect_austender), ("gets", collect_gets), ("secop", collect_secop),
-                     ("samgov", collect_samgov), ("jobbank", collect_jobbank), ("adzuna", collect_adzuna)):
+                     ("samgov", collect_samgov), ("jobbank", collect_jobbank), ("adzuna", collect_adzuna),
+                     ("usajobs", collect_usajobs), ("employers", collect_employers)):
         try:
             with db.standalone() as conn:
                 report[name] = fn(conn)
