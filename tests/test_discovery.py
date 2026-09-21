@@ -293,6 +293,12 @@ def test_faq_content_uses_real_platform_numbers():
     assert "{" not in entries["cancel"]["answer"], "placeholder non formate"
     featured = content.faq("en", featured_only=True)
     assert 3 <= len(featured) <= 8 and all(e["featured"] for e in featured)
+    # Promesses périmées (nom verrouillé après vérification, flou de 10 km,
+    # brevet vérifié « en tête des résultats ») : la FAQ dit ce que fait le site.
+    for lang in ("fr", "en"):
+        text = " ".join(e["answer"] for e in content.faq(lang))
+        for stale in ("10 km", "verrouillé", "name is then locked", "en tête des résultats", "top of results", "flout", "blurred"):
+            assert stale not in text, (lang, stale)
 
 
 def test_home_shows_new_sections(client):

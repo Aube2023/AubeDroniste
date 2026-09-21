@@ -119,15 +119,17 @@ _FAQ = [
       "en": "What is a “verified” profile?"},
      {"fr": "Le pilote a téléversé le justificatif de son brevet (DGAC, EASA, "
             "Transport Canada, FAA, ASECNA…) et notre équipe l'a contrôlé "
-            "manuellement. Le badge apparaît sur le brevet et sur le profil, et le "
-            "nom du pilote est alors verrouillé. L'assurance responsabilité civile "
+            "manuellement. Le badge apparaît sur le brevet et sur le profil ; si le "
+            "pilote change ensuite de nom, ses brevets repassent en vérification. "
+            "L'assurance responsabilité civile "
             "professionnelle suit le même chemin : le badge « RC pro » ne s'affiche "
             "qu'après contrôle de l'attestation, et tombe à son échéance. Vous pouvez "
             "filtrer la recherche sur l'un comme sur l'autre.",
       "en": "The pilot uploaded proof of their licence (DGAC, EASA, Transport "
             "Canada, FAA, ASECNA…) and our team checked it manually. The badge "
-            "appears on the licence and on the profile, the pilot's name is then "
-            "locked. Professional liability insurance follows the same path: the "
+            "appears on the licence and on the profile; if the pilot later changes "
+            "their name, their licences go back to review. Professional liability "
+            "insurance follows the same path: the "
             "\u201cInsured\u201d badge only appears once the certificate has been "
             "checked, and drops at its expiry date. You can filter the search on "
             "either one."}),
@@ -148,14 +150,16 @@ _FAQ = [
      {"fr": "Créez votre compte (deux minutes), renseignez votre base "
             "d'opération, votre rayon, vos spécialités et vos tarifs, puis ajoutez "
             "vos brevets et vos drones. Vous apparaissez aussitôt sur la carte et "
-            "dans les recherches — votre position exacte est floutée d'environ "
-            "10 km par respect de votre vie privée. Un brevet vérifié vous place "
-            "en tête des résultats.",
+            "dans les recherches, du plus proche au plus éloigné ; votre position "
+            "est arrondie à une centaine de mètres, jamais votre adresse exacte. Un "
+            "brevet vérifié vous vaut le badge et vous garde dans les résultats des "
+            "clients qui filtrent sur les profils vérifiés.",
       "en": "Create your account (two minutes), fill in your home base, range, "
             "specialties and rates, then add your licences and drones. You appear "
-            "right away on the map and in searches — your exact position is "
-            "blurred by about 10 km to protect your privacy. A verified licence "
-            "puts you at the top of results."}),
+            "right away on the map and in searches, nearest first; your position "
+            "is rounded to about a hundred metres, never your exact address. A "
+            "verified licence earns you the badge and keeps you in the results of "
+            "clients who filter on verified profiles."}),
     ("licences", "pilots", False,
      {"fr": "Quelles certifications sont acceptées ?",
       "en": "Which certifications are accepted?"},
@@ -227,12 +231,14 @@ _FAQ = [
      {"fr": "Que faites-vous de mes données ?",
       "en": "What do you do with my data?"},
      {"fr": "Le minimum : aucun traceur publicitaire, aucun outil d'analyse "
-            "tiers. Les positions des pilotes sont floutées sur la carte, "
+            "tiers. Les positions des pilotes sont arrondies sur la carte (une "
+            "centaine de mètres, jamais l'adresse exacte), "
             "les coordonnées directes ne sont échangées qu'après le paiement "
             "d'une mission, et les justificatifs de brevet restent "
             "privés. Conformité Loi 25 (Québec) et RGPD.",
       "en": "The minimum: no ad trackers, no third-party analytics. Pilot positions "
-            "are blurred on the map, direct contact details are only exchanged "
+            "are rounded on the map (about a hundred metres, never the exact "
+            "address), direct contact details are only exchanged "
             "after a mission is paid, and licence proofs stay private. "
             "Compliant with Quebec's Law 25 and the GDPR."}),
 ]
