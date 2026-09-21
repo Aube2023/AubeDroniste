@@ -19,6 +19,7 @@ from flask import (
 )
 
 import auth
+import beacon
 import bots
 import config
 import content
@@ -4514,6 +4515,11 @@ def _register_lang_routes():
 
 
 _register_lang_routes()
+
+# AubeBeacon : ingestion de telemetrie des balises (/api/v1/telemetry), pages
+# de l'espace pilote (/espace/pilote/aubebeacon) et lecture pour la carte.
+# Hors LANG_ENDPOINTS (espace prive), donc apres les routes par langue.
+beacon.register(app)
 
 
 # ---------------------------------------------------------------------------

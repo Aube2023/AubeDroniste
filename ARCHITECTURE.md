@@ -16,6 +16,7 @@ AubePilot/
 ├── i18n.py                Traductions 9 langues, resolve_lang via cookie
 ├── mailer.py              SMTP + fallback dump local (data/mail/*.eml)
 ├── services.py            Logique metier (pilotes, missions, encheres, bookings…)
+├── beacon/                AubeBeacon : balises, telemetrie, vols, temps reel (voir section)
 ├── schema.sql             14 tables SQLite, foreign keys, index, WAL
 ├── wsgi.py                Entry point gunicorn
 ├── pyrightconfig.json
@@ -419,6 +420,37 @@ compteur mis à jour) → `transferred`. Si le pilote n'a pas encore de compte
 au moment du paiement, la contribution reste `paid` et
 `transfer_pending_contributions()` la verse plus tard (à appeler du cron).
 
+## AubeBeacon : télémétrie des drones en direct
+
+Une balise AubeBeacon (ESP32-S3 + SIM7080G LTE-M/NB-IoT + BMP390, dépôt
+`AubeBeacon/`) posée sur un drone envoie sa position à `POST /api/v1/telemetry`.
+Tout le code serveur vit dans le paquet `beacon/` :
+
+| Module | Rôle |
+|---|---|
+| `beacon/schema.py` | DDL des tables `beacon_devices`, `beacon_flights`, `beacon_telemetry`, `beacon_device_events` (source unique, reprise par `db._ADD_TABLES`) |
+| `beacon/devices.py` | identités `AUBE-BCN-000001`, jeton (32 octets, stocké en HMAC-SHA256), rotation, activation, association à un `pilot_drones`, journal ; toute requête filtre sur le propriétaire |
+| `beacon/telemetry.py` | validation stricte du format v1 (bornes, types, `version`), plausibilité (saut impossible = `jump`, rejeu ancien = `late`), ingestion idempotente (`UNIQUE(device_id, packet_id)`), battements de cœur sans position |
+| `beacon/flights.py` | sessions de vol PREPARING → ACTIVE → FINISHED / ABORTED déduites de l'état annoncé, statistiques point par point (distance, vitesse et hauteur max, points), trace simplifiée (Douglas-Peucker) |
+| `beacon/status.py` | ONLINE / DEGRADED / OFFLINE calculé depuis `last_seen_at` (seuils `AUBEBEACON_ONLINE_S`, `AUBEBEACON_DEGRADED_S`), sans minuteur |
+| `beacon/realtime.py` | file + fil d'arrière-plan qui publie chaque point au hub WebSocket (`AUBEBEACON_HUB_URL`, clé `AUBEBEACON_HUB_SECRET`) ; tickets signés (HMAC, 60 s) listant les salles `beacon:<id>` que le compte peut suivre |
+| `beacon/api.py` | `POST /api/v1/telemetry` (Bearer, exempté CSRF, corps borné 16 Ko / lot 96 Ko, 180 paquets/min par balise), `GET /api/v1/beacon/live`, `/flights/<id>/track`, `/ws-ticket` (session) |
+| `beacon/views.py` | `/espace/pilote/aubebeacon` : créer une balise (le jeton n'est affiché qu'une fois, via la session), associer, dissocier, désactiver, régénérer, supprimer ; `/vols/<id>` |
+
+Côté navigateur, `static/js/beacon-live.js` se branche sur la carte de
+`_map.html` (`window.AubeMap.map`, événement `aube:map-ready`, `map_markers=false`
+pour une carte nue) : marqueurs DOM orientés par le cap, trace GeoJSON, état
+recalculé chaque seconde, WebSocket avec repli sur un sondage de 5 s. Le hub
+temps réel est un processus à part (`AubeBeacon/server/websocket/hub.py`) parce
+que gunicorn ne tient pas de connexions longues ; sans `AUBEBEACON_HUB_SECRET`
+tout fonctionne en sondage.
+
+Règles : aucune position n'est publique (propriétaire ou administrateur avec
+`?all=1`), aucune route ne commande le drone, la CSP ouvre `connect-src` à
+l'origine du hub seulement quand il est configuré. Simulateur pour développer
+sans matériel : `scripts/beacon_sim_devices.py` + `AubeBeacon/simulator/`.
+Tests : `tests/test_beacon.py`.
+
 ## Sécurité
 
 `security.py` centralise toutes les protections. Activées automatiquement
@@ -507,6 +539,11 @@ sur l'app via `before_request` / `after_request` hooks.
 | `AUBEPILOT_CONTACT_EMAIL` | `rprp@aubemail.com` | destinataire du formulaire `/contact` |
 | `AUBEPILOT_CONTACT_REPLY_HOURS` | 24 | délai de réponse annoncé |
 | `AUBEPILOT_SOCIAL_LINKEDIN` … `_YOUTUBE` | (vide) | liens réseaux du pied de page + `sameAs` |
+| `AUBEBEACON_HUB_SECRET` | (vide) | secret partagé avec le hub temps réel AubeBeacon ; vide = pas de WebSocket, la carte sonde toutes les 5 s |
+| `AUBEBEACON_HUB_URL` | `http://127.0.0.1:5035` | où AubePilot publie les événements |
+| `AUBEBEACON_HUB_PUBLIC_URL` | (vide) | adresse WebSocket annoncée au navigateur ; vide = `wss://<hôte>/ws/beacon` |
+| `AUBEBEACON_ONLINE_S` / `AUBEBEACON_DEGRADED_S` | 10 / 30 | seuils ONLINE / DEGRADED / OFFLINE d'une balise |
+| `AUBEBEACON_INTERVAL_FLYING_MS` / `_READY_MS` / `_LANDED_MS` | 2000 / 10000 / 30000 | cadences renvoyées aux balises |
 
 ---
 

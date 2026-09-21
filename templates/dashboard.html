@@ -17,6 +17,7 @@
   <div class="cockpit-actions">
     {% if is_client %}<a class="cta" href="{{ url_for('mission_create') }}">{{ t('tpl.publier_une_mission') }}</a>{% endif %}
     {% if is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ t('tpl.mon_profil_pilote') }}</a>
+    <a class="ghost" href="{{ url_for('beacon_views.devices_page') }}">{{ t('beacon.nav') }}</a>
     <a class="ghost" href="{{ url_for('pilot_campaign') }}">{{ t('tpl.ma_collecte') }}</a>{% endif %}
     {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ t('tpl.devenir_pilote') }}</a>{% endif %}
     <a class="ghost" href="{{ url_for('settings') }}">{{ t('tpl.parametres') }}</a>

@@ -37,6 +37,18 @@ server {
         access_log off;
     }
 
+    # AubeBeacon : hub temps réel (processus aiohttp local, cf. AubeBeacon/server/websocket)
+    location /ws/beacon {
+        proxy_pass http://127.0.0.1:5035/ws/beacon;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:5034;
         proxy_set_header Host              $host;

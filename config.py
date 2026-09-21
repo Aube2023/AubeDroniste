@@ -869,3 +869,56 @@ COUNTRIES = [
     "Turkménistan", "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu",
     "Vatican", "Venezuela", "Viêt Nam", "Yémen", "Zambie", "Zimbabwe",
 ]
+
+
+# ---------------------------------------------------------------------------
+# AubeBeacon : balises de télémétrie posées sur les drones (cf. beacon/).
+# Tout est surchargeable par variable d'environnement ; les valeurs sont
+# celles de la V1 (télémétrie seule, aucune commande vers le drone).
+# ---------------------------------------------------------------------------
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, "") or default)
+    except ValueError:
+        return default
+
+
+# Silence depuis le dernier paquet accepté : ONLINE en deçà de BEACON_ONLINE_S,
+# DEGRADED jusqu'à BEACON_DEGRADED_S, OFFLINE (« signal perdu ») au-delà.
+BEACON_ONLINE_S = _env_int("AUBEBEACON_ONLINE_S", 10)
+BEACON_DEGRADED_S = _env_int("AUBEBEACON_DEGRADED_S", 30)
+# Une session de vol sans nouvelle position depuis ce délai est abandonnée
+# (ABORTED) : la balise a coupé sans annoncer d'atterrissage.
+BEACON_FLIGHT_ABORT_AFTER_S = _env_int("AUBEBEACON_FLIGHT_ABORT_AFTER_S", 900)
+# Cadences annoncées à la balise dans la réponse (ms) ; elle les applique
+# selon son état (vol / prêt / posé). La configuration reste côté serveur
+# pour pouvoir l'ajuster sans reflasher.
+BEACON_INTERVAL_FLYING_MS = _env_int("AUBEBEACON_INTERVAL_FLYING_MS", 2000)
+BEACON_INTERVAL_READY_MS = _env_int("AUBEBEACON_INTERVAL_READY_MS", 10000)
+BEACON_INTERVAL_LANDED_MS = _env_int("AUBEBEACON_INTERVAL_LANDED_MS", 30000)
+# Taille maximale acceptée du corps JSON (un paquet / un lot rejoué) et
+# nombre de paquets par lot : au-delà, 413 sans lire le reste.
+BEACON_MAX_BODY_BYTES = 16 * 1024
+BEACON_MAX_BATCH_BYTES = 96 * 1024
+BEACON_MAX_BATCH = 50
+# Plafond de paquets acceptés par balise et par minute (un rejeu de file
+# hors connexion envoie des lots, d'où la marge au-dessus des 30/min du vol).
+BEACON_DEVICE_RATE_PER_MIN = _env_int("AUBEBEACON_DEVICE_RATE_PER_MIN", 180)
+# Valeurs aberrantes : vitesse annoncée au-delà de ce plafond = paquet refusé ;
+# saut implicite entre deux points au-delà de BEACON_JUMP_SPEED_MPS = point
+# gardé mais marqué « jump » et écarté des statistiques et des traces.
+BEACON_MAX_SPEED_MPS = 120.0
+BEACON_JUMP_SPEED_MPS = 150.0
+# Trace d'un vol pour l'affichage : simplification Douglas-Peucker (mètres)
+# puis plafond de points envoyés au navigateur.
+BEACON_TRACK_EPSILON_M = 2.0
+BEACON_TRACK_MAX_POINTS = 800
+# Hub temps réel (AubeBeacon/server/websocket) : adresse locale où AubePilot
+# publie, secret partagé (vide = pas de temps réel, la carte se rabat sur le
+# sondage), adresse publique du WebSocket annoncée au navigateur (vide =
+# wss://<hôte de la page>/ws/beacon).
+BEACON_HUB_URL = os.environ.get("AUBEBEACON_HUB_URL", "http://127.0.0.1:5035").rstrip("/")
+BEACON_HUB_SECRET = os.environ.get("AUBEBEACON_HUB_SECRET", "").strip()
+BEACON_HUB_PUBLIC_URL = os.environ.get("AUBEBEACON_HUB_PUBLIC_URL", "").strip()
+BEACON_TICKET_TTL_S = 60

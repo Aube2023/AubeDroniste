@@ -113,6 +113,11 @@ AUBEMAIL_DB_URL=<URL lecture identite, si utilisee>
 AUBEPILOT_REQUIRE_AUBEMAIL=0
 AUBE_ALLOW_LOCAL_ACCOUNTS=0
 
+# AubeBeacon (télémétrie des drones) : même secret que /etc/aubebeacon-hub.env ;
+# vide = pas de WebSocket, la carte se rabat sur un sondage de 5 s
+AUBEBEACON_HUB_SECRET=
+AUBEBEACON_HUB_URL=http://127.0.0.1:5035
+
 # SMTP transactionnel
 SMTP_HOST=smtp.aubemail.com
 SMTP_PORT=587

@@ -1,0 +1,45 @@
+{# Styles partagés des pages AubeBeacon (balises, vol). Style suisse : filets 1 px,
+   mono pour les valeurs, pastilles d'état monochromes sur teinte fonctionnelle. #}
+<style>
+.bcn-list{display:grid;gap:14px}
+.bcn-row{border:1px solid var(--rule);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.bcn-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bcn-head .name{font-weight:700;font-size:1.02rem}
+.bcn-head .uid{font-family:var(--mono);font-size:.78rem;color:var(--ink-dim);letter-spacing:.02em}
+.bcn-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:.74rem;font-family:var(--mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft)}
+.bcn-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ink-faint)}
+.bcn-pill[data-status="ONLINE"]{border-color:var(--teal);color:var(--teal)}
+.bcn-pill[data-status="ONLINE"]::before{background:var(--teal)}
+.bcn-pill[data-status="DEGRADED"]{border-color:#b87519;color:#b87519}
+.bcn-pill[data-status="DEGRADED"]::before{background:#b87519}
+.bcn-pill[data-status="OFFLINE"]{border-color:var(--signal);color:var(--signal)}
+.bcn-pill[data-status="OFFLINE"]::before{background:var(--signal)}
+.bcn-pill.off{border-style:dashed}
+.bcn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 18px}
+.bcn-grid .k{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);display:block}
+.bcn-grid .v{font-family:var(--mono);font-size:.86rem}
+.bcn-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--rule-soft);padding-top:10px}
+.bcn-actions form{display:flex;gap:6px;align-items:center;margin:0}
+.bcn-actions select{margin:0;padding:6px 8px;font-size:.82rem;max-width:220px}
+.bcn-actions button,.bcn-actions .ghost{padding:6px 10px;font-size:.8rem}
+.bcn-secret{border:1px solid var(--teal);border-radius:12px;padding:16px;margin-bottom:24px}
+.bcn-secret pre{font-family:var(--mono);font-size:.84rem;background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:12px;overflow:auto;margin:10px 0 0;user-select:all}
+.bcn-journal summary{cursor:pointer;font-size:.8rem;color:var(--ink-dim)}
+.bcn-journal ul{list-style:none;padding:0;margin:8px 0 0;font-family:var(--mono);font-size:.76rem;color:var(--ink-soft)}
+.bcn-journal li{padding:2px 0;border-top:1px solid var(--rule-soft)}
+.bcn-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:16px 0}
+.bcn-stat{border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.bcn-stat .k{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);display:block}
+.bcn-stat .v{font-family:var(--mono);font-size:1.15rem;font-weight:600}
+.bcn-flights{display:grid;gap:8px}
+.bcn-flight{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.bcn-flight .meta{font-family:var(--mono);font-size:.78rem;color:var(--ink-dim)}
+.bcn-profile{width:100%;height:120px;display:block;border:1px solid var(--rule);border-radius:10px;background:var(--paper-2)}
+.bcn-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-dim);margin:8px 0 0}
+.aube-drone-marker{width:34px;height:34px;border-radius:50%;background:var(--paper,#fff);border:2px solid var(--teal);display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;position:relative}
+.aube-drone-marker[data-status="DEGRADED"]{border-color:#b87519}
+.aube-drone-marker[data-status="OFFLINE"],.aube-drone-marker[data-status="NEVER"]{border-color:var(--signal);opacity:.75}
+.aube-drone-marker svg{width:20px;height:20px;display:block;transition:transform .4s linear}
+.aube-drone-marker .lbl{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 11px/1.2 var(--sans);background:var(--paper,#fff);border:1px solid var(--rule);border-radius:6px;padding:2px 6px;color:var(--ink)}
+.aube-drone-marker .lbl small{font-family:var(--mono);font-weight:500;color:var(--ink-dim)}
+</style>

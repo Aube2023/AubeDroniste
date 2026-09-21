@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}AubeBeacon · {{ t('tpl.mes_drones') }} · AubePilot{% endblock %}
+{% block content %}
+{% include "_beacon_style.html" %}
+
+<div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+  <div>
+    <span class="eyebrow">{{ t('tpl.mes_drones') }}</span>
+    <h1>AubeBeacon</h1>
+    <p class="muted" style="max-width: 66ch;">{{ t('beacon.lead') }}</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% if current_user.is_admin %}<a href="{{ url_for('beacon_views.devices_page', all=None if show_all else 1) }}" class="ghost">{{ t('beacon.all_devices') if not show_all else t('tpl.mes_drones') }}</a>{% endif %}
+    <a href="{{ url_for('pilot_edit') }}" class="ghost">← {{ t('tpl.profil_pilote') }}</a>
+  </div>
+</div>
+
+{% if reveal %}
+<section class="bcn-secret">
+  <span class="eyebrow">{{ t('beacon.reveal_title', uid=reveal.uid) }}</span>
+  <p style="margin: 6px 0 0;">{{ t('beacon.reveal_text') }}</p>
+<pre>DEVICE_ID={{ reveal.uid }}
+DEVICE_TOKEN={{ reveal.token }}</pre>
+</section>
+{% endif %}
+
+<section class="card" style="padding:0;overflow:hidden;">
+  <div style="padding:16px 18px 0;">
+    <span class="eyebrow">{{ t('beacon.live_map') }}</span>
+    {% if not realtime.enabled %}<p class="muted small" style="margin:4px 0 10px;">{{ t('beacon.realtime_off') }}</p>{% else %}<p class="muted small" style="margin:4px 0 10px;">{{ t('beacon.height_note') }}</p>{% endif %}
+  </div>
+  {% set map_height = 'clamp(360px, 52vh, 560px)' %}{% set map_markers = false %}{% include "_map.html" with context %}
+</section>
+
+<section class="card">
+  <span class="eyebrow">{{ t('tpl.mes_drones') }} · AubeBeacon</span>
+  {% if not devices %}<p class="muted">{{ t('beacon.no_devices') }}</p>{% endif %}
+  <div class="bcn-list">
+  {% for d in devices %}
+    <article class="bcn-row" data-beacon-id="{{ d.id }}" id="beacon-{{ d.id }}">
+      <div class="bcn-head">
+        <span class="name">{{ d.label or d.uid }}</span>
+        <span class="uid">{{ d.uid }}</span>
+        <span class="bcn-pill{{ ' off' if not d.enabled }}" data-field="status" data-status="{{ d.status }}">{{ t('beacon.status.' ~ d.status) }}</span>
+        {% if not d.enabled %}<span class="bcn-pill off">{{ t('beacon.disabled') }}</span>{% endif %}
+        {% if d.drone %}<span class="muted small">{{ d.drone.brand }} {{ d.drone.model }}</span>{% else %}<span class="muted small">{{ t('beacon.no_drone') }}</span>{% endif %}
+        {% if show_all %}<span class="muted small">· {{ d.owner.name }}</span>{% endif %}
+        <a class="ghost" href="#aube-map" data-beacon-focus="{{ d.id }}" style="margin-left:auto;padding:4px 10px;font-size:.78rem;">{{ t('beacon.live_map') }}</a>
+      </div>
+      <div class="bcn-grid">
+        <div><span class="k">{{ t('beacon.state_label') }}</span><span class="v" data-field="state">{{ t('beacon.state.' ~ d.state) if d.state and d.state not in ('TAKEOFF', 'LANDING') else (t('beacon.takeoff') if d.state == 'TAKEOFF' else (t('beacon.landing') if d.state == 'LANDING' else '·')) }}</span></div>
+        <div><span class="k">{{ t('beacon.last_data') }}</span><span class="v" data-field="age" data-ts="{{ d.last_seen_at or '' }}">{{ t('beacon.never') if not d.last_seen_at else '·' }}</span></div>
+        <div><span class="k">{{ t('beacon.height') }} · {{ t('beacon.speed') }} · {{ t('beacon.heading') }}</span><span class="v" data-field="motion">{% if d.position %}{{ (d.position.relative_altitude_m or 0)|round(0)|int }} m · {{ ((d.position.speed_mps or 0) * 3.6)|round(0)|int }} km/h · {{ (d.position.heading_deg or 0)|round(0)|int }}°{% else %}·{% endif %}</span></div>
+        <div><span class="k">{{ t('beacon.last_position') }}</span><span class="v" data-field="position">{% if d.position %}{{ '%.5f'|format(d.position.latitude) }}, {{ '%.5f'|format(d.position.longitude) }}{% else %}·{% endif %}</span></div>
+        <div><span class="k">GPS</span><span class="v" data-field="gps">{% if d.position %}{{ t('beacon.satellites', n=d.position.satellites or 0) if d.position.gnss_fix else t('beacon.no_fix') }}{% else %}·{% endif %}</span></div>
+        <div><span class="k">{{ t('beacon.signal') }}</span><span class="v" data-field="signal">{% if d.signal_dbm is not none %}{{ d.network_type or '' }} {{ d.signal_dbm }} dBm{% else %}·{% endif %}</span></div>
+        <div><span class="k">{{ t('beacon.battery') }}</span><span class="v" data-field="battery">{% if d.battery_percent is not none %}{{ d.battery_percent }} %{% else %}·{% endif %}</span></div>
+        <div><span class="k">{{ t('beacon.firmware') }}</span><span class="v">{{ d.firmware_version or '·' }}</span></div>
+      </div>
+      <div class="bcn-actions">
+        {% if not d.drone %}
+        <form method="post" action="{{ url_for('beacon_views.device_attach', device_id=d.id, all=1 if show_all else None) }}">
+          {{ csrf_input() }}
+          <select name="drone_id" required aria-label="{{ t('beacon.drone') }}">
+            <option value="">{{ t('beacon.drone') }}</option>
+            {% for dr in drones %}<option value="{{ dr.id }}">{{ dr.brand }} {{ dr.model }}</option>{% endfor %}
+          </select>
+          <button class="ghost" type="submit">{{ t('beacon.attach') }}</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('beacon_views.device_detach', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.detach') }}</button></form>
+        {% endif %}
+        {% if d.enabled %}
+        <form method="post" action="{{ url_for('beacon_views.device_disable', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.disable') }}</button></form>
+        {% else %}
+        <form method="post" action="{{ url_for('beacon_views.device_enable', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.enable') }}</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('beacon_views.device_rotate', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.rotate') }}</button></form>
+        <form method="post" action="{{ url_for('beacon_views.device_delete', device_id=d.id, all=1 if show_all else None) }}" style="margin-left:auto;">{{ csrf_input() }}<button class="ghost danger" type="submit">{{ t('tpl.supprimer_2') }}</button></form>
+      </div>
+      {% if d.events %}
+      <details class="bcn-journal">
+        <summary>{{ t('beacon.journal') }}</summary>
+        <ul>{% for e in d.events %}<li>{{ e.created_at }} · {{ e.kind }}{% if e.detail %} · {{ e.detail }}{% endif %}</li>{% endfor %}</ul>
+      </details>
+      {% endif %}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <span class="eyebrow">{{ t('beacon.new') }}</span>
+  {% if not drones %}
+  <p class="muted">{{ t('beacon.add_drone_first') }} <a href="{{ url_for('pilot_edit') }}#drone-form">{{ t('tpl.mes_drones') }} →</a></p>
+  {% endif %}
+  <form method="post" action="{{ url_for('beacon_views.device_create') }}">
+    {{ csrf_input() }}
+    <div class="grid-3">
+      <label>{{ t('beacon.label') }}<input name="label" maxlength="80" placeholder="Mavic 3 · balise 1"></label>
+      <label>{{ t('beacon.uid') }}<input name="device_uid" maxlength="21" pattern="(AUBE-BCN-)?[A-Za-z0-9]{3,12}" placeholder="AUBE-BCN-000001"><span class="field-hint">{{ t('beacon.uid_hint') }}</span></label>
+      <label>{{ t('beacon.drone') }}
+        <select name="drone_id">
+          <option value="">{{ t('beacon.no_drone') }}</option>
+          {% for dr in drones %}<option value="{{ dr.id }}">{{ dr.brand }} {{ dr.model }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <button class="cta" type="submit">{{ t('beacon.create') }}</button>
+  </form>
+</section>
+
+<section class="card">
+  <span class="eyebrow">{{ t('beacon.flights') }}</span>
+  {% if not flights %}<p class="muted">{{ t('beacon.no_flights') }}</p>{% endif %}
+  <div class="bcn-flights">
+  {% for f in flights %}
+    <a class="bcn-flight" href="{{ url_for('beacon_views.flight_page', flight_id=f.id) }}">
+      <div>
+        <strong>{{ f.device_label or f.device_uid }}</strong>
+        <span class="bcn-pill" data-status="{{ 'ONLINE' if f.status == 'ACTIVE' else ('DEGRADED' if f.status == 'PREPARING' else ('OFFLINE' if f.status == 'ABORTED' else 'NEVER')) }}">{{ t('beacon.fstatus.' ~ f.status) }}</span>
+        <div class="meta">{% if f.takeoff_at %}{{ f.takeoff_at[:16]|replace('T', ' ') }} UTC{% endif %}{% if f.duration_s is not none %} · {{ (f.duration_s // 60) }} min {{ f.duration_s % 60 }} s{% endif %}{% if f.distance_m is not none %} · {{ (f.distance_m / 1000)|round(2) }} km{% endif %}{% if f.max_speed_mps is not none %} · {{ (f.max_speed_mps * 3.6)|round(0)|int }} km/h{% endif %}{% if f.max_relative_altitude_m is not none %} · {{ f.max_relative_altitude_m|round(0)|int }} m{% endif %} · {{ f.points }} pts</div>
+      </div>
+      <span class="muted small">{{ t('beacon.view_flight') }} →</span>
+    </a>
+  {% endfor %}
+  </div>
+</section>
+
+<script nonce="{{ csp_nonce }}">
+window.AUBEBEACON = {{ {
+  "devices": devices,
+  "thresholds": thresholds,
+  "realtime": realtime,
+  "liveUrl": url_for('beacon_api.beacon_live', all=1 if show_all else None),
+  "ticketUrl": url_for('beacon_api.beacon_ws_ticket', all=1 if show_all else None),
+  "flightUrl": url_for('beacon_views.flight_page', flight_id=0),
+  "l10n": {
+    "status": {"ONLINE": t('beacon.status.ONLINE'), "DEGRADED": t('beacon.status.DEGRADED'), "OFFLINE": t('beacon.status.OFFLINE'), "NEVER": t('beacon.status.NEVER')},
+    "state": {"OFFLINE": t('beacon.state.OFFLINE'), "CONNECTED": t('beacon.state.CONNECTED'), "READY": t('beacon.state.READY'), "TAKEOFF": t('beacon.takeoff'), "FLYING": t('beacon.state.FLYING'), "LANDING": t('beacon.landing'), "LANDED": t('beacon.state.LANDED'), "GPS_LOST": t('beacon.state.GPS_LOST'), "NETWORK_LOST": t('beacon.state.NETWORK_LOST')},
+    "agoS": t('beacon.ago_s', n='{n}'), "agoMin": t('beacon.ago_min', n='{n}'), "agoH": t('beacon.ago_h', n='{n}'), "never": t('beacon.never'),
+    "satellites": t('beacon.satellites', n='{n}'), "noFix": t('beacon.no_fix'),
+    "height": t('beacon.height'), "speed": t('beacon.speed'), "heading": t('beacon.heading'), "lastData": t('beacon.last_data'),
+    "battery": t('beacon.battery'), "signal": t('beacon.signal'), "viewFlight": t('beacon.view_flight'), "noDrone": t('beacon.no_drone')
+  }
+} | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/beacon-live.js') }}" defer></script>
+{% endblock %}

@@ -434,6 +434,7 @@
       <a href="{{ aubecrew_url }}" target="_blank" rel="noopener noreferrer">
         {{ t('tpl.gerez_votre_flotte_sur_aubecrew') }}
       </a>
+      · <a href="{{ url_for('beacon_views.devices_page') }}">{{ t('beacon.fleet_link') }} →</a>
     </p>
     {% for d in profile.drones %}
     <div class="drone row-between" id="drone-{{ d.id }}" style="gap: 14px; align-items: center; flex-wrap: wrap;">

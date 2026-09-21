@@ -445,6 +445,11 @@ BEGIN
 END""",
 ]
 
+# AubeBeacon (balises de telemetrie) : le DDL vit dans beacon/schema.py, source
+# unique reprise ici pour la prod existante et recopiee dans schema.sql.
+from beacon.schema import TABLES as _BEACON_TABLES  # noqa: E402
+_ADD_TABLES.extend(_BEACON_TABLES)
+
 
 def run_migrations():
     """Applique les migrations additives manquantes (colonnes + index).

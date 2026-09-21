@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ t('beacon.flight') }} {{ flight.id }} · AubeBeacon · AubePilot{% endblock %}
+{% block content %}
+{% include "_beacon_style.html" %}
+
+<div class="row-between" style="align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+  <div>
+    <span class="eyebrow">AubeBeacon · {{ t('beacon.flight') }} {{ flight.id }}</span>
+    <h1>{{ flight.device_label or flight.device_uid }}{% if flight.drone_brand %} · {{ flight.drone_brand }} {{ flight.drone_model }}{% endif %}</h1>
+    <p class="muted" style="margin:4px 0 0;">
+      <span class="bcn-pill" data-status="{{ 'ONLINE' if flight.status == 'ACTIVE' else ('DEGRADED' if flight.status == 'PREPARING' else ('OFFLINE' if flight.status == 'ABORTED' else 'NEVER')) }}">{{ t('beacon.fstatus.' ~ flight.status) }}</span>
+      <span class="uid" style="font-family:var(--mono);font-size:.8rem;">{{ flight.device_uid }}</span>
+      {% if flight.owner_name %}· {{ flight.owner_name }}{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('beacon_views.devices_page') }}" class="ghost">← AubeBeacon</a>
+</div>
+
+<div class="bcn-stats">
+  <div class="bcn-stat"><span class="k">{{ t('beacon.takeoff') }}</span><span class="v" style="font-size:.9rem;">{% if flight.takeoff_at %}{{ flight.takeoff_at[:16]|replace('T', ' ') }} UTC{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.landing') }}</span><span class="v" style="font-size:.9rem;">{% if flight.landing_at %}{{ flight.landing_at[:16]|replace('T', ' ') }} UTC{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.duration') }}</span><span class="v">{% if flight.duration_s is not none %}{{ flight.duration_s // 60 }} min {{ flight.duration_s % 60 }} s{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.distance') }}</span><span class="v">{% if flight.distance_m is not none %}{{ (flight.distance_m / 1000)|round(2) }} km{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.max_speed') }}</span><span class="v">{% if flight.max_speed_mps is not none %}{{ (flight.max_speed_mps * 3.6)|round(0)|int }} km/h{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.max_height') }}</span><span class="v">{% if flight.max_relative_altitude_m is not none %}{{ flight.max_relative_altitude_m|round(0)|int }} m{% else %}·{% endif %}</span></div>
+  <div class="bcn-stat"><span class="k">{{ t('beacon.points') }}</span><span class="v">{{ flight.points }}</span></div>
+</div>
+
+<section class="card" style="padding:0;overflow:hidden;">
+  <div style="padding:16px 18px 0;">
+    <span class="eyebrow">{{ t('beacon.flight') }}</span>
+    <div class="bcn-legend"><span><span class="map-legend-icon" style="background:var(--teal);"></span>{{ t('beacon.start') }}</span><span><span class="map-legend-icon" style="background:var(--signal);"></span>{{ t('beacon.end') }}</span></div>
+  </div>
+  {% set map_height = 'clamp(360px, 52vh, 560px)' %}{% set map_markers = false %}{% include "_map.html" with context %}
+</section>
+
+<section class="card">
+  <span class="eyebrow">{{ t('beacon.height') }} · {{ t('beacon.speed') }}</span>
+  <svg class="bcn-profile" id="bcn-profile" viewBox="0 0 800 120" preserveAspectRatio="none" role="img" aria-label="{{ t('beacon.height') }}, {{ t('beacon.speed') }}"></svg>
+  <div class="bcn-legend"><span><span class="map-legend-icon" style="background:var(--teal);"></span>{{ t('beacon.height') }} (m)</span><span><span class="map-legend-icon" style="background:var(--amber);"></span>{{ t('beacon.speed') }} (km/h)</span></div>
+  <p class="muted small" style="margin-top:10px;">{{ t('beacon.height_note') }}</p>
+</section>
+
+<script nonce="{{ csp_nonce }}">
+window.AUBEBEACON_FLIGHT = {{ {"flight": flight, "track": track} | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/beacon-live.js') }}" defer></script>
+{% endblock %}

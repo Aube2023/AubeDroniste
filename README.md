@@ -205,3 +205,12 @@ Configurer un vrai SMTP via les variables d'env `SMTP_HOST`, `SMTP_PORT`, etc.
 - ~~Carte interactive MapLibre~~ (faite : OpenFreeMap, accueil + annuaire + missions)
 - Application mobile Flutter (réutiliser le pattern AubeSIG offline-first)
 - Webhooks vers AubeStatus
+
+## AubeBeacon : drones en direct
+
+Un pilote peut poser une balise AubeBeacon (ESP32-S3 + LTE-M/NB-IoT + GNSS +
+baromètre, dépôt `AubeBeacon/`) sur un drone : la page Mes drones → AubeBeacon
+délivre l'identité et le jeton, affiche la carte en direct et chaque vol avec sa
+trace et ses statistiques. Détails dans `ARCHITECTURE.md` (section AubeBeacon)
+et `AubeBeacon/docs/`. Pour développer sans matériel :
+`scripts/beacon_sim_devices.py` puis `AubeBeacon/simulator/drone-simulator/simulate.py`.

@@ -133,6 +133,23 @@ def _meteo_enabled() -> bool:
         return False
 
 
+def _beacon_ws_src() -> str:
+    """Origine du hub temps reel AubeBeacon dans connect-src (vide sans hub).
+    Derivee de l'hote de la page (wss://pilot.aubeetoilee.com) ou de
+    AUBEBEACON_HUB_PUBLIC_URL en developpement (ws://127.0.0.1:5035)."""
+    try:
+        from urllib.parse import urlsplit
+
+        from beacon import realtime
+        if not realtime.enabled():
+            return ""
+        secure = request.is_secure or request.headers.get("X-Forwarded-Proto") == "https"
+        u = urlsplit(realtime.public_url(request.host, secure))
+        return f"{u.scheme}://{u.netloc} "
+    except Exception:
+        return ""
+
+
 def apply_security_headers(resp):
     """after_request hook : pose les en-tetes de securite recommandes."""
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -164,7 +181,8 @@ def apply_security_headers(resp):
         "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
         "connect-src 'self' https://api.stripe.com https://tiles.openfreemap.org "
         "https://server.arcgisonline.com "
-        + ("https://tilecache.rainviewer.com " if _meteo_enabled() else "") +
+        + ("https://tilecache.rainviewer.com " if _meteo_enabled() else "")
+        + _beacon_ws_src() +
         "https://aubemail.com https://captcha.aubeetoilee.com; "
         "form-action 'self' https://checkout.stripe.com https://connect.stripe.com; "
         "frame-ancestors 'none'; "
