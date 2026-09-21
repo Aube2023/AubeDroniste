@@ -918,7 +918,7 @@ BEACON_TRACK_MAX_POINTS = 800
 # publie, secret partagé (vide = pas de temps réel, la carte se rabat sur le
 # sondage), adresse publique du WebSocket annoncée au navigateur (vide =
 # wss://<hôte de la page>/ws/beacon).
-BEACON_HUB_URL = os.environ.get("AUBEBEACON_HUB_URL", "http://127.0.0.1:5035").rstrip("/")
+BEACON_HUB_URL = os.environ.get("AUBEBEACON_HUB_URL", "http://127.0.0.1:5137").rstrip("/")
 BEACON_HUB_SECRET = os.environ.get("AUBEBEACON_HUB_SECRET", "").strip()
 BEACON_HUB_PUBLIC_URL = os.environ.get("AUBEBEACON_HUB_PUBLIC_URL", "").strip()
 BEACON_TICKET_TTL_S = 60

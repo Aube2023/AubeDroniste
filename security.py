@@ -136,7 +136,7 @@ def _meteo_enabled() -> bool:
 def _beacon_ws_src() -> str:
     """Origine du hub temps reel AubeBeacon dans connect-src (vide sans hub).
     Derivee de l'hote de la page (wss://pilot.aubeetoilee.com) ou de
-    AUBEBEACON_HUB_PUBLIC_URL en developpement (ws://127.0.0.1:5035)."""
+    AUBEBEACON_HUB_PUBLIC_URL en developpement (ws://127.0.0.1:5137)."""
     try:
         from urllib.parse import urlsplit
 

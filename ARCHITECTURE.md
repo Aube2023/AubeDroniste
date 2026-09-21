@@ -540,7 +540,7 @@ sur l'app via `before_request` / `after_request` hooks.
 | `AUBEPILOT_CONTACT_REPLY_HOURS` | 24 | délai de réponse annoncé |
 | `AUBEPILOT_SOCIAL_LINKEDIN` … `_YOUTUBE` | (vide) | liens réseaux du pied de page + `sameAs` |
 | `AUBEBEACON_HUB_SECRET` | (vide) | secret partagé avec le hub temps réel AubeBeacon ; vide = pas de WebSocket, la carte sonde toutes les 5 s |
-| `AUBEBEACON_HUB_URL` | `http://127.0.0.1:5035` | où AubePilot publie les événements |
+| `AUBEBEACON_HUB_URL` | `http://127.0.0.1:5137` | où AubePilot publie les événements |
 | `AUBEBEACON_HUB_PUBLIC_URL` | (vide) | adresse WebSocket annoncée au navigateur ; vide = `wss://<hôte>/ws/beacon` |
 | `AUBEBEACON_ONLINE_S` / `AUBEBEACON_DEGRADED_S` | 10 / 30 | seuils ONLINE / DEGRADED / OFFLINE d'une balise |
 | `AUBEBEACON_INTERVAL_FLYING_MS` / `_READY_MS` / `_LANDED_MS` | 2000 / 10000 / 30000 | cadences renvoyées aux balises |

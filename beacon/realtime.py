@@ -5,7 +5,7 @@ part : gunicorn (2 workers × 4 fils bloquants) ne peut pas tenir des
 connexions longues, et un paquet reçu par un worker doit atteindre les
 navigateurs connectés à l'autre. AubePilot ne fait donc que :
 
-1. publier chaque événement au hub par un POST local (127.0.0.1:5035),
+1. publier chaque événement au hub par un POST local (127.0.0.1:5137),
    depuis une file et un fil d'arrière-plan : l'ingestion répond à la balise
    sans attendre le hub, et un hub arrêté ne casse rien (la carte se rabat
    sur le sondage) ;
