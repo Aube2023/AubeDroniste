@@ -23,6 +23,7 @@ from config import (
     BEACON_DEVICE_RATE_PER_MIN, BEACON_MAX_BATCH, BEACON_MAX_BATCH_BYTES, BEACON_MAX_BODY_BYTES,
 )
 
+from . import access as _access
 from . import devices as _devices
 from . import flights as _flights
 from . import realtime as _realtime
@@ -156,6 +157,8 @@ def _require_user() -> dict:
     user = getattr(g, "user", None)
     if not user:
         abort(_json_error(401, "login_required", "sign in first"))
+    if not _access.allowed(user):
+        abort(_json_error(404, "not_found", "not found"))
     return user
 
 

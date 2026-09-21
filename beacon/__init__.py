@@ -19,7 +19,7 @@ def register(app) -> None:
 
     import security
 
-    from . import api, devices, realtime, views
+    from . import access, api, devices, realtime, views
 
     app.register_blueprint(api.bp)
     app.register_blueprint(views.bp)
@@ -28,12 +28,15 @@ def register(app) -> None:
 
     @app.context_processor
     def _beacon_context():
+        # `beacon_enabled` conditionne les liens (tableau de bord, Mes drones) :
+        # un compte non autorisé ne voit jamais le nom de la fonction.
         user = getattr(g, "user", None)
+        enabled = access.allowed(user)
         has_beacons = False
-        if user and user.get("role") in ("pilot", "both"):
+        if enabled and user.get("role") in ("pilot", "both"):
             try:
                 has_beacons = devices.count_for_owner(user["id"]) > 0
             except Exception:      # table absente pendant une migration : rien à afficher
                 has_beacons = False
-        return {"beacon_has_devices": has_beacons, "beacon_realtime_enabled": realtime.enabled(),
-                "beacon_version": VERSION}
+        return {"beacon_enabled": enabled, "beacon_has_devices": has_beacons,
+                "beacon_realtime_enabled": realtime.enabled(), "beacon_version": VERSION}

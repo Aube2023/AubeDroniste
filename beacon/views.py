@@ -12,7 +12,8 @@
 Le jeton complet n'apparaît qu'une fois, sur la page qui suit la création ou
 la rotation : il transite par la session signée (`beacon_reveal`), puis est
 retiré au premier affichage. Un administrateur voit toutes les balises
-(`?all=1`) ; un pilote ne voit et ne modifie que les siennes.
+(`?all=1`) ; un pilote ne voit et ne modifie que les siennes. Accès réservé
+(cf. beacon/access.py) : 404 pour les comptes non autorisés.
 """
 import logging
 
@@ -22,6 +23,7 @@ import auth
 import security
 import services
 
+from . import access as _access
 from . import api as _api
 from . import devices as _devices
 from . import flights as _flights
@@ -37,6 +39,8 @@ REVEAL_KEY = "beacon_reveal"
 
 def _pilot_or_403() -> dict:
     user = g.user
+    if not _access.allowed(user):
+        abort(404)              # la fonction n'existe pas pour ce compte
     if user["role"] not in ("pilot", "both") and not user.get("is_admin"):
         abort(403)
     return user

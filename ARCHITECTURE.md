@@ -445,7 +445,10 @@ temps réel est un processus à part (`AubeBeacon/server/websocket/hub.py`) parc
 que gunicorn ne tient pas de connexions longues ; sans `AUBEBEACON_HUB_SECRET`
 tout fonctionne en sondage.
 
-Règles : aucune position n'est publique (propriétaire ou administrateur avec
+Règles : **fonction confidentielle** tant que le module physique n'existe pas
+(`beacon/access.py` : administrateurs et `AUBEBEACON_USERS` seulement, 404 pour
+les autres, liens masqués ; `AUBEBEACON_PUBLIC=1` l'ouvre à tous les pilotes) ;
+aucune position n'est publique (propriétaire ou administrateur avec
 `?all=1`), aucune route ne commande le drone, la CSP ouvre `connect-src` à
 l'origine du hub seulement quand il est configuré. Simulateur pour développer
 sans matériel : `scripts/beacon_sim_devices.py` + `AubeBeacon/simulator/`.
@@ -539,6 +542,8 @@ sur l'app via `before_request` / `after_request` hooks.
 | `AUBEPILOT_CONTACT_EMAIL` | `rprp@aubemail.com` | destinataire du formulaire `/contact` |
 | `AUBEPILOT_CONTACT_REPLY_HOURS` | 24 | délai de réponse annoncé |
 | `AUBEPILOT_SOCIAL_LINKEDIN` … `_YOUTUBE` | (vide) | liens réseaux du pied de page + `sameAs` |
+| `AUBEBEACON_PUBLIC` | 0 | 1 = AubeBeacon visible par tous les pilotes ; 0 = administrateurs et `AUBEBEACON_USERS` seulement (404 ailleurs) |
+| `AUBEBEACON_USERS` | (vide) | usernames autorisés en plus des administrateurs, séparés par des virgules |
 | `AUBEBEACON_HUB_SECRET` | (vide) | secret partagé avec le hub temps réel AubeBeacon ; vide = pas de WebSocket, la carte sonde toutes les 5 s |
 | `AUBEBEACON_HUB_URL` | `http://127.0.0.1:5137` | où AubePilot publie les événements |
 | `AUBEBEACON_HUB_PUBLIC_URL` | (vide) | adresse WebSocket annoncée au navigateur ; vide = `wss://<hôte>/ws/beacon` |

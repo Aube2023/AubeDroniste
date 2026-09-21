@@ -117,6 +117,10 @@ AUBE_ALLOW_LOCAL_ACCOUNTS=0
 # vide = pas de WebSocket, la carte se rabat sur un sondage de 5 s
 AUBEBEACON_HUB_SECRET=
 AUBEBEACON_HUB_URL=http://127.0.0.1:5137
+# visible par les administrateurs seuls (0) tant que le module n'existe pas ;
+# AUBEBEACON_USERS=alice,bob pour ouvrir à des comptes précis, AUBEBEACON_PUBLIC=1 pour tous
+AUBEBEACON_PUBLIC=0
+AUBEBEACON_USERS=
 
 # SMTP transactionnel
 SMTP_HOST=smtp.aubemail.com

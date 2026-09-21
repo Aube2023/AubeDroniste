@@ -922,3 +922,9 @@ BEACON_HUB_URL = os.environ.get("AUBEBEACON_HUB_URL", "http://127.0.0.1:5137").r
 BEACON_HUB_SECRET = os.environ.get("AUBEBEACON_HUB_SECRET", "").strip()
 BEACON_HUB_PUBLIC_URL = os.environ.get("AUBEBEACON_HUB_PUBLIC_URL", "").strip()
 BEACON_TICKET_TTL_S = 60
+# Visibilité : tant que le module physique n'existe pas, AubeBeacon n'apparaît
+# que pour les administrateurs et les comptes listés (usernames séparés par
+# des virgules). Pour les autres, pages, liens et API n'existent pas (404).
+# AUBEBEACON_PUBLIC=1 ouvre la fonction à tous les pilotes.
+BEACON_PUBLIC = os.environ.get("AUBEBEACON_PUBLIC", "0").strip().lower() in ("1", "true", "yes", "on")
+BEACON_ALLOWED_USERS = {u.strip().lower() for u in os.environ.get("AUBEBEACON_USERS", "").split(",") if u.strip()}

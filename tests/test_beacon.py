@@ -47,9 +47,17 @@ def _iso(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _grant(user):
+    """AubeBeacon est réservé aux administrateurs tant que le module n'existe
+    pas (beacon/access.py) : les pilotes des tests le sont."""
+    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (user["id"],))
+    user["is_admin"] = 1
+    return user
+
+
 @pytest.fixture()
 def pilot_with_drone(make_user):
-    u = make_user("bcn_pilot", role="both", lat=45.5, lng=-73.6)
+    u = _grant(make_user("bcn_pilot", role="both", lat=45.5, lng=-73.6))
     drone_id = services.add_drone(u["id"], category="pro_camera", brand="DJI", model="Mavic 3")
     return u, drone_id
 
@@ -307,16 +315,42 @@ def test_live_cloisonne(client, auth_client, beacon, make_user):
     mine = [d for d in j["devices"] if d["id"] == device["id"]]
     assert len(mine) == 1 and mine[0]["status"] == "ONLINE" and mine[0]["position"]["latitude"] == 45.5017
     assert "token" not in json.dumps(j) and j["thresholds"]["online_s"] == 10
-    other = make_user("bcn_stranger", role="both")
+    other = _grant(make_user("bcn_stranger", role="both"))
     j2 = auth_client(other["id"]).get("/api/v1/beacon/live").get_json()
     assert all(d["id"] != device["id"] for d in j2["devices"])
     assert auth_client(other["id"]).get(f"/api/v1/beacon/flights/1/track").status_code in (404, 200)
 
 
+def test_fonction_invisible_pour_un_pilote_ordinaire(client, auth_client, make_user, beacon, monkeypatch):
+    """Tant que le module n'existe pas : ni page, ni API, ni lien pour un compte
+    non autorisé (404, jamais 403). AUBEBEACON_USERS ou AUBEBEACON_PUBLIC ouvrent."""
+    import config
+    u, _, device, token = beacon
+    pilot = make_user("bcn_ordinaire", role="both")
+    c = auth_client(pilot["id"])
+    assert c.get("/espace/pilote/aubebeacon").status_code == 404
+    assert c.get("/api/v1/beacon/live").status_code == 404
+    assert c.get("/api/v1/beacon/ws-ticket").status_code == 404
+    assert c.post(f"/espace/pilote/aubebeacon/{device['id']}/jeton").status_code == 404
+    for path in ("/espace", "/espace/pilote"):
+        html = c.get(path, follow_redirects=True).get_data(as_text=True)
+        assert "aubebeacon" not in html.lower()
+    # la balise, elle, émet toujours (authentifiée par son jeton, pas par un compte)
+    assert _post(client, token, _packet(device["device_uid"], "inv-1")).status_code == 200
+    # liste d'accès
+    monkeypatch.setattr(config, "BEACON_ALLOWED_USERS", {pilot["username"].lower()})
+    assert c.get("/espace/pilote/aubebeacon").status_code == 200
+    assert "aubebeacon" in c.get("/espace", follow_redirects=True).get_data(as_text=True).lower()
+    monkeypatch.setattr(config, "BEACON_ALLOWED_USERS", set())
+    assert c.get("/espace/pilote/aubebeacon").status_code == 404
+    # ouverture générale
+    monkeypatch.setattr(config, "BEACON_PUBLIC", True)
+    assert c.get("/espace/pilote/aubebeacon").status_code == 200
+
+
 def test_live_admin_voit_tout(client, auth_client, beacon, make_user):
     u, _, device, token = beacon
-    admin = make_user("bcn_admin", role="both")
-    db.execute("UPDATE users SET is_admin=1 WHERE id=?", (admin["id"],))
+    admin = _grant(make_user("bcn_admin", role="both"))
     c = auth_client(admin["id"])
     assert all(d["id"] != device["id"] for d in c.get("/api/v1/beacon/live").get_json()["devices"])
     assert any(d["id"] == device["id"] for d in c.get("/api/v1/beacon/live?all=1").get_json()["devices"])
@@ -389,11 +423,17 @@ def test_page_balises_creation_et_jeton_unique(auth_client, pilot_with_drone, cl
     assert devices.get_by_uid(uid) is None
 
 
-def test_page_balises_refusee_au_client_et_a_l_etranger(auth_client, make_user, beacon):
+def test_page_balises_refusee_au_client_et_a_l_etranger(auth_client, make_user, beacon, monkeypatch):
+    import config
+    monkeypatch.setattr(config, "BEACON_PUBLIC", True)      # fonction ouverte : reste le rôle
     u, _, device, _ = beacon
     c = auth_client(make_user("bcn_client", role="client")["id"])
     assert c.get("/espace/pilote/aubebeacon").status_code == 403
-    other = auth_client(make_user("bcn_pilot2", role="both")["id"])
+    monkeypatch.setattr(config, "BEACON_PUBLIC", False)
+    # autre pilote autorisé par la liste d'accès (pas administrateur) : cloisonné
+    stranger = make_user("bcn_pilot2", role="both")
+    monkeypatch.setattr(config, "BEACON_ALLOWED_USERS", {stranger["username"].lower()})
+    other = auth_client(stranger["id"])
     assert other.post(f"/espace/pilote/aubebeacon/{device['id']}/jeton").status_code == 404
     assert other.post(f"/espace/pilote/aubebeacon/{device['id']}/supprimer").status_code == 404
     assert devices.get_by_uid(device["device_uid"]) is not None
