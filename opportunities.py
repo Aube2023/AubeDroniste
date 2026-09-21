@@ -98,6 +98,16 @@ JOBBANK_FEED_EN = "https://www.jobbank.gc.ca/jobsearch/feed/jobSearchRSSfeed?sea
 JOBBANK_FEED_FR = "https://www.guichetemplois.gc.ca/jobsearch/feed/jobSearchRSSfeed?searchstring={q}&sort=D&rows=100"
 JOBBANK_TERMS = ("drone", "drones", "UAV", "RPAS", "télépilote")
 JOB_DAYS = 30                  # une offre sans date de fin est proposée 30 jours après sa publication
+# Intitulés d'emploi à écarter : « RPAS » d'Oracle Retail (Retail Predictive
+# Application Server), annonces de mise en relation Cronoshare (« Drones e
+# Fotografia Aérea em <ville> » : des demandes de particuliers, pas des postes).
+JOB_NOISE = re.compile(r"oracle retail|\bsiocs\b|\bmfcs\b|cronoshare|drones? e fotografia a[ée]rea em\b", re.I)
+
+
+def job_matches(title: str) -> bool:
+    """Un intitulé de poste qui parle vraiment de drone (titre seul : le
+    descriptif d'une offre cite « drone » pour un rien)."""
+    return bool(title) and not JOB_NOISE.search(title) and matches(title)
 # Adzuna : API officielle (clé gratuite sur developer.adzuna.com), un appel
 # par pays et par nuit ; sans clé la source est sautée proprement.
 ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "").strip()
@@ -182,7 +192,7 @@ SPECIALTY_RULES = [
 
 # Termes qui signalent un avis SUR les drones mais pas POUR un pilote (lutte
 # anti-drone, véhicules de surface ou terrestres sans équipage).
-NOISE = re.compile(r"anti-?drones?|contre les (?:drones|syst[èe]mes d.a[ée]ronef)|counter-?\s?(?:uas|drone|uav)|c-uas|"
+NOISE = re.compile(r"anti-?drones?|contre les (?:drones|syst[èe]mes d.a[ée]ronef)|counter-?\s?(?:uas|drone|uav)|c[-‑–]uas|"
                    r"drone remote id|remote id|d[ée]tection (?:et neutralisation )?de drones|neutralisation de drones|brouill\w+|"
                    r"v[ée]hicule (?:de surface|terrestre) sans [ée]quipage|unmanned (?:surface|ground) vehicle|drones? navals?|"
                    r"\bvsse\b|\busv\b|\bugv\b|munitions?|lõhkepea|minendetektion|mine ?detection|"
@@ -1041,7 +1051,7 @@ def parse_jobbank(entries_en: list, entries_fr: list) -> list:
         e_en, e_fr = en.get(ref) or {}, fr.get(ref) or {}
         # le Guichet publie les intitulés tout en minuscules (« drone technician »)
         title_en, title_fr = (t[:1].upper() + t[1:] for t in (e_en.get("title") or "", e_fr.get("title") or ""))
-        if not (matches(title_en) or matches(title_fr)):
+        if not (job_matches(title_en) or job_matches(title_fr)):
             continue
         f_en, f_fr = _jobbank_fields(e_en.get("summary") or ""), _jobbank_fields(e_fr.get("summary") or "")
         location = f_fr.get("location") or f_en.get("location") or ""
@@ -1092,9 +1102,7 @@ def parse_adzuna(data: dict, country: str) -> list:
         title = re.sub(r"\s+", " ", _strip_html(r.get("title") or "")).strip()
         desc = _strip_html(r.get("description") or "")
         url = (r.get("redirect_url") or "").strip()
-        # Titre seul : le descriptif Adzuna est un extrait où « drone » peut
-        # être incident (« emballer des drones ») ; un intitulé, lui, ne ment pas.
-        if not title or not url or not matches(title):
+        if not url or not job_matches(title):
             continue
         loc = r.get("location") or {}
         area = [a for a in (loc.get("area") or []) if a]

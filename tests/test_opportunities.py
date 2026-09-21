@@ -79,6 +79,10 @@ def _adzuna_payload():
          "redirect_url": "https://www.adzuna.ca/land/ad/5002", "company": {"display_name": "X"}, "location": {"area": ["Canada"]}},
         {"id": "5003", "title": "Warehouse associate", "description": "Pack drones for shipping. Drones drones.", "created": "2026-09-19T08:00:00Z",
          "redirect_url": "https://www.adzuna.ca/land/ad/5003", "company": {"display_name": "Y"}, "location": {"area": ["Canada", "Ontario"]}},
+        {"id": "5004", "title": "Oracle Retail SIOCS/MFCS/RPAS – Technical Lead", "description": "", "created": "2026-09-19T08:00:00Z",
+         "redirect_url": "https://www.adzuna.ca/land/ad/5004", "company": {"display_name": "Z"}, "location": {"area": ["Canada"]}},
+        {"id": "5005", "title": "Electronics Design Engineer Interceptor C‑UAS", "description": "", "created": "2026-09-19T08:00:00Z",
+         "redirect_url": "https://www.adzuna.ca/land/ad/5005", "company": {"display_name": "Z"}, "location": {"area": ["Canada"]}},
     ]}
 
 
@@ -95,7 +99,7 @@ def test_parse_emplois_jobbank_et_adzuna():
     assert items[0]["title_fr"] == items[0]["title_en"] and items[0]["region"] == "Canada" and "guichetemplois" in items[0]["url_fr"]
 
     jobs = opp.parse_adzuna(_adzuna_payload(), "Canada")
-    assert [j["source_ref"] for j in jobs] == ["5001"]   # anti-drone et « drones » dans le corps seulement : écartés
+    assert [j["source_ref"] for j in jobs] == ["5001"]   # anti-drone (C-UAS, trait insécable), corps seul, RPAS d'Oracle : écartés
     j = jobs[0]
     assert j["region"] == "Alberta" and j["city"] == "Calgary" and j["org"] == "Prairie Geomatics"
     assert j["notice_type"] == "permanent, full time" and j["summary_fr"].endswith("(65,000–80,000)")
