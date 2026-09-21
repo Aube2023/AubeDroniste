@@ -99,24 +99,27 @@ def telemetry_ingest():
     if len(raw_packets) > BEACON_MAX_BATCH:
         return _json_error(400, "validation", f"batch larger than {BEACON_MAX_BATCH} packets")
 
-    packets = []
-    for i, raw in enumerate(raw_packets):
-        try:
-            packets.append(_telemetry.parse_packet(raw))
-        except _telemetry.TelemetryError as exc:
-            return _json_error(400, "validation", exc.message, path=exc.path, packet_index=i)
-    uid = packets[0]["device_id"]
-    if any(p["device_id"] != uid for p in packets):
-        return _json_error(400, "validation", "all packets of a batch must share device_id", packet_index=0)
-
+    # Authentification AVANT la validation : un inconnu reçoit toujours 401,
+    # jamais le détail du format attendu. Le device_id vient du premier paquet.
+    first = raw_packets[0] if isinstance(raw_packets[0], dict) else {}
+    uid = first.get("device_id") if isinstance(first.get("device_id"), str) else ""
     ip = security.client_ip()
     device, why = _devices.authenticate(uid, _bearer(), ip=ip)
     if device is None:
         if why == "disabled":
             return _json_error(403, "device_disabled", "this beacon is disabled")
         return _json_error(401, "unauthorized", "unknown device or bad token")
-    if not _device_rate_ok(uid, len(packets)):
+    if not _device_rate_ok(uid, len(raw_packets)):
         return _json_error(429, "rate_limited", f"more than {BEACON_DEVICE_RATE_PER_MIN} packets per minute")
+
+    packets = []
+    for i, raw in enumerate(raw_packets):
+        try:
+            packets.append(_telemetry.parse_packet(raw))
+        except _telemetry.TelemetryError as exc:
+            return _json_error(400, "validation", exc.message, path=exc.path, packet_index=i)
+    if any(p["device_id"] != uid for p in packets):
+        return _json_error(400, "validation", "all packets of a batch must share device_id", packet_index=0)
 
     received_at = _devices.now_iso()
     try:
