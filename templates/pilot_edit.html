@@ -165,6 +165,7 @@
 
 <form method="post" class="card">
         {{ csrf_input() }}
+  <input type="hidden" name="profile_form" value="1">
   <h2>{{ t('tpl.identite_zone') }}</h2>
   <div class="grid-2">
     <label>{{ t('tpl.type_de_profil') }}
@@ -237,6 +238,25 @@
   <p class="muted small" style="margin-top: 6px;">
     {{ t('tpl.cette_case_est_une_declaration_le') }}
   </p>
+
+  {# Spécialités : ce que le pilote sait faire, une page publique par
+     spécialité. Le bloc avait disparu du formulaire le 2026-09-10 (remplacé
+     par erreur par les livrables) : chaque enregistrement effaçait les
+     spécialités. #}
+  <h2 id="specialites">{{ t('tpl.specialites') }}</h2>
+  <p class="muted small" style="margin: 0 0 10px;">{{ t('tpl.vis_specialties_why') }}</p>
+  <div class="spec-groups">
+    {% for gname, codes in mission_groups %}
+    <div class="spec-group">
+      <div class="spec-group-title">{{ mission_group_label(gname) }}</div>
+      <div class="chips check-grid">
+        {% for code in codes %}
+        <label class="chip-check"><input type="checkbox" name="specialties" value="{{ code }}" {% if code in (profile.specialties or []) %}checked{% endif %}> {{ mission_label(code) }}</label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 
 <h2 id="livrables">{{ t('deliverables.title') }}</h2>
   <p class="muted small" style="margin: 0 0 10px;">{{ t('deliverables.hint') }}</p>

@@ -2148,13 +2148,21 @@ def pilot_edit():
             kind=_profile_kind(request.form.get("kind")) or "pro",
             school_programs=(request.form.get("school_programs") or "").strip()[:2000],
         )
-        services.set_pilot_specialties(user["id"], request.form.getlist("specialties"))
+        # Les listes a cases (specialites, livrables, liens, territoires) ne
+        # sont reecrites que si le formulaire complet a ete envoye : un envoi
+        # partiel ne doit jamais les vider (le 2026-09-10, le bloc des
+        # specialites avait disparu du gabarit et chaque enregistrement les
+        # effacait).
+        full_form = bool(request.form.get("profile_form"))
+        if full_form:
+            services.set_pilot_specialties(user["id"], request.form.getlist("specialties"))
         countries = request.form.getlist("territory_country")
         regions = request.form.getlist("territory_region")
-        services.set_pilot_territories(
-            user["id"],
-            [{"country": c, "region": r} for c, r in zip(countries, regions) if c],
-        )
+        if full_form:
+            services.set_pilot_territories(
+                user["id"],
+                [{"country": c, "region": r} for c, r in zip(countries, regions) if c],
+            )
         # bio + ville. Sans GPS explicite mais avec une ville/pays -> on geocode
         # pour apparaitre sur la carte (idem inscription). Non bloquant.
         _city = (request.form.get("city") or "").strip()
@@ -2181,9 +2189,10 @@ def pilot_edit():
                 user["id"],
             ),
         )
-        services.set_pilot_deliverables(user["id"], request.form.getlist("deliverables"))
-        services.set_pilot_links(user["id"], zip(request.form.getlist("link_kind"),
-                                                 request.form.getlist("link_url")))
+        if full_form:
+            services.set_pilot_deliverables(user["id"], request.form.getlist("deliverables"))
+            services.set_pilot_links(user["id"], zip(request.form.getlist("link_kind"),
+                                                     request.form.getlist("link_url")))
         flash("Profil pilote mis a jour.", "success")
         _ping_index([f"/pilotes/{user['id']}", "/pilotes"])
         return redirect(url_for("pilot_edit"))

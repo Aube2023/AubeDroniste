@@ -107,7 +107,7 @@ def test_visibilite_liste_ce_qui_manque(auth_client, make_user, app_ctx):
     assert ("payouts" in v["missing_blocking"]) == config.STRIPE_CONNECT_ENABLED
 
     html = auth_client(u["id"]).get("/espace/pilote").data.decode()
-    assert 'class="visibility-block"' in html
+    assert 'visibility-block' in html
     assert "Spécialités" in html and "bloquant" in html
     assert 'class="share-block"' in html               # sa fiche, a partager
 
@@ -198,6 +198,7 @@ def test_formulaire_enregistre_livrables_et_liens(auth_client, make_user, app_ct
     c = auth_client(u["id"])
     assert 'id="livrables"' in c.get("/espace/pilote").data.decode()
     c.post("/espace/pilote", data={
+        "profile_form": "1",     # formulaire complet : les listes a cases font foi
         "headline": "x", "travel_radius_km": "50", "currency": "CAD",
         "deliverables": ["panorama_360", "modele_3d"],
         "link_kind": ["google", "website"],

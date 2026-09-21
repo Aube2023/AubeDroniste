@@ -194,3 +194,27 @@ def test_photo_de_profil_cliquable_en_grand(client, make_user):
     html = client.get(f"/pilotes/{u['id']}").get_data(as_text=True)
     assert 'class="avatar big avatar-zoom"' in html and "data-zoom" in html
     assert "makeViewer" in client.get("/static/js/app.js").get_data(as_text=True)
+
+
+def test_pilot_edit_specialites_presentes_et_jamais_effacees_par_un_envoi_partiel(client, auth_client, make_user):
+    """Le bloc des spécialités avait disparu du formulaire le 2026-09-10 :
+    chaque enregistrement effaçait les spécialités du pilote (trois pilotes
+    en prod à zéro le 2026-09-21). Le bloc est de retour, et un envoi sans le
+    formulaire complet (marqueur profile_form) ne touche plus aux listes."""
+    import services
+    u = make_user("spec_keep", role="pilot", country="Canada")
+    with client.application.app_context():
+        services.set_pilot_specialties(u["id"], ["inspection", "mapping"])
+    c = auth_client(u["id"])
+    html = c.get("/espace/pilote").data.decode()
+    assert 'name="specialties" value="inspection" checked' in html and 'name="specialties" value="mapping" checked' in html
+    assert 'id="specialites"' in html and 'name="profile_form"' in html
+    base = {"kind": "pro", "country": "Canada", "currency": "CAD", "travel_radius_km": "50"}
+    # envoi partiel (sans marqueur) : les spécialités restent
+    c.post("/espace/pilote", data=base)
+    with client.application.app_context():
+        assert sorted(services.get_pilot_profile(u["id"])["specialties"]) == ["inspection", "mapping"]
+    # formulaire complet : ce qui est coché fait foi
+    c.post("/espace/pilote", data={**base, "profile_form": "1", "specialties": ["photo", "video"]})
+    with client.application.app_context():
+        assert sorted(services.get_pilot_profile(u["id"])["specialties"]) == ["photo", "video"]
