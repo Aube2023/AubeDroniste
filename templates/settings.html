@@ -123,58 +123,58 @@
   </div>
 </div>
 
-{# ================= Sessions ================= #}
-<section class="card" style="margin-top: 24px;">
-  <div class="row-between" style="align-items: end; flex-wrap: wrap; gap: 12px;">
-    <div>
-      <span class="eyebrow">{{ t('tpl.securite') }}</span>
-      <h2 style="font-size: 1.25rem; margin: 4px 0 6px;">{{ t('tpl.appareils_connectes') }}</h2>
-      <p class="muted small" style="margin: 0;">{{ sessions|length }} {{ t('tpl.session_s_active_s_les_sessions') }}</p>
-    </div>
-    <form method="post" action="{{ url_for('settings_sessions_revoke') }}">
+{# ================= Sécurité (appareils) et personnes bloquées, côte à côte ================= #}
+<div class="grid-2" style="align-items: start; gap: 24px; margin-top: 24px;">
+  <section class="card">
+    <span class="eyebrow">{{ t('tpl.securite') }}</span>
+    <h2 style="font-size: 1.25rem; margin: 4px 0 6px;">{{ t('tpl.appareils_connectes') }}</h2>
+    <p class="muted small" style="margin: 0;">{{ sessions|length }} {{ t('tpl.session_s_active_s_les_sessions') }}</p>
+    <ul class="stack-list">
+      {% for s in sessions %}
+      <li>
+        <div class="who">{{ s.created_at[:16] }} · {{ s.ip or '—' }}{% if s.is_current %} · <strong style="color: var(--teal);">{{ t('tpl.cet_appareil') }}</strong>{% endif %}</div>
+        <div class="body small muted">{{ s.user_agent or t('tpl.unknown_browser') }} · {{ t('tpl.expire_le_2') }} {{ s.expires_at[:10] }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if sessions|length > 1 %}
+    <form method="post" action="{{ url_for('settings_sessions_revoke') }}" style="margin-top: 12px;">
       {{ csrf_input() }}
       <button class="ghost danger" type="submit" data-confirm="{{ t('tpl.deconnecter_tous_les_autres_appareils') }}">{{ t('tpl.deconnecter_les_autres_appareils') }}</button>
     </form>
-  </div>
-  <ul class="stack-list">
-    {% for s in sessions %}
-    <li>
-      <div class="who">{{ s.created_at[:16] }} · {{ s.ip or '—' }}{% if s.is_current %} · <strong style="color: var(--teal);">{{ t('tpl.cet_appareil') }}</strong>{% endif %}</div>
-      <div class="body small muted">{{ s.user_agent or t('tpl.unknown_browser') }} · {{ t('tpl.expire_le_2') }} {{ s.expires_at[:10] }}</div>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
+    {% endif %}
+  </section>
 
-{# ================= Données ================= #}
+  <section class="card">
+    <span class="eyebrow">{{ t('block.list_title') }}</span>
+    <p class="muted small" style="margin: 6px 0 12px;">{{ t('block.list_hint') }}</p>
+    {% if blocked_users %}
+    <ul class="blocked-list">
+      {% for b in blocked_users %}
+      <li>
+        <span>{{ b.full_name or b.username }} <span class="muted small">· @{{ b.username }}</span></span>
+        <form method="post" action="{{ url_for('unblock_user', user_id=b.id) }}" class="inline">
+          {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+          <button class="ghost small" type="submit">{{ t('block.unblock') }}</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">{{ t('block.list_empty') }}</p>
+    {% endif %}
+  </section>
+</div>
+
+{# ================= Données : l'export en un bouton, la suppression repliée ================= #}
 <section class="card" style="margin-top: 24px;">
-  <span class="eyebrow">{{ t('block.list_title') }}</span>
-  <p class="muted small" style="margin: 6px 0 12px;">{{ t('block.list_hint') }}</p>
-  {% if blocked_users %}
-  <ul class="blocked-list">
-    {% for b in blocked_users %}
-    <li>
-      <span>{{ b.full_name or b.username }} <span class="muted small">· @{{ b.username }}</span></span>
-      <form method="post" action="{{ url_for('unblock_user', user_id=b.id) }}" class="inline">
-        {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
-        <button class="ghost small" type="submit">{{ t('block.unblock') }}</button>
-      </form>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="muted">{{ t('block.list_empty') }}</p>
-  {% endif %}
-</section>
-
-<section class="card" style="margin-top: 24px; border-left: 3px solid var(--signal);">
   <span class="eyebrow">{{ t('tpl.vos_donnees_loi_25_rgpd') }}</span>
   <h2 style="font-size: 1.25rem; margin: 4px 0 12px;">{{ t('tpl.exporter_ou_supprimer') }}</h2>
-  <div class="grid-2" style="gap: 24px; align-items: start;">
-    <div>
-      <p class="muted small">{{ t('tpl.telechargez_tout_ce_que_la_plateforme') }}</p>
-      <a class="ghost" href="{{ url_for('settings_export') }}">{{ t('tpl.telecharger_mes_donnees_json') }}</a>
-    </div>
+  <p class="muted small">{{ t('tpl.telechargez_tout_ce_que_la_plateforme') }}</p>
+  <a class="ghost" href="{{ url_for('settings_export') }}">{{ t('tpl.telecharger_mes_donnees_json') }}</a>
+
+  <details class="danger-zone">
+    <summary>{{ t('tpl.supprimer_mon_compte') }}</summary>
     <form method="post" action="{{ url_for('settings_delete') }}" data-confirm="{{ t('tpl.supprimer_definitivement_votre_compte') }}">
       {{ csrf_input() }}
       <p class="muted small">
@@ -182,14 +182,16 @@
         {% if deletion_blockers %}<br><strong style="color: var(--signal);">{{ t('tpl.not_possible_now') }}</strong> {{ deletion_blockers|join(' ; ') }}.{% endif %}
       </p>
       {% if not deletion_blockers %}
-      <label class="small">{{ t('tpl.tapez') }} <strong>SUPPRIMER</strong> {{ t('tpl.pour_confirmer') }}<input name="confirm_word" required pattern="SUPPRIMER" autocomplete="off"></label>
-      {% if not password_managed_elsewhere %}
-      <label class="small">{{ t('tpl.mot_de_passe_actuel') }}<input name="password" type="password" required autocomplete="current-password"></label>
-      {% endif %}
+      <div class="grid-2" style="gap: 12px; align-items: end;">
+        <label class="small">{{ t('tpl.tapez') }} <strong>SUPPRIMER</strong> {{ t('tpl.pour_confirmer') }}<input name="confirm_word" required pattern="SUPPRIMER" autocomplete="off"></label>
+        {% if not password_managed_elsewhere %}
+        <label class="small">{{ t('tpl.mot_de_passe_actuel') }}<input name="password" type="password" required autocomplete="current-password"></label>
+        {% endif %}
+      </div>
       <button class="ghost danger" type="submit">{{ t('tpl.supprimer_mon_compte') }}</button>
       {% endif %}
     </form>
-  </div>
+  </details>
 </section>
 
 {% endblock %}

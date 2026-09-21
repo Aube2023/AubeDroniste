@@ -2783,3 +2783,16 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
   .lightbox .lb-prev, .lightbox .lb-next { top: auto; bottom: 18px; transform: none; }
   .lightbox img { max-height: 76vh; }
 }
+
+/* ---- paramètres : zone de suppression repliée (2026-09-21) ---- */
+.danger-zone { margin-top: 22px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.danger-zone > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  font: 600 14px/1 var(--display); color: var(--signal);
+}
+.danger-zone > summary::-webkit-details-marker { display: none; }
+.danger-zone > summary::after { content: "▾"; font-size: .85em; transition: transform .15s; }
+.danger-zone[open] > summary::after { transform: rotate(180deg); }
+.danger-zone[open] > form { margin-top: 12px; padding: 14px 16px; border-left: 3px solid var(--signal); background: var(--paper-2); border-radius: 0 10px 10px 0; }
+.danger-zone .small input { margin-top: 4px; }
+
