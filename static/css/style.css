@@ -2567,10 +2567,10 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .section.section-tight + .section.section-tight { margin-top: 0; }
 .section-line { align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .section-line h2 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
-#pilotes .dir-tabs { margin-bottom: 16px; }
+#pilotes .dir-tabs { margin: 0 auto 16px; }
 .dir-tabs {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  margin: 0 0 12px; padding: 6px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  margin: 0 auto 12px; padding: 6px;
   border: 1px solid var(--rule); border-radius: 999px; background: var(--paper-2);
   width: fit-content; max-width: 100%;
 }
