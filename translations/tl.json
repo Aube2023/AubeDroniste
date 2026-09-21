@@ -1302,7 +1302,17 @@
   "map.style_noir": "Itim",
   "map.style_nuit": "Asul na gabi",
   "map.style_couleurs": "May kulay",
-  "map.style_clair": "Maliwanag"
+  "map.style_clair": "Maliwanag",
+  "opp.jobs_nav": "Mga trabaho",
+  "opp.jobs_h1": "Mga trabaho sa larangan ng drone",
+  "opp.jobs_lead": "Mga alok na trabaho para sa mga piloto at technician ng drone, kinokolekta gabi-gabi mula sa mga pampublikong serbisyo sa trabaho at opisyal na API, ayon sa bansa at probinsya. Libre, walang pagpaparehistro.",
+  "opp.jobs_count": "{n} alok na trabaho",
+  "opp.posted": "Nai-post noong",
+  "opp.jobs_about": "Ang mga alok na ito ay mula sa mga opisyal na feed at API, kasama ang kanilang lisensya:",
+  "opp.jobs_empty": "Walang alok na trabaho para sa mga pamantayang ito.",
+  "opp.jobs_empty_hint": "Palawakin ang bansa o probinsya: nire-refresh ang listahan gabi-gabi.",
+  "opp.view_job": "Tingnan ang alok →",
+  "opp.jobs_all": "Tingnan ang lahat ng alok na trabaho →"
  },
  "seo": {
   "home.title": "Umupa ng Sertipikadong Piloto ng Drone — Libreng Quote | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Mga tender at kontrata para sa drone sa Canada | AubePilot",
   "opportunities_page.description": "Pampublikong tender para sa drone pilot (LiDAR, photogrammetry, inspeksyon) ayon sa probinsya, may deadline at link sa abiso. Libre, updated gabi-gabi.",
   "partners_page.title": "Ang aming mga kasosyo | AubePilot",
-  "partners_page.description": "Mga paaralan, insurer, tindahan, asosasyon at media na sumusuporta sa network ng AubePilot at sa mga piloto ng drone nito."
+  "partners_page.description": "Mga paaralan, insurer, tindahan, asosasyon at media na sumusuporta sa network ng AubePilot at sa mga piloto ng drone nito.",
+  "jobs_page.title": "Mga trabaho sa drone: piloto, remote pilot, technician | AubePilot",
+  "jobs_page.description": "Mga alok na trabaho para sa mga piloto at technician ng drone, kinokolekta gabi-gabi mula sa mga pampublikong serbisyo sa trabaho at opisyal na API, ayon sa bansa at probinsya, may link sa alok. Libre."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

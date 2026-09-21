@@ -1302,7 +1302,17 @@
   "map.style_noir": "ブラック",
   "map.style_nuit": "ナイトブルー",
   "map.style_couleurs": "カラー",
-  "map.style_clair": "ライト"
+  "map.style_clair": "ライト",
+  "opp.jobs_nav": "求人",
+  "opp.jobs_h1": "ドローン業界の求人",
+  "opp.jobs_lead": "ドローンのパイロットと技術者向けの求人情報を、公共職業サービスと公式 API から毎晩収集し、国と地域別に掲載。無料、登録不要。",
+  "opp.jobs_count": "求人 {n} 件",
+  "opp.posted": "掲載日",
+  "opp.jobs_about": "これらの求人は公式フィードと API から取得し、ライセンスを明記しています：",
+  "opp.jobs_empty": "この条件に合う求人はありません。",
+  "opp.jobs_empty_hint": "国や地域を広げてみてください。一覧は毎晩更新されます。",
+  "opp.view_job": "求人を見る →",
+  "opp.jobs_all": "すべての求人を見る →"
  },
  "seo": {
   "home.title": "認定ドローンパイロットを探す — 無料見積もり | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "カナダのドローン入札・契約案件 | AubePilot",
   "opportunities_page.description": "ドローンパイロット、LiDAR、写真測量、点検の公共入札を州ごとに掲載。締切日と公告へのリンク付き。無料、毎晩更新。",
   "partners_page.title": "私たちのパートナー | AubePilot",
-  "partners_page.description": "AubePilot ネットワークとそのドローンパイロットを支える学校、保険会社、ショップ、協会、メディア。"
+  "partners_page.description": "AubePilot ネットワークとそのドローンパイロットを支える学校、保険会社、ショップ、協会、メディア。",
+  "jobs_page.title": "ドローン求人：パイロット、操縦者、技術者 | AubePilot",
+  "jobs_page.description": "ドローンのパイロットと技術者向けの求人情報を、公共職業サービスと公式 API から毎晩収集し、国・地域別に求人へのリンク付きで掲載。無料。"
  },
  "countries": {
   "Afghanistan": "アフガニスタン",

@@ -217,7 +217,7 @@ _static_ver_cache: dict = {}
 # sous /ru/faq en le declarant russe tromperait les moteurs.
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
-    "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None,
+    "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None, "jobs": None,
     "partners": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
@@ -1043,24 +1043,40 @@ def admin_partner_delete(partner_id):
     return redirect(url_for("admin_partners"))
 
 
-@app.route("/opportunites")
-def opportunities():
-    """Appels d'offres publics pour les pros du drone, repris de données
-    ouvertes (CanadaBuys, SEAO) avec leur source et un lien vers l'avis."""
+def _opportunities_page(kind: str):
+    """Page commune aux appels d'offres (kind=tender) et aux emplois
+    (kind=job) : mêmes filtres, mêmes fiches, onglet pour passer de l'un à
+    l'autre."""
     lang = getattr(g, "lang", i18n.DEFAULT)
     country = (request.args.get("country") or "").strip()
     region = (request.args.get("region") or "").strip()
     specialty = (request.args.get("mission_type") or "").strip()
     text = (request.args.get("q") or "").strip()[:80]
     items = services.localize_opportunities(
-        services.list_opportunities(country=country, region=region, specialty=specialty, text=text), lang)
+        services.list_opportunities(kind=kind, country=country, region=region, specialty=specialty, text=text), lang)
     return render_template(
-        "opportunities.html", items=items, regions=services.opportunity_regions(country) if country else [],
-        countries=services.opportunity_countries(),
+        "opportunities.html", kind=kind, items=items,
+        regions=services.opportunity_regions(country, kind) if country else [],
+        countries=services.opportunity_countries(kind),
+        counts={"tender": services.count_opportunities("tender"), "job": services.count_opportunities("job")},
         country=country, region=region, specialty=specialty, q=text,
-        sources=__import__("opportunities").SOURCES,
-        seo=seo.opportunities_page(lang),
+        sources={k: v for k, v in __import__("opportunities").SOURCES.items() if v["kind"] == kind},
+        seo=seo.jobs_page(lang) if kind == "job" else seo.opportunities_page(lang),
     )
+
+
+@app.route("/opportunites")
+def opportunities():
+    """Appels d'offres publics pour les pros du drone, repris de données
+    ouvertes (CanadaBuys, SEAO, TED…) avec leur source et un lien vers l'avis."""
+    return _opportunities_page("tender")
+
+
+@app.route("/emplois")
+def jobs():
+    """Offres d'emploi drone reprises de flux et d'API officiels
+    (Guichet-Emplois, Adzuna), avec leur source et un lien vers l'offre."""
+    return _opportunities_page("job")
 
 
 @app.route("/admin/opportunites")

@@ -4586,14 +4586,17 @@ def _rowcount(cur) -> int:
 # Opportunites (appels d'offres publics, cf. opportunities.py)
 # ---------------------------------------------------------------------------
 
-def list_opportunities(*, country: str = "", region: str = "", specialty: str = "",
+def list_opportunities(*, kind: str = "", country: str = "", region: str = "", specialty: str = "",
                        text: str = "", limit: int = 200, include_hidden: bool = False) -> list:
-    """Fiches ouvertes, les clôtures les plus proches d'abord (celles sans
-    date à la fin). L'admin voit aussi les fiches masquées et closes."""
+    """Fiches ouvertes : appels d'offres (kind=tender) les clôtures les plus
+    proches d'abord (celles sans date à la fin), emplois (kind=job) les plus
+    récents d'abord. L'admin voit aussi les fiches masquées et closes."""
     q = ["SELECT * FROM opportunities WHERE 1=1"]
     args: list = []
     if not include_hidden:
         q.append("AND status='published' AND (closes_at IS NULL OR closes_at >= date('now'))")
+    if kind:
+        q.append("AND kind=?"); args.append(kind)
     if country:
         q.append("AND country=?"); args.append(country)
     if region:
@@ -4604,7 +4607,10 @@ def list_opportunities(*, country: str = "", region: str = "", specialty: str = 
         like = f"%{text.strip().lower()}%"
         q.append("AND (lower(title_fr) LIKE ? OR lower(title_en) LIKE ? OR lower(org) LIKE ? OR lower(summary_fr) LIKE ?)")
         args.extend([like, like, like, like])
-    q.append("ORDER BY status='published' DESC, closes_at IS NULL, closes_at, id DESC LIMIT ?")
+    if kind == "job":
+        q.append("ORDER BY status='published' DESC, published_at DESC, id DESC LIMIT ?")
+    else:
+        q.append("ORDER BY status='published' DESC, closes_at IS NULL, closes_at, id DESC LIMIT ?")
     args.append(limit)
     return [dict(r) for r in db.fetchall(" ".join(q), args)]
 
@@ -4629,31 +4635,40 @@ def localize_opportunities(items: list, lang: str) -> list:
         o["country_label"] = i18n.country_name(o.get("country") or "", lang)
         o["source_label"] = {"canadabuys": "CanadaBuys", "seao": "SEAO", "ted": "TED", "boamp": "BOAMP",
                              "contractsfinder": "Contracts Finder", "austender": "AusTender", "gets": "GETS",
-                             "secop": "SECOP II", "samgov": "SAM.gov"}.get(o.get("source"), o.get("source"))
+                             "secop": "SECOP II", "samgov": "SAM.gov",
+                             "jobbank": "Guichet-Emplois" if fr else "Job Bank", "adzuna": "Adzuna"}.get(o.get("source"), o.get("source"))
+        o["source_url"] = {"jobbank": "https://www.guichetemplois.gc.ca/" if fr else "https://www.jobbank.gc.ca/",
+                           "adzuna": "https://www.adzuna.com/"}.get(o.get("source"), "")   # attribution demandée par ces sources
     return items
 
 
-def opportunity_countries() -> list:
+_OPEN = "status='published' AND (closes_at IS NULL OR closes_at >= date('now'))"
+
+
+def opportunity_countries(kind: str = "") -> list:
     """Pays présents parmi les fiches ouvertes, avec leur nombre."""
-    return [dict(r) for r in db.fetchall(
-        "SELECT country, COUNT(*) AS n FROM opportunities WHERE status='published' "
-        "AND (closes_at IS NULL OR closes_at >= date('now')) GROUP BY country ORDER BY n DESC, country")]
+    q, args = f"SELECT country, COUNT(*) AS n FROM opportunities WHERE {_OPEN}", []
+    if kind:
+        q += " AND kind=?"; args.append(kind)
+    return [dict(r) for r in db.fetchall(q + " GROUP BY country ORDER BY n DESC, country", args)]
 
 
-def opportunity_regions(country: str = "") -> list:
+def opportunity_regions(country: str = "", kind: str = "") -> list:
     """Régions présentes parmi les fiches ouvertes, avec leur nombre."""
-    q = ("SELECT region, COUNT(*) AS n FROM opportunities WHERE status='published' "
-         "AND (closes_at IS NULL OR closes_at >= date('now'))")
-    args: list = []
+    q, args = f"SELECT region, COUNT(*) AS n FROM opportunities WHERE {_OPEN}", []
+    if kind:
+        q += " AND kind=?"; args.append(kind)
     if country:
         q += " AND country=?"; args.append(country)
     q += " GROUP BY region ORDER BY region=country, region"
     return [dict(r) for r in db.fetchall(q, args)]
 
 
-def count_opportunities() -> int:
-    return db.fetchone("SELECT COUNT(*) AS n FROM opportunities WHERE status='published' "
-                       "AND (closes_at IS NULL OR closes_at >= date('now'))")["n"]
+def count_opportunities(kind: str = "") -> int:
+    q, args = f"SELECT COUNT(*) AS n FROM opportunities WHERE {_OPEN}", []
+    if kind:
+        q += " AND kind=?"; args.append(kind)
+    return db.fetchone(q, args)["n"]
 
 
 def opportunities_for_user(user: dict, lang: str = "fr", limit: int = 5) -> list:

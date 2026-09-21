@@ -1,11 +1,13 @@
-"""Opportunités pour les pros du drone : appels d'offres publics repris de
-sources OUVERTES, avec leur licence, leur source et un lien vers l'avis.
+"""Opportunités pour les pros du drone : appels d'offres publics et offres
+d'emploi repris de sources OUVERTES, avec leur licence, leur source et un lien
+vers l'avis (colonne `kind` : tender | job).
 
 Règles (le service est gratuit et doit rester irréprochable) :
 - uniquement des jeux de données ouverts publiés par les organismes
   eux-mêmes : CanadaBuys (Licence du gouvernement ouvert, Canada) et le SEAO
   du Québec (Données Québec, CC BY 4.0) ; pas de scraping de sites qui
-  l'interdisent, pas de sites d'emploi sans flux officiel ;
+  l'interdisent, pas de sites d'emploi sans flux ou API officiels (emplois :
+  flux Atom du Guichet-Emplois du Canada, API Adzuna sur clé) ;
 - on republie le titre, l'organisme, la région, la date de clôture et un
   court résumé (400 caractères), jamais l'avis complet ; chaque fiche cite
   sa source et renvoie vers l'avis d'origine ;
@@ -63,7 +65,14 @@ SOURCES = {
               "url": "https://www.datos.gov.co/"},
     "samgov": {"label": "SAM.gov (États-Unis)", "licence": "U.S. Government Work, données publiques",
                "url": "https://sam.gov/"},
+    # Emplois (kind = job)
+    "jobbank": {"label": "Guichet-Emplois / Job Bank (Canada)", "licence": "Flux Atom officiel, reproduction non commerciale avec mention de la source",
+                "url": "https://www.guichetemplois.gc.ca/", "kind": "job"},
+    "adzuna": {"label": "Adzuna (19 pays)", "licence": "API officielle, attribution « Jobs by Adzuna »",
+               "url": "https://www.adzuna.com/", "kind": "job"},
 }
+for _s in SOURCES.values():
+    _s.setdefault("kind", "tender")
 AUSTENDER_RSS = "https://www.tenders.gov.au/public_data/rss/rss.xml"
 GETS_RSS = "https://www.gets.govt.nz/ExternalRSSFeed.htm"
 SECOP_API = ("https://www.datos.gov.co/resource/p6dx-8zbt.json?$limit=200&$order=fecha_de_publicacion_del%20DESC"
@@ -80,6 +89,26 @@ _SECOP_API_OLD = ("https://www.datos.gov.co/resource/p6dx-8zbt.json?$limit=200&$
 SAMGOV_API = ("https://api.sam.gov/opportunities/v2/search?limit=100&api_key={key}&postedFrom={frm}&postedTo={to}"
               "&ptype=o,k,p&keywords={kw}")
 SAMGOV_KEY = os.environ.get("SAMGOV_API_KEY", "").strip()
+# Emplois. Guichet-Emplois : flux Atom officiel de la recherche (lien « RSS »
+# de la page de résultats). Il ne couvre que les offres des 3 derniers jours,
+# d'où la collecte nocturne, et cherche dans les titres (mot entier) : on
+# interroge quelques termes, en anglais et en français, et on fusionne par
+# numéro d'offre (le même dans les deux langues).
+JOBBANK_FEED_EN = "https://www.jobbank.gc.ca/jobsearch/feed/jobSearchRSSfeed?searchstring={q}&sort=D&rows=100"
+JOBBANK_FEED_FR = "https://www.guichetemplois.gc.ca/jobsearch/feed/jobSearchRSSfeed?searchstring={q}&sort=D&rows=100"
+JOBBANK_TERMS = ("drone", "drones", "UAV", "RPAS", "télépilote")
+JOB_DAYS = 30                  # une offre sans date de fin est proposée 30 jours après sa publication
+# Adzuna : API officielle (clé gratuite sur developer.adzuna.com), un appel
+# par pays et par nuit ; sans clé la source est sautée proprement.
+ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "").strip()
+ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY", "").strip()
+ADZUNA_API = ("https://api.adzuna.com/v1/api/jobs/{cc}/search/1?app_id={app_id}&app_key={app_key}"
+              "&results_per_page=50&what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Drohne%20dron"
+              "&max_days_old=30&sort_by=date&content-type=application/json")
+ADZUNA_COUNTRIES = {"ca": "Canada", "us": "États-Unis", "gb": "Royaume-Uni", "fr": "France", "de": "Allemagne",
+                    "es": "Espagne", "it": "Italie", "nl": "Pays-Bas", "be": "Belgique", "ch": "Suisse", "at": "Autriche",
+                    "pl": "Pologne", "au": "Australie", "nz": "Nouvelle-Zélande", "br": "Brésil", "mx": "Mexique",
+                    "in": "Inde", "sg": "Singapour", "za": "Afrique du Sud"}
 US_STATES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut",
              "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida", "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois",
              "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
@@ -943,6 +972,166 @@ def collect_samgov(conn) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Emplois : Guichet-Emplois / Job Bank (Canada), flux Atom officiel
+# ---------------------------------------------------------------------------
+
+def _atom_entries(raw: bytes) -> list:
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(raw)
+    out = []
+    for e in root.iter("{http://www.w3.org/2005/Atom}entry"):
+        d: dict = {}
+        for c in e:
+            tag = c.tag.split("}")[-1]
+            if tag == "link":
+                d["link"] = c.get("href") or ""
+            else:
+                d[tag] = (c.text or "").strip()
+        out.append(d)
+    return out
+
+
+def _jobbank_ref(link: str) -> str:
+    m = re.search(r"/jobposting/(\d+)", link or "")
+    return m.group(1) if m else ""
+
+
+_JB_LABELS = {"job number": "number", "numéro de l’offre": "number", "numéro de l'offre": "number",
+              "location": "location", "emplacement": "location", "employer": "org", "employeur": "org",
+              "salary": "salary", "salaire": "salary"}
+
+
+def _jobbank_fields(summary_html: str) -> dict:
+    """« <strong>Location:</strong> Alma (QC) <br /><strong>Employer:</strong> … »
+    -> {location: 'Alma (QC)', org: '…', salary: 'Salary: $…'} (le salaire
+    garde son libellé, dans la langue du flux)."""
+    out: dict = {}
+    for part in re.split(r"<br\s*/?>", summary_html or ""):
+        m = re.match(r"\s*<strong>(.*?)</strong>(.*)", part, re.S)
+        if not m:
+            continue
+        label = _strip_html(m.group(1)).rstrip(" :").lower()
+        key = _JB_LABELS.get(label)
+        if key == "salary":
+            out[key] = _strip_html(part)
+        elif key:
+            out[key] = _strip_html(m.group(2))
+    return out
+
+
+def _plus_days(day: Optional[str], days: int) -> Optional[str]:
+    try:
+        return (date.fromisoformat(day) + timedelta(days=days)).isoformat() if day else None
+    except ValueError:
+        return None
+
+
+def parse_jobbank(entries_en: list, entries_fr: list) -> list:
+    """Fusionne les entrées anglaises et françaises par numéro d'offre ; ne
+    garde que les titres qui parlent de drone (mot métier dans le titre)."""
+    en = {_jobbank_ref(e.get("link")): e for e in entries_en if _jobbank_ref(e.get("link"))}
+    fr = {_jobbank_ref(e.get("link")): e for e in entries_fr if _jobbank_ref(e.get("link"))}
+    items = []
+    for ref in sorted(set(en) | set(fr), key=int):
+        e_en, e_fr = en.get(ref) or {}, fr.get(ref) or {}
+        # le Guichet publie les intitulés tout en minuscules (« drone technician »)
+        title_en, title_fr = (t[:1].upper() + t[1:] for t in (e_en.get("title") or "", e_fr.get("title") or ""))
+        if not (matches(title_en) or matches(title_fr)):
+            continue
+        f_en, f_fr = _jobbank_fields(e_en.get("summary") or ""), _jobbank_fields(e_fr.get("summary") or "")
+        location = f_fr.get("location") or f_en.get("location") or ""
+        m = re.match(r"(.*?)\s*\(([A-Z]{2})\)\s*$", location)
+        city, code = (m.group(1), m.group(2)) if m else (location, "")
+        region = normalize_region(code)[0] if code else "Canada"
+        url_en = e_en.get("link") or f"https://www.jobbank.gc.ca/jobsearch/jobposting/{ref}"
+        url_fr = e_fr.get("link") or f"https://www.guichetemplois.gc.ca/jobsearch/jobposting/{ref}"
+        published = _iso_date(e_en.get("updated") or e_fr.get("updated") or "")
+        items.append({
+            "source": "jobbank", "source_ref": ref, "kind": "job",
+            "title_fr": title_fr or title_en, "title_en": title_en or title_fr,
+            "summary_fr": f_fr.get("salary") or f_en.get("salary") or "",
+            "summary_en": f_en.get("salary") or f_fr.get("salary") or "",
+            "org": f_en.get("org") or f_fr.get("org") or "", "country": "Canada", "region": region,
+            "regions_raw": location, "city": city if code else "",
+            "url_fr": url_fr, "url_en": url_en, "notice_type": "", "category": "job",
+            "specialties": specialties_for(title_en + " " + title_fr),
+            "published_at": published, "closes_at": _plus_days(published, JOB_DAYS),
+        })
+    return items
+
+
+def collect_jobbank(conn) -> dict:
+    import urllib.parse
+    entries_en: list = []
+    entries_fr: list = []
+    errors = 0
+    for term in JOBBANK_TERMS:
+        q = urllib.parse.quote(term)
+        for store, url in ((entries_en, JOBBANK_FEED_EN.format(q=q)), (entries_fr, JOBBANK_FEED_FR.format(q=q))):
+            try:
+                store.extend(_atom_entries(_fetch(url, timeout=60)))
+            except Exception as exc:
+                log.warning("jobbank %s: %s", url, exc)
+                errors += 1
+    items = parse_jobbank(entries_en, entries_fr)
+    return {"items": _upsert_many(conn, items), "seen": len(entries_en) + len(entries_fr), "errors": errors}
+
+
+# ---------------------------------------------------------------------------
+# Emplois : Adzuna (API officielle sur clé, 19 pays)
+# ---------------------------------------------------------------------------
+
+def parse_adzuna(data: dict, country: str) -> list:
+    items = []
+    for r in (data or {}).get("results") or []:
+        title = re.sub(r"\s+", " ", _strip_html(r.get("title") or "")).strip()
+        desc = _strip_html(r.get("description") or "")
+        url = (r.get("redirect_url") or "").strip()
+        # Titre seul : le descriptif Adzuna est un extrait où « drone » peut
+        # être incident (« emballer des drones ») ; un intitulé, lui, ne ment pas.
+        if not title or not url or not matches(title):
+            continue
+        loc = r.get("location") or {}
+        area = [a for a in (loc.get("area") or []) if a]
+        region = area[1] if len(area) > 1 else ""
+        city = area[-1] if len(area) > 2 else ""
+        if country == "Canada":
+            region = normalize_region(region or city)[0]
+        summary = summarize(desc)
+        if r.get("salary_min") and not r.get("salary_is_predicted") in (1, "1", True):
+            lo, hi = int(r["salary_min"]), int(r.get("salary_max") or r["salary_min"])
+            summary = (summary + " " if summary else "") + (f"({lo:,}–{hi:,})" if hi != lo else f"({lo:,})")
+        published = _iso_date(r.get("created") or "")
+        items.append({
+            "source": "adzuna", "source_ref": str(r.get("id") or url), "kind": "job",
+            "title_fr": title, "title_en": title, "summary_fr": summary, "summary_en": summary,
+            "org": (r.get("company") or {}).get("display_name") or "", "country": country,
+            "region": region or country, "regions_raw": loc.get("display_name") or "", "city": city,
+            "url_fr": url, "url_en": url,
+            "notice_type": ", ".join(str(x).replace("_", " ") for x in (r.get("contract_type"), r.get("contract_time")) if x),
+            "category": "job", "specialties": specialties_for(title + " " + desc),
+            "published_at": published, "closes_at": _plus_days(published, JOB_DAYS),
+        })
+    return items
+
+
+def collect_adzuna(conn) -> dict:
+    if not (ADZUNA_APP_ID and ADZUNA_APP_KEY):
+        return {"skipped": "ADZUNA_APP_ID / ADZUNA_APP_KEY absents"}
+    n = errors = 0
+    for cc, country in ADZUNA_COUNTRIES.items():
+        url = ADZUNA_API.format(cc=cc, app_id=ADZUNA_APP_ID, app_key=ADZUNA_APP_KEY)
+        try:
+            data = json.loads(_fetch(url, timeout=60).decode("utf-8"))
+        except Exception as exc:
+            log.warning("adzuna %s: %s", cc, exc)
+            errors += 1
+            continue
+        n += _upsert_many(conn, parse_adzuna(data, country))
+    return {"items": n, "countries": len(ADZUNA_COUNTRIES), "errors": errors}
+
+
+# ---------------------------------------------------------------------------
 # Vérification des liens : un avis dont la page ne répond pas n'est pas montré
 # ---------------------------------------------------------------------------
 
@@ -1011,15 +1200,20 @@ def _norm_title(t: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", (t or "").lower()).strip()[:80]
 
 
+SECONDARY_SOURCES = ("ted", "adzuna")   # agrégateurs : le doublon cède devant la source nationale
+
+
 def dedupe_cross_sources(conn) -> int:
-    """Un marché français est publié à la fois au BOAMP et au TED : on garde
-    la fiche nationale (lien direct, région) et on ferme le doublon TED."""
-    rows = conn.execute("SELECT id, source, country, title_fr FROM opportunities WHERE status='published'").fetchall()
+    """Un marché français est publié à la fois au BOAMP et au TED, une offre
+    canadienne au Guichet-Emplois et chez Adzuna : on garde la fiche de la
+    source nationale (lien direct, région) et on ferme le doublon de
+    l'agrégateur. Pour un emploi, même titre ET même employeur."""
+    rows = conn.execute("SELECT id, source, country, title_fr, kind, org FROM opportunities WHERE status='published'").fetchall()
     seen: dict = {}
     closed = 0
-    for r in sorted(rows, key=lambda r: (r[1] == "ted",)):   # sources nationales d'abord
-        key = (r[2], _norm_title(r[3]))
-        if key in seen and r[1] == "ted":
+    for r in sorted(rows, key=lambda r: (r[1] in SECONDARY_SOURCES,)):   # sources nationales d'abord
+        key = (r[2], _norm_title(r[3]), _norm_title(r[5]) if r[4] == "job" else "")
+        if key in seen and r[1] in SECONDARY_SOURCES:
             conn.execute("UPDATE opportunities SET status='closed' WHERE id=?", (r[0],)); closed += 1
         else:
             seen.setdefault(key, r[0])
@@ -1045,7 +1239,7 @@ def collect(verify: bool = True) -> dict:
     for name, fn in (("canadabuys", lambda c: collect_canadabuys(c)), ("seao", lambda c: collect_seao(c, state)),
                      ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder),
                      ("austender", collect_austender), ("gets", collect_gets), ("secop", collect_secop),
-                     ("samgov", collect_samgov)):
+                     ("samgov", collect_samgov), ("jobbank", collect_jobbank), ("adzuna", collect_adzuna)):
         try:
             with db.standalone() as conn:
                 report[name] = fn(conn)

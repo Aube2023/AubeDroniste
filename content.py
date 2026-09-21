@@ -280,6 +280,15 @@ _UPDATES = [
                "pages.",
          "en": "Country lists now show in your language, in its alphabetical order, on every page.",
          "es": "Las listas de países aparecen en su idioma y en su orden alfabético, en todas las páginas."},
+        {"fr": "Emplois dans le drone : les offres pour pilotes, télépilotes et techniciens, reprises chaque nuit "
+               "des services publics de l'emploi et de flux officiels, par pays et par province, avec un lien vers "
+               "l'offre d'origine. Gratuit, dans le même courriel hebdomadaire que les appels d'offres.",
+         "en": "Drone jobs: offers for pilots, remote pilots and technicians, collected nightly from public "
+               "employment services and official feeds, by country and province, with a link to the original "
+               "posting. Free, in the same weekly email as the tenders.",
+         "es": "Empleos en el dron: las ofertas para pilotos, telepilotos y técnicos, recogidas cada noche de los "
+               "servicios públicos de empleo y de flujos oficiales, por país y provincia, con enlace a la oferta "
+               "original. Gratis, en el mismo correo semanal que las licitaciones."},
         {"fr": "Appels d'offres et contrats drone : les avis publics pour les pros du drone, repris chaque nuit "
                "de neuf portails officiels (Canada, Québec, Union européenne, France, Royaume-Uni, Australie, "
                "Nouvelle-Zélande, Colombie, États-Unis), par pays, province et spécialité, avec la date de clôture "

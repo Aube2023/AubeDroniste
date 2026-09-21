@@ -1302,7 +1302,17 @@
   "map.style_noir": "Nero",
   "map.style_nuit": "Blu notte",
   "map.style_couleurs": "Colori",
-  "map.style_clair": "Chiaro"
+  "map.style_clair": "Chiaro",
+  "opp.jobs_nav": "Lavoro",
+  "opp.jobs_h1": "Lavoro nel settore dei droni",
+  "opp.jobs_lead": "Le offerte di lavoro per piloti e tecnici di droni, raccolte ogni notte dai servizi pubblici per l'impiego e da API ufficiali, per paese e provincia. Gratis, senza registrazione.",
+  "opp.jobs_count": "{n} offerta/e di lavoro",
+  "opp.posted": "Pubblicata il",
+  "opp.jobs_about": "Queste offerte provengono da feed e API ufficiali, con la loro licenza:",
+  "opp.jobs_empty": "Nessuna offerta di lavoro per questi criteri.",
+  "opp.jobs_empty_hint": "Allarga il paese o la provincia: l'elenco è aggiornato ogni notte.",
+  "opp.view_job": "Vedi l'offerta →",
+  "opp.jobs_all": "Vedi tutte le offerte di lavoro →"
  },
  "seo": {
   "home.title": "Trova un pilota di drone certificato — Preventivi gratuiti | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Gare d'appalto e contratti per droni in Canada | AubePilot",
   "opportunities_page.description": "Gare d'appalto pubbliche per piloti di drone, LiDAR, fotogrammetria e ispezione, per provincia, con scadenza e link all'avviso. Gratis, aggiornato ogni notte.",
   "partners_page.title": "I nostri partner | AubePilot",
-  "partners_page.description": "Scuole, assicuratori, negozi, associazioni e media che sostengono la rete AubePilot e i suoi piloti di droni."
+  "partners_page.description": "Scuole, assicuratori, negozi, associazioni e media che sostengono la rete AubePilot e i suoi piloti di droni.",
+  "jobs_page.title": "Lavoro droni: piloti, telepiloti, tecnici | AubePilot",
+  "jobs_page.description": "Offerte di lavoro per piloti e tecnici di droni, raccolte ogni notte dai servizi pubblici per l'impiego e da API ufficiali, per paese e provincia, con link all'offerta. Gratis."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

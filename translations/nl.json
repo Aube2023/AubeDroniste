@@ -1302,7 +1302,17 @@
   "map.style_noir": "Zwart",
   "map.style_nuit": "Nachtblauw",
   "map.style_couleurs": "Kleur",
-  "map.style_clair": "Licht"
+  "map.style_clair": "Licht",
+  "opp.jobs_nav": "Vacatures",
+  "opp.jobs_h1": "Vacatures in de dronesector",
+  "opp.jobs_lead": "Vacatures voor dronepiloten en -technici, elke nacht overgenomen van publieke arbeidsbemiddelingen en officiële API's, per land en provincie. Gratis, zonder inschrijving.",
+  "opp.jobs_count": "{n} vacature(s)",
+  "opp.posted": "Geplaatst op",
+  "opp.jobs_about": "Deze vacatures komen uit officiële feeds en API's, met hun licentie:",
+  "opp.jobs_empty": "Geen vacature voor deze criteria.",
+  "opp.jobs_empty_hint": "Verbreed het land of de provincie: de lijst wordt elke nacht ververst.",
+  "opp.view_job": "Bekijk de vacature →",
+  "opp.jobs_all": "Bekijk alle vacatures →"
  },
  "seo": {
   "home.title": "Huur een gecertificeerde dronepiloot — Gratis offertes | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Drone-aanbestedingen en -contracten in Canada | AubePilot",
   "opportunities_page.description": "Openbare drone-aanbestedingen (LiDAR, fotogrammetrie, inspectie) per provincie, met sluitingsdatum en link naar de aankondiging. Gratis, dagelijks bijgewerkt.",
   "partners_page.title": "Onze partners | AubePilot",
-  "partners_page.description": "Scholen, verzekeraars, winkels, verenigingen en media die het AubePilot-netwerk en zijn dronepiloten steunen."
+  "partners_page.description": "Scholen, verzekeraars, winkels, verenigingen en media die het AubePilot-netwerk en zijn dronepiloten steunen.",
+  "jobs_page.title": "Dronebanen: piloten, bestuurders op afstand, technici | AubePilot",
+  "jobs_page.description": "Vacatures voor dronepiloten en -technici, elke nacht overgenomen van publieke arbeidsbemiddelingen en officiële API's, per land en provincie, met link naar de vacature. Gratis."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

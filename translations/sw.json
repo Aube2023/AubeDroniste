@@ -1302,7 +1302,17 @@
   "map.style_noir": "Nyeusi",
   "map.style_nuit": "Bluu ya usiku",
   "map.style_couleurs": "Rangi",
-  "map.style_clair": "Angavu"
+  "map.style_clair": "Angavu",
+  "opp.jobs_nav": "Kazi",
+  "opp.jobs_h1": "Kazi katika sekta ya ndege zisizo na rubani",
+  "opp.jobs_lead": "Nafasi za kazi kwa marubani na mafundi wa ndege zisizo na rubani, zinazokusanywa kila usiku kutoka huduma za umma za ajira na API rasmi, kwa nchi na mkoa. Bila malipo, bila usajili.",
+  "opp.jobs_count": "Nafasi za kazi: {n}",
+  "opp.posted": "Imechapishwa",
+  "opp.jobs_about": "Nafasi hizi zinatoka kwenye mipasho na API rasmi, pamoja na leseni zake:",
+  "opp.jobs_empty": "Hakuna nafasi ya kazi kwa vigezo hivi.",
+  "opp.jobs_empty_hint": "Panua nchi au mkoa: orodha husasishwa kila usiku.",
+  "opp.view_job": "Tazama nafasi →",
+  "opp.jobs_all": "Tazama nafasi zote za kazi →"
  },
  "seo": {
   "home.title": "Ajiri rubani wa droni aliyeidhinishwa — Nukuu za bei bure | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Zabuni na mikataba ya droni nchini Kanada | AubePilot",
   "opportunities_page.description": "Zabuni za umma kwa marubani wa droni, LiDAR, fotogrametria na ukaguzi, kwa jimbo, na tarehe ya kufunga na kiungo cha tangazo. Bure, husasishwa kila usiku.",
   "partners_page.title": "Washirika wetu | AubePilot",
-  "partners_page.description": "Shule, bima, maduka, vyama na vyombo vya habari vinavyounga mkono mtandao wa AubePilot na marubani wake wa ndege zisizo na rubani."
+  "partners_page.description": "Shule, bima, maduka, vyama na vyombo vya habari vinavyounga mkono mtandao wa AubePilot na marubani wake wa ndege zisizo na rubani.",
+  "jobs_page.title": "Kazi za droni: marubani, waendeshaji, mafundi | AubePilot",
+  "jobs_page.description": "Nafasi za kazi kwa marubani na mafundi wa ndege zisizo na rubani, zinazokusanywa kila usiku kutoka huduma za umma za ajira na API rasmi, kwa nchi na mkoa, na kiungo cha nafasi. Bila malipo."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

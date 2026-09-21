@@ -1302,7 +1302,17 @@
   "map.style_noir": "ጥቁር",
   "map.style_nuit": "የሌሊት ሰማያዊ",
   "map.style_couleurs": "ባለቀለም",
-  "map.style_clair": "ብሩህ"
+  "map.style_clair": "ብሩህ",
+  "opp.jobs_nav": "ሥራዎች",
+  "opp.jobs_h1": "በድሮን ዘርፍ ሥራዎች",
+  "opp.jobs_lead": "ለድሮን አብራሪዎችና ቴክኒሻኖች የሥራ ማስታወቂያዎች፣ በየሌሊቱ ከመንግሥት የሥራ አገልግሎቶችና ከይፋዊ API የሚሰበሰቡ፣ በአገርና በክፍለ ሀገር። ነጻ፣ ምዝገባ አያስፈልግም።",
+  "opp.jobs_count": "{n} የሥራ ማስታወቂያ(ዎች)",
+  "opp.posted": "የታተመበት ቀን",
+  "opp.jobs_about": "እነዚህ ማስታወቂያዎች ከይፋዊ ምንጮችና API፣ ከፈቃዳቸው ጋር የተወሰዱ ናቸው፦",
+  "opp.jobs_empty": "ለእነዚህ መስፈርቶች የሥራ ማስታወቂያ የለም።",
+  "opp.jobs_empty_hint": "አገሩን ወይም ክፍለ ሀገሩን ያስፉ፦ ዝርዝሩ በየሌሊቱ ይታደሳል።",
+  "opp.view_job": "ማስታወቂያውን ይመልከቱ →",
+  "opp.jobs_all": "ሁሉንም የሥራ ማስታወቂያዎች ይመልከቱ →"
  },
  "seo": {
   "home.title": "የተመሰከረለት የድሮን አብራሪ ይቅጠሩ — ነጻ የዋጋ ግምት | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "በካናዳ የድሮን ጨረታዎችና ውሎች | AubePilot",
   "opportunities_page.description": "ለድሮን አብራሪዎች፣ LiDAR፣ ፎቶግራሜትሪና ምርመራ የሚሆኑ የመንግሥት ጨረታዎች፣ በክፍለ ሀገር የተደረደሩ፣ ከመዝጊያ ቀንና ከማስታወቂያው አገናኝ ጋር። ነጻ፣ በየሌሊቱ ይታደሳል።",
   "partners_page.title": "አጋሮቻችን | AubePilot",
-  "partners_page.description": "የAubePilot አውታረ መረብን እና የድሮን አብራሪዎቹን የሚደግፉ ትምህርት ቤቶች፣ መድን ሰጪዎች፣ ሱቆች፣ ማህበራት እና ሚዲያዎች።"
+  "partners_page.description": "የAubePilot አውታረ መረብን እና የድሮን አብራሪዎቹን የሚደግፉ ትምህርት ቤቶች፣ መድን ሰጪዎች፣ ሱቆች፣ ማህበራት እና ሚዲያዎች።",
+  "jobs_page.title": "የድሮን ሥራዎች፦ አብራሪዎች፣ የርቀት አብራሪዎች፣ ቴክኒሻኖች | AubePilot",
+  "jobs_page.description": "ለድሮን አብራሪዎችና ቴክኒሻኖች የሥራ ማስታወቂያዎች፣ በየሌሊቱ ከመንግሥት የሥራ አገልግሎቶችና ከይፋዊ API የሚሰበሰቡ፣ በአገርና በክፍለ ሀገር፣ ከማስታወቂያው አገናኝ ጋር። ነጻ።"
  },
  "countries": {
   "Afghanistan": "አፍጋኒስታን",

@@ -1302,7 +1302,17 @@
   "map.style_noir": "Hitam",
   "map.style_nuit": "Biru malam",
   "map.style_couleurs": "Berwarna",
-  "map.style_clair": "Terang"
+  "map.style_clair": "Terang",
+  "opp.jobs_nav": "Lowongan kerja",
+  "opp.jobs_h1": "Lowongan kerja di bidang drone",
+  "opp.jobs_lead": "Lowongan kerja untuk pilot dan teknisi drone, dikumpulkan setiap malam dari layanan ketenagakerjaan publik dan API resmi, per negara dan provinsi. Gratis, tanpa pendaftaran.",
+  "opp.jobs_count": "{n} lowongan kerja",
+  "opp.posted": "Diterbitkan",
+  "opp.jobs_about": "Lowongan ini diambil dari umpan dan API resmi, beserta lisensinya:",
+  "opp.jobs_empty": "Tidak ada lowongan kerja untuk kriteria ini.",
+  "opp.jobs_empty_hint": "Perluas negara atau provinsi: daftar diperbarui setiap malam.",
+  "opp.view_job": "Lihat lowongan →",
+  "opp.jobs_all": "Lihat semua lowongan kerja →"
  },
  "seo": {
   "home.title": "Sewa pilot drone bersertifikat — Penawaran gratis | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Tender dan kontrak drone di Kanada | AubePilot",
   "opportunities_page.description": "Tender publik untuk pilot drone, LiDAR, fotogrametri, dan inspeksi, menurut provinsi, dengan tanggal penutupan dan tautan. Gratis, diperbarui setiap malam.",
   "partners_page.title": "Mitra kami | AubePilot",
-  "partners_page.description": "Sekolah, perusahaan asuransi, toko, asosiasi, dan media yang mendukung jaringan AubePilot dan para pilot drone-nya."
+  "partners_page.description": "Sekolah, perusahaan asuransi, toko, asosiasi, dan media yang mendukung jaringan AubePilot dan para pilot drone-nya.",
+  "jobs_page.title": "Lowongan drone: pilot, pilot jarak jauh, teknisi | AubePilot",
+  "jobs_page.description": "Lowongan kerja untuk pilot dan teknisi drone, dikumpulkan setiap malam dari layanan ketenagakerjaan publik dan API resmi, per negara dan provinsi, dengan tautan ke lowongan. Gratis."
  },
  "countries": {
   "Afghanistan": "Afganistan",

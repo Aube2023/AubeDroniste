@@ -1302,7 +1302,17 @@
   "map.style_noir": "Đen",
   "map.style_nuit": "Xanh đêm",
   "map.style_couleurs": "Màu",
-  "map.style_clair": "Sáng"
+  "map.style_clair": "Sáng",
+  "opp.jobs_nav": "Việc làm",
+  "opp.jobs_h1": "Việc làm trong ngành drone",
+  "opp.jobs_lead": "Các tin tuyển dụng cho phi công và kỹ thuật viên drone, được thu thập mỗi đêm từ các dịch vụ việc làm công và API chính thức, theo quốc gia và tỉnh. Miễn phí, không cần đăng ký.",
+  "opp.jobs_count": "{n} tin tuyển dụng",
+  "opp.posted": "Đăng ngày",
+  "opp.jobs_about": "Các tin này được lấy từ nguồn cấp và API chính thức, kèm giấy phép:",
+  "opp.jobs_empty": "Không có tin tuyển dụng nào cho các tiêu chí này.",
+  "opp.jobs_empty_hint": "Mở rộng quốc gia hoặc tỉnh: danh sách được làm mới mỗi đêm.",
+  "opp.view_job": "Xem tin →",
+  "opp.jobs_all": "Xem tất cả tin tuyển dụng →"
  },
  "seo": {
   "home.title": "Thuê phi công drone được chứng nhận — Báo giá miễn phí | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Gói thầu và hợp đồng drone tại Canada | AubePilot",
   "opportunities_page.description": "Gói thầu công cho phi công drone, LiDAR, quang trắc và kiểm tra, theo tỉnh bang, kèm ngày đóng thầu và liên kết đến thông báo. Miễn phí, cập nhật mỗi đêm.",
   "partners_page.title": "Đối tác của chúng tôi | AubePilot",
-  "partners_page.description": "Trường học, công ty bảo hiểm, cửa hàng, hiệp hội và truyền thông đồng hành cùng mạng lưới AubePilot và các phi công drone."
+  "partners_page.description": "Trường học, công ty bảo hiểm, cửa hàng, hiệp hội và truyền thông đồng hành cùng mạng lưới AubePilot và các phi công drone.",
+  "jobs_page.title": "Việc làm drone: phi công, người điều khiển, kỹ thuật viên | AubePilot",
+  "jobs_page.description": "Tin tuyển dụng cho phi công và kỹ thuật viên drone, thu thập mỗi đêm từ dịch vụ việc làm công và API chính thức, theo quốc gia và tỉnh, kèm liên kết tin. Miễn phí."
  },
  "countries": {
   "Afghanistan": "Afghanistan",

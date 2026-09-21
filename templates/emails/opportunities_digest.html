@@ -1,35 +1,35 @@
 {% extends "emails/_layout.html" %}
 {% block subject %}Opportunités drone de la semaine / This week's drone tenders ({{ count }}){% endblock %}
-{% block preview %}{{ count }} appel(s) d'offres publics pour les pros du drone · {{ count }} public tender(s) for drone pros.{% endblock %}
+{% block preview %}{{ count }} appel(s) d'offres et emploi(s) pour les pros du drone · {{ count }} tender(s) and job(s) for drone pros.{% endblock %}
 
 {% block content %}
 {% set first = pilot.full_name.split(' ')[0] %}
-{% macro row(title, it, url, closes_label) %}
+{% macro row(title, it, url, closes_label, job_label) %}
 <tr><td style="padding:12px 18px;border-bottom:1px solid #e3ded1;">
-  <div style="font:600 15px/1.35 Georgia,serif;color:#15181f;"><a href="{{ url }}" style="color:#15181f;text-decoration:none;">{{ title }}</a></div>
-  <div style="font:400 13px/1.5 Georgia,serif;color:#6b6f80;margin-top:3px;">{{ it.org }}{% if it.region %} · {{ it.region }}{% endif %}{% if it.closes_at %} · {{ closes_label }} {{ it.closes_at }}{% endif %}</div>
+  <div style="font:600 15px/1.35 Georgia,serif;color:#15181f;">{% if it.kind == 'job' %}<span style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.12em;color:#b87519;text-transform:uppercase;margin-right:6px;">{{ job_label }}</span>{% endif %}<a href="{{ url }}" style="color:#15181f;text-decoration:none;">{{ title }}</a></div>
+  <div style="font:400 13px/1.5 Georgia,serif;color:#6b6f80;margin-top:3px;">{{ it.org }}{% if it.region %} · {{ it.region }}{% endif %}{% if it.kind == 'job' %}{% if it.published_at %} · {{ it.published_at }}{% endif %}{% elif it.closes_at %} · {{ closes_label }} {{ it.closes_at }}{% endif %}</div>
 </td></tr>
 {% endmacro %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr><td style="padding:36px 32px 12px;">
   <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">FR, Opportunités de la semaine</div>
-  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">{{ count }} appel(s) d'offres pour les pros du drone, {{ first }}.</h1>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">{{ count }} appel(s) d'offres et emploi(s) pour les pros du drone, {{ first }}.</h1>
   <p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3b414e;margin:0 0 16px;">Publiés cette semaine sur les portails publics de votre pays, repris avec leur source. Chaque titre mène à l'avis d'origine.</p>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3ded1;background:#faf8f3;">
-    {% for it in items %}{{ row(it.title_fr, it, it.url_fr, 'clôture le') }}{% endfor %}
+    {% for it in items %}{{ row(it.title_fr, it, it.url_fr, 'clôture le', 'Emploi') }}{% endfor %}
   </table>
   <p style="margin:22px 0 0;"><a href="{{ site_url }}/opportunites" style="display:inline-block;background:#b87519;color:#ffffff;padding:12px 22px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Voir toutes les opportunités</a></p>
-  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources : portails publics officiels (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), données ouvertes. AubePilot n'est pas l'organisme émetteur. Vous recevez ce courriel car vos alertes sont activées ; désactivez-les dans vos paramètres.</p>
+  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources : portails publics officiels (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), données ouvertes ; emplois : Guichet-Emplois et Adzuna. AubePilot n'est pas l'organisme émetteur. Vous recevez ce courriel car vos alertes sont activées ; désactivez-les dans vos paramètres.</p>
 </td></tr>
 <tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
 <tr><td style="padding:0 32px 36px;">
   <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:#b87519;text-transform:uppercase;margin-bottom:12px;">EN, This week's tenders</div>
-  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">{{ count }} public tender(s) for drone pros, {{ first }}.</h1>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.15;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 14px;">{{ count }} tender(s) and job(s) for drone pros, {{ first }}.</h1>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3ded1;background:#faf8f3;">
-    {% for it in items %}{{ row(it.title_en, it, it.url_en or it.url_fr, 'closes') }}{% endfor %}
+    {% for it in items %}{{ row(it.title_en, it, it.url_en or it.url_fr, 'closes', 'Job') }}{% endfor %}
   </table>
   <p style="margin:22px 0 0;"><a href="{{ site_url }}/en/opportunites" style="display:inline-block;background:#b87519;color:#ffffff;padding:12px 22px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">See all opportunities</a></p>
-  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources: official public portals (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), open data. AubePilot is not the issuing body. You receive this because alerts are on; turn them off in your settings.</p>
+  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources: official public portals (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), open data; jobs: Job Bank and Adzuna. AubePilot is not the issuing body. You receive this because alerts are on; turn them off in your settings.</p>
 </td></tr>
 </table>
 {% endblock %}

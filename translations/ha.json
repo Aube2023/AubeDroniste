@@ -1302,7 +1302,17 @@
   "map.style_noir": "Baƙi",
   "map.style_nuit": "Shuɗin dare",
   "map.style_couleurs": "Mai launi",
-  "map.style_clair": "Haske"
+  "map.style_clair": "Haske",
+  "opp.jobs_nav": "Ayyuka",
+  "opp.jobs_h1": "Ayyuka a fannin jirage marasa matuki",
+  "opp.jobs_lead": "Tayin aiki ga matukan jirage marasa matuki da masu fasaha, ana tattarawa kowane dare daga hidimomin aikin yi na gwamnati da API na hukuma, bisa ƙasa da lardi. Kyauta, ba tare da rajista ba.",
+  "opp.jobs_count": "Tayin aiki {n}",
+  "opp.posted": "An wallafa",
+  "opp.jobs_about": "Waɗannan tayin sun fito daga hanyoyin bayanai da API na hukuma, tare da lasisinsu:",
+  "opp.jobs_empty": "Babu tayin aiki da ya dace da waɗannan sharuɗɗa.",
+  "opp.jobs_empty_hint": "Faɗaɗa ƙasa ko lardi: ana sabunta jerin kowane dare.",
+  "opp.view_job": "Duba tayin →",
+  "opp.jobs_all": "Duba duk tayin aiki →"
  },
  "seo": {
   "home.title": "Hayar Matuƙin Drone Mai Lasisi — Ƙiyasin Farashi Kyauta | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Tanda da kwangilolin drone a Kanada | AubePilot",
   "opportunities_page.description": "Tanda na gwamnati ga matuƙan drone, LiDAR, photogrammetry da bincike, bisa lardi, tare da ranar rufewa da mahaɗin sanarwar. Kyauta, ana sabuntawa kowane dare.",
   "partners_page.title": "Abokan hulɗarmu | AubePilot",
-  "partners_page.description": "Makarantu, kamfanonin inshora, shaguna, ƙungiyoyi da kafofin watsa labarai da ke tallafa wa hanyar sadarwar AubePilot da matukan jirgin ta."
+  "partners_page.description": "Makarantu, kamfanonin inshora, shaguna, ƙungiyoyi da kafofin watsa labarai da ke tallafa wa hanyar sadarwar AubePilot da matukan jirgin ta.",
+  "jobs_page.title": "Ayyukan jirage marasa matuki: matuka, masu sarrafawa, masu fasaha | AubePilot",
+  "jobs_page.description": "Tayin aiki ga matukan jirage marasa matuki da masu fasaha, ana tattarawa kowane dare daga hidimomin aikin yi na gwamnati da API na hukuma, bisa ƙasa da lardi, tare da hanyar haɗi zuwa tayin. Kyauta."
  },
  "countries": {
   "Afghanistan": "Afganistan",

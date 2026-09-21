@@ -107,6 +107,7 @@
     <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a>
     <a href="{{ url_for('missions_search') }}">{{ t('nav.missions') }}</a>
     <a href="{{ url_for('opportunities') }}" class="{{ 'on' if request.endpoint == 'opportunities' else '' }}">{{ t('opp.nav') }}</a>
+    <a href="{{ url_for('jobs') }}" class="{{ 'on' if request.endpoint == 'jobs' else '' }}">{{ t('opp.jobs_nav') }}</a>
     {% if current_user %}
       <a href="{{ url_for('messages_inbox') }}" class="{{ 'on' if request.endpoint in ('messages_inbox', 'messages_thread') else '' }}">{{ t('nav.messages') }}{% if unread_messages %}<span class="nav-badge">{{ unread_messages }}</span>{% endif %}</a>
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
@@ -204,6 +205,7 @@
       <a href="{{ url_for('register') }}?role=pilot">{{ t('footer.become_pilot') }}</a>
       <a href="{{ url_for('schools') }}">{{ t('footer.schools') }}</a>
       <a href="{{ url_for('opportunities') }}">{{ t('opp.nav') }}</a>
+      <a href="{{ url_for('jobs') }}">{{ t('opp.jobs_nav') }}</a>
     </nav>
     <nav aria-label="{{ t('footer.company') }}">
       <h4>{{ t('footer.company') }}</h4>

@@ -1302,7 +1302,17 @@
   "map.style_noir": "Czarny",
   "map.style_nuit": "Granat",
   "map.style_couleurs": "Kolorowa",
-  "map.style_clair": "Jasna"
+  "map.style_clair": "Jasna",
+  "opp.jobs_nav": "Oferty pracy",
+  "opp.jobs_h1": "Oferty pracy w branży dronów",
+  "opp.jobs_lead": "Oferty pracy dla pilotów i techników dronów, pobierane co noc z publicznych służb zatrudnienia i oficjalnych API, według kraju i prowincji. Bezpłatnie, bez rejestracji.",
+  "opp.jobs_count": "Ofert pracy: {n}",
+  "opp.posted": "Opublikowano",
+  "opp.jobs_about": "Te oferty pochodzą z oficjalnych kanałów i API, wraz z ich licencją:",
+  "opp.jobs_empty": "Brak ofert pracy dla tych kryteriów.",
+  "opp.jobs_empty_hint": "Rozszerz kraj lub prowincję: lista jest odświeżana co noc.",
+  "opp.view_job": "Zobacz ofertę →",
+  "opp.jobs_all": "Zobacz wszystkie oferty pracy →"
  },
  "seo": {
   "home.title": "Wynajmij certyfikowanego pilota drona — bezpłatne wyceny | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Przetargi i kontrakty dronowe w Kanadzie | AubePilot",
   "opportunities_page.description": "Przetargi publiczne dla pilotów dronów (LiDAR, fotogrametria, inspekcje) według prowincji, z datą zamknięcia i linkiem do ogłoszenia. Bezpłatnie, co noc.",
   "partners_page.title": "Nasi partnerzy | AubePilot",
-  "partners_page.description": "Szkoły, ubezpieczyciele, sklepy, stowarzyszenia i media wspierające sieć AubePilot i jej pilotów dronów."
+  "partners_page.description": "Szkoły, ubezpieczyciele, sklepy, stowarzyszenia i media wspierające sieć AubePilot i jej pilotów dronów.",
+  "jobs_page.title": "Praca w dronach: piloci, operatorzy, technicy | AubePilot",
+  "jobs_page.description": "Oferty pracy dla pilotów i techników dronów, pobierane co noc z publicznych służb zatrudnienia i oficjalnych API, według kraju i prowincji, z linkiem do oferty. Bezpłatnie."
  },
  "countries": {
   "Afghanistan": "Afganistan",

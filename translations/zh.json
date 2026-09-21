@@ -1302,7 +1302,17 @@
   "map.style_noir": "黑色",
   "map.style_nuit": "深蓝",
   "map.style_couleurs": "彩色",
-  "map.style_clair": "浅色"
+  "map.style_clair": "浅色",
+  "opp.jobs_nav": "招聘",
+  "opp.jobs_h1": "无人机行业招聘",
+  "opp.jobs_lead": "面向无人机飞手和技术员的招聘信息，每晚从公共就业服务和官方 API 采集，按国家和省份分类。免费，无需注册。",
+  "opp.jobs_count": "{n} 个职位",
+  "opp.posted": "发布于",
+  "opp.jobs_about": "这些职位来自官方数据源和 API，并附许可信息：",
+  "opp.jobs_empty": "没有符合这些条件的职位。",
+  "opp.jobs_empty_hint": "请放宽国家或省份：列表每晚更新。",
+  "opp.view_job": "查看职位 →",
+  "opp.jobs_all": "查看全部职位 →"
  },
  "seo": {
   "home.title": "聘请持证无人机飞手 — 免费报价 | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "加拿大无人机招标与合同 | AubePilot",
   "opportunities_page.description": "面向无人机飞手、LiDAR、摄影测量与巡检的公共招标，按省份分类，附截止日期和公告链接。免费，每晚更新。",
   "partners_page.title": "我们的合作伙伴 | AubePilot",
-  "partners_page.description": "支持 AubePilot 网络及其无人机飞手的学校、保险公司、商店、协会和媒体。"
+  "partners_page.description": "支持 AubePilot 网络及其无人机飞手的学校、保险公司、商店、协会和媒体。",
+  "jobs_page.title": "无人机招聘：飞手、遥控驾驶员、技术员 | AubePilot",
+  "jobs_page.description": "面向无人机飞手和技术员的招聘信息，每晚从公共就业服务和官方 API 采集，按国家和省份分类，附职位链接。免费。"
  },
  "countries": {
   "Afghanistan": "阿富汗",

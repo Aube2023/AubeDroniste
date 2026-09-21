@@ -1302,7 +1302,17 @@
   "map.style_noir": "검정",
   "map.style_nuit": "짙은 파랑",
   "map.style_couleurs": "컬러",
-  "map.style_clair": "밝게"
+  "map.style_clair": "밝게",
+  "opp.jobs_nav": "채용",
+  "opp.jobs_h1": "드론 분야 채용",
+  "opp.jobs_lead": "드론 조종사와 기술자를 위한 채용 정보를 공공 고용 서비스와 공식 API에서 매일 밤 수집해 국가와 지역별로 정리했습니다. 무료, 가입 불필요.",
+  "opp.jobs_count": "채용 공고 {n}건",
+  "opp.posted": "게시일",
+  "opp.jobs_about": "이 채용 정보는 공식 피드와 API에서 라이선스와 함께 가져왔습니다:",
+  "opp.jobs_empty": "이 조건에 맞는 채용 공고가 없습니다.",
+  "opp.jobs_empty_hint": "국가나 지역 범위를 넓혀 보세요. 목록은 매일 밤 갱신됩니다.",
+  "opp.view_job": "공고 보기 →",
+  "opp.jobs_all": "모든 채용 공고 보기 →"
  },
  "seo": {
   "home.title": "인증 드론 조종자 섭외 — 무료 견적 | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "캐나다 드론 입찰 공고와 계약 | AubePilot",
   "opportunities_page.description": "드론 조종자, LiDAR, 사진측량, 점검을 위한 공공 입찰 공고를 주별로 정리했습니다. 마감일과 공고 링크 포함. 무료, 매일 밤 업데이트.",
   "partners_page.title": "우리의 파트너 | AubePilot",
-  "partners_page.description": "AubePilot 네트워크와 드론 파일럿을 지원하는 학교, 보험사, 상점, 협회 및 미디어."
+  "partners_page.description": "AubePilot 네트워크와 드론 파일럿을 지원하는 학교, 보험사, 상점, 협회 및 미디어.",
+  "jobs_page.title": "드론 채용: 조종사, 원격 조종사, 기술자 | AubePilot",
+  "jobs_page.description": "드론 조종사와 기술자를 위한 채용 정보를 공공 고용 서비스와 공식 API에서 매일 밤 수집해 국가와 지역별로 공고 링크와 함께 제공합니다. 무료."
  },
  "countries": {
   "Afghanistan": "아프가니스탄",

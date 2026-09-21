@@ -53,6 +53,55 @@ AU_XML = b"""<rss><channel><item><title>DAF-2026-44: Aerial LiDAR survey of floo
 NZ_XML = b"""<rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><item><title>RFP 2026-77 Drone inspection of bridges</title><link>https://www.gets.govt.nz//NZTA/ExternalTenderDetails.htm?id=34580891</link><description>&lt;table&gt;&lt;tr&gt;&lt;td&gt;Organisation: &lt;/td&gt;&lt;td&gt;Waka Kotahi&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Close date: &lt;/td&gt;&lt;td&gt;Thursday, 15 October 2026 4:00 PM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Region: &lt;/td&gt;&lt;td&gt;Canterbury&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Overview: &lt;/td&gt;&lt;td&gt;UAV-based inspection of 40 bridges with photogrammetry deliverables.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</description><dc:date>2026-08-03T20:00:00Z</dc:date></item></channel></rss>"""
 
 
+JB_EN = b"""<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><title><![CDATA[drone - Job Bank]]></title>
+<entry><title type="html"><![CDATA[drone technician]]></title><link rel="alternate" type="text/html" href="https://www.jobbank.gc.ca/jobsearch/jobposting/50315643"/><id>https://www.jobbank.gc.ca/jobsearch/jobSearchRSSfeed?id=3670001</id><updated>2026-09-18T20:19:00Z</updated>
+<summary type="html"><![CDATA[<strong>Job number:</strong> 3670001<br /><strong>Location:</strong> Saint-Hubert (QC)  <br /><strong>Employer:</strong> Drones Aube Inc.<br /><strong>Salary:</strong> $32.00 hourly]]></summary></entry>
+<entry><title type="html"><![CDATA[land survey technician]]></title><link rel="alternate" type="text/html" href="https://www.jobbank.gc.ca/jobsearch/jobposting/50329244"/><updated>2026-09-20T20:06:00Z</updated>
+<summary type="html"><![CDATA[<strong>Job number:</strong> 3677210<br /><strong>Location:</strong> Alma (QC)  <br /><strong>Employer:</strong> Arpentage GTG Inc<br /><strong>Salary:</strong> $1,851.60 weekly]]></summary></entry>
+<entry><title type="html"><![CDATA[unmanned aerial vehicle (UAV) technician]]></title><link rel="alternate" type="text/html" href="https://www.jobbank.gc.ca/jobsearch/jobposting/50301957"/><updated>2026-09-17T10:00:00Z</updated>
+<summary type="html"><![CDATA[<strong>Job number:</strong> 3660002<br /><strong>Location:</strong> Various locations<br /><strong>Employer:</strong> SkyOps Ltd.<br /><strong>Salary:</strong> $70,000.00 annually]]></summary></entry>
+</feed>"""
+JB_FR = """<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="fr">
+<entry><title type="html"><![CDATA[technicien/technicienne de drones]]></title><link rel="alternate" type="text/html" href="https://www.guichetemplois.gc.ca/jobsearch/jobposting/50315643"/><updated>2026-09-18T20:19:00Z</updated>
+<summary type="html"><![CDATA[<strong>Numéro de l’offre :</strong> 3670001<br /><strong>Emplacement :</strong> Saint-Hubert (QC)  <br /><strong>Employeur :</strong> Drones Aube Inc.<br /><strong>Salaire :</strong> 32,00 $ de l'heure]]></summary></entry>
+</feed>""".encode("utf-8")
+
+
+def _adzuna_payload():
+    return {"count": 3, "results": [
+        {"id": "5001", "title": "Drone Pilot / Surveyor", "description": "Fly RPAS for LiDAR and photogrammetry surveys across Alberta. " * 3,
+         "created": "2026-09-19T08:00:00Z", "redirect_url": "https://www.adzuna.ca/land/ad/5001?se=x",
+         "company": {"display_name": "Prairie Geomatics"}, "location": {"display_name": "Calgary, Alberta", "area": ["Canada", "Alberta", "Calgary"]},
+         "contract_type": "permanent", "contract_time": "full_time", "salary_min": 65000, "salary_max": 80000, "salary_is_predicted": "0"},
+        {"id": "5002", "title": "Counter-drone systems engineer", "description": "C-UAS radar", "created": "2026-09-19T08:00:00Z",
+         "redirect_url": "https://www.adzuna.ca/land/ad/5002", "company": {"display_name": "X"}, "location": {"area": ["Canada"]}},
+        {"id": "5003", "title": "Warehouse associate", "description": "Pack drones for shipping. Drones drones.", "created": "2026-09-19T08:00:00Z",
+         "redirect_url": "https://www.adzuna.ca/land/ad/5003", "company": {"display_name": "Y"}, "location": {"area": ["Canada", "Ontario"]}},
+    ]}
+
+
+def test_parse_emplois_jobbank_et_adzuna():
+    items = opp.parse_jobbank(opp._atom_entries(JB_EN), opp._atom_entries(JB_FR))
+    assert [i["source_ref"] for i in items] == ["50301957", "50315643"]   # l'arpenteur sans drone est écarté
+    it = items[1]
+    assert it["kind"] == "job" and it["title_fr"] == "Technicien/technicienne de drones" and it["title_en"] == "Drone technician"
+    assert it["region"] == "Québec" and it["city"] == "Saint-Hubert" and it["org"] == "Drones Aube Inc."
+    assert it["summary_fr"] == "Salaire : 32,00 $ de l'heure" and it["summary_en"] == "Salary: $32.00 hourly"
+    assert it["url_fr"].startswith("https://www.guichetemplois.gc.ca/") and it["url_en"].startswith("https://www.jobbank.gc.ca/")
+    assert it["published_at"] == "2026-09-18" and it["closes_at"] == "2026-10-18"
+    # sans entrée française : titre anglais des deux côtés, lien FR déduit du numéro
+    assert items[0]["title_fr"] == items[0]["title_en"] and items[0]["region"] == "Canada" and "guichetemplois" in items[0]["url_fr"]
+
+    jobs = opp.parse_adzuna(_adzuna_payload(), "Canada")
+    assert [j["source_ref"] for j in jobs] == ["5001"]   # anti-drone et « drones » dans le corps seulement : écartés
+    j = jobs[0]
+    assert j["region"] == "Alberta" and j["city"] == "Calgary" and j["org"] == "Prairie Geomatics"
+    assert j["notice_type"] == "permanent, full time" and j["summary_fr"].endswith("(65,000–80,000)")
+    assert "topographie" in j["specialties"] and j["closes_at"] == "2026-10-19"
+
+
 def _secop_rows():
     return [{"nombre_del_procedimiento": "LEVANTAMIENTO TOPOGRAFICO CON DRON Y FOTOGRAMETRIA", "descripci_n_del_procedimiento": "Levantamiento aereo con dron RTK",
              "id_del_proceso": "CO1.REQ.1", "entidad": "ALCALDIA DE MEDELLIN", "departamento_entidad": "Antioquia", "ciudad_entidad": "Medellín",
@@ -140,8 +189,15 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return NZ_XML
         if url.startswith("https://www.datos.gov.co/"):
             return json.dumps(_secop_rows()).encode("utf-8")
+        if url.startswith("https://www.jobbank.gc.ca/jobsearch/feed/"):
+            return JB_EN if "searchstring=drone&" in url else b'<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+        if url.startswith("https://www.guichetemplois.gc.ca/jobsearch/feed/"):
+            return JB_FR if "searchstring=drone&" in url else b'<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+        if url.startswith("https://api.adzuna.com/"):
+            return json.dumps(_adzuna_payload() if "/jobs/ca/" in url else {"results": []}).encode("utf-8")
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
+    monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key")
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
     # Liens : tout répond sauf l'avis SEAO (mort) -> retiré du site.
     monkeypatch.setattr(opp, "link_status", lambda url: 404 if "seao.gouv.qc.ca/avis/1" in url else 200)
@@ -150,7 +206,19 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     assert report["ted"]["items"] == 1 and report["boamp"]["items"] == 1 and report["contractsfinder"]["items"] == 1
     assert report["austender"]["items"] == 1 and report["gets"]["items"] == 1 and report["secop"]["items"] == 1
     assert "skipped" in report["samgov"]   # pas de clé SAM.gov en test
-    assert report["published"] == 7   # 8 fiches, moins celle au lien mort
+    assert report["jobbank"] == {"items": 2, "seen": 4, "errors": 0} and report["adzuna"]["items"] == 1
+    assert report["published"] == 10   # 8 avis + 3 emplois, moins l'avis au lien mort
+    # Emplois : page à part, onglet vers les appels d'offres, jamais mélangés
+    jobs_html = client.get("/emplois").get_data(as_text=True)
+    assert "Technicien/technicienne de drones" in jobs_html and "Drone Pilot / Surveyor" in jobs_html
+    assert "Levé LiDAR" not in jobs_html and "guichetemplois.gc.ca/jobsearch/jobposting/50315643" in jobs_html
+    assert "Salaire : 32,00 $ de l&#39;heure" in jobs_html and "Publiée le 2026-09-18" in jobs_html
+    assert 'href="/opportunites"' in jobs_html and 'href="/emplois" class="on"' in jobs_html
+    assert "Technicien/technicienne de drones" not in client.get("/opportunites").get_data(as_text=True)
+    en_jobs = client.get("/en/emplois?region=Québec").get_data(as_text=True)
+    assert "Drone technician" in en_jobs and "jobbank.gc.ca/jobsearch/jobposting/50315643" in en_jobs and "Surveyor" not in en_jobs
+    client.set_cookie("aube_lang", "fr", domain="localhost.localdomain")
+    assert "/emplois" in client.get("/sitemap-fr.xml").get_data(as_text=True)
     # Pays : filtre et titre dans la langue du visiteur (TED)
     fr_page = client.get("/opportunites?country=Allemagne").get_data(as_text=True)
     assert "LiDAR-Sensorpaket" in fr_page and "Levé LiDAR" not in fr_page and "ted.europa.eu/fr/" in fr_page

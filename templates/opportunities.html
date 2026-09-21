@@ -1,14 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-{# Appels d'offres publics repris de données ouvertes : titre, organisme,
-   région, clôture, résumé court, lien vers l'avis d'origine et sa source. #}
+{# Appels d'offres publics (kind=tender) et offres d'emploi (kind=job) repris
+   de données ouvertes : titre, organisme, région, clôture ou date de
+   publication, résumé court, lien vers l'avis d'origine et sa source. #}
+{% set is_job = (kind == 'job') %}
 <div class="search-head centered">
   <span class="eyebrow">{{ t('opp.eyebrow') }}</span>
-  <h1>{{ t('opp.h1') }}</h1>
-  <p class="lead muted">{{ t('opp.lead') }}</p>
+  <h1>{{ t('opp.jobs_h1') if is_job else t('opp.h1') }}</h1>
+  <p class="lead muted">{{ t('opp.jobs_lead') if is_job else t('opp.lead') }}</p>
 </div>
 
-<form method="get" class="search-form centered" action="{{ url_for('opportunities') }}">
+<nav class="dir-tabs" aria-label="{{ t('opp.eyebrow') }}">
+  <a href="{{ url_for('opportunities') }}" class="{{ '' if is_job else 'on' }}">{{ t('opp.nav') }} <span class="n">{{ counts.tender }}</span></a>
+  <a href="{{ url_for('jobs') }}" class="{{ 'on' if is_job else '' }}">{{ t('opp.jobs_nav') }} <span class="n">{{ counts.job }}</span></a>
+</nav>
+
+<form method="get" class="search-form centered" action="{{ url_for('jobs' if is_job else 'opportunities') }}">
   <div class="search-bar">
     <label class="search-field grow">
       <span>{{ t('opp.filter_q') }}</span>
@@ -41,7 +48,7 @@
   </div>
 </form>
 
-<p class="muted small" style="text-align: center; margin: 10px 0 24px;">{{ t('opp.count', n=items|length) }}</p>
+<p class="muted small" style="text-align: center; margin: 10px 0 24px;">{{ t('opp.jobs_count', n=items|length) if is_job else t('opp.count', n=items|length) }}</p>
 
 {% if items %}
 <div class="grid-cards">
@@ -58,23 +65,28 @@
     <div class="auth-chips" style="margin-top: 8px;">{% for c in o.specialties.split(',') if c %}<span class="auth-chip">{{ mission_label(c) }}</span>{% endfor %}</div>
     {% endif %}
     <div class="footer">
+      {% if o.kind == 'job' %}
+      <span class="price">{% if o.published_at %}{{ t('opp.posted') }} {{ o.published_at }}{% endif %}</span>
+      <a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ t('opp.view_job') }}</a>
+      {% else %}
       <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
       <a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ t('opp.view') }}</a>
+      {% endif %}
     </div>
-    <div class="muted small" style="margin-top: 6px;">{{ t('opp.source') }} {{ o.source_label }}{% if o.notice_type %} · {{ o.notice_type }}{% endif %}</div>
+    <div class="muted small" style="margin-top: 6px;">{{ t('opp.source') }} {% if o.source_url %}<a href="{{ o.source_url }}" target="_blank" rel="noopener">{{ o.source_label }}</a>{% else %}{{ o.source_label }}{% endif %}{% if o.notice_type %} · {{ o.notice_type }}{% endif %}</div>
   </article>
   {% endfor %}
 </div>
 {% else %}
 <div class="empty-state" style="text-align: center; padding: 40px 0;">
-  <strong>{{ t('opp.empty') }}</strong>
-  <p class="muted">{{ t('opp.empty_hint') }}</p>
+  <strong>{{ t('opp.jobs_empty') if is_job else t('opp.empty') }}</strong>
+  <p class="muted">{{ t('opp.jobs_empty_hint') if is_job else t('opp.empty_hint') }}</p>
 </div>
 {% endif %}
 
 <section class="section" style="margin-top: 48px;">
   <p class="muted small" style="max-width: 72ch;">
-    {{ t('opp.about') }}
+    {{ t('opp.jobs_about') if is_job else t('opp.about') }}
     {% for code, s in sources.items() %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label }}</a> ({{ s.licence }}){{ ' · ' if not loop.last else '.' }}{% endfor %}
     {{ t('opp.about_alerts') }}
   </p>

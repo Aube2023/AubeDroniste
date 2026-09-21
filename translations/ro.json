@@ -1302,7 +1302,17 @@
   "map.style_noir": "Negru",
   "map.style_nuit": "Albastru noapte",
   "map.style_couleurs": "Color",
-  "map.style_clair": "Deschis"
+  "map.style_clair": "Deschis",
+  "opp.jobs_nav": "Locuri de muncă",
+  "opp.jobs_h1": "Locuri de muncă în domeniul dronelor",
+  "opp.jobs_lead": "Ofertele de muncă pentru piloți și tehnicieni de drone, preluate în fiecare noapte de la serviciile publice de ocupare și din API-uri oficiale, pe țări și provincii. Gratuit, fără înscriere.",
+  "opp.jobs_count": "{n} ofertă/oferte de muncă",
+  "opp.posted": "Publicată la",
+  "opp.jobs_about": "Aceste oferte provin din fluxuri și API-uri oficiale, cu licența lor:",
+  "opp.jobs_empty": "Nicio ofertă de muncă pentru aceste criterii.",
+  "opp.jobs_empty_hint": "Extindeți țara sau provincia: lista este reîmprospătată în fiecare noapte.",
+  "opp.view_job": "Vezi oferta →",
+  "opp.jobs_all": "Vezi toate ofertele de muncă →"
  },
  "seo": {
   "home.title": "Angajați un pilot de dronă certificat — Oferte gratuite | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Licitații și contracte pentru drone în Canada | AubePilot",
   "opportunities_page.description": "Licitații publice pentru piloți de dronă (LiDAR, fotogrametrie, inspecție) pe provincii, cu data de închidere și link către anunț. Gratuit, actualizat zilnic.",
   "partners_page.title": "Partenerii noștri | AubePilot",
-  "partners_page.description": "Școli, asigurători, magazine, asociații și media care susțin rețeaua AubePilot și piloții săi de drone."
+  "partners_page.description": "Școli, asigurători, magazine, asociații și media care susțin rețeaua AubePilot și piloții săi de drone.",
+  "jobs_page.title": "Joburi drone: piloți, piloți la distanță, tehnicieni | AubePilot",
+  "jobs_page.description": "Oferte de muncă pentru piloți și tehnicieni de drone, preluate în fiecare noapte de la serviciile publice de ocupare și din API-uri oficiale, pe țări și provincii, cu link către ofertă. Gratuit."
  },
  "countries": {
   "Afghanistan": "Afganistan",

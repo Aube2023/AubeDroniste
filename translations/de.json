@@ -1302,7 +1302,17 @@
   "map.style_noir": "Schwarz",
   "map.style_nuit": "Nachtblau",
   "map.style_couleurs": "Farbig",
-  "map.style_clair": "Hell"
+  "map.style_clair": "Hell",
+  "opp.jobs_nav": "Stellenangebote",
+  "opp.jobs_h1": "Jobs in der Drohnenbranche",
+  "opp.jobs_lead": "Stellenangebote für Drohnenpiloten und -techniker, jede Nacht aus öffentlichen Arbeitsvermittlungen und offiziellen APIs übernommen, nach Land und Provinz. Kostenlos, ohne Anmeldung.",
+  "opp.jobs_count": "{n} Stellenangebot(e)",
+  "opp.posted": "Veröffentlicht am",
+  "opp.jobs_about": "Diese Angebote stammen aus offiziellen Feeds und APIs, mit ihrer Lizenz:",
+  "opp.jobs_empty": "Kein Stellenangebot für diese Kriterien.",
+  "opp.jobs_empty_hint": "Erweitern Sie Land oder Provinz: Die Liste wird jede Nacht aktualisiert.",
+  "opp.view_job": "Angebot ansehen →",
+  "opp.jobs_all": "Alle Stellenangebote ansehen →"
  },
  "seo": {
   "home.title": "Zertifizierten Drohnenpiloten buchen — Kostenlose Angebote | AubePilot",
@@ -1340,7 +1350,9 @@
   "opportunities_page.title": "Drohnen-Ausschreibungen und -Aufträge in Kanada | AubePilot",
   "opportunities_page.description": "Öffentliche Ausschreibungen für Drohnenpiloten, LiDAR, Photogrammetrie und Inspektion, nach Provinz, mit Frist und Link. Kostenlos, jede Nacht aktualisiert.",
   "partners_page.title": "Unsere Partner | AubePilot",
-  "partners_page.description": "Schulen, Versicherer, Shops, Verbände und Medien, die das AubePilot-Netzwerk und seine Drohnenpiloten unterstützen."
+  "partners_page.description": "Schulen, Versicherer, Shops, Verbände und Medien, die das AubePilot-Netzwerk und seine Drohnenpiloten unterstützen.",
+  "jobs_page.title": "Drohnen-Jobs: Piloten, Fernpiloten, Techniker | AubePilot",
+  "jobs_page.description": "Stellenangebote für Drohnenpiloten und -techniker, jede Nacht aus öffentlichen Arbeitsvermittlungen und offiziellen APIs übernommen, nach Land und Provinz, mit Link zum Angebot. Kostenlos."
  },
  "countries": {
   "Afghanistan": "Afghanistan",
