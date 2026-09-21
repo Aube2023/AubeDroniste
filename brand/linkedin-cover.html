@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  html, body { margin: 0; padding: 0; background: #061a33; }
+  .cover { position: relative; overflow: hidden; width: var(--w); height: var(--h);
+    background: radial-gradient(120% 160% at 88% 120%, #1d5f96 0%, #0e3a66 32%, #082744 58%, #051730 100%); color: #fff;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  .stars { position: absolute; inset: 0; }
+  .glow { position: absolute; right: -6%; bottom: -70%; width: 60%; height: 140%; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(158,211,245,.35), rgba(47,155,219,.12) 55%, transparent 72%); }
+  .horizon { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, transparent 0%, rgba(158,211,245,.0) 35%, rgba(158,211,245,.55) 70%, rgba(255,255,255,.9) 100%); }
+  .content { position: absolute; display: flex; align-items: center; gap: var(--gap); }
+  .mark { width: var(--mark); height: var(--mark); flex: none; }
+  .text { display: flex; flex-direction: column; gap: var(--tgap); }
+  .word { font-weight: 800; font-size: var(--word); letter-spacing: -0.035em; line-height: 1; }
+  .word span { font-weight: 500; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: var(--tag); letter-spacing: .22em; text-transform: uppercase; color: #9ed3f5; }
+  .sub { font-weight: 500; font-size: var(--sub); line-height: 1.35; color: #c9d6e6; max-width: var(--subw); }
+  .sub b { color: #fff; font-weight: 700; }
+  .url { position: absolute; right: var(--pad); bottom: var(--pad); font-family: 'JetBrains Mono', monospace; font-size: var(--url); letter-spacing: .14em; color: rgba(201,214,230,.85); text-transform: uppercase; }
+  .pill { position: absolute; left: var(--pad); top: var(--pad); font-family: 'JetBrains Mono', monospace; font-size: var(--url); letter-spacing: .14em; color: rgba(201,214,230,.7); text-transform: uppercase; }
+  .pill i { display: inline-block; width: .55em; height: .55em; border-radius: 50%; background: #2f9bdb; margin-right: .6em; vertical-align: middle; }
+</style></head>
+<body>
+<div class="cover" id="cover">
+  <svg class="stars" viewBox="0 0 1584 396" preserveAspectRatio="none" aria-hidden="true">
+    <g fill="#ffffff">
+      <circle cx="120" cy="60" r="1.4" opacity=".55"/><circle cx="210" cy="140" r="1" opacity=".35"/><circle cx="330" cy="40" r="1.8" opacity=".6"/>
+      <circle cx="420" cy="110" r="1.1" opacity=".4"/><circle cx="520" cy="70" r="1.5" opacity=".5"/><circle cx="640" cy="30" r="1" opacity=".35"/>
+      <circle cx="700" cy="150" r="1.3" opacity=".45"/><circle cx="820" cy="90" r="1.9" opacity=".65"/><circle cx="930" cy="45" r="1.1" opacity=".4"/>
+      <circle cx="1040" cy="120" r="1.4" opacity=".5"/><circle cx="1150" cy="60" r="1" opacity=".35"/><circle cx="1260" cy="30" r="1.6" opacity=".55"/>
+      <circle cx="1380" cy="95" r="1.2" opacity=".45"/><circle cx="1480" cy="50" r="1.9" opacity=".6"/><circle cx="1540" cy="150" r="1" opacity=".35"/>
+      <circle cx="60" cy="230" r="1.2" opacity=".4"/><circle cx="260" cy="300" r="1" opacity=".3"/><circle cx="380" cy="250" r="1.5" opacity=".45"/>
+      <circle cx="560" cy="330" r="1.1" opacity=".35"/><circle cx="1180" cy="230" r="1.3" opacity=".4"/><circle cx="1320" cy="300" r="1" opacity=".3"/>
+    </g>
+    <g stroke="#9ed3f5" stroke-width="1" opacity=".22" fill="none">
+      <path d="M330 40 L420 110 L520 70 L640 30"/><path d="M820 90 L930 45 L1040 120"/><path d="M1260 30 L1380 95 L1480 50"/>
+    </g>
+    <g fill="#9ed3f5"><circle cx="330" cy="40" r="2.4" opacity=".8"/><circle cx="820" cy="90" r="2.6" opacity=".85"/><circle cx="1480" cy="50" r="2.4" opacity=".8"/></g>
+  </svg>
+  <div class="glow"></div>
+  <div class="horizon"></div>
+  <div class="pill"><i></i>Montréal · Québec · Canada</div>
+  <div class="content">
+    <img class="mark" src="logo-mark-white.svg" alt="">
+    <div class="text">
+      <div class="word">Aube<span>Pilot</span></div>
+      <div class="tag">Trouvez · Réservez · Volez</div>
+      <div class="sub">Le réseau des <b>pilotes de drone certifiés</b> : missions et devis, appels d'offres publics et offres d'emploi, en 31 langues.</div>
+    </div>
+  </div>
+  <div class="url">pilot.aubeetoilee.com</div>
+</div>
+</body></html>

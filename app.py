@@ -1053,7 +1053,8 @@ def _opportunities_page(kind: str):
     specialty = (request.args.get("mission_type") or "").strip()
     text = (request.args.get("q") or "").strip()[:80]
     items = services.localize_opportunities(
-        services.list_opportunities(kind=kind, country=country, region=region, specialty=specialty, text=text), lang)
+        services.list_opportunities(kind=kind, country=country, region=region, specialty=specialty, text=text,
+                                    limit=500 if kind == "job" else 200), lang)
     return render_template(
         "opportunities.html", kind=kind, items=items,
         regions=services.opportunity_regions(country, kind) if country else [],

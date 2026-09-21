@@ -1517,7 +1517,8 @@ def dedupe_cross_sources(conn) -> int:
     seen: dict = {}
     closed = 0
     for r in sorted(rows, key=lambda r: (r[1] in SECONDARY_SOURCES,)):   # sources nationales d'abord
-        key = (r[2], _norm_title(r[3]), _norm_title(r[5]) if r[4] == "job" else "")
+        # employeur réduit à son premier mot : « Anduril » chez Adzuna, « Anduril Industries » sur sa page carrières
+        key = (r[2], _norm_title(r[3]), _norm_title(r[5]).split(" ")[0] if r[4] == "job" else "")
         if key in seen and r[1] in SECONDARY_SOURCES:
             conn.execute("UPDATE opportunities SET status='closed' WHERE id=?", (r[0],)); closed += 1
         else:
