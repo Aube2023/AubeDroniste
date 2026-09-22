@@ -139,12 +139,17 @@ ADZUNA_WIDE = "what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Droh
 ADZUNA_PAGES = 5
 ADZUNA_PAUSE = 1.5
 ADZUNA_MAX_CALLS = 220
-# USAJOBS : API officielle (clé gratuite : developer.usajobs.gov/apirequest,
-# envoyée par courriel ; l'API veut aussi l'adresse dans User-Agent).
-USAJOBS_API = ("https://data.usajobs.gov/api/search?Keyword={kw}&ResultsPerPage=250&SortField=OpenDate&SortDirection=Desc")
+# USAJOBS : API officielle (clé gratuite, demandée sur
+# developer.usajobs.gov/apirequest/ et envoyée par courriel ; l'adresse
+# inscrite sert de User-Agent, la clé d'en-tête Authorization-Key).
+# `PositionTitle` cherche dans l'intitulé (« contains »), pas dans tout l'avis :
+# c'est l'équivalent du title_only d'Adzuna, sans le bruit. DatePosted vaut au
+# plus 60 jours, ResultsPerPage au plus 500 (doc de l'API).
+USAJOBS_API = ("https://data.usajobs.gov/api/search?PositionTitle={kw}&ResultsPerPage=500"
+               "&DatePosted=60&SortField=opendate&SortDirection=Desc")
 USAJOBS_KEY = os.environ.get("USAJOBS_API_KEY", "").strip()
 USAJOBS_EMAIL = os.environ.get("USAJOBS_EMAIL", "").strip()
-USAJOBS_TERMS = ("drone", "UAS", "unmanned aircraft", "remotely piloted")
+USAJOBS_TERMS = ("drone", "UAS", "UAV", "unmanned aircraft", "remotely piloted", "aerial survey")
 # Employeurs du drone : leurs pages carrières exposent un flux public prévu
 # pour la republication (API « job board » de leur outil de recrutement).
 # strict=True (industriels de défense aux milliers de postes) : seul un
