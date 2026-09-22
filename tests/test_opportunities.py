@@ -126,7 +126,7 @@ LV_SHIELD = json.dumps([
 def _usajobs_payload():
     return {"SearchResult": {"SearchResultItems": [
         {"MatchedObjectId": "830001", "MatchedObjectDescriptor": {
-            "PositionID": "USDA-1", "PositionTitle": "Unmanned Aircraft Systems (UAS) Pilot", "PositionURI": "https://www.usajobs.gov/job/830001",
+            "PositionID": "USDA-1", "PositionTitle": "Unmanned Aircraft Systems (UAS) Pilot", "PositionURI": "https://www.usajobs.gov:443/job/830001",
             "PositionLocationDisplay": "Boise, Idaho", "PositionLocation": [{"CityName": "Boise, Idaho", "CountrySubDivisionCode": "Idaho"}],
             "OrganizationName": "Forest Service", "DepartmentName": "Department of Agriculture",
             "PublicationStartDate": "2026-09-15", "ApplicationCloseDate": "2026-10-06",
@@ -143,8 +143,11 @@ def test_parse_emplois_usajobs_et_pages_carrieres():
     assert [j["source_ref"] for j in jobs] == ["830001"]   # « drone » dans le résumé seul : écarté
     j = jobs[0]
     assert j["country"] == "États-Unis" and j["region"] == "Idaho" and j["org"] == "Forest Service"
-    assert j["closes_at"] == "2026-10-06" and j["summary_en"].endswith("(59,966–77,955 USD)") and "feux_foret" in j["specialties"]
+    assert j["closes_at"] == "2026-10-06" and "feux_foret" in j["specialties"]
+    assert j["summary_en"].endswith("(59,966–77,955 USD a year)") and j["summary_fr"].endswith("(59,966–77,955 USD par an)")
     assert j["notice_type"] == "Full-time, Permanent"
+    assert j["url_fr"] == "https://www.usajobs.gov/job/830001"   # le :443 de l'API est retiré
+    assert j["city"] == "Boise"   # « Boise, Idaho » : la province est déjà dans l'étiquette
 
     z = opp.parse_employer_board("greenhouse", GH_ZIPLINE, "zipline", "Zipline", False, "États-Unis")
     assert [i["title_en"] for i in z] == ["Drone Maintenance Technician", "Flight Test Operator, Amarillo", "Flight Operations Specialist"]

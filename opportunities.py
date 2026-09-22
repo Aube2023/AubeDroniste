@@ -145,11 +145,18 @@ ADZUNA_MAX_CALLS = 220
 # `PositionTitle` cherche dans l'intitulé (« contains »), pas dans tout l'avis :
 # c'est l'équivalent du title_only d'Adzuna, sans le bruit. DatePosted vaut au
 # plus 60 jours, ResultsPerPage au plus 500 (doc de l'API).
-USAJOBS_API = ("https://data.usajobs.gov/api/search?PositionTitle={kw}&ResultsPerPage=500"
-               "&DatePosted=60&SortField=opendate&SortDirection=Desc")
+USAJOBS_API = ("https://data.usajobs.gov/api/search?{param}={kw}&ResultsPerPage=500"
+               "&SortField=opendate&SortDirection=Desc")
 USAJOBS_KEY = os.environ.get("USAJOBS_API_KEY", "").strip()
 USAJOBS_EMAIL = os.environ.get("USAJOBS_EMAIL", "").strip()
-USAJOBS_TERMS = ("drone", "UAS", "UAV", "unmanned aircraft", "remotely piloted", "aerial survey")
+# `PositionTitle` trouve les intitulés (« UAS Quality Assurance Specialist »),
+# `Keyword` ratisse l'avis entier et rattrape les intitulés en toutes lettres
+# (« Unmanned Aircraft System Supervisor ») ; job_matches() trie ensuite.
+USAJOBS_TITLE_TERMS = ("drone", "UAS", "UAV", "unmanned", "remotely piloted", "RPAS")
+USAJOBS_KEYWORDS = ("unmanned aircraft", "drone pilot", "remotely piloted aircraft")
+USAJOBS_PAY = {"PA": ("USD par an", "USD a year"), "PH": ("USD de l'heure", "USD an hour"),
+               "PD": ("USD par jour", "USD a day"), "PW": ("USD par semaine", "USD a week"),
+               "PM": ("USD par mois", "USD a month"), "PB": ("USD par période", "USD per period")}
 # Employeurs du drone : leurs pages carrières exposent un flux public prévu
 # pour la republication (API « job board » de leur outil de recrutement).
 # strict=True (industriels de défense aux milliers de postes) : seul un
@@ -1253,7 +1260,7 @@ def parse_usajobs(data: dict) -> list:
     for it in ((data or {}).get("SearchResult") or {}).get("SearchResultItems") or []:
         d = it.get("MatchedObjectDescriptor") or {}
         title = re.sub(r"\s+", " ", d.get("PositionTitle") or "").strip()
-        url = (d.get("PositionURI") or "").strip()
+        url = (d.get("PositionURI") or "").strip().replace("usajobs.gov:443/", "usajobs.gov/")
         if not url or not job_matches(title):
             continue
         locs = d.get("PositionLocation") or []
@@ -1261,20 +1268,26 @@ def parse_usajobs(data: dict) -> list:
         state = first.get("CountrySubDivisionCode") or ""
         region = US_STATES.get(state, state) if len(locs) == 1 else "États-Unis"
         pay = (d.get("PositionRemuneration") or [{}])[0]
-        salary = ""
+        pay_fr = pay_en = ""
         if pay.get("MinimumRange"):
+            unit = USAJOBS_PAY.get(pay.get("RateIntervalCode") or "", ("USD", "USD"))
             try:
-                salary = f" ({int(float(pay['MinimumRange'])):,}–{int(float(pay.get('MaximumRange') or pay['MinimumRange'])):,} USD)"
+                lo = int(float(pay["MinimumRange"]))
+                hi = int(float(pay.get("MaximumRange") or pay["MinimumRange"]))
+                span = f"{lo:,}" if hi == lo else f"{lo:,}–{hi:,}"
+                pay_fr, pay_en = f" ({span} {unit[0]})", f" ({span} {unit[1]})"
             except ValueError:
-                salary = ""
+                pass
         summary = summarize(((d.get("UserArea") or {}).get("Details") or {}).get("JobSummary") or "")
         notice = ", ".join(x.get("Name", "") for x in (d.get("PositionSchedule") or []) + (d.get("PositionOfferingType") or []) if x.get("Name"))
+        # « Grayling, Michigan » : la province est déjà dans l'étiquette du pays
+        city = (first.get("CityName") or "").split(",")[0].strip() if len(locs) == 1 else ""
         items.append({
             "source": "usajobs", "source_ref": str(it.get("MatchedObjectId") or d.get("PositionID") or url), "kind": "job",
-            "title_fr": title, "title_en": title, "summary_fr": summary + salary, "summary_en": summary + salary,
+            "title_fr": title, "title_en": title, "summary_fr": summary + pay_fr, "summary_en": summary + pay_en,
             "org": d.get("OrganizationName") or d.get("DepartmentName") or "", "country": "États-Unis",
             "region": region or "États-Unis", "regions_raw": d.get("PositionLocationDisplay") or "",
-            "city": first.get("CityName") or "" if len(locs) == 1 else "",
+            "city": city,
             "url_fr": url, "url_en": url, "notice_type": notice, "category": "job",
             "specialties": specialties_for(title + " " + summary),
             "published_at": _iso_date(d.get("PublicationStartDate") or ""),
@@ -1290,11 +1303,12 @@ def collect_usajobs(conn) -> dict:
     headers = {"Host": "data.usajobs.gov", "User-Agent": USAJOBS_EMAIL, "Authorization-Key": USAJOBS_KEY}
     items: list = []
     errors = 0
-    for term in USAJOBS_TERMS:
+    queries = [("PositionTitle", t) for t in USAJOBS_TITLE_TERMS] + [("Keyword", t) for t in USAJOBS_KEYWORDS]
+    for param, term in queries:
         try:
-            data = json.loads(_fetch_headers(USAJOBS_API.format(kw=urllib.parse.quote(term)), headers).decode("utf-8"))
+            data = json.loads(_fetch_headers(USAJOBS_API.format(param=param, kw=urllib.parse.quote(term)), headers).decode("utf-8"))
         except Exception as exc:
-            log.warning("usajobs %s: %s", term, exc)
+            log.warning("usajobs %s=%s: %s", param, term, exc)
             errors += 1
             continue
         items.extend(parse_usajobs(data))
