@@ -72,8 +72,8 @@ SOURCES = {
                "url": "https://www.adzuna.com/", "kind": "job"},
     "usajobs": {"label": "USAJOBS (États-Unis, emplois fédéraux)", "licence": "API officielle de l'Office of Personnel Management, données publiques",
                 "url": "https://www.usajobs.gov/", "kind": "job"},
-    "employers": {"label": "Pages carrières d'employeurs du drone (Zipline, Skydio, Auterion, Elroy Air, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI)",
-                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor), lien vers l'offre chez l'employeur",
+    "employers": {"label": "Pages carrières d'employeurs du drone (Volatus Aerospace, Zipline, Skydio, Auterion, Elroy Air, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI)",
+                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor, BambooHR), lien vers l'offre chez l'employeur",
                   "url": "https://pilot.aubeetoilee.com/emplois", "kind": "job"},
 }
 for _s in SOURCES.values():
@@ -101,7 +101,12 @@ SAMGOV_KEY = os.environ.get("SAMGOV_API_KEY", "").strip()
 # numéro d'offre (le même dans les deux langues).
 JOBBANK_FEED_EN = "https://www.jobbank.gc.ca/jobsearch/feed/jobSearchRSSfeed?searchstring={q}&sort=D&rows=100"
 JOBBANK_FEED_FR = "https://www.guichetemplois.gc.ca/jobsearch/feed/jobSearchRSSfeed?searchstring={q}&sort=D&rows=100"
-JOBBANK_TERMS = ("drone", "drones", "UAV", "RPAS", "télépilote")
+# Les intitulés sont filtrés ensuite par job_matches() : un terme large ne
+# ramène du bruit que dans la page lue, jamais sur le site. Chaque terme est
+# interrogé dans les deux langues (le flux FR indexe les intitulés français).
+JOBBANK_TERMS = ("drone", "drones", "UAV", "UAS", "RPAS", "télépilote", "aerial", "aérien",
+                 "lidar", "photogrammétrie", "arpentage", "cartographie", "géomatique", "topographie")
+JOBBANK_PAUSE = 2.0            # le portail ralentit un client trop pressé
 JOB_DAYS = 30                  # une offre sans date de fin est proposée 30 jours après sa publication
 # Intitulés d'emploi à écarter : « RPAS » d'Oracle Retail (Retail Predictive
 # Application Server), annonces de mise en relation Cronoshare (« Drones e
@@ -127,7 +132,7 @@ ADZUNA_API = ("https://api.adzuna.com/v1/api/jobs/{cc}/search/{page}?app_id={app
 # - `what_or=…` (large, descriptif compris) : garde le Canada, où title_only
 #   « drone » répond 0 alors que des intitulés « Drone Pilot » existent.
 # Les appels sont espacés (accès d'essai : 25/min) et plafonnés par nuit.
-ADZUNA_TITLE_TERMS = ("drone", "UAV", "RPAS")
+ADZUNA_TITLE_TERMS = ("drone", "UAV", "UAS", "RPAS")
 ADZUNA_EXTRA_TERMS = {"fr": ("télépilote",), "be": ("télépilote",), "ch": ("télépilote", "Drohne"), "ca": ("télépilote",),
                       "de": ("Drohne",), "at": ("Drohne",), "es": ("dron",), "mx": ("dron",), "pl": ("dron",)}
 ADZUNA_WIDE = "what_or=drone%20drones%20UAV%20RPAS%20t%C3%A9l%C3%A9pilote%20Drohne%20dron"
@@ -157,6 +162,7 @@ EMPLOYER_BOARDS = (
     ("pix4d", "workable", "pix4d", "Pix4D", False, "Suisse"),
     ("wingcopter", "personio", "wingcopter", "Wingcopter", False, "Allemagne"),
     ("delair", "teamtailor", "delair", "Delair", False, "France"),
+    ("volatus", "bamboohr", "volatus", "Volatus Aerospace", False, "Canada"),
 )
 ATS_URLS = {
     "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs",
@@ -165,10 +171,12 @@ ATS_URLS = {
     "workable": "https://apply.workable.com/api/v1/widget/accounts/{slug}",
     "personio": "https://{slug}.jobs.personio.de/xml",
     "teamtailor": "https://{slug}.teamtailor.com/jobs.rss",
+    "bamboohr": "https://{slug}.bamboohr.com/careers/list",
 }
 EMPLOYER_ROLE = re.compile(
-    r"\b(pilot\w*|pilote\w*|t[ée]l[ée]pilot\w*|flight (?:test|ops|operations?|engineer\w*|technician\w*|instructor\w*|controls?)|"
-    r"test pilot|aircraft|airframe|avionic\w*|payload\w*|propulsion|maintenance technician|"
+    r"\b(pilot\w*|pilote\w*|t[ée]l[ée]pilot\w*|flight\w*|vol en|"
+    r"test pilot|aircraft|a[ée]ronef\w*|a[ée]rospat\w*|aerospace|airframe|avionic\w*|payload\w*|propulsion|"
+    r"technician\w*|technicien\w*|maintenance\w*|assembl\w*|"
     r"field (?:service|support|technician|engineer|operations?|ops)\w*|mission (?:operator|specialist|planner)\w*|operator\w*|"
     r"composite\w*|assembly technician|inspection\w*|survey\w*|mapping|lidar|photogramm\w*|geomat\w*|"
     r"instructor\w*|training specialist|site lead|remote operations?|ground (?:control|station)|gcs)\b", re.I)
@@ -1133,13 +1141,17 @@ def parse_jobbank(entries_en: list, entries_fr: list) -> list:
 
 
 def collect_jobbank(conn) -> dict:
+    import time
     import urllib.parse
     entries_en: list = []
     entries_fr: list = []
-    errors = 0
+    errors = calls = 0
     for term in JOBBANK_TERMS:
         q = urllib.parse.quote(term)
         for store, url in ((entries_en, JOBBANK_FEED_EN.format(q=q)), (entries_fr, JOBBANK_FEED_FR.format(q=q))):
+            if calls:
+                time.sleep(JOBBANK_PAUSE)
+            calls += 1
             try:
                 store.extend(_atom_entries(_fetch(url, timeout=60)))
             except Exception as exc:
@@ -1372,6 +1384,15 @@ def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict
             pid = (pos.findtext("id") or "").strip()
             rows.append((pos.findtext("name"), pos.findtext("office") or "", "", f"https://{board}.jobs.personio.de/job/{pid}",
                          pos.findtext("createdAt"), ", ".join(x for x in (pos.findtext("employmentType"), pos.findtext("schedule")) if x), pid))
+    elif ats == "bamboohr":
+        # Liste publique du tableau de bord carrières : pas de date de parution,
+        # la fiche vit tant qu'elle reste dans le flux.
+        for j in (json.loads(raw.decode("utf-8")).get("result") or []):
+            loc = j.get("location") or {}
+            place = ", ".join(x for x in (loc.get("city"), loc.get("state")) if x)
+            rows.append((j.get("jobOpeningName"), place, (j.get("atsLocation") or {}).get("country") or "",
+                         f"https://{board}.bamboohr.com/careers/{j.get('id')}", "",
+                         (j.get("employmentStatusLabel") or "").lower(), str(j.get("id"))))
     elif ats == "teamtailor":
         import xml.etree.ElementTree as ET
         ns = "{https://teamtailor.com/locations}"
@@ -1390,6 +1411,8 @@ def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict
         anywhere = bool(re.search(r"remote|international|anywhere", loc or "", re.I))
         if not country:
             country = "International" if anywhere else (default_country or "International")
+            if country == "Canada" and not anywhere:
+                region = normalize_region(loc or "")[0]
         published = _iso_date(when or "")
         city = (loc or "").split(",")[0].strip() if loc and not anywhere else ""
         items.append({

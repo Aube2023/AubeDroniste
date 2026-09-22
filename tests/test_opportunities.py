@@ -256,6 +256,8 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return TT_DELAIR
         if url.startswith("https://api.lever.co/v0/postings/shieldai"):
             return LV_SHIELD
+        if url.startswith("https://volatus.bamboohr.com/"):
+            return BH_VOLATUS
         if url.startswith(("https://boards-api.greenhouse.io/", "https://api.ashbyhq.com/", "https://apply.workable.com/")):
             return b'{"jobs": []}'
         if url.startswith("https://api.lever.co/"):
@@ -264,7 +266,8 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return b"<workzag-jobs></workzag-jobs>"
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
-    monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key"); monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0)
+    monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key")
+    monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0); monkeypatch.setattr(opp, "JOBBANK_PAUSE", 0)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
     # Liens : tout répond sauf l'avis SEAO (mort) -> retiré du site.
     monkeypatch.setattr(opp, "link_status", lambda url: 404 if "seao.gouv.qc.ca/avis/1" in url else 200)
@@ -275,12 +278,13 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     assert "skipped" in report["samgov"]   # pas de clé SAM.gov en test
     assert report["jobbank"] == {"items": 2, "seen": 4, "errors": 0} and report["adzuna"]["items"] == 1
     assert "skipped" in report["usajobs"]   # pas de clé USAJOBS en test
-    assert report["employers"]["items"] == 5 and report["employers"]["errors"] == 0 and report["employers"]["closed"] == 0
-    assert report["published"] == 15   # 8 avis + 8 emplois, moins l'avis au lien mort
+    assert report["employers"]["items"] == 8 and report["employers"]["errors"] == 0 and report["employers"]["closed"] == 0
+    assert report["published"] == 18   # 8 avis + 11 emplois, moins l'avis au lien mort
     # Emplois : page à part, onglet vers les appels d'offres, jamais mélangés
     jobs_html = client.get("/emplois").get_data(as_text=True)
     assert "Technicien/technicienne de drones" in jobs_html and "Drone Pilot / Surveyor" in jobs_html
     assert "Drone Maintenance Technician" in jobs_html and "zipline.com/open-roles/1" in jobs_html and "Télépilote Drone" in jobs_html
+    assert "Volatus Aerospace" in jobs_html and "volatus.bamboohr.com/careers/134" in jobs_html
     assert "Levé LiDAR" not in jobs_html and "guichetemplois.gc.ca/jobsearch/jobposting/50315643" in jobs_html
     assert "Salaire : 32,00 $ de l&#39;heure" in jobs_html and "Publiée le 2026-09-18" in jobs_html
     assert 'href="/opportunites"' in jobs_html and 'href="/emplois" class="on"' in jobs_html
@@ -378,3 +382,29 @@ def test_la_collecte_ne_bloque_pas_le_site(client, monkeypatch):
     waited["t"] = time.time() - t0
     th.join(30)
     assert waited["t"] < 1.0, f"écriture bloquée {waited['t']:.1f}s pendant la collecte"
+
+
+BH_VOLATUS = json.dumps({"result": [
+    {"id": "134", "jobOpeningName": "Aircraft Maintenance Engineer/Technician", "employmentStatusLabel": "Full-Time",
+     "location": {"city": "Vaughan", "state": "Ontario"}, "atsLocation": {"country": None}},
+    {"id": "135", "jobOpeningName": "Technicien(ne) en assemblage aérospatial", "employmentStatusLabel": "Full-Time",
+     "location": {"city": "Mirabel", "state": "Quebec"}, "atsLocation": {"country": None}},
+    {"id": "139", "jobOpeningName": "Contract Visual Observer – Transmission Inspections", "employmentStatusLabel": "Full-Time",
+     "location": {"city": "State College", "state": "Pennsylvania"}, "atsLocation": {"country": None}},
+    {"id": "132", "jobOpeningName": "Revenue Accountant", "employmentStatusLabel": "Full-Time",
+     "location": {"city": "Edmonton", "state": "Alberta"}, "atsLocation": {"country": None}},
+]}).encode("utf-8")
+
+
+def test_parse_page_carrieres_bamboohr_provinces_canadiennes():
+    """Volatus Aerospace (le plus gros employeur drone au Canada) publie sur
+    BambooHR : pas de date de parution, la province vient du lieu."""
+    items = opp.parse_employer_board("bamboohr", BH_VOLATUS, "volatus", "Volatus Aerospace", False, "Canada")
+    assert [(i["title_en"][:28], i["country"], i["region"], i["city"]) for i in items] == [
+        ("Aircraft Maintenance Enginee", "Canada", "Ontario", "Vaughan"),
+        ("Technicien(ne) en assemblage", "Canada", "Québec", "Mirabel"),
+        ("Contract Visual Observer – T", "États-Unis", "Pennsylvania", "State College"),
+    ]   # le poste de comptable est écarté
+    assert items[0]["url_fr"] == "https://volatus.bamboohr.com/careers/134"
+    assert items[0]["published_at"] is None and items[0]["closes_at"] is None
+    assert items[0]["notice_type"] == "full-time" and items[0]["org"] == "Volatus Aerospace"
