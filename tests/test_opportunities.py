@@ -265,10 +265,16 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return b'{"jobs": []}'
         if url.startswith("https://api.lever.co/"):
             return b"[]"
+        if ".zohorecruit.in/" in url:
+            return b'{"data": []}'
+        if url.startswith("https://jobsearch.api.jobtechdev.se/"):
+            return json.dumps(_jobtech_payload() if "q=UAS" in url else {"hits": []}).encode("utf-8")
         if ".jobs.personio.de/" in url:
             return b"<workzag-jobs></workzag-jobs>"
         raise AssertionError(url)
     monkeypatch.setattr(opp, "_fetch", fake_fetch)
+    monkeypatch.setattr(opp, "_fetch_headers", lambda url, headers, timeout=60: json.dumps(
+        _ba_payload() if "was=Drohnenpilot&" in url and headers.get("X-API-Key") == "jobboerse-jobsuche" else {"ergebnisliste": []}).encode("utf-8"))
     monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key")
     monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0); monkeypatch.setattr(opp, "JOBBANK_PAUSE", 0)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
@@ -282,7 +288,8 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
     assert report["jobbank"] == {"items": 2, "seen": 4, "errors": 0} and report["adzuna"]["items"] == 1
     assert "skipped" in report["usajobs"]   # pas de clé USAJOBS en test
     assert report["employers"]["items"] == 8 and report["employers"]["errors"] == 0 and report["employers"]["closed"] == 0
-    assert report["published"] == 18   # 8 avis + 11 emplois, moins l'avis au lien mort
+    assert report["arbeitsagentur"] == {"items": 1, "errors": 0} and report["jobtech"] == {"items": 1, "errors": 0}
+    assert report["published"] == 20   # 8 avis + 13 emplois, moins l'avis au lien mort
     # Emplois : page à part, onglet vers les appels d'offres, jamais mélangés
     jobs_html = client.get("/emplois").get_data(as_text=True)
     assert "Technicien/technicienne de drones" in jobs_html and "Drone Pilot / Surveyor" in jobs_html
@@ -382,6 +389,7 @@ def test_la_collecte_ne_bloque_pas_le_site(client, monkeypatch):
     monkeypatch.setattr(opp, "JOBBANK_TERMS", ("drone",))
     monkeypatch.setattr(opp, "JOBBANK_PAUSE", 0)
     monkeypatch.setattr(opp, "ADZUNA_APP_ID", ""); monkeypatch.setattr(opp, "USAJOBS_KEY", "")
+    monkeypatch.setattr(opp, "ARBEITSAGENTUR_TERMS", ()); monkeypatch.setattr(opp, "JOBTECH_TERMS", ())
     th = threading.Thread(target=lambda: opp.collect(verify=False)); th.start()
     started.wait(5); time.sleep(0.2)
     t0 = time.time()
@@ -418,3 +426,51 @@ def test_parse_page_carrieres_bamboohr_provinces_canadiennes():
     assert items[0]["url_fr"] == "https://volatus.bamboohr.com/careers/134"
     assert items[0]["published_at"] is None and items[0]["closes_at"] is None
     assert items[0]["notice_type"] == "full-time" and items[0]["org"] == "Volatus Aerospace"
+
+
+def _ba_payload():
+    return {"maxErgebnisse": 3, "ergebnisliste": [
+        {"stellenangebotsTitel": "Drohnen-Pilot/in (m/w/d) Teilzeit/Vollzeit", "referenznummer": "10000-1200-S", "firma": "ASDRO GmbH",
+         "arbeitszeitVollzeit": True, "vertragsdauer": "UNBEFRISTET", "datumErsteVeroeffentlichung": "2026-09-15",
+         "stellenlokationen": [{"adresse": {"plz": "45127", "ort": "Essen, Ruhr", "region": "NORDRHEIN_WESTFALEN", "land": "DEUTSCHLAND"}}]},
+        {"stellenangebotsTitel": "Vermessungstechniker (m/w/d)", "referenznummer": "10000-1201-S", "firma": "X",
+         "stellenlokationen": [{"adresse": {"ort": "Köln", "region": "NORDRHEIN_WESTFALEN"}}]},
+        {"stellenangebotsTitel": "Operator Drohnenabwehr zgl. Polizist (m/w/d)", "referenznummer": "10000-1202-S", "firma": "Polizei",
+         "stellenlokationen": [{"adresse": {"ort": "Berlin", "region": "BERLIN"}}]},
+    ]}
+
+
+def _jobtech_payload():
+    return {"total": {"value": 2}, "hits": [
+        {"id": "30001", "headline": "UAS Flight Manager to UMS Skeldar in Linköping", "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/30001",
+         "employer": {"name": "UMS Skeldar Sweden AB"}, "workplace_address": {"municipality": "Linköping", "region": "Östergötlands län"},
+         "description": {"text": "Leda flygoperationer med obemannade system."}, "employment_type": {"label": "Vanlig anställning"},
+         "publication_date": "2026-09-20T10:00:00", "application_deadline": "2027-02-21T23:59:59"},
+        {"id": "30002", "headline": "Business Strategist – Drönare, Drönarskydd & AI", "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/30002",
+         "employer": {"name": "Securitas"}, "workplace_address": {"region": "Stockholms län"}},
+    ]}
+
+
+ZOHO_TECHEAGLE = json.dumps({"data": [
+    {"id": "9434801", "Posting_Title": "Field Operations Trainee", "City": "India", "Country": "India", "Job_Type": "Full time", "Publish": True,
+     "$url": "https://techeagle.zohorecruit.in/jobs/Careers/9434801/Field-Operations-Trainee?source=CareerSite"},
+    {"id": "9434802", "Posting_Title": "Drone Pilot", "City": "Gurugram", "Country": "India", "Job_Type": "Permanent", "Publish": True,
+     "$url": "https://techeagle.zohorecruit.in/jobs/Careers/9434802/Drone-Pilot?source=CareerSite"},
+    {"id": "9434803", "Posting_Title": "HR Recruiter Intern", "City": "Gurugram", "Country": "India", "Publish": True, "$url": "https://x"},
+]}).encode("utf-8")
+
+
+def test_parse_emplois_allemagne_suede_et_zoho_inde():
+    de = opp.parse_arbeitsagentur(_ba_payload())
+    assert [(j["title_fr"][:15], j["region"], j["city"], j["org"]) for j in de] == [
+        ("Drohnen-Pilot/i", "Nordrhein-Westfalen", "Essen", "ASDRO GmbH")]   # géomètre (recherche floue) et anti-drone écartés
+    assert de[0]["url_fr"] == "https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1200-S"
+    assert de[0]["country"] == "Allemagne" and de[0]["closes_at"] == "2026-10-15" and de[0]["notice_type"] == "Vollzeit, unbefristet"
+    se = opp.parse_jobtech(_jobtech_payload())
+    assert [(j["title_fr"][:17], j["country"], j["region"], j["closes_at"]) for j in se] == [
+        ("UAS Flight Manage", "Suède", "Östergötlands län", "2027-02-21")]   # « Drönarskydd » = anti-drone
+    assert opp.job_matches("Drönarpilot sökes") and opp.job_matches("Mechatroniker Drohnenproduktion")
+    assert not opp.job_matches("Fachkraft Metall / Bootsbauer (m/w/d) Drohnenboote")
+    ind = opp.parse_employer_board("zoho", ZOHO_TECHEAGLE, "techeagle", "TechEagle", False, "Inde")
+    assert [(j["title_en"], j["country"], j["city"]) for j in ind] == [("Field Operations Trainee", "Inde", ""), ("Drone Pilot", "Inde", "Gurugram")]
+    assert ind[1]["url_fr"] == "https://techeagle.zohorecruit.in/jobs/Careers/9434802/Drone-Pilot" and ind[1]["closes_at"] is None

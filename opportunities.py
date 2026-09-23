@@ -72,8 +72,12 @@ SOURCES = {
                "url": "https://www.adzuna.com/", "kind": "job"},
     "usajobs": {"label": "USAJOBS (États-Unis, emplois fédéraux)", "licence": "API officielle de l'Office of Personnel Management, données publiques",
                 "url": "https://www.usajobs.gov/", "kind": "job"},
-    "employers": {"label": "Pages carrières d'employeurs du drone (Volatus Aerospace, Zipline, Skydio, Auterion, Elroy Air, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI)",
-                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor, BambooHR), lien vers l'offre chez l'employeur",
+    "arbeitsagentur": {"label": "Bundesagentur für Arbeit (Allemagne)", "licence": "API publique Jobsuche de l'agence fédérale pour l'emploi, lien vers l'offre d'origine",
+                       "url": "https://www.arbeitsagentur.de/jobsuche/", "kind": "job"},
+    "jobtech": {"label": "Arbetsförmedlingen (Suède)", "licence": "API JobSearch de JobTech, données ouvertes CC0",
+                "url": "https://arbetsformedlingen.se/platsbanken/", "kind": "job"},
+    "employers": {"label": "Pages carrières d'employeurs du drone (Volatus Aerospace, Zipline, Wing, Skydio, BRINC, Auterion, Elroy Air, Matternet, Unusual Machines, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI, Airbound, TechEagle, Drone Acharya)",
+                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor, BambooHR, Zoho Recruit), lien vers l'offre chez l'employeur",
                   "url": "https://pilot.aubeetoilee.com/emplois", "kind": "job"},
 }
 for _s in SOURCES.values():
@@ -175,6 +179,14 @@ EMPLOYER_BOARDS = (
     ("wingcopter", "personio", "wingcopter", "Wingcopter", False, "Allemagne"),
     ("delair", "teamtailor", "delair", "Delair", False, "France"),
     ("volatus", "bamboohr", "volatus", "Volatus Aerospace", False, "Canada"),
+    ("wing", "greenhouse", "wing", "Wing", False, "États-Unis"),
+    ("brinc", "ashby", "brinc", "BRINC", False, "États-Unis"),
+    ("unusualmachines", "greenhouse", "unusualmachines", "Unusual Machines", False, "États-Unis"),
+    ("matternet", "workable", "matternet", "Matternet", False, "États-Unis"),
+    # Inde : livraison et relevés par drone
+    ("airbound", "ashby", "airbound", "Airbound", False, "Inde"),
+    ("techeagle", "zoho", "techeagle", "TechEagle", False, "Inde"),
+    ("droneacharya", "zoho", "droneacharya", "Drone Acharya", False, "Inde"),
 )
 ATS_URLS = {
     "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs",
@@ -184,7 +196,26 @@ ATS_URLS = {
     "personio": "https://{slug}.jobs.personio.de/xml",
     "teamtailor": "https://{slug}.teamtailor.com/jobs.rss",
     "bamboohr": "https://{slug}.bamboohr.com/careers/list",
+    # API publique du site carrières Zoho Recruit (celle du widget d'offres)
+    "zoho": "https://{slug}.zohorecruit.in/recruit/v2/public/Job_Openings?pagename=Careers",
 }
+# Services publics de l'emploi à API ouverte, sans clé.
+# Allemagne : Bundesagentur für Arbeit (Jobsuche, v6 ; clé publique
+# documentée « jobboerse-jobsuche », la v4 répond 403). Recherche floue
+# (« Drohne » ramène des géomètres, des couvreurs) : intitulé filtré ensuite.
+ARBEITSAGENTUR_API = ("https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v6/jobs"
+                      "?was={q}&size=100&veroeffentlichtseit=30")
+ARBEITSAGENTUR_KEY = "jobboerse-jobsuche"
+ARBEITSAGENTUR_JOB = "https://www.arbeitsagentur.de/jobsuche/jobdetail/{ref}"
+ARBEITSAGENTUR_TERMS = ("Drohne", "Drohnenpilot", "UAV", "Multikopter", "Fernpilot")
+DE_LAENDER = {"BADEN_WUERTTEMBERG": "Baden-Württemberg", "BAYERN": "Bayern", "BERLIN": "Berlin", "BRANDENBURG": "Brandenburg",
+              "BREMEN": "Bremen", "HAMBURG": "Hamburg", "HESSEN": "Hessen", "MECKLENBURG_VORPOMMERN": "Mecklenburg-Vorpommern",
+              "NIEDERSACHSEN": "Niedersachsen", "NORDRHEIN_WESTFALEN": "Nordrhein-Westfalen", "RHEINLAND_PFALZ": "Rheinland-Pfalz",
+              "SAARLAND": "Saarland", "SACHSEN": "Sachsen", "SACHSEN_ANHALT": "Sachsen-Anhalt",
+              "SCHLESWIG_HOLSTEIN": "Schleswig-Holstein", "THUERINGEN": "Thüringen"}
+# Suède : Arbetsförmedlingen, API JobSearch de JobTech (données CC0).
+JOBTECH_API = "https://jobsearch.api.jobtechdev.se/search?q={q}&limit=100"
+JOBTECH_TERMS = ("drönare", "drönarpilot", "UAV", "UAS")
 EMPLOYER_ROLE = re.compile(
     r"\b(pilot\w*|pilote\w*|t[ée]l[ée]pilot\w*|flight\w*|vol en|"
     r"test pilot|aircraft|a[ée]ronef\w*|a[ée]rospat\w*|aerospace|airframe|avionic\w*|payload\w*|propulsion|"
@@ -241,7 +272,7 @@ TED_HTML_LANG = {"fra": "fr", "eng": "en", "spa": "es", "deu": "de", "ita": "it"
 # Ce qui concerne un professionnel du drone. Le mot « aérien » seul ne suffit
 # pas (ravitailleurs, fret aérien...) : il faut un terme métier.
 KEYWORDS = re.compile(
-    r"\b(drones?|dron|drones|drohnen?|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
+    r"\b(drones?|dron|drones|drohnen?\w*|dr[öo]nar\w*|multi[ck]opter\w*|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
     r"aeronaves? (?:no tripulada|remotamente pilotada)s?|fotogrametr[ií]a|ortofoto\w*|levantamiento a[ée]reo|"
     r"a[ée]ronefs? (?:t[ée]l[ée]pilot|sans [ée]quipage|sans pilote)\w*|t[ée]l[ée]pilot\w*|remotely piloted\w*|"
     r"lidar|photogramm\w*|orthophoto\w*|orthoimage\w*|orthomosa\w*|"
@@ -273,7 +304,7 @@ NOISE = re.compile(r"anti-?drones?|contre les (?:drones|syst[èe]mes d.a[ée]ron
                    r"drone remote id|remote id|d[ée]tection (?:et neutralisation )?de drones|neutralisation de drones|brouill\w+|"
                    r"v[ée]hicule (?:de surface|terrestre) sans [ée]quipage|unmanned (?:surface|ground) vehicle|drones? navals?|"
                    r"\bvsse\b|\busv\b|\bugv\b|munitions?|lõhkepea|minendetektion|mine ?detection|"
-                   r"drohnenabwehr|antidron|contradron|anti-uav|dronebestrijding|drone ?afvær|"
+                   r"drohnenabwehr|drohnenboot\w*|dr[öo]narskydd|dr[öo]narbek[äa]mp\w*|antidron|contradron|anti-uav|dronebestrijding|drone ?afvær|"
                    r"p[óo]lizas? de seguro|seguros? de vida|contrat d.assurance|insurance polic|spectacle|pyrotechni|feu d.artifice|light show|"
                    r"uav[- ]?gc|uav 2012|uav 1989", re.I)   # NL : « UAV » = Uniforme Administratieve Voorwaarden (conditions de marché), pas un drone
 
@@ -1318,6 +1349,86 @@ def collect_usajobs(conn) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Emplois : services publics de l'emploi (Allemagne, Suède), API ouvertes
+# ---------------------------------------------------------------------------
+
+def parse_arbeitsagentur(data: dict) -> list:
+    items = []
+    for j in (data or {}).get("ergebnisliste") or []:
+        title = re.sub(r"\s+", " ", j.get("stellenangebotsTitel") or j.get("titel") or "").strip()
+        ref = (j.get("referenznummer") or "").strip()
+        if not ref or not job_matches(title):
+            continue
+        addr = ((j.get("stellenlokationen") or [{}])[0].get("adresse") or {})
+        region = DE_LAENDER.get(addr.get("region") or "", "")
+        published = _iso_date(j.get("datumErsteVeroeffentlichung") or (j.get("veroeffentlichungszeitraum") or {}).get("von") or "")
+        url = ARBEITSAGENTUR_JOB.format(ref=ref)
+        notice = ", ".join(x for x in (("Vollzeit" if j.get("arbeitszeitVollzeit") else ""),
+                                       {"UNBEFRISTET": "unbefristet", "BEFRISTET": "befristet"}.get(j.get("vertragsdauer") or "", "")) if x)
+        items.append({
+            "source": "arbeitsagentur", "source_ref": ref, "kind": "job",
+            "title_fr": title, "title_en": title, "summary_fr": "", "summary_en": "",
+            "org": j.get("firma") or "", "country": "Allemagne", "region": region or "Allemagne",
+            "regions_raw": ", ".join(x for x in (addr.get("plz"), addr.get("ort")) if x),
+            "city": (addr.get("ort") or "").split(",")[0].strip(),
+            "url_fr": url, "url_en": url, "notice_type": notice, "category": "job",
+            "specialties": specialties_for(title),
+            "published_at": published, "closes_at": _plus_days(published, JOB_DAYS),
+        })
+    return items
+
+
+def parse_jobtech(data: dict) -> list:
+    items = []
+    for j in (data or {}).get("hits") or []:
+        title = re.sub(r"\s+", " ", j.get("headline") or "").strip()
+        url = (j.get("webpage_url") or "").strip()
+        if not url or not job_matches(title):
+            continue
+        addr = j.get("workplace_address") or {}
+        desc = (j.get("description") or {}).get("text") or ""
+        published = _iso_date(j.get("publication_date") or "")
+        items.append({
+            "source": "jobtech", "source_ref": str(j.get("id") or url), "kind": "job",
+            "title_fr": title, "title_en": title, "summary_fr": summarize(desc), "summary_en": summarize(desc),
+            "org": (j.get("employer") or {}).get("name") or "", "country": "Suède",
+            "region": addr.get("region") or "Suède", "regions_raw": addr.get("municipality") or "",
+            "city": addr.get("municipality") or "",
+            "url_fr": url, "url_en": url, "notice_type": ((j.get("employment_type") or {}).get("label") or "").lower(),
+            "category": "job", "specialties": specialties_for(title + " " + desc),
+            "published_at": published,
+            "closes_at": _iso_date(j.get("application_deadline") or "") or _plus_days(published, JOB_DAYS),
+        })
+    return items
+
+
+def _collect_open_api(conn, name: str, terms: tuple, fetch, parse) -> dict:
+    """Un appel par terme, téléchargements d'abord, une écriture ensuite."""
+    import urllib.parse
+    items: list = []
+    errors = 0
+    for term in terms:
+        try:
+            items.extend(parse(json.loads(fetch(urllib.parse.quote(term)).decode("utf-8"))))
+        except Exception as exc:
+            log.warning("%s %s: %s", name, term, exc)
+            errors += 1
+    seen: set = set()
+    unique = [it for it in items if not (it["source_ref"] in seen or seen.add(it["source_ref"]))]
+    return {"items": _upsert_many(conn, unique), "errors": errors}
+
+
+def collect_arbeitsagentur(conn) -> dict:
+    return _collect_open_api(conn, "arbeitsagentur", ARBEITSAGENTUR_TERMS,
+                             lambda q: _fetch_headers(ARBEITSAGENTUR_API.format(q=q), {"X-API-Key": ARBEITSAGENTUR_KEY}),
+                             parse_arbeitsagentur)
+
+
+def collect_jobtech(conn) -> dict:
+    return _collect_open_api(conn, "jobtech", JOBTECH_TERMS, lambda q: _fetch(JOBTECH_API.format(q=q), timeout=60), parse_jobtech)
+
+
+# ---------------------------------------------------------------------------
 # Emplois : pages carrières d'employeurs du drone (flux publics de leur ATS)
 # ---------------------------------------------------------------------------
 
@@ -1412,6 +1523,14 @@ def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict
             rows.append((j.get("jobOpeningName"), place, (j.get("atsLocation") or {}).get("country") or "",
                          f"https://{board}.bamboohr.com/careers/{j.get('id')}", "",
                          (j.get("employmentStatusLabel") or "").lower(), str(j.get("id"))))
+    elif ats == "zoho":
+        # pas de date de parution : la fiche vit tant qu'elle reste publiée
+        for j in (json.loads(raw.decode("utf-8")).get("data") or []):
+            if j.get("Publish") is False:
+                continue
+            loc = ", ".join(x for x in (j.get("City"), j.get("State"), j.get("Country")) if x)
+            rows.append((j.get("Posting_Title") or j.get("Job_Opening_Name"), loc, j.get("Country") or "",
+                         (j.get("$url") or "").replace("?source=CareerSite", ""), "", (j.get("Job_Type") or "").lower(), str(j.get("id") or "")))
     elif ats == "teamtailor":
         import xml.etree.ElementTree as ET
         ns = "{https://teamtailor.com/locations}"
@@ -1434,6 +1553,8 @@ def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict
                 region = normalize_region(loc or "")[0]
         published = _iso_date(when or "")
         city = (loc or "").split(",")[0].strip() if loc and not anywhere else ""
+        if city and _country_from_location(city)[0]:   # « USA », « India » : un pays, pas une ville
+            city = ""
         items.append({
             "source": "employers", "source_ref": f"{board}:{ref}", "kind": "job",
             "title_fr": title, "title_en": title, "summary_fr": "", "summary_en": "",
@@ -1588,7 +1709,8 @@ def collect(verify: bool = True) -> dict:
                      ("ted", collect_ted), ("boamp", collect_boamp), ("contractsfinder", collect_contractsfinder),
                      ("austender", collect_austender), ("gets", collect_gets), ("secop", collect_secop),
                      ("samgov", collect_samgov), ("jobbank", collect_jobbank), ("adzuna", collect_adzuna),
-                     ("usajobs", collect_usajobs), ("employers", collect_employers)):
+                     ("usajobs", collect_usajobs), ("arbeitsagentur", collect_arbeitsagentur), ("jobtech", collect_jobtech),
+                     ("employers", collect_employers)):
         try:
             with db.standalone() as conn:
                 report[name] = fn(conn)

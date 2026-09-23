@@ -19,7 +19,7 @@
     {% for it in items %}{{ row(it.title_fr, it, it.url_fr, 'clôture le', 'Emploi') }}{% endfor %}
   </table>
   <p style="margin:22px 0 0;"><a href="{{ site_url }}/opportunites" style="display:inline-block;background:#b87519;color:#ffffff;padding:12px 22px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">Voir toutes les opportunités</a></p>
-  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources : portails publics officiels (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), données ouvertes ; emplois : Guichet-Emplois et Adzuna. AubePilot n'est pas l'organisme émetteur. Vous recevez ce courriel car vos alertes sont activées ; désactivez-les dans vos paramètres.</p>
+  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources : portails publics officiels d'appels d'offres (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder, AusTender, GETS, SECOP II, SAM.gov), données ouvertes ; emplois : services publics de l'emploi (Guichet-Emplois, USAJOBS, Bundesagentur für Arbeit, Arbetsförmedlingen), Adzuna et pages carrières des employeurs du drone. AubePilot n'est pas l'organisme émetteur. Vous recevez ce courriel car vos alertes sont activées ; désactivez-les dans vos paramètres.</p>
 </td></tr>
 <tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
 <tr><td style="padding:0 32px 36px;">
@@ -29,7 +29,7 @@
     {% for it in items %}{{ row(it.title_en, it, it.url_en or it.url_fr, 'closes', 'Job') }}{% endfor %}
   </table>
   <p style="margin:22px 0 0;"><a href="{{ site_url }}/en/opportunites" style="display:inline-block;background:#b87519;color:#ffffff;padding:12px 22px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">See all opportunities</a></p>
-  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources: official public portals (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder), open data; jobs: Job Bank and Adzuna. AubePilot is not the issuing body. You receive this because alerts are on; turn them off in your settings.</p>
+  <p style="font-family:Georgia,serif;font-size:12px;line-height:1.5;color:#9a9da4;margin:14px 0 0;">Sources: official public tender portals (CanadaBuys, SEAO, TED, BOAMP, Contracts Finder, AusTender, GETS, SECOP II, SAM.gov), open data; jobs: public employment services (Job Bank, USAJOBS, Bundesagentur für Arbeit, Arbetsförmedlingen), Adzuna and drone employers' careers pages. AubePilot is not the issuing body. You receive this because alerts are on; turn them off in your settings.</p>
 </td></tr>
 </table>
 {% endblock %}
