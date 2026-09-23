@@ -376,14 +376,21 @@ def test_la_collecte_ne_bloque_pas_le_site(client, monkeypatch):
     monkeypatch.setattr(opp, "_fetch", slow_fetch)
     monkeypatch.setattr(opp, "_post_json", lambda *a, **k: {"notices": []})
     monkeypatch.setattr(opp, "link_status", lambda url: 200)
-    th = threading.Thread(target=lambda: opp.collect()); th.start()
+    # Sources coupées : le fil doit se terminer DANS le test, sinon il survit
+    # au monkeypatch et part sur le vrai réseau (vu le 2026-09-22).
+    monkeypatch.setattr(opp, "EMPLOYER_BOARDS", ())
+    monkeypatch.setattr(opp, "JOBBANK_TERMS", ("drone",))
+    monkeypatch.setattr(opp, "JOBBANK_PAUSE", 0)
+    monkeypatch.setattr(opp, "ADZUNA_APP_ID", ""); monkeypatch.setattr(opp, "USAJOBS_KEY", "")
+    th = threading.Thread(target=lambda: opp.collect(verify=False)); th.start()
     started.wait(5); time.sleep(0.2)
     t0 = time.time()
     with client.application.app_context():
         db.execute("INSERT INTO visit_countries(day, country, kind, views) VALUES(date('now'), 'ZZ', 'human', 1) "
                    "ON CONFLICT(day, country, kind) DO UPDATE SET views = views + 1")
     waited["t"] = time.time() - t0
-    th.join(30)
+    th.join(90)
+    assert not th.is_alive(), "la collecte de test n'est pas terminée : elle continuerait sur le vrai réseau"
     assert waited["t"] < 1.0, f"écriture bloquée {waited['t']:.1f}s pendant la collecte"
 
 
