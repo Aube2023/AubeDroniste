@@ -293,10 +293,10 @@
   <h2>{{ t('tpl.territoires_operes_en_plus_du_pays') }}</h2>
   <p class="muted small">{{ t('tpl.les_lignes_vides_seront_ignorees_a') }}</p>
   <div id="territories">
-    {% for t in profile.territories %}
+    {% for terr in profile.territories %}
     <div class="row-territory">
-      <input name="territory_country" placeholder="{{ t('tpl.pays') }}" value="{{ t.country }}">
-      <input name="territory_region" placeholder="{{ t('tpl.region_optionnel') }}" value="{{ t.region or '' }}">
+      <input name="territory_country" placeholder="{{ t('tpl.pays') }}" value="{{ terr.country }}">
+      <input name="territory_region" placeholder="{{ t('tpl.region_optionnel') }}" value="{{ terr.region or '' }}">
       <button type="button" class="ghost danger row-remove" title="{{ t('tpl.retirer') }}">✕</button>
     </div>
     {% endfor %}

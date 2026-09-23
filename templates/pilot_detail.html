@@ -153,8 +153,8 @@
 
     <h3 style="margin-top: 24px;">{{ t('tpl.territoires_operes') }}</h3>
     <ul class="chips" style="margin: 6px 0;">
-      {% for t in pilot.territories %}
-        <li class="tag">{{ t.country }}{% if t.region %} · {{ t.region }}{% endif %}</li>
+      {% for terr in pilot.territories %}
+        <li class="tag">{{ terr.country }}{% if terr.region %} · {{ terr.region }}{% endif %}</li>
       {% else %}
         <li class="muted">{{ pilot.country or '—' }}</li>
       {% endfor %}
