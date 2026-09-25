@@ -11,6 +11,7 @@ secrets.h du micrologiciel), puis seul son HMAC-SHA256 (clé dérivée du
 secret de l'application) est conservé. Une fuite de la base ne donne donc
 aucun jeton utilisable, et la vérification reste immédiate à chaque paquet.
 """
+import fnmatch
 import hashlib
 import hmac
 import logging
@@ -27,6 +28,9 @@ log = logging.getLogger("aubepilot.beacon.devices")
 UID_PREFIX = "AUBE-BCN-"
 # Suffixe : chiffres (série) ou lettres+chiffres (balises simulées « SIM001 »).
 UID_RE = re.compile(r"^AUBE-BCN-[A-Z0-9]{3,12}$")
+# Série automatique (`next_uid`) : AUBE-BCN- suivi d'exactement 6 chiffres.
+SERIAL_DIGITS = 6
+_SERIAL_GLOB = UID_PREFIX + "[0-9]" * SERIAL_DIGITS
 TOKEN_BYTES = 32
 LABEL_MAX = 80
 
@@ -60,15 +64,34 @@ def normalize_uid(raw: str) -> str:
     return uid
 
 
+def _serial_top() -> int:
+    """Plus grand numéro de la série déjà attribué, balises supprimées comprises (0 sinon)."""
+    row = db.fetchone(
+        "SELECT MAX(device_uid) AS top FROM ("
+        "SELECT device_uid FROM beacon_devices WHERE device_uid GLOB ? "
+        "UNION SELECT device_uid FROM beacon_retired_uids WHERE device_uid GLOB ?)",
+        (_SERIAL_GLOB, _SERIAL_GLOB),
+    )
+    # Même longueur partout : le plus grand texte est le plus grand numéro.
+    return int(row["top"][len(UID_PREFIX):]) if row and row["top"] else 0
+
+
 def next_uid() -> str:
-    """AUBE-BCN-000001, 000002... : suite du plus grand numéro de série attribué."""
-    rows = db.fetchall("SELECT device_uid FROM beacon_devices WHERE device_uid GLOB 'AUBE-BCN-[0-9]*'")
-    top = 0
-    for r in rows:
-        suffix = r["device_uid"][len(UID_PREFIX):]
-        if suffix.isdigit():
-            top = max(top, int(suffix))
-    return f"{UID_PREFIX}{top + 1:06d}"
+    """AUBE-BCN-000001, 000002... : suite du plus grand numéro de série
+    automatique attribué, balises supprimées comprises (`beacon_retired_uids`).
+    Un numéro n'est donc jamais réattribué : AubeLink peut encore l'associer à
+    un drone si la dissociation n'a pas pu lui parvenir à la suppression.
+
+    Seuls comptent les numéros de la série (exactement SERIAL_DIGITS
+    chiffres). Une saisie manuelle (SIM001, numéro matériel de 12 chiffres
+    tapé par erreur), gardée à jamais dans les numéros retirés une fois la
+    balise supprimée, ne décale donc pas la série et ne la fait pas déborder
+    de UID_RE. DeviceError quand la série est épuisée."""
+    top = _serial_top()
+    uid = f"{UID_PREFIX}{top + 1:0{SERIAL_DIGITS}d}"
+    if top + 1 >= 10 ** SERIAL_DIGITS or not UID_RE.match(uid):
+        raise DeviceError("Numérotation automatique épuisée : saisissez l'identifiant imprimé sur la balise.")
+    return uid
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +105,8 @@ SELECT d.*, p.brand AS drone_brand, p.model AS drone_model, p.category AS drone_
        t.satellites AS last_satellites, t.gnss_fix AS last_gnss_fix,
        t.flight_id AS last_flight_id, t.server_timestamp AS last_point_at,
        t.device_timestamp AS last_point_device_at,
-       u.full_name AS owner_name, u.username AS owner_username
+       u.full_name AS owner_name, u.username AS owner_username, u.email AS owner_email,
+       u.deleted_at AS owner_deleted_at
 FROM beacon_devices d
 LEFT JOIN pilot_drones p ON p.id = d.drone_id
 LEFT JOIN beacon_telemetry t ON t.id = d.last_telemetry_id
@@ -134,6 +158,14 @@ def create_device(owner_user_id: int, *, label: str = "", drone_id: Optional[int
     """Crée une balise et retourne (balise, jeton en clair). Le jeton n'est
     jamais réaffiché : le pilote le copie maintenant ou le régénère."""
     uid = normalize_uid(device_uid) if device_uid else next_uid()
+    if not UID_RE.match(uid):       # jamais un identifiant que la balise ne pourrait pas présenter
+        raise DeviceError("Identifiant invalide : AUBE-BCN- suivi de 3 à 12 lettres ou chiffres.")
+    # Un numéro de la série saisi à la main ne peut être que celui d'une balise déjà
+    # numérotée (réenregistrée). Au-delà du plus grand numéro attribué, il décalerait
+    # la numérotation automatique pour toujours (il resterait dans les numéros retirés).
+    if device_uid and fnmatch.fnmatchcase(uid, _SERIAL_GLOB) and int(uid[len(UID_PREFIX):]) > _serial_top():
+        raise DeviceError(f"Le numéro {uid} n'a pas encore été attribué : laissez le champ vide "
+                          "pour recevoir le numéro suivant, ou saisissez celui imprimé sur la balise.")
     if get_by_uid(uid):
         raise DeviceError(f"L'identifiant {uid} est déjà utilisé.")
     drone = _owned_drone(owner_user_id, drone_id)
@@ -201,13 +233,18 @@ def detach_drone(device_id: int, owner_user_id: Optional[int], *, user_id: Optio
 
 
 def delete_device(device_id: int, owner_user_id: Optional[int]) -> bool:
-    """Supprime la balise, ses vols et ses points (ON DELETE CASCADE)."""
-    sql = "DELETE FROM beacon_devices WHERE id=?"
+    """Supprime la balise, ses vols et ses points (ON DELETE CASCADE). Son
+    numéro rejoint `beacon_retired_uids` : `next_uid` ne le rendra plus. La
+    saisie manuelle du même numéro reste permise (même balise physique
+    réenregistrée)."""
+    where = "WHERE id=?"
     params = [device_id]
     if owner_user_id:
-        sql += " AND owner_user_id=?"
+        where += " AND owner_user_id=?"
         params.append(owner_user_id)
-    return db.execute(sql, params).rowcount > 0
+    db.execute("INSERT OR IGNORE INTO beacon_retired_uids (device_uid, retired_at) "
+               f"SELECT device_uid, ? FROM beacon_devices {where}", [now_iso()] + params, commit=False)
+    return db.execute(f"DELETE FROM beacon_devices {where}", params).rowcount > 0
 
 
 # ---------------------------------------------------------------------------

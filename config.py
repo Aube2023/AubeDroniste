@@ -928,3 +928,20 @@ BEACON_TICKET_TTL_S = 60
 # AUBEBEACON_PUBLIC=1 ouvre la fonction à tous les pilotes.
 BEACON_PUBLIC = os.environ.get("AUBEBEACON_PUBLIC", "0").strip().lower() in ("1", "true", "yes", "on")
 BEACON_ALLOWED_USERS = {u.strip().lower() for u in os.environ.get("AUBEBEACON_USERS", "").split(",") if u.strip()}
+
+# ---------------------------------------------------------------------------
+# AubeLink : liaison de données drone-sol (serveur OVH, joint par WireGuard,
+# cf. beacon/aubelink.py). AubeLink tient seul l'association balise ↔ drone
+# AubeLink ; AubePilot n'appelle que trois routes, au nom du propriétaire de
+# la balise (X-Acting-User). URL ou clé vide = fonction inerte : aucun appel,
+# aucun panneau, aucun lien. Le client relit ces valeurs à chaque appel
+# (`config.AUBELINK_*`), jamais par `from config import`.
+# ---------------------------------------------------------------------------
+AUBELINK_URL = os.environ.get("AUBELINK_URL", "").strip().rstrip("/")
+AUBELINK_KEY = os.environ.get("AUBELINK_KEY", "").strip()          # alp_<id>_<secret>, jamais journalisée
+AUBELINK_PUBLIC_URL = os.environ.get("AUBELINK_PUBLIC_URL", "").strip().rstrip("/")  # vide = pas de lien « Ouvrir »
+# Délai d'un appel (ms) ; durée de vie d'une lecture réussie (s) ; pause après
+# une panne (injoignable, 5xx) et cache négatif d'un refus 403 / 404 (s).
+AUBELINK_TIMEOUT_MS = _env_int("AUBELINK_TIMEOUT_MS", 2500)
+AUBELINK_CACHE_S = _env_int("AUBELINK_CACHE_S", 15)
+AUBELINK_FAIL_CACHE_S = _env_int("AUBELINK_FAIL_CACHE_S", 30)

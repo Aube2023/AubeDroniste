@@ -42,4 +42,19 @@
 .aube-drone-marker svg{width:20px;height:20px;display:block;transition:transform .4s linear}
 .aube-drone-marker .lbl{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 11px/1.2 var(--sans);background:var(--paper,#fff);border:1px solid var(--rule);border-radius:6px;padding:2px 6px;color:var(--ink)}
 .aube-drone-marker .lbl small{font-family:var(--mono);font-weight:500;color:var(--ink-dim)}
+{% if aubelink_enabled %}
+/* AubeLink : drone AubeLink qui porte la balise (filet 1 px, valeurs et listes en mono). */
+.bcn-link{border-top:1px solid var(--rule);padding-top:10px;display:grid;gap:10px}
+.bcn-link [hidden]{display:none!important}
+.bcn-link-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bcn-link-head .k,.bcn-link-lists .k{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);display:block}
+.bcn-link-head .k{font-weight:700;display:inline}
+.bcn-link-lists{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px 18px}
+.bcn-link-lists ul{list-style:none;padding:0;margin:0;font-family:var(--mono);font-size:.78rem;color:var(--ink-soft)}
+.bcn-link-lists li{padding:3px 0;border-top:1px solid var(--rule-soft);overflow-wrap:anywhere}
+.bcn-link-lists li.empty{color:var(--ink-dim)}
+.bcn-link-links{display:flex;gap:14px;flex-wrap:wrap;margin:0;font-size:.82rem}
+.bcn-link-note{margin:0;font-size:.8rem;color:var(--ink-dim)}
+.bcn-link-note:empty{display:none}
+{% endif %}
 </style>

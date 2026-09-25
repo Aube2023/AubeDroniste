@@ -5,9 +5,10 @@
 
 Modules : schema (DDL), devices (identité, jeton, association), telemetry
 (validation + ingestion), flights (sessions et statistiques), status
-(ONLINE / DEGRADED / OFFLINE), realtime (hub WebSocket, tickets), api
-(routes JSON), views (pages de l'espace pilote). Documentation d'ensemble :
-AubeBeacon/README.md et docs/api/.
+(ONLINE / DEGRADED / OFFLINE), realtime (hub WebSocket, tickets), aubelink
+(client AubeLink : drone AubeLink associé à chaque balise), api (routes
+JSON), views (pages de l'espace pilote). Documentation d'ensemble :
+AubeBeacon/README.md et docs/api/ ; AubeLink/docs/api.md pour AubeLink.
 """
 VERSION = "0.1.0"
 
@@ -19,7 +20,7 @@ def register(app) -> None:
 
     import security
 
-    from . import access, api, devices, realtime, views
+    from . import access, api, aubelink, devices, realtime, views
 
     app.register_blueprint(api.bp)
     app.register_blueprint(views.bp)
@@ -38,5 +39,8 @@ def register(app) -> None:
                 has_beacons = devices.count_for_owner(user["id"]) > 0
             except Exception:      # table absente pendant une migration : rien à afficher
                 has_beacons = False
+        # `aubelink_enabled` : panneau, sélecteur et liens AubeLink (fonction
+        # configurée ET compte autorisé à voir AubeBeacon).
         return {"beacon_enabled": enabled, "beacon_has_devices": has_beacons,
-                "beacon_realtime_enabled": realtime.enabled(), "beacon_version": VERSION}
+                "beacon_realtime_enabled": realtime.enabled(), "beacon_version": VERSION,
+                "aubelink_enabled": enabled and aubelink.enabled()}

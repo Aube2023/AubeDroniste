@@ -229,6 +229,16 @@ STRIPE_ACCOUNT_ID=
 
 # Auto-libération escrow (jours sans validation client)
 AUBEPILOT_AUTO_RELEASE_DAYS=7
+
+# --- AubeLink (drone AubeLink de chaque balise, joint par WireGuard) ---
+# Inerte tant que AUBELINK_KEY est vide. Clé d intégration alp_... créée sur
+# AubeLink (portées fleet:read, beacon:write, act_as_user), jamais dans git.
+# AUBELINK_URL=http://10.8.0.2:5125
+# AUBELINK_KEY=
+# AUBELINK_PUBLIC_URL=https://link.aubeetoilee.com
+# AUBELINK_TIMEOUT_MS=2500
+# AUBELINK_CACHE_S=15
+# AUBELINK_FAIL_CACHE_S=30
 EOF"
     run "chmod 600 \"$ENV_FILE\""
     run "chown root:$APP_USER \"$ENV_FILE\""

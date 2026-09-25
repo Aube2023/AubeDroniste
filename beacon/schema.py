@@ -102,6 +102,14 @@ TABLES = [
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 )""",
     "CREATE INDEX IF NOT EXISTS idx_beacon_events_device ON beacon_device_events(device_id, id)",
+    # Numéros de balise retirés (balise supprimée) : `devices.next_uid` ne les
+    # réattribue jamais, car AubeLink peut encore associer ce numéro à un drone
+    # si la dissociation n'a pas pu lui parvenir.
+    """CREATE TABLE IF NOT EXISTS beacon_retired_uids (
+    device_uid TEXT PRIMARY KEY,   -- AUBE-BCN-000001
+    retired_at TEXT NOT NULL       -- suppression (ISO 8601 UTC)
+)""",
 ]
 
-TABLE_NAMES = ("beacon_devices", "beacon_flights", "beacon_telemetry", "beacon_device_events")
+TABLE_NAMES = ("beacon_devices", "beacon_flights", "beacon_telemetry", "beacon_device_events",
+               "beacon_retired_uids")

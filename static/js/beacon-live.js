@@ -6,6 +6,13 @@
  *                            mise à jour des lignes de la liste.
  *   window.AUBEBEACON_FLIGHT page d'un vol : trace figée, départ/arrivée, profil.
  *
+ * Page des balises, panneau AubeLink (si `cfg.aubelinkUrl`) : drone AubeLink qui
+ * porte chaque balise, sondé toutes les 15 s sur /api/v1/beacon/aubelink. Son
+ * état vit dans `aubelinkState`, jamais dans `devices` (que `applyLive`
+ * remplace en entier), et son rendu passe uniquement par textContent.
+ * TODO : les boutons associer et dissocier ne suivent pas ce sondage ; si
+ * l'état a changé depuis le rendu serveur, la note invite à recharger.
+ *
  * La carte vient de templates/_map.html, qui expose `window.AubeMap.map` et émet
  * `aube:map-ready`. Les marqueurs sont des éléments DOM (ils survivent au
  * changement de fond) ; la trace est une source GeoJSON, recréée si le style
@@ -285,6 +292,122 @@
         .catch(function () { startPolling(); setTimeout(connect, wsBackoff); wsBackoff = Math.min(wsBackoff * 2, 30000); });
     }
 
+    // ---- AubeLink : drone AubeLink de chaque balise (sondage 15 s, état à part)
+    function startAubeLink() {
+      if (!cfg.aubelinkUrl) return;
+      var AL = L.aubelink || {};
+      var PILL = { CONNECTED: 'ONLINE', DEGRADED: 'DEGRADED', LOST: 'OFFLINE', UNKNOWN: 'NEVER' };
+      var aubelinkState = {};          // id de balise -> dernière vue connue (linked true ou false)
+      var lastFetch = 0;
+
+      function panels() { return Array.prototype.slice.call(document.querySelectorAll('[data-aubelink-for]')); }
+      function part(row, name) { return row.querySelector('[data-al="' + name + '"]'); }
+      function setText(el, text) { if (el && el.textContent !== text) el.textContent = text; }
+      function show(el, on) { if (el) el.hidden = !on; }
+      function safeUrl(u) { return typeof u === 'string' && /^https?:\/\//.test(u) ? u : null; }
+      function when(ts) { return String(ts).slice(0, 16).replace('T', ' ') + ' UTC'; }
+      function setNote(row, text) { setText(row.querySelector('[data-field="al-note"]'), text || ''); }
+      function fillList(ul, items, empty, line) {
+        if (!ul) return;
+        while (ul.firstChild) ul.removeChild(ul.firstChild);
+        if (!items || !items.length) {
+          var none = document.createElement('li');
+          none.className = 'empty';
+          none.textContent = empty || '';
+          ul.appendChild(none);
+          return;
+        }
+        items.forEach(function (it) { var li = document.createElement('li'); li.textContent = line(it); ul.appendChild(li); });
+      }
+      function alertLine(a) { return (a.code || '·') + ' · ' + (a.severity || '·') + (a.message ? ' · ' + a.message : ''); }
+      function messageLine(m) {
+        var body = (m.kind === 'command' ? m.command : (m.text || m.category)) || '·';
+        return (m.direction || '·') + ' · ' + body + ' · ' + (m.status || '·') + (m.createdAt ? ' · ' + when(m.createdAt) : '');
+      }
+      function renderAge(row) {
+        var el = part(row, 'age');
+        if (!el) return;
+        var t = parseTs(el.getAttribute('data-ts'));
+        setText(el, t == null ? L.never : agoText(Math.max(0, (Date.now() - t) / 1000)));
+      }
+      function renderAubeLink(row, view) {
+        var dr = view && view.linked ? view.drone : null;
+        var pill = part(row, 'pill');
+        show(pill, !!dr); show(part(row, 'grid'), !!dr); show(part(row, 'lists'), !!dr);
+        if (dr) {
+          var ls = dr.linkState || 'UNKNOWN';
+          if (pill) { pill.setAttribute('data-status', PILL[ls] || 'NEVER'); setText(pill, ls); }
+          setText(part(row, 'drone'), (dr.name || '') + ' · ' + (dr.droneId || ''));
+          setText(part(row, 'flight'), dr.flightState || '·');
+          setText(part(row, 'battery'), dr.batteryPercent == null ? '·' : dr.batteryPercent + ' %');
+          var age = part(row, 'age');
+          if (age) age.setAttribute('data-ts', dr.lastSeen || '');
+          setText(part(row, 'alert-count'), String(dr.activeAlerts == null ? 0 : dr.activeAlerts));
+          fillList(part(row, 'alerts'), view.alerts, AL.noAlerts, alertLine);
+          fillList(part(row, 'messages'), view.messages, AL.noMessages, messageLine);
+          renderAge(row);
+        }
+        var urls = dr && view.urls ? view.urls : null;
+        var u1 = urls && safeUrl(urls.drone), u2 = urls && safeUrl(urls.flight);
+        var open = part(row, 'open'), openFlight = part(row, 'open-flight');
+        show(part(row, 'links'), !!u1);
+        if (open && u1) open.href = u1;
+        show(openFlight, !!u2);
+        if (openFlight && u2) openFlight.href = u2;
+      }
+      function applyAubeLink(json) {
+        var beacons = (json && json.beacons) || {};
+        var deferred = false;
+        Object.keys(beacons).forEach(function (id) {
+          var row = document.querySelector('[data-aubelink-for="' + id + '"]');
+          var v = beacons[id];
+          if (!row || !v) return;
+          if (v.linked === true || v.linked === false) {
+            aubelinkState[id] = v;
+            renderAubeLink(row, v);
+            // TODO : les boutons de .bcn-actions (dissocier, sélecteur) restent
+            // ceux du rendu serveur (data-al-rendered) ; quand l'état AubeLink
+            // a changé depuis, la note invite à recharger la page.
+            var stale = row.getAttribute('data-al-rendered') !== String(v.linked);
+            var note = v.linked ? '' : AL.notLinked;
+            if (stale && AL.reload) note = note ? note + ' ' + AL.reload : AL.reload;
+            setNote(row, note);
+          } else if (v.reason === 'deferred') {
+            deferred = true;          // budget épuisé côté serveur : servie au prochain tour
+          } else if (v.reason === 'owner_deleted') {
+            setNote(row, AL.ownerDeleted);   // aucun appel au nom d'un compte supprimé
+          } else {
+            // AubeLink n'a pas répondu : les dernières valeurs restent affichées.
+            setNote(row, v.reason === 'rate_limited' ? AL.busy : AL.unavailable);
+          }
+        });
+        return deferred;
+      }
+      function failAll(text) { panels().forEach(function (row) { setNote(row, text); }); }
+      function tick() {
+        if (document.hidden) return;
+        lastFetch = Date.now();
+        fetch(cfg.aubelinkUrl, { credentials: 'same-origin' })
+          .then(function (r) {
+            if (r.status === 429) { failAll(AL.busy); return null; }
+            if (!r.ok) { failAll(AL.unavailable); return null; }
+            return r.json();
+          })
+          .then(function (j) { if (j) applyAubeLink(j); })
+          .catch(function () { failAll(AL.unavailable); });
+      }
+
+      if (cfg.aubelink && applyAubeLink(cfg.aubelink)) setTimeout(tick, 1500);
+      setInterval(tick, 15000);
+      setInterval(function () {
+        Object.keys(aubelinkState).forEach(function (id) {
+          var row = aubelinkState[id].linked && document.querySelector('[data-aubelink-for="' + id + '"]');
+          if (row) renderAge(row);
+        });
+      }, 1000);
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - lastFetch > 15000) tick(); });
+    }
+
     // ---- Démarrage
     whenMapReady(function (m) {
       map = m;
@@ -309,6 +432,7 @@
       if (popups[d.id] && !popups[d.id].isOpen()) markers[d.id].togglePopup();
     });
     document.addEventListener('visibilitychange', function () { if (!document.hidden && !ws) connect(); });
+    startAubeLink();
     connect();
   }
 

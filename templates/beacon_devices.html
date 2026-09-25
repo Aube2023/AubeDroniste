@@ -36,7 +36,10 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
   <span class="eyebrow">{{ t('tpl.mes_drones') }} · AubeBeacon</span>
   {% if not devices %}<p class="muted">{{ t('beacon.no_devices') }}</p>{% endif %}
   <div class="bcn-list">
+  {% set al_pill = {'CONNECTED': 'ONLINE', 'DEGRADED': 'DEGRADED', 'LOST': 'OFFLINE', 'UNKNOWN': 'NEVER'} %}
   {% for d in devices %}
+    {% set al = ((aubelink.beacons.get(d.id|string) if aubelink_enabled and aubelink else none) or {}) %}
+    {% set ald = al.drone if al.linked else none %}
     <article class="bcn-row" data-beacon-id="{{ d.id }}" id="beacon-{{ d.id }}">
       <div class="bcn-head">
         <span class="name">{{ d.label or d.uid }}</span>
@@ -57,6 +60,39 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
         <div><span class="k">{{ t('beacon.battery') }}</span><span class="v" data-field="battery">{% if d.battery_percent is not none %}{{ d.battery_percent }} %{% else %}·{% endif %}</span></div>
         <div><span class="k">{{ t('beacon.firmware') }}</span><span class="v">{{ d.firmware_version or '·' }}</span></div>
       </div>
+      {% if aubelink_enabled and aubelink %}
+      {# Drone AubeLink qui porte cette balise : codes AubeLink en majuscules
+         anglaises, jamais traduits ; aucune coordonnée. Mis à jour toutes les
+         15 s par beacon-live.js (renderAubeLink). #}
+      <div class="bcn-link" data-aubelink-for="{{ d.id }}" data-al-rendered="{{ 'true' if al.linked else ('false' if al.linked is sameas false else '') }}">
+        <div class="bcn-link-head">
+          <span class="k">{{ t('aubelink.title') }}</span>
+          <span class="bcn-pill" data-al="pill" title="{{ t('aubelink.link_state') }}" data-status="{{ al_pill.get(ald.linkState, 'NEVER') if ald else 'NEVER' }}"{% if not ald %} hidden{% endif %}>{{ (ald.linkState or 'UNKNOWN') if ald else '' }}</span>
+        </div>
+        <div class="bcn-grid" data-al="grid"{% if not ald %} hidden{% endif %}>
+          <div><span class="k">{{ t('aubelink.drone') }}</span><span class="v" data-al="drone">{% if ald %}{{ ald.name or '' }} · {{ ald.droneId }}{% else %}·{% endif %}</span></div>
+          <div><span class="k">{{ t('aubelink.flight_state') }}</span><span class="v" data-al="flight">{{ (ald.flightState or '·') if ald else '·' }}</span></div>
+          <div><span class="k">{{ t('beacon.battery') }}</span><span class="v" data-al="battery">{% if ald and ald.batteryPercent is not none %}{{ ald.batteryPercent }} %{% else %}·{% endif %}</span></div>
+          <div><span class="k">{{ t('aubelink.last_frame') }}</span><span class="v" data-al="age" data-ts="{{ (ald.lastSeen or '') if ald else '' }}">{{ t('beacon.never') if ald and not ald.lastSeen else '·' }}</span></div>
+          <div><span class="k">{{ t('aubelink.alerts') }}</span><span class="v" data-al="alert-count">{{ ald.activeAlerts if ald else '·' }}</span></div>
+        </div>
+        <div class="bcn-link-lists" data-al="lists"{% if not ald %} hidden{% endif %}>
+          <div>
+            <span class="k">{{ t('aubelink.alerts') }}</span>
+            <ul data-al="alerts">{% for a in al.alerts or [] %}<li>{{ a.code or '·' }} · {{ a.severity or '·' }}{% if a.message %} · {{ a.message }}{% endif %}</li>{% else %}<li class="empty">{{ t('aubelink.no_alerts') }}</li>{% endfor %}</ul>
+          </div>
+          <div>
+            <span class="k">{{ t('aubelink.messages') }}</span>
+            <ul data-al="messages">{% for m in al.messages or [] %}<li>{{ m.direction or '·' }} · {{ (m.command if m.kind == 'command' else (m.text or m.category)) or '·' }} · {{ m.status or '·' }}{% if m.createdAt %} · {{ m.createdAt[:16]|replace('T', ' ') }} UTC{% endif %}</li>{% else %}<li class="empty">{{ t('aubelink.no_messages') }}</li>{% endfor %}</ul>
+          </div>
+        </div>
+        <p class="bcn-link-links" data-al="links"{% if not (ald and al.urls) %} hidden{% endif %}>
+          <a data-al="open" href="{{ al.urls.drone if ald and al.urls else '#' }}" target="_blank" rel="noopener noreferrer">{{ t('aubelink.open') }} →</a>
+          <a data-al="open-flight" href="{{ al.urls.flight if ald and al.urls and al.urls.flight else '#' }}" target="_blank" rel="noopener noreferrer"{% if not (ald and al.urls and al.urls.flight) %} hidden{% endif %}>{{ t('aubelink.open_flight') }} →</a>
+        </p>
+        <p class="bcn-link-note" data-field="al-note">{% if al.linked is sameas false %}{{ t('aubelink.not_linked') }}{% elif not al.linked and al.reason == 'rate_limited' %}{{ t('aubelink.busy') }}{% elif not al.linked and al.reason == 'owner_deleted' %}{{ t('aubelink.owner_deleted') }}{% elif not al.linked and al.reason != 'deferred' %}{{ t('aubelink.unavailable') }}{% endif %}</p>
+      </div>
+      {% endif %}
       <div class="bcn-actions">
         {% if not d.drone %}
         <form method="post" action="{{ url_for('beacon_views.device_attach', device_id=d.id, all=1 if show_all else None) }}">
@@ -69,6 +105,28 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
         </form>
         {% else %}
         <form method="post" action="{{ url_for('beacon_views.device_detach', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.detach') }}</button></form>
+        {% endif %}
+        {% if aubelink_enabled and aubelink %}
+        {# TODO : ces boutons suivent l'état AubeLink du rendu serveur
+           (data-al-rendered), pas le sondage de 15 s ; quand l'état change,
+           beacon-live.js invite à recharger la page (aubelink.reload). #}
+        {% if al.linked %}
+        <form method="post" action="{{ url_for('beacon_views.device_aubelink_unlink', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('aubelink.unpair') }}</button></form>
+        {% elif al.linked is sameas false %}
+        {% set al_drones = aubelink.drones.get(d.owner.id|string) or [] %}
+        {% if al_drones %}
+        <form method="post" action="{{ url_for('beacon_views.device_aubelink_link', device_id=d.id, all=1 if show_all else None) }}">
+          {{ csrf_input() }}
+          <select name="aubelink_drone_id" required aria-label="{{ t('aubelink.drone') }}">
+            <option value="">{{ t('aubelink.drone') }}</option>
+            {% for dr in al_drones %}<option value="{{ dr.droneId }}"{% if dr.beaconId %} disabled{% endif %}>{{ dr.droneId }} · {{ dr.name or '' }}{% if dr.beaconId %} ({{ t('aubelink.carries', uid=dr.beaconId) }}){% endif %}</option>{% endfor %}
+          </select>
+          <button class="ghost" type="submit">{{ t('aubelink.pair') }}</button>
+        </form>
+        {% else %}
+        <span class="muted small">{{ t('aubelink.no_drones') }}</span>
+        {% endif %}
+        {% endif %}
         {% endif %}
         {% if d.enabled %}
         <form method="post" action="{{ url_for('beacon_views.device_disable', device_id=d.id, all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.disable') }}</button></form>
@@ -135,13 +193,17 @@ window.AUBEBEACON = {{ {
   "liveUrl": url_for('beacon_api.beacon_live', all=1 if show_all else None),
   "ticketUrl": url_for('beacon_api.beacon_ws_ticket', all=1 if show_all else None),
   "flightUrl": url_for('beacon_views.flight_page', flight_id=0),
+  "aubelink": aubelink if aubelink_enabled else none,
+  "aubelinkUrl": url_for('beacon_api.beacon_aubelink', all=1 if show_all else None) if (aubelink_enabled and aubelink) else none,
   "l10n": {
     "status": {"ONLINE": t('beacon.status.ONLINE'), "DEGRADED": t('beacon.status.DEGRADED'), "OFFLINE": t('beacon.status.OFFLINE'), "NEVER": t('beacon.status.NEVER')},
     "state": {"OFFLINE": t('beacon.state.OFFLINE'), "CONNECTED": t('beacon.state.CONNECTED'), "READY": t('beacon.state.READY'), "TAKEOFF": t('beacon.takeoff'), "FLYING": t('beacon.state.FLYING'), "LANDING": t('beacon.landing'), "LANDED": t('beacon.state.LANDED'), "GPS_LOST": t('beacon.state.GPS_LOST'), "NETWORK_LOST": t('beacon.state.NETWORK_LOST')},
     "agoS": t('beacon.ago_s', n='{n}'), "agoMin": t('beacon.ago_min', n='{n}'), "agoH": t('beacon.ago_h', n='{n}'), "never": t('beacon.never'),
     "satellites": t('beacon.satellites', n='{n}'), "noFix": t('beacon.no_fix'),
     "height": t('beacon.height'), "speed": t('beacon.speed'), "heading": t('beacon.heading'), "lastData": t('beacon.last_data'),
-    "battery": t('beacon.battery'), "signal": t('beacon.signal'), "viewFlight": t('beacon.view_flight'), "noDrone": t('beacon.no_drone')
+    "battery": t('beacon.battery'), "signal": t('beacon.signal'), "viewFlight": t('beacon.view_flight'), "noDrone": t('beacon.no_drone'),
+    "aubelink": {"notLinked": t('aubelink.not_linked'), "unavailable": t('aubelink.unavailable'), "busy": t('aubelink.busy'), "reload": t('aubelink.reload'), "ownerDeleted": t('aubelink.owner_deleted'),
+                 "noAlerts": t('aubelink.no_alerts'), "noMessages": t('aubelink.no_messages')}
   }
 } | tojson }};
 </script>

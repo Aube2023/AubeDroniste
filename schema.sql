@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     role          TEXT NOT NULL DEFAULT 'client', -- 'client' | 'pilot' | 'both'
     avatar_path   TEXT,
     cover_path    TEXT,                             -- image de couverture (bandeau paysage de la fiche)
+    org_logo_path TEXT,                             -- logo d'entreprise des offres d'emploi deposees (job_posts.py)
     bio           TEXT,
     is_verified   INTEGER NOT NULL DEFAULT 0,
     is_admin      INTEGER NOT NULL DEFAULT 0,
@@ -689,3 +690,7 @@ CREATE TABLE IF NOT EXISTS beacon_device_events (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_events_device ON beacon_device_events(device_id, id);
+CREATE TABLE IF NOT EXISTS beacon_retired_uids (
+    device_uid TEXT PRIMARY KEY,   -- AUBE-BCN-000001
+    retired_at TEXT NOT NULL       -- suppression (ISO 8601 UTC)
+);

@@ -5,6 +5,7 @@ Sans réseau : le hub temps réel est absent (BEACON_HUB_SECRET vide en test),
 avec un secret fixe et un vecteur partagé avec le hub (AubeBeacon/docs/api).
 """
 import json
+import pathlib
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -77,6 +78,16 @@ def test_schema_sql_a_jour():
     sql = open("schema.sql", encoding="utf-8").read()
     for name in TABLE_NAMES:
         assert f"CREATE TABLE IF NOT EXISTS {name}" in sql
+    # Copies de référence d'AubeBeacon (server/database), quand le dépôt est
+    # voisin : une table ajoutée ici doit y être reportée (vérification
+    # complète dans AubeBeacon/tests/test_schema.py).
+    database = pathlib.Path(__file__).resolve().parents[2] / "AubeBeacon" / "server" / "database"
+    for copy in ("schema.sqlite.sql", "schema.postgres.sql"):
+        if not (database / copy).exists():
+            continue
+        text = (database / copy).read_text(encoding="utf-8")
+        for name in TABLE_NAMES:
+            assert f"CREATE TABLE IF NOT EXISTS {name}" in text, (copy, name)
 
 
 def test_creation_balise_jeton_hache(app_ctx, pilot_with_drone):

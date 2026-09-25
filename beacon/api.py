@@ -4,6 +4,7 @@
     GET  /api/v1/beacon/live               balises du compte + dernier point + vol en cours (session)
     GET  /api/v1/beacon/flights/<id>/track trace simplifiée d'un vol (session)
     GET  /api/v1/beacon/ws-ticket          ticket de connexion au hub temps réel (session)
+    GET  /api/v1/beacon/aubelink           drone AubeLink de chaque balise, alertes, messages (session)
 
 L'ingestion est le chemin chaud : lecture bornée du corps, authentification
 HMAC, validation stricte, une transaction, réponse courte. Elle est exemptée
@@ -24,6 +25,7 @@ from config import (
 )
 
 from . import access as _access
+from . import aubelink as _aubelink
 from . import devices as _devices
 from . import flights as _flights
 from . import realtime as _realtime
@@ -33,6 +35,11 @@ from . import telemetry as _telemetry
 log = logging.getLogger("aubepilot.beacon.api")
 
 bp = Blueprint("beacon_api", __name__)
+
+# Budget de temps de la route AubeLink (s) : un appel ne part que si ce qui
+# en reste couvre son délai entier ; les propriétaires non servis passent en
+# `deferred` et le sont au sondage suivant (cf. aubelink.panels).
+AUBELINK_ROUTE_BUDGET_S = 4.0
 
 # Cadence par balise (token bucket en mémoire, par worker : même limite que
 # security.rate_limit, documentée comme telle).
@@ -255,3 +262,17 @@ def beacon_ws_ticket():
         rooms = [_realtime.room_for_device(d["id"]) for d in _devices.list_devices(user["id"])]
     return jsonify({"ticket": _realtime.make_ticket(user["id"], rooms), "rooms": rooms,
                     "url": realtime_info()["url"], "ttl_s": 60})
+
+
+@bp.route("/api/v1/beacon/aubelink")
+def beacon_aubelink():
+    """Drone AubeLink associé à chaque balise visible (liste blanche, aucune
+    coordonnée), et drones AubeLink de chaque propriétaire pour le sélecteur.
+    Toujours 200 une fois configuré : une panne d'AubeLink se lit dans
+    `available` et dans le `reason` de chaque balise. Sondée toutes les 15 s."""
+    user = _require_user()
+    if not _aubelink.enabled():
+        return _json_error(503, "aubelink_not_configured", "AubeLink is not configured")
+    resp = jsonify(_aubelink.panels(_devices.list_devices(_scope(user)), budget_s=AUBELINK_ROUTE_BUDGET_S))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp

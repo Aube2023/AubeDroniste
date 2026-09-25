@@ -214,3 +214,9 @@ délivre l'identité et le jeton, affiche la carte en direct et chaque vol avec 
 trace et ses statistiques. Détails dans `ARCHITECTURE.md` (section AubeBeacon)
 et `AubeBeacon/docs/`. Pour développer sans matériel :
 `scripts/beacon_sim_devices.py` puis `AubeBeacon/simulator/drone-simulator/simulate.py`.
+
+Avec `AUBELINK_URL` et `AUBELINK_KEY` (clé d'intégration AubeLink), chaque balise
+montre aussi le drone AubeLink qui la porte (liaison, vol, alertes, derniers
+messages, sans coordonnées) et peut y être associée au nom de son propriétaire.
+Détails dans `ARCHITECTURE.md` (section AubeLink) ; contrôle :
+`scripts/aubelink_check.py --user <username>`.

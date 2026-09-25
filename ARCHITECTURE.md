@@ -420,6 +420,36 @@ compteur mis à jour) → `transferred`. Si le pilote n'a pas encore de compte
 au moment du paiement, la contribution reste `paid` et
 `transfer_pending_contributions()` la verse plus tard (à appeler du cron).
 
+## Offres d'emploi déposées par les entreprises
+
+Les entreprises et les écoles publient gratuitement leurs postes, avec leur
+logo, à côté des offres reprises de flux officiels (`opportunities.py`). Code :
+`job_posts.py` (métier), routes `/emplois/publier`, `/emplois/<id>`,
+`/espace/offres` (+ `/modifier`, `/fermer`, `/supprimer`, `/logo/supprimer`),
+`/admin/opportunites/<id>/valider|refuser`.
+
+- **Même table** `opportunities` (`kind='job'`, `source='aubepilot'`) : liste
+  /emplois, filtres, compteurs, courriel du lundi et expiration nocturne
+  (`opportunities.expire`) sans code en double. Colonnes propres : `posted_by`,
+  `body`, `apply_url`, `apply_email`, `employment_type`, `salary`,
+  `review_note`. La collecte ne les touche pas (`LINK_CHECK_SKIP`, jamais
+  « source secondaire » dans `dedupe_cross_sources`).
+- **Vérifiées avant publication** : `pending` jusqu'à la validation d'un
+  administrateur ; toute modification y revient (une offre validée ne peut
+  pas devenir autre chose en silence). Refus = motif obligatoire, montré à
+  l'auteur et envoyé par courriel (`emails/job_post_reviewed`). Un
+  administrateur qui publie lui-même passe directement en ligne.
+- **Logo** rattaché au compte (`users.org_logo_path`, fichier
+  `orglogo_u<id>_*` servi par /media), type lu dans les premiers octets
+  (PNG, JPEG, WebP ; 2 Mo) : un SVG renommé en .png est refusé.
+- **Fiche** `/emplois/<id>` dans toutes les langues (`LANG_ENDPOINTS`), données
+  structurées `JobPosting` au nom de l'employeur réel (`seo.job_posting`),
+  au sitemap tant qu'elle est ouverte ; en vérification, refusée ou close :
+  404 sauf pour son auteur et l'équipe. Signalable (`/signaler`,
+  `target_type='job'`).
+- Textes dans `translations/_jobs.json` (clés `job.*`, les 31 langues dans un
+  seul fichier, chargé par `i18n.py`). Tests : `tests/test_opportunities_offres.py`.
+
 ## AubeBeacon : télémétrie des drones en direct
 
 Une balise AubeBeacon (ESP32-S3 + SIM7080G LTE-M/NB-IoT + BMP390, dépôt
@@ -428,14 +458,15 @@ Tout le code serveur vit dans le paquet `beacon/` :
 
 | Module | Rôle |
 |---|---|
-| `beacon/schema.py` | DDL des tables `beacon_devices`, `beacon_flights`, `beacon_telemetry`, `beacon_device_events` (source unique, reprise par `db._ADD_TABLES`) |
-| `beacon/devices.py` | identités `AUBE-BCN-000001`, jeton (32 octets, stocké en HMAC-SHA256), rotation, activation, association à un `pilot_drones`, journal ; toute requête filtre sur le propriétaire |
+| `beacon/schema.py` | DDL des tables `beacon_devices`, `beacon_flights`, `beacon_telemetry`, `beacon_device_events`, `beacon_retired_uids` (source unique, reprise par `db._ADD_TABLES`, recopiée dans `schema.sql`) |
+| `beacon/devices.py` | identités `AUBE-BCN-000001`, jeton (32 octets, stocké en HMAC-SHA256), rotation, activation, association à un `pilot_drones`, journal ; toute requête filtre sur le propriétaire ; un numéro supprimé rejoint `beacon_retired_uids` et n'est jamais réattribué |
 | `beacon/telemetry.py` | validation stricte du format v1 (bornes, types, `version`), plausibilité (saut impossible = `jump`, rejeu ancien = `late`), ingestion idempotente (`UNIQUE(device_id, packet_id)`), battements de cœur sans position |
 | `beacon/flights.py` | sessions de vol PREPARING → ACTIVE → FINISHED / ABORTED déduites de l'état annoncé, statistiques point par point (distance, vitesse et hauteur max, points), trace simplifiée (Douglas-Peucker) |
 | `beacon/status.py` | ONLINE / DEGRADED / OFFLINE calculé depuis `last_seen_at` (seuils `AUBEBEACON_ONLINE_S`, `AUBEBEACON_DEGRADED_S`), sans minuteur |
 | `beacon/realtime.py` | file + fil d'arrière-plan qui publie chaque point au hub WebSocket (`AUBEBEACON_HUB_URL`, clé `AUBEBEACON_HUB_SECRET`) ; tickets signés (HMAC, 60 s) listant les salles `beacon:<id>` que le compte peut suivre |
-| `beacon/api.py` | `POST /api/v1/telemetry` (Bearer, exempté CSRF, corps borné 16 Ko / lot 96 Ko, 180 paquets/min par balise), `GET /api/v1/beacon/live`, `/flights/<id>/track`, `/ws-ticket` (session) |
-| `beacon/views.py` | `/espace/pilote/aubebeacon` : créer une balise (le jeton n'est affiché qu'une fois, via la session), associer, dissocier, désactiver, régénérer, supprimer ; `/vols/<id>` |
+| `beacon/aubelink.py` | client AubeLink (urllib, `_request` seule fonction réseau) : `beacon_status`, `link`, `unlink`, `unlink_beacon`, `panels` ; cache par délégué, pause après panne, liste blanche vers les pages |
+| `beacon/api.py` | `POST /api/v1/telemetry` (Bearer, exempté CSRF, corps borné 16 Ko / lot 96 Ko, 180 paquets/min par balise), `GET /api/v1/beacon/live`, `/flights/<id>/track`, `/ws-ticket`, `/aubelink` (session) |
+| `beacon/views.py` | `/espace/pilote/aubebeacon` : créer une balise (le jeton n'est affiché qu'une fois, via la session), associer, dissocier, désactiver, régénérer, supprimer ; associer à AubeLink ou l'en dissocier (`/<id>/aubelink`, `/<id>/aubelink/retirer`) ; `/vols/<id>` |
 
 Côté navigateur, `static/js/beacon-live.js` se branche sur la carte de
 `_map.html` (`window.AubeMap.map`, événement `aube:map-ready`, `map_markers=false`
@@ -453,6 +484,133 @@ aucune position n'est publique (propriétaire ou administrateur avec
 l'origine du hub seulement quand il est configuré. Simulateur pour développer
 sans matériel : `scripts/beacon_sim_devices.py` + `AubeBeacon/simulator/`.
 Tests : `tests/test_beacon.py`.
+
+### AubeLink : le drone AubeLink qui porte la balise
+
+AubeLink (dépôt `AubeLink/`, réseau de liaison de données drone-sol, serveur
+OVH) sait quel drone AubeLink porte une balise : le `device_uid` AubeBeacon
+(`AUBE-BCN-…`) est son `beaconId`, normalisé des deux côtés par la même règle
+(`devices.normalize_uid`, vecteurs partagés dans `tests/test_aubelink.py`).
+**AubeLink tient seul l'association** : AubePilot n'ajoute aucune colonne et ne
+garde qu'un cache mémoire. Elle est indépendante de l'association d'une balise à
+un drone du catalogue AubePilot (`pilot_drones`), et les libellés restent
+distincts (« Associer » contre « Associer à AubeLink »).
+
+- **Trois routes AubeLink**, de serveur à serveur, avec la clé d'intégration
+  (`AUBELINK_KEY`, portées `fleet:read`, `beacon:write`, `act_as_user`) et
+  `X-Acting-User` = adresse @aubemail.com du **propriétaire de la balise**
+  (tirée de son identifiant, jamais de `users.email`), jamais celle de
+  l'administrateur qui regarde : `GET /api/v1/beacon-status`, `PUT` et
+  `DELETE /api/v1/drones/{droneId}/beacon`. AubeLink limite tout aux drones
+  dont ce compte est propriétaire. Pour un compte supprimé (`users.deleted_at`),
+  AubeLink n'est jamais appelé : panneau `owner_deleted`, actions refusées,
+  suppression de la balise sans prévenir AubeLink (`aubelink.delete_orphan`).
+  Documentation côté AubeLink : `AubeLink/docs/api.md` (section AubeBeacon).
+- **Page des balises** : sous chaque balise, un panneau AubeLink (état de
+  liaison, état de vol, batterie, âge de la dernière trame, alertes actives,
+  3 derniers messages, liens « Ouvrir dans AubeLink » si `AUBELINK_PUBLIC_URL`)
+  et, selon le cas, « Associer à AubeLink » (sélecteur des drones AubeLink du
+  propriétaire ; un drone qui porte déjà une balise est grisé) ou « Dissocier
+  d'AubeLink ». Le PUT d'AubeLink remplace sans erreur la balise d'un drone
+  qui en porte déjà une : la route d'association lit donc d'abord
+  beacon-status sans cache et refuse un drone qui porte une autre balise
+  (`aubelink.err.drone_busy`), quel que soit l'état du sélecteur. Aucune coordonnée : la réponse AubeLink passe par une liste
+  blanche (`aubelink.panels`) qui écarte `telemetry`, `ownerId`, l'UUID du drone,
+  les `fields` des messages, les `data` des alertes, la clé et l'adresse
+  déléguée ; le compte rendu de position (`POSITION_REPORT`, dont le texte
+  porte la position du drone) n'est montré que par sa catégorie, et toute
+  coordonnée écrite en clair dans un message ou une alerte est masquée
+  (`[…]`). Les codes AubeLink (`CONNECTED`, `FLYING`, `LOW_BATTERY`,
+  `STATUS REQUEST`…) restent en majuscules anglaises.
+- **Rafraîchissement** : `GET /api/v1/beacon/aubelink` (session, `?all=1` pour
+  un administrateur), sondée toutes les 15 s par `beacon-live.js`, qui garde
+  cet état à part (`aubelinkState`) et ne rend que par `textContent`. Toujours
+  200 une fois configurée ; une panne se lit dans `available` et dans le
+  `reason` de chaque balise (`unreachable`, `rate_limited`, `misconfigured`,
+  `refused`, `deferred`, `owner_deleted`). 503 `aubelink_not_configured`
+  sinon. TODO : les boutons associer et dissocier restent ceux du rendu
+  serveur ; quand l'état AubeLink change entre deux sondages, la note du
+  panneau invite à recharger la page (`aubelink.reload`).
+- **Limite de débit** : associer et dissocier (10 par minute, 120 par heure,
+  par IP et par route), supprimer une balise (20 et 200). Ces actions
+  ignorent cache et pause, et le budget de la clé d'intégration chez AubeLink
+  est partagé : sans limite, un seul compte pourrait l'épuiser et mettre le
+  panneau de tous les pilotes en pause après le 429.
+- **Budget et concurrence** : la page n'attend pas AubeLink plus de 3 s (4 s
+  pour la route). Un appel y part toujours avec son délai entier
+  (`AUBELINK_TIMEOUT_MS`), et seulement si le budget restant le couvre ;
+  sinon le propriétaire passe en `deferred` et il est servi au sondage
+  suivant. Un délai raccourci au budget qui expirerait passerait pour une
+  panne et suspendrait les lectures de tout le worker alors qu'AubeLink
+  répond. Un budget couvre toujours au moins un appel, même si
+  `AUBELINK_TIMEOUT_MS` le dépasse. Par worker, au plus 2 lectures des
+  panneaux attendent AubeLink en même temps (`aubelink.MAX_CONCURRENT_READS`) ;
+  au-delà, `deferred` sans attendre, pour qu'un AubeLink lent n'occupe
+  jamais tous les fils de gunicorn.
+- **Pannes** : une panne réseau ou un 5xx suspend les lectures `AUBELINK_FAIL_CACHE_S`
+  secondes, un 429 selon `Retry-After` (60 s à défaut), une clé refusée (401)
+  300 s avec un journal `aubelink.key_rejected`. Les dernières valeurs restent
+  affichées avec la mention « AubeLink ne répond pas ». Journal
+  `aubelink.request_failed` (méthode, chemin, statut, code, durée), jamais la clé.
+  Cache et pause sont propres à chaque worker gunicorn.
+- **Suppression d'une balise** : AubePilot la dissocie d'abord dans AubeLink.
+  Si AubeLink ne répond pas, la balise est supprimée quand même (message
+  `aubelink.delete_orphan`, journal `aubelink.unlink_failed`) ; son numéro,
+  retiré (`beacon_retired_uids`), n'est jamais réattribué, et un
+  administrateur AubeLink peut retirer l'association restée orpheline. La
+  numérotation automatique (`devices.next_uid`) ne compte que sa propre série,
+  `AUBE-BCN-` suivi d'exactement 6 chiffres : une saisie manuelle (numéro
+  matériel de 12 chiffres tapé par erreur, `SIM001`) ne la décale pas, même
+  retirée à jamais. Au-delà de 999999, la création automatique est refusée
+  et la saisie manuelle reste possible.
+- **Inerte sans configuration** : `AUBELINK_URL` vide ou `AUBELINK_KEY` sans le
+  préfixe `alp_` = aucun appel, aucun panneau, aucun lien, actions en 404.
+- **Contrôle après déploiement** : `scripts/aubelink_check.py --user <username>`
+  (« joignable, N drones, M associés », code de sortie 0 ou 1, jamais la clé).
+  Il lit `/etc/aubepilot.env` comme systemd pour le service (dernière
+  occurrence d'une variable retenue, guillemets entourants retirés) et
+  signale un fichier illisible (lancé sans `sudo -u aube`) au lieu de
+  conclure « non configuré ».
+- **Limites connues, acceptées pour la V1** :
+  - Masque des coordonnées incomplet (`aubelink._COORD_RE`) : il reconnaît
+    les degrés décimaux (3 décimales ou plus) et les degrés-minutes avec
+    « ° ». D'autres écritures d'une position dans un texte libre (FREE_TEXT
+    d'un opérateur ou d'un drone, message d'alerte) passent en clair : degrés,
+    minutes et secondes séparés par des espaces (« 45 30 06 N »), forme NMEA
+    ou ACARS (« N4530.1 W07333.6 », « N45301W073336 »), degrés à 2 décimales
+    suivis d'une lettre d'hémisphère (« 45.50N »). Précision de 30 m à 1 km,
+    visible du seul propriétaire et d'un administrateur. À faire : élargir le
+    masque, ou ne montrer que la catégorie d'un FREE_TEXT où une lettre
+    d'hémisphère touche un nombre.
+  - Délégation sans preuve du lien AubeMail : `X-Acting-User` vient du seul
+    `users.username`. Un ancien compte local (mot de passe de
+    `.dev_passwords`, accepté après l'échec de PAM) homonyme d'une adresse
+    @aubemail.com créée plus tard par une autre personne agirait chez
+    AubeLink au nom de celle-ci (drones, alertes, messages, association).
+    À faire : ne déléguer que pour un compte dont le lien AubeMail est prouvé
+    (indicateur posé à la connexion par PAM ou par la base AubeMail), ou
+    fermer `_dev_check` aux noms qui existent dans AubeMail.
+  - Actions pendant une panne silencieuse : associer, retirer et supprimer
+    ignorent la pause et le sémaphore des lectures. Quand les paquets vers
+    AubeLink se perdent sans refus (WireGuard sans pair, OVH arrêté), chaque
+    action occupe un fil gunicorn jusqu'au délai (2,5 s, deux fois pour une
+    association : lecture fraîche puis PUT). La limite de débit se compte par
+    IP, par route et par worker, et la création de balises n'en a pas :
+    quelques adresses IP suffisent à occuper les 8 fils. À faire : refuser
+    les actions pendant une pause active (la suppression saute alors
+    l'appel), limite par compte, limite sur `/creer`.
+  - Cache propre à chaque worker après une action : `_invalidate` ne vide
+    que le cache du worker qui a traité le POST. La redirection peut arriver
+    sur l'autre worker, qui montre jusqu'à `AUBELINK_CACHE_S` (15 s) l'état
+    d'avant l'action et ses boutons ; un second clic reçoit alors « déjà
+    associée » ou « associée à aucun drone ». À faire : marqueur de session
+    qui force une lecture fraîche au rendu suivant, ou cache partagé
+    (SQLite).
+- **TODO (hors V1)** : temps réel AubeLink (une clé d'intégration n'obtient pas
+  de ticket `/ws`), correspondance des vols AubeBeacon et AubeLink, portée
+  `messages:write` (bouton STATUS REQUEST), connexion unique entre AubePilot et
+  AubeLink (le lien « Ouvrir » mène à la connexion AubeMail d'AubeLink).
+  Tests : `tests/test_aubelink.py` (faux AubeLink).
 
 ## Sécurité
 
@@ -549,6 +707,11 @@ sur l'app via `before_request` / `after_request` hooks.
 | `AUBEBEACON_HUB_PUBLIC_URL` | (vide) | adresse WebSocket annoncée au navigateur ; vide = `wss://<hôte>/ws/beacon` |
 | `AUBEBEACON_ONLINE_S` / `AUBEBEACON_DEGRADED_S` | 10 / 30 | seuils ONLINE / DEGRADED / OFFLINE d'une balise |
 | `AUBEBEACON_INTERVAL_FLYING_MS` / `_READY_MS` / `_LANDED_MS` | 2000 / 10000 / 30000 | cadences renvoyées aux balises |
+| `AUBELINK_URL` | (vide) | adresse d'AubeLink vue du serveur (`http://10.8.0.2:5125` par WireGuard en production, `http://127.0.0.1:5125` en local) ; vide = fonction AubeLink inerte |
+| `AUBELINK_KEY` | (vide) | clé d'intégration AubeLink `alp_<id>_<secret>` (portées `fleet:read`, `beacon:write`, `act_as_user`), seulement dans `/etc/aubepilot.env`, jamais journalisée ; sans le préfixe `alp_` = inerte |
+| `AUBELINK_PUBLIC_URL` | (vide) | adresse publique de l'interface AubeLink pour les liens « Ouvrir dans AubeLink » ; vide = aucun lien |
+| `AUBELINK_TIMEOUT_MS` | 2500 | délai d'un appel à AubeLink |
+| `AUBELINK_CACHE_S` / `AUBELINK_FAIL_CACHE_S` | 15 / 30 | durée de vie d'une lecture réussie ; pause après une panne et cache négatif d'un refus 403 / 404 |
 
 ---
 

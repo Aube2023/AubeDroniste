@@ -122,6 +122,19 @@ AUBEBEACON_HUB_URL=http://127.0.0.1:5137
 AUBEBEACON_PUBLIC=0
 AUBEBEACON_USERS=
 
+# AubeLink (drone AubeLink qui porte chaque balise, cf. ARCHITECTURE.md) : joint
+# par WireGuard (OVH 10.8.0.2). Vide = fonction inerte. La clé d'intégration
+# alp_... (portées fleet:read, beacon:write, act_as_user) se crée sur AubeLink
+# et ne s'écrit qu'ici, jamais dans le dépôt ; contrôle après redémarrage :
+# sudo -u aube .venv/bin/python scripts/aubelink_check.py --user <username>
+AUBELINK_URL=http://10.8.0.2:5125
+AUBELINK_KEY=
+# lien « Ouvrir dans AubeLink » : seulement quand le DNS de link répond
+AUBELINK_PUBLIC_URL=
+# AUBELINK_TIMEOUT_MS=2500
+# AUBELINK_CACHE_S=15
+# AUBELINK_FAIL_CACHE_S=30
+
 # SMTP transactionnel
 SMTP_HOST=smtp.aubemail.com
 SMTP_PORT=587
