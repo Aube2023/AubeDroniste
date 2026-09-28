@@ -210,6 +210,21 @@ def send_new_message(recipient: dict, sender: dict, mission: dict, body: str) ->
     )
 
 
+def send_new_contact_message(recipient: dict, sender: dict, body: str,
+                             thread_path: str) -> bool:
+    """Premier contact depuis la fiche d'un pilote (avant toute mission) :
+    meme preference courriel que les messages de mission."""
+    if not _wants(recipient, "notify_messages"):
+        return False
+    return send(
+        to=recipient["email"],
+        subject=i18n.t("contact.email_subject", name=sender["full_name"]),
+        template="new_contact_message",
+        context={"recipient": recipient, "sender": sender, "body": body,
+                 "thread_path": thread_path},
+    )
+
+
 def send_bid_rejected(pilot: dict, mission: dict, bid: dict,
                       client: dict, reason: str = "") -> bool:
     """Notifie le pilote que son devis a ete refuse par le client.

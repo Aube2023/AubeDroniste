@@ -162,6 +162,7 @@ CREATE TABLE IF NOT EXISTS missions (
     from_package_id   INTEGER REFERENCES pilot_packages(id) ON DELETE SET NULL,
     targeted_pilot_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     is_private      INTEGER NOT NULL DEFAULT 0,   -- demande reservee au pilote vise : invisible des autres
+    from_contact    INTEGER NOT NULL DEFAULT 0,   -- creee par le pilote depuis un premier contact (direct_messages)
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -283,6 +284,24 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_msg_mission ON messages(mission_id);
 CREATE INDEX IF NOT EXISTS idx_msg_recipient ON messages(recipient_user_id);
+
+-- Premier contact : messages directs client -> pilote depuis la fiche, AVANT
+-- toute mission (comme la messagerie de Fiverr : on s'ecrit, puis le pilote
+-- propose un devis). Quand le pilote propose ce devis, une demande privee est
+-- creee au nom du client (missions.from_contact=1) et les messages echanges
+-- basculent dans `messages` sous cette mission.
+CREATE TABLE IF NOT EXISTS direct_messages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pilot_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sender_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body            TEXT NOT NULL,
+    read_at         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dm_pair   ON direct_messages(client_user_id, pilot_user_id, id);
+CREATE INDEX IF NOT EXISTS idx_dm_pilot  ON direct_messages(pilot_user_id, read_at);
+CREATE INDEX IF NOT EXISTS idx_dm_client ON direct_messages(client_user_id, read_at);
 
 -- Forfaits proposes par le pilote (catalogue de packages)
 CREATE TABLE IF NOT EXISTS pilot_packages (

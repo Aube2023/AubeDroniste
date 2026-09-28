@@ -131,6 +131,9 @@ def schema_ready(path: str = DB_PATH) -> bool:
 # base existante (CREATE TABLE IF NOT EXISTS ne modifie pas une table deja la).
 _ADD_COLUMNS = [
     ("pilot_profiles", "business_name", "TEXT"),
+    # Demande privee creee par le pilote depuis un premier contact (messagerie
+    # directe de la fiche, 2026-09-27).
+    ("missions", "from_contact", "INTEGER NOT NULL DEFAULT 0"),
     # Type de profil (onglets annuaire) + formations des ecoles.
     ("pilot_profiles", "kind", "TEXT NOT NULL DEFAULT 'pro'"),
     ("pilot_profiles", "school_programs", "TEXT"),
@@ -249,6 +252,9 @@ _ADD_INDEXES = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_pilot_profiles_no ON pilot_profiles(pilot_no)",
     "CREATE INDEX IF NOT EXISTS idx_opp_status_close ON opportunities(status, closes_at)",
     "CREATE INDEX IF NOT EXISTS idx_opp_posted_by ON opportunities(posted_by, status)",
+    "CREATE INDEX IF NOT EXISTS idx_dm_pair ON direct_messages(client_user_id, pilot_user_id, id)",
+    "CREATE INDEX IF NOT EXISTS idx_dm_pilot ON direct_messages(pilot_user_id, read_at)",
+    "CREATE INDEX IF NOT EXISTS idx_dm_client ON direct_messages(client_user_id, read_at)",
 ]
 
 
@@ -321,6 +327,18 @@ _ADD_TABLES = [
     sort_order  INTEGER NOT NULL DEFAULT 0,
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT
+)""",
+    # Premier contact : messages directs client -> pilote depuis la fiche,
+    # avant toute mission (cf. services.contact_* ; bascule dans `messages`
+    # quand le pilote propose un devis).
+    """CREATE TABLE IF NOT EXISTS direct_messages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pilot_user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sender_user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body            TEXT NOT NULL,
+    read_at         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 )""",
     # Provenance des visiteurs, par jour et par pays. AUCUNE IP n'est stockee :
     # le pays est resolu a la volee (geoip.py) puis jete, seul l'agregat reste.

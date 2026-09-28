@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ t('contact.propose_quote') }} · AubePilot{% endblock %}
+{% block content %}
+{# Le pilote propose un devis depuis un premier contact : la demande privee
+   (au nom du client) et le devis sont crees d'un coup, puis la conversation
+   continue sous la mission. Champs alignes sur mission_create + bid_place. #}
+{% set client_name = client.full_name if conv.funded else mask_name(client.full_name) %}
+<section class="form-page">
+  <div class="search-head centered">
+    <h1>{{ t('contact.quote_title', name=client_name) }}</h1>
+    <p class="lead muted">{{ t('contact.quote_lead') }}</p>
+    <p><a class="ghost" href="{{ url_for('contact_thread', client_id=conv.client_id, pilot_id=conv.pilot_id) }}">← {{ t('contact.back_to_thread') }}</a></p>
+  </div>
+
+  {% if thread %}
+  <details class="notice" style="margin-bottom: 18px;" open>
+    <summary class="eyebrow">{{ t('contact.quote_context') }}</summary>
+    {% for m in thread %}
+    <p class="small prewrap" style="margin: 8px 0 0;"><strong>{{ client_name if m.sender_user_id == conv.client_id else current_user.full_name }}</strong> <span class="muted">· {{ m.created_at[:16] }}</span><br>{{ m.body }}</p>
+    {% endfor %}
+  </details>
+  {% endif %}
+
+  <form method="post" class="auth-form auth-steps" id="quote-form">
+    {{ csrf_input() }}
+    {% if packages %}
+    <div class="notice notice-teal">
+      <label>{{ t('contact.quote_from_package') }}
+        <select name="from_package_id" id="pkg-select">
+          <option value="">{{ t('contact.quote_no_package') }}</option>
+          {% for p in packages %}
+          <option value="{{ p.id }}" data-title="{{ p.title }}" data-desc="{{ p.description }}" data-type="{{ p.mission_type or '' }}" data-price="{{ p.price or '' }}" data-currency="{{ p.currency }}" data-duration="{{ p.duration_hours or '' }}" data-deliverables="{{ p.deliverables or '' }}"{% if form.get('from_package_id')|string == p.id|string %} selected{% endif %}>{{ p.title }}{% if p.price %} · {{ p.price|int }} {{ p.currency }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    {% endif %}
+
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ t('contact.quote_mission') }}</legend>
+      <label>{{ t('tpl.titre_de_la_mission') }}
+        <input name="title" id="f-title" required maxlength="120" value="{{ form.get('title','') }}" placeholder="{{ t('tpl.captation_aerienne_d_un_mariage_a') }}">
+      </label>
+      <label>{{ t('tpl.type') }}
+        <select name="mission_type" id="f-type" required>
+          {% for gname, codes in mission_groups %}<optgroup label="{{ mission_group_label(gname) }}">{% for code in codes %}<option value="{{ code }}"{% if form.get('mission_type') == code %} selected{% endif %}>{{ mission_label(code) }}</option>{% endfor %}</optgroup>{% endfor %}
+        </select>
+      </label>
+      <label>{{ t('contact.quote_need') }}
+        <textarea name="need" rows="3" required>{{ form.get('need','') }}</textarea>
+      </label>
+      <div class="grid-2">
+        <label>{{ t('tpl.pays') }}
+          {% set _cur = form.get('country') or client.country or '' %}
+          <select name="country" required>
+            <option value="">—</option>
+            {% if _cur and _cur not in countries %}<option value="{{ _cur }}" selected>{{ _cur }}</option>{% endif %}
+            <optgroup label="{{ t('country.common') }}">{% for c, label in country_options(featured_countries) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+            <optgroup label="{{ t('country.all') }}">{% for c, label in country_options(countries|reject('in', featured_countries)) %}<option value="{{ c }}"{% if _cur == c %} selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>
+          </select>
+        </label>
+        <label>{{ t('tpl.ville') }}<input name="city" value="{{ form.get('city') or client.city or '' }}"></label>
+        <label>{{ t('tpl.region_ou_departement') }}<input name="region" value="{{ form.get('region','') }}"></label>
+        <label>{{ t('tpl.date_heure_de_debut') }}<input name="start_date" type="datetime-local" value="{{ form.get('start_date','') }}"></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset-block auth-step">
+      <legend>{{ t('contact.quote_offer') }}</legend>
+      <div class="grid-3">
+        <label>{{ t('tpl.prix') }}<input name="price" id="f-price" type="number" step="0.01" min="1" required value="{{ form.get('price','') }}"></label>
+        <label>{{ t('tpl.devise') }}
+          <select name="currency" id="f-currency">{% for c in currencies %}<option value="{{ c }}"{% if (form.get('currency') or default_currency) == c %} selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+        </label>
+        <label>{{ t('tpl.duree_estimee_h') }}<input name="duration_hours" id="f-duration" type="number" step="0.5" value="{{ form.get('duration_hours','') }}"></label>
+      </div>
+      <label>{{ t('contact.quote_desc') }}
+        <textarea name="description" id="f-desc" rows="4" required minlength="30">{{ form.get('description','') }}</textarea>
+      </label>
+      <div class="grid-2">
+        <label>{{ t('tpl.livrables_2') }}<textarea name="deliverables" id="f-deliverables" rows="3">{{ form.get('deliverables','') }}</textarea></label>
+        <label>{{ t('contact.quote_terms') }}<textarea name="terms" rows="3">{{ form.get('terms','') }}</textarea></label>
+      </div>
+      <div class="grid-2">
+        <label>{{ t('contact.quote_eta') }}<input name="eta_hours" type="number" step="0.5" value="{{ form.get('eta_hours','') }}"></label>
+        <label>{{ t('contact.quote_note') }}<textarea name="message" rows="2">{{ form.get('message','') }}</textarea></label>
+      </div>
+    </fieldset>
+
+    <button class="cta" type="submit">{{ t('contact.quote_submit') }}</button>
+  </form>
+</section>
+
+<script nonce="{{ csp_nonce }}">
+(function () {
+  // Partir d'un forfait : on preremplit, le pilote ajuste ensuite.
+  var sel = document.getElementById('pkg-select'); if (!sel) return;
+  function fill(id, v) { var el = document.getElementById(id); if (el && v) el.value = v; }
+  sel.addEventListener('change', function () {
+    var o = sel.options[sel.selectedIndex]; if (!o || !o.value) return;
+    fill('f-title', o.getAttribute('data-title')); fill('f-desc', o.getAttribute('data-desc'));
+    fill('f-price', o.getAttribute('data-price')); fill('f-currency', o.getAttribute('data-currency'));
+    fill('f-duration', o.getAttribute('data-duration')); fill('f-deliverables', o.getAttribute('data-deliverables'));
+    fill('f-type', o.getAttribute('data-type'));
+  });
+})();
+</script>
+{% endblock %}

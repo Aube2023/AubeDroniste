@@ -1,0 +1,21 @@
+AUBEPILOT, NOUVEAU MESSAGE / NEW MESSAGE
+========================================
+
+[FR]
+{{ sender.full_name }} vous a écrit sur AubePilot.
+
+> {{ body }}
+
+Répondre : {{ site_url }}{{ thread_path }}
+
+------------------------------------------------------------
+
+[EN]
+{{ sender.full_name }} sent you a message on AubePilot.
+
+> {{ body }}
+
+Reply: {{ site_url }}{{ thread_path }}
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

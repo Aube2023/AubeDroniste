@@ -4012,6 +4012,7 @@ def messages_thread(mission_id, peer_id):
         (mission_id, user["id"], peer_id, user["id"], peer_id),
     )
     conv = {
+        "kind": "mission",
         "mission_id": mission_id, "mission_title": mission["title"], "mission_status": mission["status"],
         "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
         "peer_avatar": peer["avatar_path"], "peer_is_client": mission["client_user_id"] == peer["id"],
@@ -4081,6 +4082,183 @@ def mission_message(mission_id):
             body=body,
         )
     return redirect(request.referrer or url_for("dashboard"))
+
+
+# ---------------------------------------------------------------------------
+# Premier contact : message direct au pilote depuis sa fiche, avant tout devis
+# ---------------------------------------------------------------------------
+# Comme sur Fiverr : « Envoyer un message » sur la fiche ouvre un fil
+# (client, pilote) sans formulaire de mission. Le pilote repond, puis propose
+# un devis depuis la conversation (contact_quote) : la demande privee et le
+# devis sont crees d'un coup au nom du client, et le fil bascule sous la
+# mission (services.propose_quote_from_contact).
+
+def _contact_conv(client_id, pilot_id, user):
+    """Contexte du fil « premier contact » pour messages.html, ou None si
+    l'utilisateur n'en fait pas partie (ou si le pilote n'a rien recu)."""
+    if not user or user["id"] not in (client_id, pilot_id) \
+            or not services.can_open_contact(client_id, pilot_id, user["id"]):
+        return None
+    peer_id = pilot_id if user["id"] == client_id else client_id
+    peer = db.fetchone("SELECT id, full_name, username, avatar_path FROM users WHERE id=?", (peer_id,))
+    if not peer:
+        return None
+    funded = services.pair_is_funded(client_id, pilot_id)
+    return {
+        "kind": "contact", "client_id": client_id, "pilot_id": pilot_id,
+        "mission_id": None, "mission_title": None, "mission_status": None,
+        "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
+        "peer_avatar": peer["avatar_path"], "peer_is_client": peer_id == client_id,
+        "booking_id": None, "booking_status": None,
+        "funded": funded, "peer_funded": funded, "i_am_pilot": user["id"] == pilot_id,
+        "blocked_by_me": services.has_blocked(user["id"], peer_id),
+        "blocked_me": services.has_blocked(peer_id, user["id"]),
+    }
+
+
+@app.route("/pilotes/<int:user_id>/message")
+@auth.login_required
+def pilot_message(user_id):
+    """Bouton « Envoyer un message » de la fiche : ouvre (ou rouvre) la
+    conversation directe entre le visiteur connecte et ce pilote. Si un devis
+    en est deja sorti et reste ouvert, la conversation vit sous la mission."""
+    if not services.contact_pilot_ok(g.user["id"], user_id):
+        abort(404)
+    if not services.contact_thread_exists(g.user["id"], user_id):
+        mission_id = services.latest_contact_mission(g.user["id"], user_id, open_only=True)
+        if mission_id:
+            return redirect(url_for("messages_thread", mission_id=mission_id, peer_id=user_id))
+    return redirect(url_for("contact_thread", client_id=g.user["id"], pilot_id=user_id))
+
+
+@app.route("/messages/contact/<int:client_id>/<int:pilot_id>")
+@auth.login_required
+def contact_thread(client_id, pilot_id):
+    conv = _contact_conv(client_id, pilot_id, g.user)
+    if not conv:
+        abort(404 if g.user["id"] == client_id else 403)
+    thread = services.contact_thread(client_id, pilot_id, g.user["id"])
+    return render_template("messages.html", conversations=services.list_conversations(g.user["id"]),
+                           conv=conv, thread=thread, seo=_NOINDEX)
+
+
+@app.route("/messages/contact/<int:client_id>/<int:pilot_id>", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=30, per_hour=300)
+def contact_message(client_id, pilot_id):
+    conv = _contact_conv(client_id, pilot_id, g.user)
+    if not conv:
+        abort(404 if g.user["id"] == client_id else 403)
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    body = (request.form.get("body") or "").strip()[:4000]
+    back = redirect(url_for("contact_thread", client_id=client_id, pilot_id=pilot_id))
+    if not body:
+        return back
+    if services.is_blocked_between(g.user["id"], conv["peer_id"]):
+        flash(i18n.t("block.closed", lang), "error")
+        return back
+    # Meme filtre que les fils de mission : pas de coordonnees externes tant
+    # qu'aucune reservation payee ne lie les deux personnes.
+    ok, reason = services.message_passes_filter(body, conv["funded"])
+    if not ok:
+        flash(reason or "Message bloqué.", "error")
+        return back
+    services.send_contact_message(client_id=client_id, pilot_id=pilot_id,
+                                  sender_id=g.user["id"], body=body)
+    return back
+
+
+@app.route("/api/messages/contact/<int:client_id>/<int:pilot_id>")
+@auth.login_required
+@security.rate_limit(per_minute=60, per_hour=1500)
+def contact_poll(client_id, pilot_id):
+    """Nouveaux messages du fil direct. Quand le pilote vient de proposer un
+    devis, le fil a bascule sous la mission : on renvoie l'adresse du
+    nouveau fil (`redirect`) pour que la page ouverte y aille d'elle-meme."""
+    user = g.user
+    after = _to_int(request.args.get("after")) or 0
+    if user["id"] in (client_id, pilot_id) and after \
+            and not services.contact_thread_exists(client_id, pilot_id):
+        mission_id = services.latest_contact_mission(client_id, pilot_id)
+        if mission_id:
+            peer = pilot_id if user["id"] == client_id else client_id
+            return jsonify({"messages": [], "unread": services.unread_count(user["id"]),
+                            "redirect": url_for("messages_thread", mission_id=mission_id, peer_id=peer)})
+    conv = _contact_conv(client_id, pilot_id, user)
+    if not conv:
+        abort(403)
+    rows = services.contact_thread_after(client_id, pilot_id, user["id"], after)
+    return jsonify({"messages": [
+        {"id": m["id"], "mine": m["sender_user_id"] == user["id"], "body": m["body"], "at": m["created_at"]}
+        for m in rows
+    ], "unread": services.unread_count(user["id"])})
+
+
+@app.route("/messages/contact/<int:client_id>/<int:pilot_id>/devis", methods=["GET", "POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=60)
+def contact_quote(client_id, pilot_id):
+    """Le pilote propose un devis depuis la conversation : demande privee au
+    nom du client + devis, en un formulaire."""
+    user = g.user
+    if user["id"] != pilot_id or user["role"] not in ("pilot", "both"):
+        abort(403)
+    conv = _contact_conv(client_id, pilot_id, user)
+    if not conv:
+        abort(403)
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    client = db.fetchone("SELECT id, full_name, username, country, city FROM users WHERE id=?", (client_id,))
+    if not client:
+        abort(404)
+    packages = services.list_pilot_packages(pilot_id, only_active=True)
+    form = request.form if request.method == "POST" else {}
+    if request.method == "POST":
+        currency = (form.get("currency") or DEFAULT_CURRENCY).upper()
+        mission = {
+            "title": (form.get("title") or "").strip()[:120],
+            "description": (form.get("need") or "").strip()[:5000],
+            "mission_type": form.get("mission_type") or "autre",
+            "country": (form.get("country") or "").strip() or (client["country"] or ""),
+            "region": (form.get("region") or "").strip()[:120],
+            "city": (form.get("city") or "").strip()[:120],
+            "currency": currency,
+            "duration_hours": _to_float(form.get("duration_hours")),
+            "start_date": (form.get("start_date") or "").strip() or None,
+            "end_date": (form.get("end_date") or "").strip() or None,
+            "from_package_id": _to_int(form.get("from_package_id")),
+        }
+        bid = {
+            "price": _to_float(form.get("price")), "currency": currency,
+            "eta_hours": _to_float(form.get("eta_hours")),
+            "message": (form.get("message") or "").strip()[:2000],
+            "description": (form.get("description") or "").strip()[:5000],
+            "deliverables": (form.get("deliverables") or "").strip()[:2000],
+            "terms": (form.get("terms") or "").strip()[:2000],
+        }
+        try:
+            mission_id = services.propose_quote_from_contact(client_id, pilot_id, mission=mission,
+                                                             bid=bid, lang=lang)
+        except (LookupError, ValueError) as exc:
+            flash(str(exc), "error")
+        else:
+            flash(i18n.t("contact.quote_sent", lang), "success")
+            return redirect(url_for("messages_thread", mission_id=mission_id, peer_id=client_id))
+    return render_template(
+        "contact_quote.html", conv=conv, client=dict(client), packages=packages, form=form,
+        thread=services.contact_thread(client_id, pilot_id, user["id"])[-6:], seo=_NOINDEX,
+        default_currency=_currency_for_country(user.get("country")),
+    )
+
+
+def _currency_for_country(country) -> str:
+    """Devise proposee par defaut d'apres le pays du compte (nom en clair)."""
+    c = (country or "").strip().lower()
+    for needle, cur in (("canada", "CAD"), ("états-unis", "USD"), ("etats-unis", "USD"), ("united states", "USD"),
+                        ("maroc", "MAD"), ("tunisie", "TND"), ("algérie", "DZD"), ("algerie", "DZD"),
+                        ("suisse", "CHF"), ("sénégal", "XOF"), ("senegal", "XOF"), ("côte d'ivoire", "XOF")):
+        if needle in c:
+            return cur
+    return DEFAULT_CURRENCY
 
 
 # ---------------------------------------------------------------------------

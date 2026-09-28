@@ -126,7 +126,9 @@ def test_pilots_search_near_sorts_by_distance(client, make_user, fake_geocoder):
                     lat=48.8566, lng=2.3522)
     close = make_user("near_close", role="pilot", country="Canada",
                       city="Montréal", lat=45.50, lng=-73.57)
-    r = client.get("/api/pilotes?near=H2X%201Y4&only_available=1")
+    # limit : la base de test est partagee par tout le process, la page de 50
+    # par defaut ne contient plus forcement le pilote parisien (loin).
+    r = client.get("/api/pilotes?near=H2X%201Y4&only_available=1&limit=200")
     assert r.status_code == 200
     j = r.get_json()
     assert j["near"]["found"] is True and j["near"]["label"].startswith("H2X 1Y4")

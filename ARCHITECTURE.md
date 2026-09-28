@@ -86,6 +86,13 @@ AubePilot/
    - `mailer.send_bid_accepted` au pilote
 4. Messagerie : `POST /missions/<id>/messages` → `services.send_message`
    - Si pas de message non-lu recent (5 min) → `mailer.send_new_message` au destinataire
+   - Premier contact (2026-09-27, comme Fiverr) : « Envoyer un message » sur la fiche
+     pilote ouvre un fil (client, pilote) SANS mission, table `direct_messages`
+     (`/messages/contact/<client>/<pilote>`, `services.contact_*`). Le pilote y a un
+     bouton « Proposer un devis » (`/…/devis`, `services.propose_quote_from_contact`) :
+     demande privee creee au nom du client (`missions.from_contact=1`, reservee au
+     pilote) + devis (`place_bid`), puis les messages basculent dans `messages` sous
+     la mission. Le sondage JSON du fil direct renvoie alors `redirect`.
 5. Booking → `completed` (côté client ou pilote)
 6. Avis bidirectionnel via `/reservations/<id>/avis`
 

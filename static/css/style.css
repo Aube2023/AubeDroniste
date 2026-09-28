@@ -913,6 +913,8 @@ img.avatar { object-fit: cover; }
 .thread-who strong { font-size: 1rem; }
 .thread-links { display: flex; gap: 6px; flex-wrap: wrap; }
 .thread-links .ghost { padding: 7px 12px; font-size: 13px; }
+.thread-links .cta { padding: 8px 14px; font-size: 13px; }
+.thread-intro { margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--rule); color: var(--ink-soft); background: var(--paper-2); }
 /* Signaler / bloquer (contenu utilisateur) */
 .report-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 6px; }
 .report-box { position: relative; }

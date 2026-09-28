@@ -2672,14 +2672,25 @@ def pilot_response_time(pilot_user_id: int) -> Optional[dict]:
         "ORDER BY created_at, id",
         (pilot_user_id, pilot_user_id, f"-{RESPONSE_WINDOW_DAYS} days"),
     )
+    # Premiers contacts (fiche pilote) : un fil par client, cle ('contact', client).
+    direct = db.fetchall(
+        "SELECT client_user_id, sender_user_id, created_at FROM direct_messages "
+        "WHERE pilot_user_id=? AND created_at >= datetime('now', ?) ORDER BY created_at, id",
+        (pilot_user_id, f"-{RESPONSE_WINDOW_DAYS} days"),
+    )
+    events = [(r["mission_id"], r["sender_user_id"], r["recipient_user_id"], r["created_at"]) for r in rows]
+    events += [("contact", r["sender_user_id"],
+                pilot_user_id if r["sender_user_id"] != pilot_user_id else r["client_user_id"],
+                r["created_at"]) for r in direct]
+    events.sort(key=lambda e: e[3])
     first_in, reply = {}, {}
-    for r in rows:
-        if r["recipient_user_id"] == pilot_user_id:
-            first_in.setdefault((r["mission_id"], r["sender_user_id"]), r["created_at"])
+    for scope, sender, recipient, at in events:
+        if recipient == pilot_user_id:
+            first_in.setdefault((scope, sender), at)
         else:
-            key = (r["mission_id"], r["recipient_user_id"])
+            key = (scope, recipient)
             if key in first_in and key not in reply:
-                reply[key] = r["created_at"]
+                reply[key] = at
     delays = []
     for key, t0 in first_in.items():
         if key in reply:
@@ -2843,7 +2854,9 @@ def list_conversations(user_id: int) -> list:
     recente d'abord, avec le dernier message, le nombre de non-lus, le titre
     de la mission, le nom de l'autre partie et son role dans la mission.
     Ne liste que les fils deja commences : un fil s'ouvre depuis la page de
-    la mission (devis) ou de la reservation."""
+    la mission (devis), de la reservation, ou de la fiche d'un pilote
+    (premier contact, cf. list_contact_conversations : ces fils-la sont
+    fusionnes ici, `kind` = 'contact' au lieu de 'mission')."""
     rows = db.fetchall(
         "SELECT m.mission_id, "
         "       CASE WHEN m.sender_user_id=? THEN m.recipient_user_id ELSE m.sender_user_id END AS peer_id, "
@@ -2866,6 +2879,7 @@ def list_conversations(user_id: int) -> list:
             (r["mission_id"], user_id, r["peer_id"], user_id, r["peer_id"]),
         )
         out.append({
+            "kind": "mission",
             "mission_id": r["mission_id"], "mission_title": mission["title"],
             "mission_status": mission["status"],
             "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
@@ -2880,6 +2894,8 @@ def list_conversations(user_id: int) -> list:
             "booking_id": booking["id"] if booking else None,
             "booking_status": booking["status"] if booking else None,
         })
+    out.extend(list_contact_conversations(user_id))
+    out.sort(key=lambda c: c["last_at"] or "", reverse=True)
     return out
 
 
@@ -2917,7 +2933,234 @@ def unread_count(user_id: int) -> int:
         "SELECT COUNT(*) AS n FROM messages WHERE recipient_user_id=? AND read_at IS NULL",
         (user_id,),
     )
+    return (int(row["n"]) if row else 0) + contact_unread_count(user_id)
+
+
+# ---------------------------------------------------------------------------
+# Premier contact : message direct au pilote depuis sa fiche, avant tout devis
+# ---------------------------------------------------------------------------
+# Comme sur Fiverr : le client ecrit au pilote depuis sa fiche (pas de
+# formulaire de mission), le pilote repond, et quand le besoin lui convient il
+# propose un devis depuis la conversation. A ce moment une demande privee est
+# creee au nom du client (missions.from_contact=1, reservee au pilote) avec
+# le devis dedans, et les messages echanges basculent dans `messages` sous
+# cette mission : le client accepte, paie et retrouve tout (PDF, livrables,
+# avis) comme pour un devis classique. Un fil = (client, pilote).
+
+def contact_pilot_ok(client_id: int, pilot_id: int) -> Optional[dict]:
+    """Le pilote que `client_id` peut contacter (compte actif avec une fiche),
+    ou None : fiche inexistante, compte supprime, ou soi-meme."""
+    if not client_id or not pilot_id or client_id == pilot_id:
+        return None
+    row = db.fetchone(
+        "SELECT u.id, u.full_name, u.username, u.avatar_path, u.country, u.city, p.kind "
+        "FROM users u JOIN pilot_profiles p ON p.user_id=u.id "
+        "WHERE u.id=? AND u.deleted_at IS NULL AND u.role IN ('pilot', 'both')",
+        (pilot_id,),
+    )
+    return dict(row) if row else None
+
+
+def contact_thread_exists(client_id: int, pilot_id: int) -> bool:
+    return bool(db.fetchone(
+        "SELECT 1 FROM direct_messages WHERE client_user_id=? AND pilot_user_id=? LIMIT 1",
+        (client_id, pilot_id),
+    ))
+
+
+def can_open_contact(client_id: int, pilot_id: int, user_id: int) -> bool:
+    """Le client peut toujours ouvrir le fil avec un pilote valide (c'est lui
+    qui commence) ; le pilote n'y accede que si le client lui a deja ecrit ;
+    un tiers jamais."""
+    if user_id == client_id:
+        return contact_pilot_ok(client_id, pilot_id) is not None
+    if user_id == pilot_id:
+        return contact_thread_exists(client_id, pilot_id)
+    return False
+
+
+def pair_is_funded(a: int, b: int) -> bool:
+    """Vrai si une reservation payee a deja lie ces deux personnes (dans un
+    sens ou l'autre) : le filtre anti-contournement des coordonnees est
+    alors leve, comme sur un fil de mission."""
+    return bool(db.fetchone(
+        "SELECT 1 FROM bookings WHERE ((client_user_id=? AND pilot_user_id=?) "
+        "   OR (client_user_id=? AND pilot_user_id=?)) "
+        "AND status IN ('funded', 'in_progress', 'completed', 'disputed') LIMIT 1",
+        (a, b, b, a),
+    ))
+
+
+def send_contact_message(*, client_id: int, pilot_id: int, sender_id: int,
+                         body: str) -> Optional[int]:
+    """Ajoute un message au fil (client, pilote) et previent l'autre par
+    courriel (au plus un courriel par 5 minutes tant qu'il n'a pas lu)."""
+    body = (body or "").strip()
+    if not body or sender_id not in (client_id, pilot_id):
+        return None
+    cur = db.execute(
+        "INSERT INTO direct_messages (client_user_id, pilot_user_id, sender_user_id, body) "
+        "VALUES (?, ?, ?, ?)",
+        (client_id, pilot_id, sender_id, body),
+    )
+    msg_id = cur.lastrowid
+    recipient_id = pilot_id if sender_id == client_id else client_id
+    try:
+        recent = db.fetchone(
+            "SELECT 1 FROM direct_messages WHERE client_user_id=? AND pilot_user_id=? "
+            "AND sender_user_id=? AND read_at IS NULL AND id<>? "
+            "AND datetime(created_at) > datetime('now', '-5 minutes')",
+            (client_id, pilot_id, sender_id, msg_id),
+        )
+        if not recent:
+            import mailer
+            sender = db.fetchone("SELECT id, full_name FROM users WHERE id=?", (sender_id,))
+            recipient = db.fetchone("SELECT id, email, full_name FROM users WHERE id=?", (recipient_id,))
+            if sender and recipient:
+                mailer.send_new_contact_message(
+                    recipient=dict(recipient), sender=dict(sender), body=body,
+                    thread_path=f"/messages/contact/{client_id}/{pilot_id}",
+                )
+    except Exception as exc:
+        log.warning("courriel premier contact non envoye : %s", exc)
+    return msg_id
+
+
+def contact_thread(client_id: int, pilot_id: int, user_id: int) -> list:
+    """Le fil complet, marque lu pour `user_id`."""
+    rows = db.fetchall(
+        "SELECT * FROM direct_messages WHERE client_user_id=? AND pilot_user_id=? ORDER BY id ASC",
+        (client_id, pilot_id),
+    )
+    db.execute(
+        "UPDATE direct_messages SET read_at=datetime('now') WHERE client_user_id=? AND pilot_user_id=? "
+        "AND sender_user_id<>? AND read_at IS NULL",
+        (client_id, pilot_id, user_id),
+    )
+    return [dict(r) for r in rows]
+
+
+def contact_thread_after(client_id: int, pilot_id: int, user_id: int, after_id: int) -> list:
+    rows = db.fetchall(
+        "SELECT * FROM direct_messages WHERE client_user_id=? AND pilot_user_id=? AND id>? ORDER BY id ASC",
+        (client_id, pilot_id, after_id),
+    )
+    if rows:
+        db.execute(
+            "UPDATE direct_messages SET read_at=datetime('now') WHERE client_user_id=? AND pilot_user_id=? "
+            "AND sender_user_id<>? AND read_at IS NULL",
+            (client_id, pilot_id, user_id),
+        )
+    return [dict(r) for r in rows]
+
+
+def contact_unread_count(user_id: int) -> int:
+    row = db.fetchone(
+        "SELECT COUNT(*) AS n FROM direct_messages WHERE (client_user_id=? OR pilot_user_id=?) "
+        "AND sender_user_id<>? AND read_at IS NULL",
+        (user_id, user_id, user_id),
+    )
     return int(row["n"]) if row else 0
+
+
+def list_contact_conversations(user_id: int) -> list:
+    """Les fils « premier contact » du compte, au meme format que
+    list_conversations (kind='contact', pas de mission ni de reservation)."""
+    rows = db.fetchall(
+        "SELECT client_user_id, pilot_user_id, MAX(id) AS last_id, MAX(created_at) AS last_at, "
+        "       SUM(CASE WHEN sender_user_id<>? AND read_at IS NULL THEN 1 ELSE 0 END) AS unread "
+        "FROM direct_messages WHERE client_user_id=? OR pilot_user_id=? "
+        "GROUP BY client_user_id, pilot_user_id ORDER BY last_at DESC LIMIT 200",
+        (user_id, user_id, user_id),
+    )
+    out = []
+    for r in rows:
+        peer_id = r["pilot_user_id"] if user_id == r["client_user_id"] else r["client_user_id"]
+        last = db.fetchone("SELECT body, sender_user_id, created_at FROM direct_messages WHERE id=?", (r["last_id"],))
+        peer = db.fetchone("SELECT id, full_name, username, avatar_path FROM users WHERE id=?", (peer_id,))
+        if not (last and peer):
+            continue
+        out.append({
+            "kind": "contact",
+            "client_id": r["client_user_id"], "pilot_id": r["pilot_user_id"],
+            "mission_id": None, "mission_title": None, "mission_status": None,
+            "peer_id": peer["id"], "peer_name": peer["full_name"] or peer["username"],
+            "peer_avatar": peer["avatar_path"],
+            "peer_is_client": peer_id == r["client_user_id"],
+            "peer_funded": pair_is_funded(r["client_user_id"], r["pilot_user_id"]),
+            "last_body": last["body"], "last_at": last["created_at"],
+            "last_mine": last["sender_user_id"] == user_id,
+            "unread": int(r["unread"] or 0),
+            "booking_id": None, "booking_status": None,
+        })
+    return out
+
+
+def latest_contact_mission(client_id: int, pilot_id: int, open_only: bool = False) -> Optional[int]:
+    """La derniere demande privee nee de la conversation entre ces deux
+    personnes (pour rediriger vers le fil de la mission une fois le devis
+    propose). `open_only` : seulement si elle est encore ouverte."""
+    row = db.fetchone(
+        "SELECT id FROM missions WHERE client_user_id=? AND targeted_pilot_id=? AND from_contact=1 "
+        + ("AND status='open' " if open_only else "") + "ORDER BY id DESC LIMIT 1",
+        (client_id, pilot_id),
+    )
+    return int(row["id"]) if row else None
+
+
+def propose_quote_from_contact(client_id: int, pilot_id: int, *, mission: dict,
+                               bid: dict, lang: str = "fr") -> int:
+    """Le pilote transforme la conversation en demande privee + devis.
+
+    1. la mission est creee AU NOM DU CLIENT (privee, reservee au pilote,
+       from_contact=1) avec ce que le pilote a decrit ;
+    2. le devis est depose dessus (place_bid : courriel « nouveau devis »
+       au client) ;
+    3. les messages du premier contact basculent sous la mission, suivis
+       d'une ligne « Devis propose » dans le fil.
+    Retourne l'id de la mission. LookupError sans conversation, ValueError
+    si un champ est invalide (message pret a afficher)."""
+    if not contact_thread_exists(client_id, pilot_id):
+        raise LookupError("aucune conversation avec ce client")
+    if is_blocked_between(client_id, pilot_id):
+        raise ValueError("conversation fermée")
+    price = bid.get("price")
+    if not price or float(price) <= 0:
+        raise ValueError("tarif invalide")
+    if len((bid.get("description") or "").strip()) < 30:
+        raise ValueError("décrivez votre devis en au moins 30 caractères")
+    mission_id = create_mission(client_id, **mission)
+    db.execute(
+        "UPDATE missions SET targeted_pilot_id=?, is_private=1, from_contact=1, from_package_id=? WHERE id=?",
+        (pilot_id, mission.get("from_package_id") or None, mission_id),
+    )
+    place_bid(
+        mission_id, pilot_id,
+        price=float(price), currency=str(bid.get("currency") or mission.get("currency") or DEFAULT_CURRENCY).upper(),
+        eta_hours=bid.get("eta_hours"), message=(bid.get("message") or "").strip(),
+        description=(bid.get("description") or "").strip(),
+        deliverables=(bid.get("deliverables") or "").strip(),
+        terms=(bid.get("terms") or "").strip(),
+    )
+    import i18n
+    note = i18n.t("contact.quote_posted", lang, title=mission.get("title") or "",
+                  price=f"{float(price):g}", currency=str(bid.get("currency") or mission.get("currency") or DEFAULT_CURRENCY).upper())
+    with db.transaction():
+        db.execute(
+            "INSERT INTO messages (mission_id, sender_user_id, recipient_user_id, body, read_at, created_at) "
+            "SELECT ?, sender_user_id, CASE WHEN sender_user_id=? THEN ? ELSE ? END, body, read_at, created_at "
+            "FROM direct_messages WHERE client_user_id=? AND pilot_user_id=? ORDER BY id",
+            (mission_id, client_id, pilot_id, client_id, client_id, pilot_id), commit=False,
+        )
+        db.execute("DELETE FROM direct_messages WHERE client_user_id=? AND pilot_user_id=?",
+                   (client_id, pilot_id), commit=False)
+        # Sans passer par send_message : le client recoit deja le courriel
+        # « nouveau devis », inutile d'en ajouter un second.
+        db.execute(
+            "INSERT INTO messages (mission_id, sender_user_id, recipient_user_id, body) VALUES (?, ?, ?, ?)",
+            (mission_id, pilot_id, client_id, note), commit=False,
+        )
+    return mission_id
 
 
 # ---------------------------------------------------------------------------
@@ -4451,6 +4694,9 @@ def export_user_data(user_id: int) -> dict:
         "messages": rows("SELECT id, mission_id, sender_user_id, recipient_user_id, body, "
                          "read_at, created_at FROM messages WHERE sender_user_id=? OR recipient_user_id=?",
                          (user_id, user_id)),
+        "direct_messages": rows("SELECT id, client_user_id, pilot_user_id, sender_user_id, body, read_at, "
+                                "created_at FROM direct_messages WHERE client_user_id=? OR pilot_user_id=?",
+                                (user_id, user_id)),
         "contact_messages": rows("SELECT id, topic, body, status, created_at FROM contact_messages "
                                  "WHERE user_id=?", (user_id,)),
         "job_posts": rows("SELECT id, title_fr AS title, org, country, region, city, employment_type, salary, "

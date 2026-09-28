@@ -2033,6 +2033,17 @@ except (OSError, ValueError) as _exc:
     import logging as _logging
     _logging.getLogger("aubepilot.i18n").error("translations/_jobs.json illisible : %s", _exc)
 
+# Premier contact (message direct au pilote depuis sa fiche, 2026-09-27) :
+# meme forme que _jobs.json, les 31 langues dans un seul fichier.
+_CONTACT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations", "_contact.json")
+try:
+    with open(_CONTACT_FILE, encoding="utf-8") as _f:
+        for _key, _entry in json.load(_f).items():
+            _T[_key] = dict(_entry)
+except (OSError, ValueError) as _exc:
+    import logging as _logging
+    _logging.getLogger("aubepilot.i18n").error("translations/_contact.json illisible : %s", _exc)
+
 EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl",
                "am", "ne", "th", "ta", "he", "ha", "nl", "el", "ro")
 _TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")

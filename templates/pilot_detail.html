@@ -76,7 +76,11 @@
           {% elif pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="cta">{{ t('tpl.appeler_la_boutique') }}</a>
           {% elif pilot.portfolio_url %}<a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="cta">{{ t('tpl.visiter_le_site') }}</a>{% endif %}
         {% else %}
-        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="cta">{% if is_school %}{{ t('tpl.contacter_cette_ecole') }}{% elif pilot.kind == 'company' %}{{ t('tpl.contacter_cette_entreprise') }}{% else %}{{ t('tpl.contacter_ce_pilote') }}{% endif %}</a>
+        {# Premier contact par message (comme Fiverr) : on s'ecrit, le pilote
+           propose ensuite un devis. Le formulaire de demande detaillee reste
+           en second choix. #}
+        <a href="{{ url_for('pilot_message', user_id=pilot.id) }}" class="cta">{% if is_school %}{{ t('tpl.contacter_cette_ecole') }}{% elif pilot.kind == 'company' %}{{ t('tpl.contacter_cette_entreprise') }}{% else %}{{ t('contact.cta') }}{% endif %}</a>
+        <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="ghost">{{ t('contact.request_quote') }}</a>
         {% endif %}
         <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('tpl.voir_les_missions_ouvertes') }}</a>
       </div>
