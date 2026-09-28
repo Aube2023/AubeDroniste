@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+{# Fiche d'une offre d'emploi déposée sur AubePilot par un employeur
+   (job_posts.py). Données structurées JobPosting : seo.job_posting. #}
+{% set place = [post.city, post.region if post.region != post.country else '', country_name(post.country)]|select|join(', ') %}
+<div style="max-width: 820px; margin: 0 auto;">
+  <p class="muted small" style="margin-bottom: 14px;"><a href="{{ url_for('jobs') }}">{{ t('opp.jobs_all') }}</a></p>
+
+  {% if not public %}
+  <div class="card" style="border-left: 3px solid var(--signal); margin-bottom: 16px;">
+    {{ t('job.pending_banner', status=t('job.status.' ~ post.status)) }}
+    {% if post.status == 'rejected' and post.review_note %}<p class="small" style="margin: 8px 0 0;">{{ t('job.reject_reason') }} {{ post.review_note }}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <article class="card">
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+      {% if logo_url %}<img src="{{ logo_url }}" alt="{{ post.org }}" width="72" height="72" style="width: 72px; height: 72px; object-fit: contain; border-radius: 10px; background: #fff; flex: none;">{% endif %}
+      <div>
+        <span class="eyebrow">{{ t('opp.kind_job') }}</span>
+        <h1 style="margin: 4px 0 6px;">{{ post.title_fr }}</h1>
+        <div class="muted">{{ post.org }}{% if place %} · {{ place }}{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="mini-profile" style="margin-top: 18px;">
+      <div class="row"><span>{{ t('job.f_type') }}</span><strong>{{ t('job.type.' ~ (post.employment_type or 'full_time')) }}</strong></div>
+      {% if post.salary %}<div class="row"><span>{{ t('job.salary') }}</span><strong>{{ post.salary }}</strong></div>{% endif %}
+      {% if place %}<div class="row"><span>{{ t('job.location') }}</span><strong>{{ place }}</strong></div>{% endif %}
+      {% if post.published_at %}<div class="row"><span>{{ t('opp.posted') }}</span><strong>{{ post.published_at }}</strong></div>{% endif %}
+      {% if post.closes_at %}<div class="row"><span>{{ t('opp.closes') }}</span><strong>{{ post.closes_at }}</strong></div>{% endif %}
+    </div>
+
+    <div style="white-space: pre-line; margin-top: 20px; line-height: 1.6;">{{ post.body }}</div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 22px;">
+      {% if post.apply_url %}<a class="cta" href="{{ post.apply_url }}" target="_blank" rel="noopener nofollow ugc">{{ t('job.apply') }}</a>{% endif %}
+      {% if post.apply_email %}
+      <a class="{{ 'ghost' if post.apply_url else 'cta' }}" href="mailto:{{ post.apply_email }}?subject={{ post.title_fr|urlquote }}">{{ t('job.apply_by_email') }}</a>
+      <span class="muted small">{{ post.apply_email }}</span>
+      {% endif %}
+      {% if is_owner %}<a class="ghost" href="{{ url_for('job_post_edit', opp_id=post.id) }}">{{ t('job.edit') }}</a>{% endif %}
+    </div>
+
+    <p class="muted small" style="margin-top: 20px;">{{ t('job.disclaimer') }}</p>
+  </article>
+
+  {% if public and not is_owner %}
+  <div style="margin-top: 14px;">
+    {% with report_type='job', report_id=post.id %}{% include "_report_form.html" %}{% endwith %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -76,9 +76,14 @@ SOURCES = {
                        "url": "https://www.arbeitsagentur.de/jobsuche/", "kind": "job"},
     "jobtech": {"label": "Arbetsförmedlingen (Suède)", "licence": "API JobSearch de JobTech, données ouvertes CC0",
                 "url": "https://arbetsformedlingen.se/platsbanken/", "kind": "job"},
-    "employers": {"label": "Pages carrières d'employeurs du drone (Volatus Aerospace, Zipline, Wing, Skydio, BRINC, Auterion, Elroy Air, Matternet, Unusual Machines, Flyability, Pix4D, Wingcopter, Delair, Anduril, Shield AI, Airbound, TechEagle, Drone Acharya)",
-                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor, BambooHR, Zoho Recruit), lien vers l'offre chez l'employeur",
+    "employers": {"label": "Pages carrières d'employeurs du drone (Volatus Aerospace, Zipline, Wing, Skydio, BRINC, Auterion, Elroy Air, Matternet, Unusual Machines, Inspired Flight, Ondas, Pyka, Zeitview, Flyability, Pix4D, Wingcopter, Delair, Aviant, Anduril, Shield AI, Airbound, TechEagle, Drone Acharya)",
+                  "licence": "flux publics de leurs systèmes de recrutement (Greenhouse, Ashby, Lever, Workable, Personio, Teamtailor, BambooHR, Zoho Recruit, Pinpoint, Breezy), lien vers l'offre chez l'employeur",
                   "url": "https://pilot.aubeetoilee.com/emplois", "kind": "job"},
+    # Offres déposées directement par les entreprises et les écoles (job_posts.py),
+    # vérifiées par l'équipe avant la mise en ligne ; jamais touchées par la collecte.
+    "aubepilot": {"label": "AubePilot (offres déposées par les employeurs)",
+                  "licence": "publiées par l'employeur, vérifiées par l'équipe AubePilot avant la mise en ligne",
+                  "url": "https://pilot.aubeetoilee.com/emplois/publier", "kind": "job"},
 }
 for _s in SOURCES.values():
     _s.setdefault("kind", "tender")
@@ -187,6 +192,11 @@ EMPLOYER_BOARDS = (
     ("airbound", "ashby", "airbound", "Airbound", False, "Inde"),
     ("techeagle", "zoho", "techeagle", "TechEagle", False, "Inde"),
     ("droneacharya", "zoho", "droneacharya", "Drone Acharya", False, "Inde"),
+    ("aviant", "teamtailor", "aviant", "Aviant", False, "Norvège"),
+    ("zeitview", "pinpoint", "zeitview", "Zeitview", False, ""),   # recrute sur plusieurs continents, lieu = ville seule
+    ("ondas", "breezy", "ondas", "Ondas", False, "États-Unis"),
+    ("inspiredflight", "bamboohr", "inspiredflight", "Inspired Flight", False, "États-Unis"),
+    ("pyka", "lever", "pyka", "Pyka", False, "États-Unis"),
 )
 ATS_URLS = {
     "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs",
@@ -198,6 +208,8 @@ ATS_URLS = {
     "bamboohr": "https://{slug}.bamboohr.com/careers/list",
     # API publique du site carrières Zoho Recruit (celle du widget d'offres)
     "zoho": "https://{slug}.zohorecruit.in/recruit/v2/public/Job_Openings?pagename=Careers",
+    "pinpoint": "https://{slug}.pinpointhq.com/postings.json",
+    "breezy": "https://{slug}.breezy.hr/json",
 }
 # Services publics de l'emploi à API ouverte, sans clé.
 # Allemagne : Bundesagentur für Arbeit (Jobsuche, v6 ; clé publique
@@ -272,7 +284,7 @@ TED_HTML_LANG = {"fra": "fr", "eng": "en", "spa": "es", "deu": "de", "ita": "it"
 # Ce qui concerne un professionnel du drone. Le mot « aérien » seul ne suffit
 # pas (ravitailleurs, fret aérien...) : il faut un terme métier.
 KEYWORDS = re.compile(
-    r"\b(drones?|dron|drones|drohnen?\w*|dr[öo]nar\w*|multi[ck]opter\w*|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
+    r"\b(drones?|dron|drones|drohnen?\w*|dr[öo]nar\w*|drone(?:pilot|operat|tekn|tjeneste|f[øo]rer|flyv|flyg)\w*|multi[ck]opter\w*|rpas|satp|uavs?|uas|unmanned (?:aircraft|aerial|air) ?(?:system|vehicle)?s?|"
     r"aeronaves? (?:no tripulada|remotamente pilotada)s?|fotogrametr[ií]a|ortofoto\w*|levantamiento a[ée]reo|"
     r"a[ée]ronefs? (?:t[ée]l[ée]pilot|sans [ée]quipage|sans pilote)\w*|t[ée]l[ée]pilot\w*|remotely piloted\w*|"
     r"lidar|photogramm\w*|orthophoto\w*|orthoimage\w*|orthomosa\w*|"
@@ -1531,6 +1543,16 @@ def parse_employer_board(ats: str, raw: bytes, board: str, employer: str, strict
             loc = ", ".join(x for x in (j.get("City"), j.get("State"), j.get("Country")) if x)
             rows.append((j.get("Posting_Title") or j.get("Job_Opening_Name"), loc, j.get("Country") or "",
                          (j.get("$url") or "").replace("?source=CareerSite", ""), "", (j.get("Job_Type") or "").lower(), str(j.get("id") or "")))
+    elif ats == "pinpoint":
+        for j in (json.loads(raw.decode("utf-8")).get("data") or []):
+            rows.append((j.get("title"), (j.get("location") or {}).get("name") or "", "", j.get("url"), "",
+                         (j.get("employment_type_text") or "").lower(), str(j.get("id") or "")))
+    elif ats == "breezy":
+        for j in json.loads(raw.decode("utf-8")):
+            loc = j.get("location") or {}
+            place = ", ".join(x for x in (loc.get("city"), (loc.get("state") or {}).get("name")) if x) or loc.get("name") or ""
+            rows.append((j.get("name"), place, (loc.get("country") or {}).get("id") or "", j.get("url"), j.get("published_date"),
+                         ((j.get("type") or {}).get("name") or "").lower(), str(j.get("id") or "")))
     elif ats == "teamtailor":
         import xml.etree.ElementTree as ET
         ns = "{https://teamtailor.com/locations}"
@@ -1603,7 +1625,7 @@ LINK_OK = (200, 202, 203, 301, 302, 303, 307, 308)
 LINK_TIMEOUT = 20
 # Adzuna répond 403 à tout robot sur ses pages de redirection : l'API (30 jours
 # glissants) et la date de fin de la fiche font foi, pas le contrôle du lien.
-LINK_CHECK_SKIP = ("adzuna",)
+LINK_CHECK_SKIP = ("adzuna", "aubepilot")   # aubepilot : nos propres fiches /emplois/<id>
 
 
 def link_status(url: str) -> int:

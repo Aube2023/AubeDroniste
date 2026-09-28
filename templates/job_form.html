@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+{# Dépôt ou modification d'une offre d'emploi par une entreprise ou une école
+   (job_posts.py) : gratuit, logo du compte, vérifiée avant la mise en ligne. #}
+<section class="auth-split">
+  <aside class="auth-aside">
+    <span class="eyebrow">{{ t('opp.jobs_nav') }}</span>
+    <h1>{{ t('job.edit_h1') if post else t('job.form_h1') }}</h1>
+    <p class="lead muted">{{ t('job.form_lead') }}</p>
+    <ul class="checklist">
+      <li>{{ t('job.aside_logo') }}</li>
+      <li>{{ t('job.aside_alerts') }}</li>
+      <li>{{ t('job.aside_google') }}</li>
+    </ul>
+    <p class="muted small" style="margin-top: 18px;"><a href="{{ url_for('my_job_posts') }}">{{ t('job.mine_h1') }}</a></p>
+  </aside>
+
+  <form method="post" enctype="multipart/form-data" class="auth-form"
+        action="{{ url_for('job_post_edit', opp_id=post.id) if post else url_for('job_post_new') }}">
+    {{ csrf_input() }}
+    <label>{{ t('job.f_title') }}
+      <input name="title" value="{{ form.title }}" required minlength="5" maxlength="140" placeholder="{{ t('job.f_title_ph') }}">
+    </label>
+    <label>{{ t('job.f_org') }}
+      <input name="org" value="{{ form.org }}" required maxlength="120" autocomplete="organization">
+    </label>
+    <div class="grid-2">
+      <label>{{ t('opp.filter_country') }}
+        <select name="country" required>
+          <option value="">{{ t('job.f_choose') }}</option>
+          {% for value, label in country_options(countries) %}<option value="{{ value }}"{% if value == form.country %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ t('job.f_region') }}
+        <input name="region" value="{{ form.region }}" maxlength="80">
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>{{ t('job.f_city') }}
+        <input name="city" value="{{ form.city }}" maxlength="80">
+      </label>
+      <label>{{ t('job.f_type') }}
+        <select name="employment_type">
+          {% for code in employment_types %}<option value="{{ code }}"{% if code == form.employment_type %} selected{% endif %}>{{ t('job.type.' ~ code) }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <label>{{ t('job.f_salary') }}
+      <input name="salary" value="{{ form.salary }}" maxlength="80" placeholder="{{ t('job.f_salary_ph') }}">
+    </label>
+    <label>{{ t('job.f_description') }}
+      <textarea name="description" rows="10" required minlength="80" maxlength="6000">{{ form.description }}</textarea>
+      <span class="muted small">{{ t('job.f_description_hint') }}</span>
+    </label>
+    <div class="grid-2">
+      <label>{{ t('job.f_apply_url') }}
+        <input name="apply_url" type="text" inputmode="url" value="{{ form.apply_url }}" maxlength="500" placeholder="https://">
+      </label>
+      <label>{{ t('job.f_apply_email') }}
+        <input name="apply_email" type="email" value="{{ form.apply_email }}" maxlength="200">
+      </label>
+    </div>
+    <p class="muted small" style="margin: -4px 0 12px;">{{ t('job.f_apply_hint') }}</p>
+    <label>{{ t('job.f_closes') }}
+      <input name="closes_at" type="date" value="{{ form.closes_at }}" min="{{ min_date }}" max="{{ max_date }}">
+      <span class="muted small">{{ t('job.f_closes_hint', days=default_days, max=max_days) }}</span>
+    </label>
+    <label>{{ t('job.f_logo') }}
+      {% if logo_url %}<img src="{{ logo_url }}" alt="" width="48" height="48" style="display: block; width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #fff; margin: 6px 0;">{% endif %}
+      <input name="logo" type="file" accept="image/png,image/jpeg,image/webp">
+      <span class="muted small">{{ t('job.f_logo_hint', mb=max_logo_mb) }}</span>
+    </label>
+    <button class="cta btn-block" type="submit">{{ t('job.f_submit') }}</button>
+  </form>
+</section>
+{% endblock %}

@@ -3619,7 +3619,7 @@ _BANNED_RX = [re.compile(p, re.IGNORECASE) for p in MESSAGE_BANNED_PATTERNS]
 # ---------------------------------------------------------------------------
 
 REPORT_REASONS = ("spam", "scam", "harassment", "inappropriate", "fake", "other")
-REPORT_TARGETS = ("user", "mission", "thread")
+REPORT_TARGETS = ("user", "mission", "thread", "job")   # job : offre d'emploi déposée (job_posts.py)
 
 
 def block_user(blocker_id: int, blocked_id: int) -> bool:
@@ -4453,6 +4453,9 @@ def export_user_data(user_id: int) -> dict:
                          (user_id, user_id)),
         "contact_messages": rows("SELECT id, topic, body, status, created_at FROM contact_messages "
                                  "WHERE user_id=?", (user_id,)),
+        "job_posts": rows("SELECT id, title_fr AS title, org, country, region, city, employment_type, salary, "
+                          "body, apply_url, apply_email, status, published_at, closes_at FROM opportunities "
+                          "WHERE source='aubepilot' AND posted_by=?", (user_id,)),
         "sessions": rows("SELECT created_at, expires_at, user_agent, ip FROM sessions WHERE user_id=?",
                          (user_id,)),
     }
@@ -4483,12 +4486,17 @@ def delete_account(user_id: int) -> dict:
     blockers = account_deletion_blockers(user_id)
     if blockers:
         return {"ok": False, "blockers": blockers}
-    user = db.fetchone("SELECT username, avatar_path, cover_path FROM users WHERE id=?", (user_id,))
+    user = db.fetchone("SELECT username, avatar_path, cover_path, org_logo_path FROM users WHERE id=?", (user_id,))
     if not user:
         return {"ok": False, "blockers": ["compte introuvable"]}
     with db.transaction():
         db.execute("UPDATE missions SET status='cancelled', updated_at=datetime('now') "
                    "WHERE client_user_id=? AND status='open'", (user_id,), commit=False)
+        # Offres d'emploi déposées par le compte : effacées avec lui (politique de
+        # confidentialité) ; une offre retirée par l'équipe après un signalement
+        # reste pour la modération.
+        db.execute("DELETE FROM opportunities WHERE source='aubepilot' AND posted_by=? AND status != 'hidden'",
+                   (user_id,), commit=False)
         db.execute("UPDATE bids SET status='withdrawn' WHERE pilot_user_id=? AND status='pending'",
                    (user_id,), commit=False)
         for table in ("pilot_certifications", "pilot_drones", "pilot_specialties",
@@ -4500,7 +4508,7 @@ def delete_account(user_id: int) -> dict:
         db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,), commit=False)
         db.execute(
             "UPDATE users SET full_name='Compte supprimé', email=?, phone=NULL, bio=NULL, "
-            "avatar_path=NULL, cover_path=NULL, lat=NULL, lng=NULL, city=NULL, is_verified=0, is_admin=0, "
+            "avatar_path=NULL, cover_path=NULL, org_logo_path=NULL, lat=NULL, lng=NULL, city=NULL, is_verified=0, is_admin=0, "
             "notify_bids=0, notify_messages=0, notify_alerts=0, notify_news=0, "
             "deleted_at=datetime('now') WHERE id=?",
             (f"deleted-{user_id}@invalid.local", user_id), commit=False,
@@ -4513,7 +4521,7 @@ def delete_account(user_id: int) -> dict:
         auth.remove_local_password(user["username"])
     except Exception as exc:
         log.warning("suppression mdp local de %s : %s", user["username"], exc)
-    for rel in (user["avatar_path"], user["cover_path"]):
+    for rel in (user["avatar_path"], user["cover_path"], user["org_logo_path"]):
         if not rel:
             continue
         try:
@@ -4532,13 +4540,13 @@ def delete_account(user_id: int) -> dict:
 
 def _remove_user_uploads(user_id: int) -> int:
     """Efface du disque tous les fichiers nommes d'apres l'utilisateur
-    (`u<id>_*`, `avatar_u<id>_*`, `cover_u<id>_*`, dossier `portfolio_u<id>/`). Retourne le
-    nombre de fichiers retires ; ne leve jamais (la suppression du compte est
-    deja engagee en base)."""
+    (`u<id>_*`, `avatar_u<id>_*`, `cover_u<id>_*`, `orglogo_u<id>_*`, dossier `portfolio_u<id>/`).
+    Retourne le nombre de fichiers retires ; ne leve jamais (la suppression du
+    compte est deja engagee en base)."""
     import shutil
     from config import UPLOAD_DIR
     removed = 0
-    prefixes = (f"u{user_id}_", f"avatar_u{user_id}_", f"cover_u{user_id}_")
+    prefixes = (f"u{user_id}_", f"avatar_u{user_id}_", f"cover_u{user_id}_", f"orglogo_u{user_id}_")
     try:
         for name in os.listdir(UPLOAD_DIR):
             full = os.path.join(UPLOAD_DIR, name)
@@ -4608,7 +4616,8 @@ def list_opportunities(*, kind: str = "", country: str = "", region: str = "", s
         q.append("AND (lower(title_fr) LIKE ? OR lower(title_en) LIKE ? OR lower(org) LIKE ? OR lower(summary_fr) LIKE ?)")
         args.extend([like, like, like, like])
     if kind == "job":
-        q.append("ORDER BY status='published' DESC, published_at DESC, id DESC LIMIT ?")
+        # Les offres déposées sur AubePilot par les employeurs d'abord (vérifiées, avec logo).
+        q.append("ORDER BY status='published' DESC, source='aubepilot' DESC, published_at DESC, id DESC LIMIT ?")
     else:
         q.append("ORDER BY status='published' DESC, closes_at IS NULL, closes_at, id DESC LIMIT ?")
     args.append(limit)
@@ -4621,6 +4630,11 @@ def localize_opportunities(items: list, lang: str) -> list:
     français a sa version et les autres langues lisent l'anglais."""
     import json as _json
     fr = (lang == "fr")
+    # Offres déposées par les employeurs : fiche servie par AubePilot, logo du compte.
+    logos = {}
+    if any(o.get("source") == "aubepilot" for o in items):
+        import job_posts
+        logos = job_posts.logos_for(o.get("posted_by") for o in items if o.get("source") == "aubepilot")
     for o in items:
         extra = {}
         if o.get("i18n"):
@@ -4641,6 +4655,11 @@ def localize_opportunities(items: list, lang: str) -> list:
                              "employers": "page carrières de l'employeur" if fr else "employer careers page"}.get(o.get("source"), o.get("source"))
         o["source_url"] = {"jobbank": "https://www.guichetemplois.gc.ca/" if fr else "https://www.jobbank.gc.ca/",
                            "adzuna": "https://www.adzuna.com/"}.get(o.get("source"), "")   # attribution demandée par ces sources
+        if o.get("source") == "aubepilot":
+            o["internal"] = True
+            o["url"] = i18n.url_prefix(lang) + f"/emplois/{o['id']}"
+            o["source_label"] = "AubePilot"
+            o["logo_url"] = logos.get(o.get("posted_by"), "")
     return items
 
 

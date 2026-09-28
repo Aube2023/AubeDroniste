@@ -1,11 +1,17 @@
-"""Opportunités : appels d'offres publics repris de données ouvertes."""
+"""Opportunités : appels d'offres publics repris de données ouvertes.
+
+Les dates de clôture des fixtures sont en 2099 : la collecte ferme les avis
+échus (expire) et les pages ne montrent que ceux encore ouverts, en les
+comparant au jour réel. Une clôture proche faisait échouer le test de
+collecte à partir de ce jour-là (avis SEAO clos le 2026-09-24).
+"""
 import json
 
 import opportunities as opp
 
 CSV = '﻿"title-titre-eng","title-titre-fra","referenceNumber-numeroReference","publicationDate-datePublication","tenderClosingDate-appelOffresDateCloture","regionsOfDelivery-regionsLivraison-fra","contractingEntityName-nomEntitContractante-fra","contractingEntityAddressCity-entiteContractanteAdresseVille-fra","noticeType-avisType-fra","tenderDescription-descriptionAppelOffres-eng","tenderDescription-descriptionAppelOffres-fra","gsinDescription-nibsDescription-fra","unspscDescription-eng"\n' \
-      '"Aerial LiDAR survey","Levé LiDAR aéroporté","cb-26-1","2026-09-10","2026-10-15T14:00:00","*Canada\n*Québec (sauf RCN)","Ressources naturelles Canada","Sherbrooke","Demande de propositions","Acquisition of airborne lidar data over the region. ' + "x" * 600 + '","Acquisition de données lidar aéroportées sur la région.","",""\n' \
-      '"Office chairs","Chaises de bureau","cb-26-2","2026-09-10","2026-10-15T14:00:00","*Ontario","SPAC","Ottawa","Demande de propositions","Chairs","Chaises","",""\n'
+      '"Aerial LiDAR survey","Levé LiDAR aéroporté","cb-26-1","2026-09-10","2099-10-15T14:00:00","*Canada\n*Québec (sauf RCN)","Ressources naturelles Canada","Sherbrooke","Demande de propositions","Acquisition of airborne lidar data over the region. ' + "x" * 600 + '","Acquisition de données lidar aéroportées sur la région.","",""\n' \
+      '"Office chairs","Chaises de bureau","cb-26-2","2026-09-10","2099-10-15T14:00:00","*Ontario","SPAC","Ottawa","Demande de propositions","Chairs","Chaises","",""\n'
 
 
 def test_parse_canadabuys_filtre_et_resume():
@@ -13,7 +19,7 @@ def test_parse_canadabuys_filtre_et_resume():
     assert [i["source_ref"] for i in items] == ["cb-26-1"]
     it = items[0]
     assert it["region"] == "Québec" and it["regions_raw"] == "Canada, Québec (sauf RCN)"
-    assert it["closes_at"] == "2026-10-15" and it["published_at"] == "2026-09-10"
+    assert it["closes_at"] == "2099-10-15" and it["published_at"] == "2026-09-10"
     assert it["url_fr"].endswith("/appels-d-offres/cb-26-1") and "/en/" in it["url_en"]
     assert it["specialties"] == "topographie"
     assert len(it["summary_en"]) <= opp.SUMMARY_CHARS + 1 and it["summary_en"].endswith("…")
@@ -33,7 +39,7 @@ def _seao_payload():
          "buyer": {"name": "Ministère des Ressources naturelles"},
          "parties": [{"name": "MRNF", "roles": ["buyer"], "address": {"locality": "Québec", "region": "QC"}}],
          "tender": {"title": "Levés laser aéroporté (Lidar) et photogrammétrie", "status": "active",
-                    "tenderPeriod": {"startDate": "2026-09-08", "endDate": "2026-09-24T12:00:00-04:00"},
+                    "tenderPeriod": {"startDate": "2026-09-08", "endDate": "2099-09-24T12:00:00-04:00"},
                     "documents": [{"url": "https://seao.gouv.qc.ca/avis/1"}], "items": [{"description": "Services de levés"}]}},
         {"ocid": "ocds-2", "tag": ["tenderUpdate"], "tender": {"title": "Location drones", "status": "complete", "items": []}},
         {"ocid": "ocds-3", "tag": ["tender"], "tender": {"title": "Implants orthopédiques", "status": "active", "items": []}},
@@ -44,13 +50,13 @@ def test_parse_seao():
     items, closed = opp.parse_seao(_seao_payload())
     assert [i["source_ref"] for i in items] == ["ocds-1"] and closed == ["ocds-2"]
     it = items[0]
-    assert it["region"] == "Québec" and it["city"] == "Québec" and it["closes_at"] == "2026-09-24"
+    assert it["region"] == "Québec" and it["city"] == "Québec" and it["closes_at"] == "2099-09-24"
     assert it["url_fr"] == "https://seao.gouv.qc.ca/avis/1" and "3d" in it["specialties"]
 
 
-AU_XML = b"""<rss><channel><item><title>DAF-2026-44: Aerial LiDAR survey of floodplains</title><link>https://www.tenders.gov.au/Atm/Show/ae88</link><description>&lt;p&gt;Agency: Department of Agriculture. Capture airborne LiDAR and orthophoto imagery by drone over New South Wales floodplains. Close Date: 15-Oct-2026 2:00 pm&lt;/p&gt;</description><pubDate>Tue, 25 Aug 2026 00:00:00 GMT</pubDate></item>
+AU_XML = b"""<rss><channel><item><title>DAF-2026-44: Aerial LiDAR survey of floodplains</title><link>https://www.tenders.gov.au/Atm/Show/ae88</link><description>&lt;p&gt;Agency: Department of Agriculture. Capture airborne LiDAR and orthophoto imagery by drone over New South Wales floodplains. Close Date: 15-Oct-2099 2:00 pm&lt;/p&gt;</description><pubDate>Tue, 25 Aug 2026 00:00:00 GMT</pubDate></item>
 <item><title>DFAT-1111: Mid-Term Review</title><link>https://www.tenders.gov.au/Atm/Show/x</link><description>evaluation team</description></item></channel></rss>"""
-NZ_XML = b"""<rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><item><title>RFP 2026-77 Drone inspection of bridges</title><link>https://www.gets.govt.nz//NZTA/ExternalTenderDetails.htm?id=34580891</link><description>&lt;table&gt;&lt;tr&gt;&lt;td&gt;Organisation: &lt;/td&gt;&lt;td&gt;Waka Kotahi&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Close date: &lt;/td&gt;&lt;td&gt;Thursday, 15 October 2026 4:00 PM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Region: &lt;/td&gt;&lt;td&gt;Canterbury&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Overview: &lt;/td&gt;&lt;td&gt;UAV-based inspection of 40 bridges with photogrammetry deliverables.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</description><dc:date>2026-08-03T20:00:00Z</dc:date></item></channel></rss>"""
+NZ_XML = b"""<rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><item><title>RFP 2026-77 Drone inspection of bridges</title><link>https://www.gets.govt.nz//NZTA/ExternalTenderDetails.htm?id=34580891</link><description>&lt;table&gt;&lt;tr&gt;&lt;td&gt;Organisation: &lt;/td&gt;&lt;td&gt;Waka Kotahi&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Close date: &lt;/td&gt;&lt;td&gt;Thursday, 15 October 2099 4:00 PM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Region: &lt;/td&gt;&lt;td&gt;Canterbury&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Overview: &lt;/td&gt;&lt;td&gt;UAV-based inspection of 40 bridges with photogrammetry deliverables.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</description><dc:date>2026-08-03T20:00:00Z</dc:date></item></channel></rss>"""
 
 
 JB_EN = b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -164,17 +170,17 @@ def _secop_rows():
     return [{"nombre_del_procedimiento": "LEVANTAMIENTO TOPOGRAFICO CON DRON Y FOTOGRAMETRIA", "descripci_n_del_procedimiento": "Levantamiento aereo con dron RTK",
              "id_del_proceso": "CO1.REQ.1", "entidad": "ALCALDIA DE MEDELLIN", "departamento_entidad": "Antioquia", "ciudad_entidad": "Medellín",
              "urlproceso": {"url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.1"},
-             "modalidad_de_contratacion": "Mínima cuantía", "fecha_de_publicacion_del": "2026-09-10T00:00:00.000", "fecha_de_recepcion_de": "2026-09-25T00:00:00.000"},
+             "modalidad_de_contratacion": "Mínima cuantía", "fecha_de_publicacion_del": "2026-09-10T00:00:00.000", "fecha_de_recepcion_de": "2099-09-25T00:00:00.000"},
             {"nombre_del_procedimiento": "COMPRA DE SILLAS", "descripci_n_del_procedimiento": "sillas", "id_del_proceso": "CO1.REQ.2", "urlproceso": {"url": "x"}}]
 
 
 def test_parse_sources_monde():
     au = opp.parse_austender(opp._rss_items(AU_XML))
-    assert len(au) == 1 and au[0]["closes_at"] == "2026-10-15" and au[0]["region"] == "New South Wales" and au[0]["org"] == "Department of Agriculture"
+    assert len(au) == 1 and au[0]["closes_at"] == "2099-10-15" and au[0]["region"] == "New South Wales" and au[0]["org"] == "Department of Agriculture"
     nz = opp.parse_gets(opp._rss_items(NZ_XML))
-    assert len(nz) == 1 and nz[0]["closes_at"] == "2026-10-15" and nz[0]["region"] == "Canterbury" and nz[0]["url_fr"].startswith("https://www.gets.govt.nz/NZTA/")
+    assert len(nz) == 1 and nz[0]["closes_at"] == "2099-10-15" and nz[0]["region"] == "Canterbury" and nz[0]["url_fr"].startswith("https://www.gets.govt.nz/NZTA/")
     co = opp.parse_secop(_secop_rows())
-    assert len(co) == 1 and co[0]["region"] == "Antioquia" and co[0]["closes_at"] == "2026-09-25" and "topographie" in co[0]["specialties"]
+    assert len(co) == 1 and co[0]["region"] == "Antioquia" and co[0]["closes_at"] == "2099-09-25" and "topographie" in co[0]["specialties"]
     us = opp.parse_samgov({"opportunitiesData": [{"noticeId": "abc", "title": "UAS LiDAR mapping services", "active": "Yes", "responseDeadLine": "2026-10-01",
                                                  "uiLink": "https://sam.gov/opp/abc/view", "fullParentPathName": "DEPT OF THE INTERIOR.BLM", "placeOfPerformance": {"state": {"code": "CO"}}}]})
     assert len(us) == 1 and us[0]["region"] == "Colorado" and us[0]["country"] == "États-Unis"
@@ -185,7 +191,7 @@ def _ted_notices():
             (("ENG", "en"), ("FRA", "fr"), ("DEU", "de"))}
     return [
         {"publication-number": "604138-2026", "buyer-country": ["DEU"], "publication-date": "2026-09-02+02:00",
-         "deadline-receipt-tender-date-lot": ["2026-10-07+02:00"], "notice-type": "cn-standard",
+         "deadline-receipt-tender-date-lot": ["2099-10-07+02:00"], "notice-type": "cn-standard",
          "notice-title": {"eng": "Germany – Surveying instruments – LiDAR-Sensorpaket", "fra": "Allemagne – Instruments de géodésie – LiDAR-Sensorpaket", "deu": "Deutschland – Vermessungsinstrumente – LiDAR-Sensorpaket"},
          "buyer-name": {"deu": ["Christian-Albrechts-Universität zu Kiel"]}, "description-lot": {"deu": ["LiDAR-Sensorpaket für Drohnenbefliegung"]},
          "links": {"html": html}},
@@ -196,7 +202,7 @@ def _ted_notices():
 def _boamp_records():
     return [
         {"idweb": "26-90001", "objet": "Relevé photogrammétrique du littoral par drone", "nomacheteur": "Métropole de Lyon",
-         "dateparution": "2026-09-10", "datelimitereponse": "2026-10-20T12:00:00+00:00", "code_departement": ["69"],
+         "dateparution": "2026-09-10", "datelimitereponse": "2099-10-20T12:00:00+00:00", "code_departement": ["69"],
          "nature_libelle": "Avis de marché", "type_marche": ["SERVICES"], "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:26-90001",
          "descripteur_libelle": ["Topographie"], "resume": "Acquisition d'orthophotos par drone sur le littoral."},
         {"idweb": "26-90002", "objet": "Spectacle pyrotechnique", "nomacheteur": "Mairie", "code_departement": ["06"], "resume": "Feu d'artifice"},
@@ -207,7 +213,7 @@ def _uk_releases():
     return [
         {"ocid": "ocds-b5fd17-uk1", "date": "2026-09-05T10:00:00Z", "buyer": {"name": "Environment Agency"},
          "tender": {"title": "Drone survey of coastal defences", "description": "Aerial survey by UAV with LiDAR and photogrammetry outputs.",
-                    "status": "active", "tenderPeriod": {"endDate": "2026-10-15T12:00:00Z"}, "mainProcurementCategory": "services",
+                    "status": "active", "tenderPeriod": {"endDate": "2099-10-15T12:00:00Z"}, "mainProcurementCategory": "services",
                     "items": [{"deliveryAddresses": [{"region": "UKK South West", "locality": "Exeter"}]}],
                     "documents": [{"url": "https://www.contractsfinder.service.gov.uk/Notice/uk1"}]}},
         {"ocid": "ocds-b5fd17-uk2", "buyer": {"name": "Council"}, "tender": {"title": "Taxi services", "description": "Cars", "status": "active"}},
@@ -218,9 +224,9 @@ def test_parse_sources_europe():
     ted = opp.parse_ted(_ted_notices())
     assert len(ted) == 1 and ted[0]["country"] == "Allemagne" and ted[0]["title_fr"] == "LiDAR-Sensorpaket"
     assert ted[0]["titles"]["de"] == "LiDAR-Sensorpaket" and ted[0]["urls"]["de"].endswith("/de/notice/-/detail/604138-2026")
-    assert ted[0]["closes_at"] == "2026-10-07" and "topographie" in ted[0]["specialties"]
+    assert ted[0]["closes_at"] == "2099-10-07" and "topographie" in ted[0]["specialties"]
     bo = opp.parse_boamp(_boamp_records())
-    assert len(bo) == 1 and bo[0]["region"] == "Auvergne-Rhône-Alpes" and bo[0]["closes_at"] == "2026-10-20" and bo[0]["category"] == "services"
+    assert len(bo) == 1 and bo[0]["region"] == "Auvergne-Rhône-Alpes" and bo[0]["closes_at"] == "2099-10-20" and bo[0]["category"] == "services"
     uk = opp.parse_contractsfinder(_uk_releases())
     assert len(uk) == 1 and uk[0]["region"] == "South West" and uk[0]["city"] == "Exeter" and uk[0]["country"] == "Royaume-Uni"
 
@@ -265,6 +271,12 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
             return b'{"jobs": []}'
         if url.startswith("https://api.lever.co/"):
             return b"[]"
+        if ".pinpointhq.com/" in url:
+            return b'{"data": []}'
+        if ".breezy.hr/" in url:
+            return b"[]"
+        if url.startswith("https://aviant.teamtailor.com/") or url.startswith("https://inspiredflight.bamboohr.com/"):
+            return b'<rss><channel></channel></rss>' if "teamtailor" in url else b'{"result": []}'
         if ".zohorecruit.in/" in url:
             return b'{"data": []}'
         if url.startswith("https://jobsearch.api.jobtechdev.se/"):
@@ -277,6 +289,9 @@ def test_collecte_page_dashboard_admin_et_digest(client, auth_client, make_user,
         _ba_payload() if "was=Drohnenpilot&" in url and headers.get("X-API-Key") == "jobboerse-jobsuche" else {"ergebnisliste": []}).encode("utf-8"))
     monkeypatch.setattr(opp, "ADZUNA_APP_ID", "id"); monkeypatch.setattr(opp, "ADZUNA_APP_KEY", "key")
     monkeypatch.setattr(opp, "ADZUNA_PAUSE", 0); monkeypatch.setattr(opp, "JOBBANK_PAUSE", 0)
+    # Offres sans date de fin : fermées JOB_DAYS après leur publication (septembre
+    # 2026 dans les fixtures) ; ici, jamais, quel que soit le jour du test.
+    monkeypatch.setattr(opp, "JOB_DAYS", 36500)
     monkeypatch.setattr(opp, "_post_json", lambda url, payload, timeout=120: {"notices": _ted_notices(), "totalNoticeCount": 2})
     # Liens : tout répond sauf l'avis SEAO (mort) -> retiré du site.
     monkeypatch.setattr(opp, "link_status", lambda url: 404 if "seao.gouv.qc.ca/avis/1" in url else 200)
@@ -445,7 +460,7 @@ def _jobtech_payload():
         {"id": "30001", "headline": "UAS Flight Manager to UMS Skeldar in Linköping", "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/30001",
          "employer": {"name": "UMS Skeldar Sweden AB"}, "workplace_address": {"municipality": "Linköping", "region": "Östergötlands län"},
          "description": {"text": "Leda flygoperationer med obemannade system."}, "employment_type": {"label": "Vanlig anställning"},
-         "publication_date": "2026-09-20T10:00:00", "application_deadline": "2027-02-21T23:59:59"},
+         "publication_date": "2026-09-20T10:00:00", "application_deadline": "2099-02-21T23:59:59"},
         {"id": "30002", "headline": "Business Strategist – Drönare, Drönarskydd & AI", "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/30002",
          "employer": {"name": "Securitas"}, "workplace_address": {"region": "Stockholms län"}},
     ]}
@@ -468,9 +483,29 @@ def test_parse_emplois_allemagne_suede_et_zoho_inde():
     assert de[0]["country"] == "Allemagne" and de[0]["closes_at"] == "2026-10-15" and de[0]["notice_type"] == "Vollzeit, unbefristet"
     se = opp.parse_jobtech(_jobtech_payload())
     assert [(j["title_fr"][:17], j["country"], j["region"], j["closes_at"]) for j in se] == [
-        ("UAS Flight Manage", "Suède", "Östergötlands län", "2027-02-21")]   # « Drönarskydd » = anti-drone
+        ("UAS Flight Manage", "Suède", "Östergötlands län", "2099-02-21")]   # « Drönarskydd » = anti-drone
     assert opp.job_matches("Drönarpilot sökes") and opp.job_matches("Mechatroniker Drohnenproduktion")
     assert not opp.job_matches("Fachkraft Metall / Bootsbauer (m/w/d) Drohnenboote")
     ind = opp.parse_employer_board("zoho", ZOHO_TECHEAGLE, "techeagle", "TechEagle", False, "Inde")
     assert [(j["title_en"], j["country"], j["city"]) for j in ind] == [("Field Operations Trainee", "Inde", ""), ("Drone Pilot", "Inde", "Gurugram")]
     assert ind[1]["url_fr"] == "https://techeagle.zohorecruit.in/jobs/Careers/9434802/Drone-Pilot" and ind[1]["closes_at"] is None
+
+
+def test_parse_pages_carrieres_pinpoint_breezy_et_mots_nordiques():
+    pp = json.dumps({"data": [
+        {"id": "31", "title": "Drone Pilot (Contractor)", "url": "https://zeitview.pinpointhq.com/en/postings/abc", "employment_type_text": "Contract",
+         "location": {"name": "London"}},
+        {"id": "32", "title": "Director of Human Resources", "url": "https://zeitview.pinpointhq.com/en/postings/def", "location": {"name": "Sydney"}},
+    ]}).encode("utf-8")
+    z = opp.parse_employer_board("pinpoint", pp, "zeitview", "Zeitview", False, "")
+    assert [(i["title_en"], i["country"], i["city"], i["notice_type"]) for i in z] == [("Drone Pilot (Contractor)", "International", "London", "contract")]
+    bz = json.dumps([
+        {"id": "274f", "name": "Electronics Engineering Technician", "url": "https://ondas.breezy.hr/p/274f-electronics", "published_date": "2026-04-23T17:53:44.830Z",
+         "type": {"name": "Full-Time"}, "location": {"country": {"id": "US"}, "state": {"name": "California"}, "city": "Sunnyvale", "name": "Sunnyvale, CA"}},
+        {"id": "1483", "name": "Tax Manager", "url": "https://ondas.breezy.hr/p/1483", "location": {"country": {"id": "US"}, "city": "West Palm Beach"}},
+    ]).encode("utf-8")
+    o = opp.parse_employer_board("breezy", bz, "ondas", "Ondas", False, "États-Unis")
+    assert [(i["title_en"], i["country"], i["region"], i["city"], i["published_at"]) for i in o] == [
+        ("Electronics Engineering Technician", "États-Unis", "California", "Sunnyvale", "2026-04-23")]
+    assert opp.job_matches("Dronepilot til inspeksjon") and opp.job_matches("Droneoperatør")
+    assert not opp.job_matches("Er du den nye selgeren ved Narvesen Dronningens gt. 7")

@@ -1,0 +1,23 @@
+AUBEPILOT, {% if decision == 'published' %}OFFRE EN LIGNE / JOB POSTING LIVE{% else %}OFFRE NON PUBLIÉE / JOB POSTING NOT PUBLISHED{% endif %}
+============================================
+
+[FR]
+{% if decision == 'published' %}Votre offre « {{ post.title_fr }} » est en ligne, avec votre logo, jusqu'au {{ post.closes_at }}.
+Les pilotes de ce pays la recevront dans le courriel du lundi.
+{{ post_url }}{% else %}Votre offre « {{ post.title_fr }} » n'a pas été publiée.
+Motif : {{ note }}
+Vous pouvez la corriger depuis « Mes offres d'emploi » : elle repassera en vérification.
+{{ mine_url }}{% endif %}
+
+------------------------------------------------------------
+
+[EN]
+{% if decision == 'published' %}Your posting "{{ post.title_fr }}" is live, with your logo, until {{ post.closes_at }}.
+Pilots in that country will receive it in the Monday email.
+{{ post_url }}{% else %}Your posting "{{ post.title_fr }}" was not published.
+Reason: {{ note }}
+You can correct it from "My job postings": it will go back to review.
+{{ mine_url }}{% endif %}
+
+------------------------------------------------------------
+AubePilot · {{ year }} · pilot.aubeetoilee.com

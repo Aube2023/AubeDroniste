@@ -1,0 +1,41 @@
+{% extends "emails/_layout.html" %}
+{% block subject %}{% if decision == 'published' %}Offre en ligne / Job posting live{% else %}Offre non publiée / Job posting not published{% endif %} : {{ post.title_fr }}{% endblock %}
+{% block preview %}{% if decision == 'published' %}Votre offre d'emploi est en ligne sur AubePilot · Your job posting is live on AubePilot.{% else %}Votre offre d'emploi n'a pas été publiée · Your job posting was not published.{% endif %}{% endblock %}
+
+{% block content %}
+{% set ok = decision == 'published' %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="padding:36px 32px 12px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">FR, {% if ok %}Offre en ligne{% else %}Offre non publiée{% endif %}</div>
+  <h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.1;font-weight:600;letter-spacing:-0.02em;color:#15181f;margin:0 0 18px;">
+    {% if ok %}Votre offre « {{ post.title_fr }} » est en ligne.{% else %}Votre offre « {{ post.title_fr }} » n'a pas été publiée.{% endif %}
+  </h1>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Elle paraît dans la liste des emplois drone d'AubePilot, avec votre logo, jusqu'au {{ post.closes_at }}. Les pilotes de ce pays la recevront dans le courriel du lundi. Pour la modifier ou la fermer : « Mes offres d'emploi ».
+    {% else %}
+      Motif : <strong>{{ note }}</strong>. Vous pouvez la corriger depuis « Mes offres d'emploi » : elle repassera en vérification.
+    {% endif %}
+  </p>
+  <p style="margin:20px 0 0;">
+    <a href="{{ post_url if ok else mine_url }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">{% if ok %}Voir l'offre{% else %}Mes offres d'emploi{% endif %}</a>
+  </p>
+</td></tr>
+
+<tr><td style="padding:0 32px;"><div style="height:1px;background:#e3ded1;margin:24px 0;"></div></td></tr>
+
+<tr><td style="padding:0 32px 36px;">
+  <div style="font:700 10px/1 'Courier New',Courier,monospace;letter-spacing:0.22em;color:{% if ok %}#1e6f5e{% else %}#b1382c{% endif %};text-transform:uppercase;margin-bottom:12px;">EN, {% if ok %}Job posting live{% else %}Job posting not published{% endif %}</div>
+  <p style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#3b414e;margin:0 0 12px;">
+    {% if ok %}
+      Your posting "{{ post.title_fr }}" is live in the AubePilot drone job list, with your logo, until {{ post.closes_at }}. Pilots in that country will receive it in the Monday email. To edit or close it: "My job postings".
+    {% else %}
+      Your posting "{{ post.title_fr }}" was not published. Reason: <strong>{{ note }}</strong>. You can correct it from "My job postings": it will go back to review.
+    {% endif %}
+  </p>
+  <p style="margin:18px 0 0;">
+    <a href="{{ post_url if ok else mine_url }}" style="display:inline-block;background:#b87519;color:#ffffff;padding:13px 24px;text-decoration:none;font:600 14px/1 'Helvetica Neue',Arial,sans-serif;">{% if ok %}View the posting{% else %}My job postings{% endif %}</a>
+  </p>
+</td></tr>
+</table>
+{% endblock %}

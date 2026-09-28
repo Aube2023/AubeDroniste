@@ -28,6 +28,7 @@ import adsb
 import geocode
 import geoip
 import i18n
+import job_posts
 import meteo
 import payments
 import security
@@ -219,6 +220,7 @@ _static_ver_cache: dict = {}
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
     "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None, "jobs": None,
+    "job_detail": None,
     "partners": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
@@ -841,6 +843,8 @@ def _sitemap_entries() -> list:
         entries.append((f"/pilotes/{p['id']}", str(p.get("lastmod") or "")[:10], "0.7", "weekly", all_langs))
     for m in services.sitemap_missions():
         entries.append((f"/missions/{m['id']}", str(m.get("lastmod") or "")[:10], "0.6", "weekly", all_langs))
+    for p in job_posts.sitemap_posts():
+        entries.append((f"/emplois/{p['id']}", str(p.get("lastmod") or "")[:10], "0.6", "weekly", all_langs))
     for c in services.landing_countries():
         entries.append((f"/pilotes/pays/{c['slug']}", "", "0.6", "weekly", all_langs))
     for c in services.landing_cities():
@@ -1081,11 +1085,219 @@ def jobs():
     return _opportunities_page("job")
 
 
+# ---------------------------------------------------------------------------
+# Offres d'emploi déposées par les entreprises et les écoles (gratuit, avec
+# logo, vérifiées avant la mise en ligne). Métier dans job_posts.py.
+# ---------------------------------------------------------------------------
+
+def _job_form_context(form: dict, post=None) -> dict:
+    low, high = job_posts.date_bounds()
+    page = seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="job.edit_h1" if post else "job.form_h1",
+                           robots="noindex, nofollow")
+    return {"form": form, "post": post, "employment_types": job_posts.EMPLOYMENT_TYPES,
+            "logo_url": job_posts.logo_url(g.user["id"]), "max_logo_mb": job_posts.MAX_LOGO_MB,
+            "default_days": job_posts.DEFAULT_DAYS, "max_days": job_posts.MAX_DAYS,
+            "min_date": low, "max_date": high, "seo": page}
+
+
+def _job_mail_admin(opp_id: int, fields: dict, edited: bool) -> None:
+    """Prévient l'équipe qu'une offre attend sa vérification. Jamais bloquant."""
+    u = g.user
+    try:
+        mailer.send(
+            to=CONTACT_EMAIL,
+            subject=f"[AubePilot] Offre d'emploi à vérifier : {fields['title']} ({fields['org']})",
+            template="contact_message",
+            context={"name": u.get("full_name") or u.get("username") or "", "email": u.get("email") or "",
+                     "topic": "Offre d'emploi modifiée" if edited else "Offre d'emploi à vérifier",
+                     "body": (f"{fields['title']}\n{fields['org']} · {fields['city']} {fields['region']} "
+                              f"{fields['country']}\n\n{fields['description'][:1500]}\n\n"
+                              f"À valider : {url_for('admin_opportunities', _external=True)}"),
+                     "user": {"id": u["id"], "username": u.get("username") or ""}, "ip": ""},
+        )
+    except Exception as exc:
+        log.warning("courriel d'offre #%s à vérifier non envoyé : %s", opp_id, exc)
+
+
+def _job_mail_poster(post: dict, decision: str, note: str = "") -> None:
+    """Prévient l'auteur que son offre est en ligne ou refusée (avec le motif)."""
+    try:
+        poster = db.fetchone("SELECT email FROM users WHERE id=? AND deleted_at IS NULL", (post["posted_by"],))
+        if not poster:
+            return
+        ok = decision == "published"
+        mailer.send(
+            to=poster["email"],
+            subject=(f"Votre offre est en ligne / Your job posting is live : {post['title_fr']}" if ok else
+                     f"Votre offre n'a pas été publiée / Your job posting was not published : {post['title_fr']}"),
+            template="job_post_reviewed",
+            context={"post": post, "decision": decision, "note": note,
+                     "post_url": seo.CANONICAL_BASE + f"/emplois/{post['id']}",
+                     "mine_url": seo.CANONICAL_BASE + "/espace/offres"},
+        )
+    except Exception as exc:
+        log.warning("courriel de revue d'offre #%s non envoyé : %s", post.get("id"), exc)
+
+
+def _job_save(post, fields: dict, errors: list):
+    """Enregistre une offre neuve (post=None) ou modifiée, logo compris. En
+    cas d'erreur, le formulaire revient avec ce qui a été saisi."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    logo_rel = ""
+    if not errors:
+        logo_rel, logo_err = job_posts.save_logo(request.files.get("logo"), g.user["id"])
+        if logo_err:
+            errors.append(logo_err)
+    if errors:
+        for key in errors:
+            flash(i18n.t(key, lang, max=job_posts.MAX_DAYS, mb=job_posts.MAX_LOGO_MB, n=job_posts.MAX_ACTIVE), "error")
+        typed = {k: (request.form.get(k) or "") for k in job_posts.FIELDS}
+        return render_template("job_form.html", **_job_form_context(typed, post)), 400
+    publish = bool(g.user.get("is_admin"))   # l'équipe publie sans se vérifier elle-même
+    if post:
+        job_posts.update(post["id"], g.user["id"], fields, publish=publish)
+        opp_id = post["id"]
+    else:
+        opp_id = job_posts.create(g.user["id"], fields, publish=publish)
+    if logo_rel:
+        _remove_upload(job_posts.set_logo(g.user["id"], logo_rel))
+    security.audit(g.user["id"], "job_post_edited" if post else "job_post_created", target=f"opportunity:{opp_id}")
+    if publish:
+        _ping_index([f"/emplois/{opp_id}", "/emplois"])
+        flash("Offre publiée.", "success")
+    else:
+        _job_mail_admin(opp_id, fields, edited=bool(post))
+        flash(i18n.t("job.updated" if post else "job.sent", lang), "success")
+    return redirect(url_for("my_job_posts"))
+
+
+@app.route("/emplois/publier", methods=["GET", "POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=60)
+def job_post_new():
+    """Formulaire de dépôt d'une offre : tout compte connecté, gratuit."""
+    if request.method == "POST":
+        fields, errors = job_posts.validate(request.form)
+        if job_posts.count_active(g.user["id"]) >= job_posts.MAX_ACTIVE:
+            errors.append("job.err_limit")
+        return _job_save(None, fields, errors)
+    u = g.user
+    form = dict.fromkeys(job_posts.FIELDS, "")
+    form.update(org=job_posts.default_org(u["id"]), city=u.get("city") or "",
+                country=u.get("country") if u.get("country") in COUNTRIES else "",
+                employment_type=job_posts.EMPLOYMENT_TYPES[0])
+    return render_template("job_form.html", **_job_form_context(form))
+
+
+@app.route("/emplois/<int:opp_id>")
+def job_detail(opp_id):
+    """Fiche d'une offre déposée sur AubePilot. En vérification, refusée ou
+    close : visible seulement de son auteur et de l'équipe."""
+    post = job_posts.get(opp_id)
+    if not post:
+        abort(404)
+    user = getattr(g, "user", None)
+    is_owner = bool(user and user["id"] == post.get("posted_by"))
+    is_admin = bool(user and user.get("is_admin"))
+    public = job_posts.is_public(post)
+    if not public and not (is_owner or is_admin):
+        abort(404)
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    logo = job_posts.logo_url(post.get("posted_by"))
+    page_seo = seo.job_posting(
+        lang, post=post, url=seo.lang_url(f"/emplois/{opp_id}", lang),
+        logo=(seo.CANONICAL_BASE + logo) if logo else None,
+        country_code=job_posts.country_iso2(post.get("country") or ""),
+        employment_type=job_posts.SCHEMA_EMPLOYMENT.get(post.get("employment_type") or "", ""),
+    )
+    if not public:
+        page_seo["robots"] = "noindex, nofollow"
+        page_seo.pop("jsonld", None)
+    return render_template("job_detail.html", post=post, logo_url=logo, public=public,
+                           is_owner=is_owner, seo=page_seo)
+
+
+@app.route("/espace/offres")
+@auth.login_required
+def my_job_posts():
+    return render_template("my_job_posts.html", posts=job_posts.list_for_user(g.user["id"]),
+                           logo_url=job_posts.logo_url(g.user["id"]),
+                           seo=seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="job.mine_h1",
+                                               robots="noindex, nofollow"))
+
+
+@app.route("/espace/offres/<int:opp_id>/modifier", methods=["GET", "POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=60)
+def job_post_edit(opp_id):
+    post = job_posts.get(opp_id)
+    if not post or post.get("posted_by") != g.user["id"] or post.get("status") == "hidden":
+        abort(404)
+    if request.method == "POST":
+        fields, errors = job_posts.validate(request.form)
+        return _job_save(post, fields, errors)
+    return render_template("job_form.html", **_job_form_context(job_posts.form_values(post), post))
+
+
+@app.route("/espace/offres/<int:opp_id>/fermer", methods=["POST"])
+@auth.login_required
+def job_post_close(opp_id):
+    if job_posts.close(opp_id, g.user["id"]):
+        flash(i18n.t("job.closed_msg", getattr(g, "lang", i18n.DEFAULT)), "info")
+    return redirect(url_for("my_job_posts"))
+
+
+@app.route("/espace/offres/<int:opp_id>/supprimer", methods=["POST"])
+@auth.login_required
+def job_post_delete(opp_id):
+    if job_posts.delete(opp_id, g.user["id"]):
+        flash(i18n.t("job.deleted_msg", getattr(g, "lang", i18n.DEFAULT)), "info")
+    return redirect(url_for("my_job_posts"))
+
+
+@app.route("/espace/offres/logo/supprimer", methods=["POST"])
+@auth.login_required
+def job_logo_remove():
+    _remove_upload(job_posts.clear_logo(g.user["id"]))
+    flash(i18n.t("job.logo_removed", getattr(g, "lang", i18n.DEFAULT)), "info")
+    return redirect(url_for("my_job_posts"))
+
+
+@app.route("/admin/opportunites/<int:opp_id>/valider", methods=["POST"])
+@auth.admin_required
+def admin_job_approve(opp_id):
+    post = job_posts.approve(opp_id, g.user["id"])
+    if post:
+        _job_mail_poster(post, "published")
+        _ping_index([f"/emplois/{opp_id}", "/emplois"])
+        flash("Offre publiée, l'auteur est prévenu par courriel.", "success")
+    else:
+        flash("Offre introuvable ou déjà traitée.", "error")
+    return redirect(url_for("admin_opportunities"))
+
+
+@app.route("/admin/opportunites/<int:opp_id>/refuser", methods=["POST"])
+@auth.admin_required
+def admin_job_reject(opp_id):
+    note = (request.form.get("note") or "").strip()
+    if len(note) < 3:
+        flash("Indiquez le motif du refus : l'auteur le verra.", "error")
+        return redirect(url_for("admin_opportunities"))
+    post = job_posts.reject(opp_id, g.user["id"], note)
+    if post:
+        _job_mail_poster(post, "rejected", note)
+        flash("Offre refusée, l'auteur est prévenu avec le motif.", "info")
+    else:
+        flash("Offre introuvable ou déjà traitée.", "error")
+    return redirect(url_for("admin_opportunities"))
+
+
 @app.route("/admin/opportunites")
 @auth.admin_required
 def admin_opportunities():
     return render_template("admin_opportunities.html",
-                           items=services.list_opportunities(limit=400, include_hidden=True))
+                           items=services.list_opportunities(limit=400, include_hidden=True),
+                           pending=job_posts.list_pending())
 
 
 @app.route("/admin/opportunites/<int:opp_id>/statut", methods=["POST"])
@@ -2990,7 +3202,8 @@ _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 # Sans cette liste blanche, /media/u1_cert_....pdf servait la piece d'identite
 # d'un pilote a n'importe quel visiteur (contournement total du controle).
 _MEDIA_PUBLIC_RE = re.compile(
-    r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+|partner_\d+_[^/]+)$"
+    r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+|partner_\d+_[^/]+"
+    r"|orglogo_u\d+_[^/]+)$"   # orglogo : logo d'entreprise des offres d'emploi (job_posts.py)
 )
 
 
@@ -3724,6 +3937,11 @@ def report_content():
         if not m:
             abort(404)
         target_user_id, label = m["client_user_id"], f"mission #{m['id']} « {m['title']} »"
+    elif target_type == "job":   # offre d'emploi déposée par une entreprise
+        post = job_posts.get(target_id)
+        if not post:
+            abort(404)
+        target_user_id, label = post.get("posted_by"), f"offre d'emploi #{post['id']} « {post['title_fr']} »"
     else:  # thread : target_id = mission, peer_id = interlocuteur
         peer_id = _to_int(request.form.get("peer_id"))
         if not peer_id or not services.can_message(target_id, g.user["id"], peer_id):

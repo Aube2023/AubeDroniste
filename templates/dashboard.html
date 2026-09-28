@@ -20,6 +20,7 @@
     {% if beacon_enabled %}<a class="ghost" href="{{ url_for('beacon_views.devices_page') }}">{{ t('beacon.nav') }}</a>{% endif %}
     <a class="ghost" href="{{ url_for('pilot_campaign') }}">{{ t('tpl.ma_collecte') }}</a>{% endif %}
     {% if not is_pilot %}<a class="ghost" href="{{ url_for('pilot_edit') }}">{{ t('tpl.devenir_pilote') }}</a>{% endif %}
+    <a class="ghost" href="{{ url_for('my_job_posts') }}">{{ t('job.mine_h1') }}</a>
     <a class="ghost" href="{{ url_for('settings') }}">{{ t('tpl.parametres') }}</a>
   </div>
 </section>

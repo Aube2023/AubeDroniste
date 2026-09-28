@@ -8,6 +8,11 @@
   <span class="eyebrow">{{ t('opp.eyebrow') }}</span>
   <h1>{{ t('opp.jobs_h1') if is_job else t('opp.h1') }}</h1>
   <p class="lead muted">{{ t('opp.jobs_lead') if is_job else t('opp.lead') }}</p>
+  {% if is_job %}
+  {# Offres déposées directement par les employeurs : gratuit, avec logo, vérifié. #}
+  <p style="margin: 14px 0 4px;"><a class="cta" href="{{ url_for('job_post_new') }}">{{ t('job.cta_publish') }}</a></p>
+  <p class="muted small" style="max-width: 60ch; margin: 6px auto 0;">{{ t('job.cta_lead') }}</p>
+  {% endif %}
 </div>
 
 <nav class="dir-tabs" aria-label="{{ t('opp.eyebrow') }}">
@@ -58,7 +63,15 @@
       <span class="tag">{{ t('opp.kind_' ~ o.kind) }}</span>
       <span class="tag tag-open">{{ o.country_label }}{% if o.region and o.region != o.country %} · {{ o.region }}{% endif %}</span>
     </div>
+    {% if o.internal %}
+    {# Offre déposée sur AubePilot : fiche chez nous, logo de l'employeur. #}
+    <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
+      {% if o.logo_url %}<img src="{{ o.logo_url }}" alt="{{ o.org }}" width="48" height="48" loading="lazy" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #fff; flex: none;">{% endif %}
+      <h3 style="margin: 0;"><a href="{{ o.url }}">{{ o.title }}</a></h3>
+    </div>
+    {% else %}
     <h3><a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ o.title }}</a></h3>
+    {% endif %}
     <div class="coords">{{ o.org }}{% if o.city %} · {{ o.city }}{% endif %}</div>
     {% if o.summary %}<p class="muted small" style="margin: 8px 0 0;">{{ o.summary }}</p>{% endif %}
     {% if o.specialties %}
@@ -67,13 +80,17 @@
     <div class="footer">
       {% if o.kind == 'job' %}
       <span class="price">{% if o.published_at %}{{ t('opp.posted') }} {{ o.published_at }}{% endif %}</span>
-      <a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ t('opp.view_job') }}</a>
+      <a href="{{ o.url }}"{% if not o.internal %} target="_blank" rel="noopener nofollow"{% endif %}>{{ t('opp.view_job') }}</a>
       {% else %}
       <span class="price">{% if o.closes_at %}{{ t('opp.closes') }} {{ o.closes_at }}{% else %}{{ t('opp.closes_none') }}{% endif %}</span>
       <a href="{{ o.url }}" target="_blank" rel="noopener nofollow">{{ t('opp.view') }}</a>
       {% endif %}
     </div>
+    {% if o.internal %}
+    <div class="muted small" style="margin-top: 6px;">{{ t('job.direct_source') }}{% if o.employment_type %} · {{ t('job.type.' ~ o.employment_type) }}{% endif %}</div>
+    {% else %}
     <div class="muted small" style="margin-top: 6px;">{{ t('opp.source') }} {% if o.source_url %}<a href="{{ o.source_url }}" target="_blank" rel="noopener">{{ o.source_label }}</a>{% else %}{{ o.source_label }}{% endif %}{% if o.notice_type %} · {{ o.notice_type }}{% endif %}</div>
+    {% endif %}
   </article>
   {% endfor %}
 </div>

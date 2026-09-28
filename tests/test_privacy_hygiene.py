@@ -26,7 +26,8 @@ def test_suppression_compte_efface_les_fichiers_televerses(make_user, app_ctx):
     uid = p["id"]
     mine = [_touch(f"u{uid}_cert_1.pdf"), _touch(f"u{uid}_namechange_1.jpg"),
             _touch(f"u{uid}_rc_1.pdf"), _touch(f"u{uid}_drone_1.jpg"),
-            _touch(f"avatar_u{uid}_1.png"), _touch(f"portfolio_u{uid}/1_photo.jpg")]
+            _touch(f"avatar_u{uid}_1.png"), _touch(f"portfolio_u{uid}/1_photo.jpg"),
+            _touch(f"orglogo_u{uid}_1_abc123.png")]   # logo des offres d'emploi (job_posts.py)
     # Voisins a ne PAS toucher : un autre pilote (prefixe proche) et un livrable.
     other = _touch(f"u{uid}1_cert_1.pdf")
     deliverable = _touch("booking_999999/1_rendu.mp4")

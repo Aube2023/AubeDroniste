@@ -22,7 +22,7 @@
       <h2 style="font-family: var(--serif); font-weight: 600; margin: 0 0 6px;">{{ reasons.get(r.reason, r.reason) }}</h2>
       <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">
         #{{ r.id }} · {{ r.created_at[:16] }} ·
-        {% if r.target_type == 'user' %}profil{% elif r.target_type == 'mission' %}mission #{{ r.target_id }}{% else %}conversation, mission #{{ r.target_id }}{% endif %}
+        {% if r.target_type == 'user' %}profil{% elif r.target_type == 'mission' %}mission #{{ r.target_id }}{% elif r.target_type == 'job' %}offre d'emploi #{{ r.target_id }}{% else %}conversation, mission #{{ r.target_id }}{% endif %}
       </div>
     </div>
     <span class="tag">{{ r.status }}</span>
@@ -45,6 +45,10 @@
       {% endif %}
       {% if r.target_type == 'thread' %}
       <a href="{{ url_for('messages_thread', mission_id=r.target_id, peer_id=r.target_user_id) }}" class="ghost" title="Visible seulement si vous êtes partie au fil">Fil (si partie) →</a>
+      {% endif %}
+      {% if r.target_type == 'job' %}
+      <a href="{{ url_for('job_detail', opp_id=r.target_id) }}" class="ghost">Ouvrir l'offre →</a>
+      <a href="{{ url_for('admin_opportunities') }}" class="ghost" title="Masquer la fiche la retire du site">Opportunités (masquer) →</a>
       {% endif %}
     </div>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">

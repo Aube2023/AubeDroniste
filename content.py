@@ -276,6 +276,12 @@ UPDATES_LANGS = ("fr", "en", "es")
 
 _UPDATES = [
     ("2026-09", {"fr": "Septembre 2026", "en": "September 2026", "es": "Septiembre de 2026"}, [
+        {"fr": "Entreprises et écoles : publiez gratuitement vos offres d'emploi drone, avec votre logo. Chaque "
+               "offre est vérifiée avant sa mise en ligne, puis paraît en tête de la page Emplois.",
+         "en": "Companies and schools: post your drone job offers for free, with your logo. Each offer is checked "
+               "before it goes live, then appears at the top of the Jobs page.",
+         "es": "Empresas y escuelas: publiquen gratis sus ofertas de empleo de dron, con su logotipo. Cada oferta "
+               "se revisa antes de publicarse y luego aparece en lo alto de la página Empleos."},
         {"fr": "Page Part 107 pour les États-Unis : recherche par code ZIP, brevet FAA contrôlé dans le "
                "registre officiel, puce « FAA Part 107 » sur les fiches.",
          "en": "Part 107 page for the United States: ZIP code search, FAA certificate checked against the "

@@ -35,7 +35,7 @@ def test_cgu_reprennent_la_configuration(client):
     assert f"{config.AUTO_RELEASE_DAYS} jours" in html
     assert f"{int(config.CAMPAIGN_FEE_PCT)} % tout compris" in html
     assert f"{config.CANCELLATION_GRACE_HOURS} h après le paiement" in html
-    assert "support@aubemail.com" in html and "Version 2.0" in html
+    assert "support@aubemail.com" in html and "Version 2.1" in html
     # Rien de promis que le code ne fait pas
     assert "abonnés Pro" not in html and "24 h." not in html
 

@@ -190,6 +190,17 @@ _ADD_COLUMNS = [
     ("opportunities", "i18n", "TEXT NOT NULL DEFAULT ''"),
     ("opportunities", "link_checked_at", "TEXT"),
     ("opportunities", "link_status", "INTEGER"),
+    # Offres d'emploi deposees par les entreprises (cf. job_posts.py) : auteur,
+    # fiche complete, candidature, type de poste, motif d'un refus ; le logo
+    # est rattache au compte.
+    ("opportunities", "posted_by", "INTEGER"),
+    ("opportunities", "body", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "apply_url", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "apply_email", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "employment_type", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "salary", "TEXT NOT NULL DEFAULT ''"),
+    ("opportunities", "review_note", "TEXT NOT NULL DEFAULT ''"),
+    ("users", "org_logo_path", "TEXT"),
 ]
 
 # Rattrapage de donnees idempotent, joue apres les colonnes : aligne les
@@ -237,6 +248,7 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_contrib_session ON campaign_contributions(stripe_session_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_pilot_profiles_no ON pilot_profiles(pilot_no)",
     "CREATE INDEX IF NOT EXISTS idx_opp_status_close ON opportunities(status, closes_at)",
+    "CREATE INDEX IF NOT EXISTS idx_opp_posted_by ON opportunities(posted_by, status)",
 ]
 
 
@@ -431,9 +443,16 @@ _ADD_TABLES = [
     specialties   TEXT NOT NULL DEFAULT '',       -- CSV codes MISSION_TYPES
     published_at  TEXT,
     closes_at     TEXT,
-    status        TEXT NOT NULL DEFAULT 'published', -- published | closed | hidden (admin)
+    status        TEXT NOT NULL DEFAULT 'published', -- published | closed | hidden (admin) | pending | rejected (offres deposees)
     first_seen_at TEXT NOT NULL,
     last_seen_at  TEXT NOT NULL,
+    posted_by     INTEGER,                        -- offres deposees sur AubePilot (source 'aubepilot')
+    body          TEXT NOT NULL DEFAULT '',       -- fiche complete d'une offre deposee
+    apply_url     TEXT NOT NULL DEFAULT '',
+    apply_email   TEXT NOT NULL DEFAULT '',
+    employment_type TEXT NOT NULL DEFAULT '',     -- job_posts.EMPLOYMENT_TYPES
+    salary        TEXT NOT NULL DEFAULT '',
+    review_note   TEXT NOT NULL DEFAULT '',       -- motif d'un refus, montre a l'auteur
     UNIQUE(source, source_ref)
 )""",
     # Numero de profil pose a la creation du profil pilote (cf. schema.sql).

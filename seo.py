@@ -454,6 +454,42 @@ def mission_posting(lang="fr", *, mission, mission_type_label="", url=None):
     return {"title": title, "description": desc, "jsonld": [posting]}
 
 
+def job_posting(lang="fr", *, post, url, logo=None, country_code="", employment_type=""):
+    """Offre d'emploi déposée par un employeur (/emplois/<id>) : JobPosting
+    au nom de l'employeur réel (pas d'AubePilot), avec son logo, le lieu et
+    la date de fin, ce que lit Google pour l'emploi. Le titre de la page est
+    celui de l'offre : il n'a rien à traduire."""
+    title_txt = post.get("title_fr") or ""
+    org = post.get("org") or ""
+    body = post.get("body") or title_txt
+    region = post.get("region") if post.get("region") not in ("", None, post.get("country")) else ""
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        "title": title_txt,
+        "description": body,
+        "datePosted": str(post.get("published_at") or post.get("first_seen_at") or "")[:10],
+        "hiringOrganization": {"@type": "Organization", "name": org, **({"logo": logo} if logo else {})},
+        "jobLocation": {"@type": "Place", "address": {
+            "@type": "PostalAddress",
+            **({"addressLocality": post["city"]} if post.get("city") else {}),
+            **({"addressRegion": region} if region else {}),
+            "addressCountry": country_code or post.get("country") or "",
+        }},
+        "directApply": False,
+        "url": url,
+    }
+    if employment_type:
+        ld["employmentType"] = employment_type
+    if post.get("closes_at"):
+        ld["validThrough"] = str(post["closes_at"])[:10] + "T23:59:59"
+    out = {"title": f"{title_txt} · {org} | AubePilot" if org else f"{title_txt} | AubePilot",
+           "description": _truncate(body), "jsonld": [ld]}
+    if logo:
+        out["og_image"] = logo
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # Sitemap : chaque page dans chaque langue, avec ses alternates hreflang
 # --------------------------------------------------------------------------- #
