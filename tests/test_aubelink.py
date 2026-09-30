@@ -281,6 +281,31 @@ def test_page_et_route_liste_blanche(auth_client, beacon, fake):
     assert fake.methods_since(0) == ["GET"]
 
 
+def test_alerte_de_trafic_aubetraffic(auth_client, beacon, fake):
+    """Une alerte de rapprochement d'AubeTraffic (déposée à AubeLink, code du niveau,
+    résumé sans coordonnée) est mise en avant dans le panneau, et passe telle quelle
+    par la route JSON."""
+    u, _, device, _ = beacon
+    acting = _acting(u)
+    fake.add(acting, "AE-XR-001", name="Mavic XR", beacon_id=device["device_uid"])
+    fake.alerts["AE-XR-001"] = [{
+        "id": "evt-t1", "droneId": "AE-XR-001", "flightId": "flight-uuid-1", "category": "ALERT",
+        "code": "CRITICAL_TRAFFIC_ALERT", "severity": "CRITICAL", "source": "SERVER",
+        "message": "C-GABC (AIRCRAFT) DIST 1.6 km BRG 088 +59 m ABOVE CPA 60 m TCPA 23 s CONVERGING",
+        "data": {"alert_id": "2ae5cfdb", "current": {"bearing_deg": 88}}, "timestamp": "2026-09-30T12:31:07.000Z",
+        "acknowledgedAt": None, "clearedAt": None,
+    }, FakeAubeLink._alert("AE-XR-001")]
+    c = auth_client(u["id"])
+    html = c.get(PAGE).get_data(as_text=True)
+    assert '<li class="traffic traffic-critical">CRITICAL_TRAFFIC_ALERT · CRITICAL · C-GABC (AIRCRAFT) DIST 1.6 km' in html
+    assert "<li>LOW_BATTERY · WARNING · Batterie faible</li>" in html
+    view = c.get(ROUTE).get_json()["beacons"][str(device["id"])]
+    codes = [a["code"] for a in view["alerts"]]
+    assert codes == ["CRITICAL_TRAFFIC_ALERT", "LOW_BATTERY"]
+    assert view["alerts"][0]["message"].startswith("C-GABC (AIRCRAFT) DIST 1.6 km BRG 088")
+    assert "alert_id" not in str(view), "le détail (data) ne passe pas, seul le résumé"
+
+
 def test_batterie_absente_et_sans_lien_public(auth_client, beacon, fake, monkeypatch):
     u, _, device, _ = beacon
     monkeypatch.setattr(config, "AUBELINK_PUBLIC_URL", "")

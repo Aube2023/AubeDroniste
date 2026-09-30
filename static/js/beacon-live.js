@@ -307,7 +307,7 @@
       function safeUrl(u) { return typeof u === 'string' && /^https?:\/\//.test(u) ? u : null; }
       function when(ts) { return String(ts).slice(0, 16).replace('T', ' ') + ' UTC'; }
       function setNote(row, text) { setText(row.querySelector('[data-field="al-note"]'), text || ''); }
-      function fillList(ul, items, empty, line) {
+      function fillList(ul, items, empty, line, klass) {
         if (!ul) return;
         while (ul.firstChild) ul.removeChild(ul.firstChild);
         if (!items || !items.length) {
@@ -317,9 +317,46 @@
           ul.appendChild(none);
           return;
         }
-        items.forEach(function (it) { var li = document.createElement('li'); li.textContent = line(it); ul.appendChild(li); });
+        items.forEach(function (it) {
+          var li = document.createElement('li');
+          li.textContent = line(it);
+          var c = klass ? klass(it) : '';
+          if (c) li.className = c;
+          ul.appendChild(li);
+        });
       }
       function alertLine(a) { return (a.code || '·') + ' · ' + (a.severity || '·') + (a.message ? ' · ' + a.message : ''); }
+      // Alertes de rapprochement d'AubeTraffic, relayées par AubeLink : mises en avant, et un
+      // signal sonore quand une alerte critique apparaît (si le navigateur autorise le son).
+      var TRAFFIC_CODES = { TRAFFIC_ADVISORY: 1, PROXIMITY_WARNING: 1, CRITICAL_TRAFFIC_ALERT: 1 };
+      function alertClass(a) { return a && TRAFFIC_CODES[a.code] ? 'traffic traffic-' + String(a.severity || 'info').toLowerCase() : ''; }
+      var seenTraffic = {};
+      var audioCtx = null;
+      function trafficTone() {
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return;
+          if (!audioCtx) audioCtx = new Ctx();
+          if (audioCtx.state !== 'running') return;   // pas de geste de l'utilisateur : le navigateur refuse, on n'insiste pas
+          [[1000, 0], [1400, 0.15], [1000, 0.3], [1400, 0.45]].forEach(function (step) {
+            var osc = audioCtx.createOscillator(), amp = audioCtx.createGain();
+            var t = audioCtx.currentTime + step[1];
+            osc.type = 'square'; osc.frequency.value = step[0];
+            amp.gain.setValueAtTime(0, t); amp.gain.linearRampToValueAtTime(0.2, t + 0.01);
+            amp.gain.setValueAtTime(0.2, t + 0.1); amp.gain.linearRampToValueAtTime(0, t + 0.12);
+            osc.connect(amp).connect(audioCtx.destination); osc.start(t); osc.stop(t + 0.15);
+          });
+        } catch (e) { /* sans son */ }
+      }
+      function noticeTraffic(alerts) {
+        (alerts || []).forEach(function (a) {
+          if (!a || a.code !== 'CRITICAL_TRAFFIC_ALERT') return;
+          var key = (a.timestamp || '') + '|' + (a.message || '');
+          if (seenTraffic[key]) return;
+          seenTraffic[key] = true;
+          trafficTone();
+        });
+      }
       function messageLine(m) {
         var body = (m.kind === 'command' ? m.command : (m.text || m.category)) || '·';
         return (m.direction || '·') + ' · ' + body + ' · ' + (m.status || '·') + (m.createdAt ? ' · ' + when(m.createdAt) : '');
@@ -343,7 +380,8 @@
           var age = part(row, 'age');
           if (age) age.setAttribute('data-ts', dr.lastSeen || '');
           setText(part(row, 'alert-count'), String(dr.activeAlerts == null ? 0 : dr.activeAlerts));
-          fillList(part(row, 'alerts'), view.alerts, AL.noAlerts, alertLine);
+          fillList(part(row, 'alerts'), view.alerts, AL.noAlerts, alertLine, alertClass);
+          noticeTraffic(view.alerts);
           fillList(part(row, 'messages'), view.messages, AL.noMessages, messageLine);
           renderAge(row);
         }

@@ -79,7 +79,7 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
         <div class="bcn-link-lists" data-al="lists"{% if not ald %} hidden{% endif %}>
           <div>
             <span class="k">{{ t('aubelink.alerts') }}</span>
-            <ul data-al="alerts">{% for a in al.alerts or [] %}<li>{{ a.code or '·' }} · {{ a.severity or '·' }}{% if a.message %} · {{ a.message }}{% endif %}</li>{% else %}<li class="empty">{{ t('aubelink.no_alerts') }}</li>{% endfor %}</ul>
+            <ul data-al="alerts">{% for a in al.alerts or [] %}<li{% if a.code in ('TRAFFIC_ADVISORY', 'PROXIMITY_WARNING', 'CRITICAL_TRAFFIC_ALERT') %} class="traffic traffic-{{ (a.severity or 'info')|lower }}"{% endif %}>{{ a.code or '·' }} · {{ a.severity or '·' }}{% if a.message %} · {{ a.message }}{% endif %}</li>{% else %}<li class="empty">{{ t('aubelink.no_alerts') }}</li>{% endfor %}</ul>
           </div>
           <div>
             <span class="k">{{ t('aubelink.messages') }}</span>

@@ -53,6 +53,10 @@
 .bcn-link-lists ul{list-style:none;padding:0;margin:0;font-family:var(--mono);font-size:.78rem;color:var(--ink-soft)}
 .bcn-link-lists li{padding:3px 0;border-top:1px solid var(--rule-soft);overflow-wrap:anywhere}
 .bcn-link-lists li.empty{color:var(--ink-dim)}
+/* Alertes de rapprochement d'AubeTraffic (via AubeLink) : distinctes des alertes du drone. */
+.bcn-link-lists li.traffic{font-weight:600;padding-left:8px;border-left:3px solid var(--ink-dim)}
+.bcn-link-lists li.traffic-warning{border-left-color:#e08a1e;color:#e08a1e}
+.bcn-link-lists li.traffic-critical{border-left-color:#d93025;color:#d93025}
 .bcn-link-links{display:flex;gap:14px;flex-wrap:wrap;margin:0;font-size:.82rem}
 .bcn-link-note{margin:0;font-size:.8rem;color:var(--ink-dim)}
 .bcn-link-note:empty{display:none}
