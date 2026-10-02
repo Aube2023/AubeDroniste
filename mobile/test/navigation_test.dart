@@ -69,4 +69,17 @@ void main() {
                 u('https://pilot.aubeetoilee.com.evil.com/connexion')),
             isTrue));
   });
+
+  group('cancelLabelFor', () {
+    test('francais', () => expect(cancelLabelFor('fr'), 'Annuler'));
+    test('anglais', () => expect(cancelLabelFor('en'), 'Cancel'));
+    test('variante regionale pt-BR -> pt',
+        () => expect(cancelLabelFor('pt-BR'), 'Cancelar'));
+    test('zh_Hans -> zh', () => expect(cancelLabelFor('zh_Hans'), '取消'));
+    test('langue inconnue -> francais',
+        () => expect(cancelLabelFor('xx'), 'Annuler'));
+    test('absente -> francais', () => expect(cancelLabelFor(null), 'Annuler'));
+    test('les 31 langues du site sont couvertes',
+        () => expect(kCancelLabels.length, 31));
+  });
 }

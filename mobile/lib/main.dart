@@ -10,6 +10,7 @@
 //  - PDF (devis) ouverts dans le navigateur (la WebView ne telecharge pas)
 //  - upload de fichiers (brevet, logo, avatar) via le selecteur natif
 //  - deep links : les liens pilot.aubeetoilee.com ouvrent l'app sur la bonne page
+//  - alert() / confirm() / prompt() de la page en boites natives
 //  - splash de premier chargement aux couleurs de la marque
 import 'dart:async';
 
@@ -25,6 +26,10 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 const String kSiteUrl = 'https://pilot.aubeetoilee.com';
 const String kSiteHost = 'pilot.aubeetoilee.com';
 
+/// Version annoncee dans l'agent (`AubePilotMobile/<version>`) : la garder
+/// alignee sur pubspec.yaml.
+const String kAppVersion = '1.5.0';
+
 /// Canal natif (MainActivity.kt) : garde la session entre deux lancements.
 /// Le cookie de session est HttpOnly (invisible du JS) et le CookieManager
 /// Android ne l'ecrit sur disque que par intermittence — le natif le
@@ -35,6 +40,9 @@ const MethodChannel kSessionChannel = MethodChannel('aubepilot/session');
 const Color kInk = Color(0xFF14161F); // noir franc
 const Color kIndigo = Color(0xFF4257B2); // accent indigo
 const Color kPaper = Color(0xFFFFFFFF);
+// Marque (static/brand) : epingle navy et point ciel.
+const Color kBrandNavy = Color(0xFF082744);
+const Color kBrandSky = Color(0xFF2F9BDB);
 
 /// Onglets natifs en bas de l'app. Chaque onglet pointe vers une page du
 /// site ; le header/footer web etant masques, c'est LA navigation de l'app.
@@ -118,6 +126,87 @@ bool shouldOpenExternally(Uri uri) {
   return false;
 }
 
+/// « Annuler » dans les 31 langues du site (cle common.cancel de i18n.py et
+/// translations/*.json) : le bouton suit la langue de la page, comme le
+/// message de la boite. « OK » se comprend partout.
+const Map<String, String> kCancelLabels = {
+  'fr': 'Annuler', 'en': 'Cancel', 'es': 'Cancelar', 'ru': 'Отмена',
+  'hi': 'रद्द करें', 'uk': 'Скасувати', 'tr': 'İptal', 'ur': 'منسوخ کریں',
+  'bn': 'বাতিল করুন', 'ar': 'إلغاء', 'pt': 'Cancelar', 'de': 'Abbrechen',
+  'vi': 'Hủy', 'id': 'Batal', 'zh': '取消', 'ja': 'キャンセル',
+  'it': 'Annulla', 'sw': 'Ghairi', 'tl': 'Kanselahin', 'fa': 'انصراف',
+  'ko': '취소', 'pl': 'Anuluj', 'am': 'ሰርዝ', 'ne': 'रद्द गर्नुहोस्',
+  'th': 'ยกเลิก', 'ta': 'ரத்துசெய்', 'he': 'ביטול', 'ha': 'Soke',
+  'nl': 'Annuleren', 'el': 'Ακύρωση', 'ro': 'Anulează',
+};
+
+/// Libelle « Annuler » pour l'attribut lang de la page (« pt-BR » -> pt),
+/// francais par defaut comme le site. Fonction PURE (testable).
+String cancelLabelFor(String? lang) {
+  final code = (lang ?? '').trim().toLowerCase().split(RegExp('[-_]')).first;
+  return kCancelLabels[code] ?? kCancelLabels['fr']!;
+}
+
+/// Boite native pour alert() (OK seul) et confirm() (Annuler / OK) de la
+/// page. Toucher hors de la boite ou le bouton retour vaut Annuler.
+Future<bool> showJsDialog(BuildContext context, String message,
+    {bool cancellable = true, String cancelLabel = 'Annuler'}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: SingleChildScrollView(child: Text(message)),
+      actions: [
+        if (cancellable)
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(cancelLabel),
+          ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
+
+/// Boite native pour prompt() : le site s'en sert pour montrer un texte a
+/// copier a la main quand la copie automatique echoue.
+Future<String> showJsPrompt(
+    BuildContext context, String message, String? defaultText,
+    {String cancelLabel = 'Annuler'}) async {
+  var text = defaultText ?? '';
+  final value = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (message.isNotEmpty) Text(message),
+          TextFormField(
+            initialValue: text,
+            autofocus: true,
+            onChanged: (v) => text = v,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(cancelLabel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, text),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+  return value ?? '';
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
@@ -152,7 +241,7 @@ class AubePilotApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aube Pilot',
+      title: 'AubePilot',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: kIndigo),
@@ -181,6 +270,7 @@ class _WebHomeState extends State<WebHome> {
   bool _offline = false;
   int _tabIndex = 0;
   bool _dark = false; // suit le theme du site (bouton sombre/clair)
+  String? _pageLang; // attribut lang de la page (boutons des boites)
 
   @override
   void initState() {
@@ -191,7 +281,7 @@ class _WebHomeState extends State<WebHome> {
     _controller = WebViewController.fromPlatformCreationParams(params)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(kPaper)
-      ..setUserAgent('AubePilotMobile/1.4.1 (Android)')
+      ..setUserAgent('AubePilotMobile/$kAppVersion (Android)')
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: _onNavigationRequest,
         onPageStarted: (url) {
@@ -209,6 +299,7 @@ class _WebHomeState extends State<WebHome> {
           unawaited(_controller.runJavaScript(kAppModeJs).catchError((_) {}));
           unawaited(_persistSession());
           unawaited(_syncTheme());
+          unawaited(_syncLang());
           setState(() {
             _loading = false;
             _firstLoad = false;
@@ -241,6 +332,24 @@ class _WebHomeState extends State<WebHome> {
       // <input type="file"> (brevet, logo, avatar) -> selecteur natif
       platform.setOnShowFileSelector(_onShowFileSelector);
     }
+
+    // Sans ces gestionnaires, la WebView n'affiche pas les boites du site :
+    // confirm() repond « non » tout seul et chaque bouton data-confirm
+    // (valider la livraison, litige, annulation, desistement) ne fait rien.
+    unawaited(_controller.setOnJavaScriptAlertDialog((request) async {
+      if (mounted) {
+        await showJsDialog(context, request.message, cancellable: false);
+      }
+    }));
+    unawaited(_controller.setOnJavaScriptConfirmDialog((request) async =>
+        mounted &&
+        await showJsDialog(context, request.message,
+            cancelLabel: cancelLabelFor(_pageLang))));
+    unawaited(_controller.setOnJavaScriptTextInputDialog((request) async =>
+        mounted
+            ? await showJsPrompt(context, request.message, request.defaultText,
+                cancelLabel: cancelLabelFor(_pageLang))
+            : ''));
 
     _bootstrap();
   }
@@ -353,6 +462,16 @@ class _WebHomeState extends State<WebHome> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
     }
+  }
+
+  /// Retient la langue de la page : le bouton Annuler des boites natives la
+  /// suit (le message, lui, vient deja traduit du site).
+  Future<void> _syncLang() async {
+    try {
+      final result = await _controller
+          .runJavaScriptReturningResult('document.documentElement.lang');
+      _pageLang = result.toString().replaceAll('"', '');
+    } catch (_) {}
   }
 
   /// Met en surbrillance l'onglet correspondant a la page affichee
@@ -489,19 +608,27 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: kInk,
+      color: kBrandNavy,
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'AUBE PILOT',
-            style: TextStyle(
-              color: kPaper,
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 4,
+          Image.asset('assets/logo-mark-white.png', width: 84, height: 84),
+          const SizedBox(height: 18),
+          const Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Aube',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                TextSpan(
+                  text: 'Pilot',
+                  style: TextStyle(fontWeight: FontWeight.w400),
+                ),
+              ],
             ),
+            style: TextStyle(color: kPaper, fontSize: 28, letterSpacing: 0.2),
           ),
           const SizedBox(height: 6),
           Text(
@@ -517,7 +644,7 @@ class SplashScreen extends StatelessWidget {
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
-              color: kIndigo,
+              color: kBrandSky,
               strokeWidth: 2.5,
             ),
           ),

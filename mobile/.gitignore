@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Cle de signature Play et ses mots de passe : jamais dans git.
+/cles/

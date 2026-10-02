@@ -9,7 +9,7 @@
     <!-- allowBackup=false : la session (cookies WebView) ne doit pas se
          retrouver dans les sauvegardes extractibles de l'appareil. -->
     <application
-        android:label="Aube Pilot"
+        android:label="AubePilot"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false">

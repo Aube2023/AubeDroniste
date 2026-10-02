@@ -1,7 +1,11 @@
+# Icone de lanceur = logo AubePilot du 2026-09-16 (static/brand/icon-512.svg).
+# icon.png : icone classique (Android < 8) ; icon-foreground.png : premier
+# plan adaptatif deja place dans la zone sure (marque large de 46 dp sur
+# 108 dp), d'ou l'inset a 0.
 flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon.png"
-  adaptive_icon_background: "#14161F"
-  adaptive_icon_foreground: "assets/icon.png"
-  adaptive_icon_foreground_inset: 24
+  adaptive_icon_background: "#082744"
+  adaptive_icon_foreground: "assets/icon-foreground.png"
+  adaptive_icon_foreground_inset: 0

@@ -27,12 +27,17 @@ GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
 
 # App Android (App Links) : sert /.well-known/assetlinks.json pour que les
 # liens https://pilot.aubeetoilee.com s'ouvrent directement dans l'app mobile.
-# Le defaut correspond au certificat DEBUG local ; en release, surcharger
-# ANDROID_CERT_SHA256 (plusieurs empreintes possibles, separees par virgules).
+# Empreintes par defaut : la cle d'importation Play (mobile/cles, APK et AAB
+# depuis la 1.5.0) puis le certificat DEBUG local (APK 1.4.1 et avant, a
+# retirer quand plus personne ne l'utilise). Une fois l'app sur Play, ajouter
+# l'empreinte « Cle de signature de l'application » de la Play Console.
+# Surcharge possible par ANDROID_CERT_SHA256 (empreintes separees par virgules).
 ANDROID_PACKAGE = os.environ.get("ANDROID_PACKAGE", "com.aubeetoilee.aubepilot")
 ANDROID_CERT_SHA256 = [
     f.strip().upper() for f in os.environ.get(
         "ANDROID_CERT_SHA256",
+        "66:B8:84:07:3B:08:3D:C5:3A:D2:80:09:1F:B4:05:80:43:8F:E9:72:A9:8E:"
+        "B0:3F:52:0F:A6:A4:3E:52:0C:2D,"
         "D4:F7:87:FE:6B:A8:3D:76:04:A1:9E:FF:EF:27:24:E4:73:8E:BE:ED:"
         "F8:E8:85:93:97:DC:9C:D4:10:15:5C:CC",
     ).split(",") if f.strip()
