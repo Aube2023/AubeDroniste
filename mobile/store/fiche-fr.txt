@@ -1,0 +1,30 @@
+=== Brève description (80 max) ===
+Trouvez un pilote de drone près de chez vous, ou des missions si vous pilotez.
+
+=== Description complète (4000 max) ===
+AubePilot met en relation les personnes et les entreprises qui ont besoin d'images ou de relevés aériens avec des pilotes de drone, partout dans le monde.
+
+POUR LES CLIENTS
+• Cherchez par code postal, adresse ou ville : les pilotes s'affichent sur la carte et dans la liste, du plus proche au plus éloigné.
+• Chaque fiche montre les brevets, l'assurance, la flotte, le portfolio et les avis des clients.
+• Filtrez sur les pilotes dont le brevet a été contrôlé par notre équipe, ou dont l'attestation d'assurance responsabilité civile a été vérifiée.
+• Publiez une mission gratuitement et recevez des devis, ou écrivez directement à un pilote depuis sa fiche.
+• Payez en ligne : le montant reste retenu par Stripe jusqu'à ce que vous validiez la livraison.
+• Si la mission ne se passe pas comme convenu, ouvrez un litige tant que les fonds sont retenus.
+
+POUR LES PILOTES
+• Créez votre fiche : brevets, spécialités, rayon d'action, drones, forfaits à prix fixe, photos et vidéos.
+• Recevez un courriel quand une mission est publiée dans votre rayon.
+• Répondez par un devis détaillé, exportable en PDF, et livrez vos fichiers dans la réservation.
+• Vous êtes payé après la validation de la livraison, ou automatiquement 7 jours après si le client ne répond pas.
+• Consultez les appels d'offres publics et les offres d'emploi du drone, repris chaque nuit de sources officielles dans plusieurs pays.
+
+COMBIEN ÇA COÛTE
+Chercher un pilote, publier une mission et recevoir des devis est gratuit, sans abonnement. Une commission est incluse dans le prix affiché et n'est prélevée que sur les missions payées : 20 %, puis 15 % à partir de la 4e mission entre le même client et le même pilote, et 10 % à partir de la 10e.
+
+AUSSI DANS L'APPLI
+• Le site et l'appli se lisent en 31 langues.
+• Mode nuit et six palettes de couleurs.
+• Annuaire des écoles de pilotage, des entreprises de services et des boutiques.
+
+AubePilot est un service de L'Aube Étoilée inc., à Montréal. Une question : support@aubemail.com
