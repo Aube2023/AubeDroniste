@@ -99,6 +99,12 @@ html[data-theme="dark"] #aube-map .aube-traffic .small{color:#9ca3af}
 html[data-theme="dark"] #aube-map .aube-panel-x{color:#9ca3af}
 html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,255,.1);color:#e9e9ec}
 @media (max-width:640px){
+  #aube-map .maplibregl-ctrl-top-left{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 0 10px;max-width:calc(100% - 64px)}
+  #aube-map .maplibregl-ctrl-top-left .maplibregl-ctrl{margin:0;float:none}
+  #aube-map .aube-sat-ctrl button{min-width:0;height:30px;padding:0 8px;font-size:10.5px;line-height:30px;letter-spacing:.04em}
+  #aube-map .aube-style-ctrl select{min-width:0;max-width:90px;height:30px;font-size:10.5px;line-height:30px}
+  #aube-map .aube-meteo{top:52px}
+  .map-wrap .map-legend{gap:6px 14px!important;padding:8px 12px!important;font-size:.8rem!important}
   #aube-map .aube-meteo,#aube-map .aube-traffic{max-width:calc(100% - 64px);font-size:12px;padding:8px 28px 8px 10px}
   #aube-map .aube-meteo .v{font-size:13px}
   #aube-map .aube-traffic{bottom:30px}
@@ -183,6 +189,10 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     attributionControl: true,
     cooperativeGestures: false
   });
+  // Telephone : les calques (satellite, fond, meteo, aeronefs) passent en une
+  // rangee en haut a gauche ; empiles a droite, ils couvraient la carte et
+  // les infobulles. Les boutons de navigation restent a droite.
+  var LAYER_POS = window.matchMedia('(max-width: 640px)').matches ? 'top-left' : 'top-right';
   map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
   map.addControl(new maplibregl.FullscreenControl(), 'top-right');
   map.addControl(new maplibregl.GeolocateControl({positionOptions: {enableHighAccuracy: false}, trackUserLocation: false}), 'top-right');
@@ -216,7 +226,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   SatToggle.prototype.onRemove = function () {
     if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c);
   };
-  map.addControl(new SatToggle(), 'top-right');
+  map.addControl(new SatToggle(), LAYER_POS);
 
   // Changement de fond sans perdre nos couches : transformStyle (MapLibre >= 3)
   // recopie sources et calques maison (satellite, zone, radar, aeronefs) dans
@@ -264,7 +274,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
   StyleSelect.prototype.onRemove = function () {
     if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c);
   };
-  map.addControl(new StyleSelect(), 'top-right');
+  map.addControl(new StyleSelect(), LAYER_POS);
 
   // ---- Meteo : radar de precipitations + conditions au centre de la carte.
   // Le navigateur ne parle qu'a notre serveur pour les conditions (relais
@@ -394,7 +404,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     return wrap;
   };
   MeteoToggle.prototype.onRemove = function () { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); };
-  {% if meteo_enabled %}map.addControl(new MeteoToggle(), 'top-right');{% endif %}
+  {% if meteo_enabled %}map.addControl(new MeteoToggle(), LAYER_POS);{% endif %}
 
   // ---- Trafic aerien ADS-B : situation reelle autour de la zone.
   // Relaye par notre serveur (adsb.lol, cache 10 s) ; sondage toutes les 15 s
@@ -554,7 +564,7 @@ html[data-theme="dark"] #aube-map .aube-panel-x:hover{background:rgba(255,255,25
     return wrap;
   };
   AdsbToggle.prototype.onRemove = function () { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); };
-  map.addControl(new AdsbToggle(), 'top-right');
+  map.addControl(new AdsbToggle(), LAYER_POS);
   map.on('moveend', function () { if (adsbOn) { clearTimeout(adsbMoveTimer); adsbMoveTimer = setTimeout(pollTraffic, 400); } });
   document.addEventListener('visibilitychange', function () { if (adsbOn && !document.hidden) pollTraffic(); });
   map.on('moveend', function () {

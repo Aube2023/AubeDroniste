@@ -45,6 +45,11 @@
   {% endfor %}{% for ld in (_seo.jsonld or []) %}<script type="application/ld+json">{{ ld | tojson }}</script>
   {% endfor %}
   <script nonce="{{ csp_nonce }}">
+    // Application Android : la page se reconnait aussi d'apres son agent.
+    // Le serveur ne la voit pas toujours (une requete passee par le service
+    // worker part avec l'agent par defaut) : sans ce filet, la barre d'onglets
+    // et le pied de page du site s'ajoutaient a ceux de l'app.
+    if (/AubePilotMobile/i.test(navigator.userAgent)) document.documentElement.classList.add('in-app');
     // Anti-FOUC : applique le thème avant le rendu
     (function () {
       try {
@@ -279,9 +284,18 @@
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/phone.js') }}"></script>
 <script nonce="{{ csp_nonce }}">
-  // PWA : offline de secours + cache statiques (voir static/sw.js)
+  // PWA : offline de secours + cache statiques (voir static/sw.js).
+  // Pas dans l'application : elle a son propre ecran hors ligne, et le service
+  // worker lui faisait perdre son agent (donc le mode app) ; on retire celui
+  // qu'une version precedente avait installe.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
+      if (document.documentElement.classList.contains('in-app')) {
+        navigator.serviceWorker.getRegistrations().then(function (rs) {
+          rs.forEach(function (r) { r.unregister(); });
+        }).catch(function () {});
+        return;
+      }
       navigator.serviceWorker.register('/sw.js').catch(function () {});
     });
   }

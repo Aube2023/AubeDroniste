@@ -690,6 +690,7 @@ fieldset.role-picker input:checked ~ * { color: var(--amber); }
    photo ronde chevauche son bord bas (même repère que la fiche). */
 .pilot-card.has-cover { grid-template-rows: auto auto 1fr auto; }
 .pilot-card .cover {
+  width: 100%;             /* sinon max-height retrecit la largeur */
   aspect-ratio: 16 / 6; max-height: 120px; overflow: hidden;
   background: var(--paper-3); border-bottom: 1px solid var(--rule);
 }
@@ -1708,6 +1709,7 @@ img.avatar { object-fit: cover; }
 /* Image de couverture : bandeau paysage en tête du carnet, la photo de
    profil chevauche son bord bas (repère habituel des profils en ligne). */
 .flightbook-cover {
+  width: 100%;             /* sinon max-height retrecit la largeur */
   aspect-ratio: 16 / 5;
   max-height: 340px;
   overflow: hidden;
@@ -1731,6 +1733,21 @@ img.avatar { object-fit: cover; }
 @media (max-width: 720px) {
   .flightbook-cover { aspect-ratio: 16 / 7; }
   .flightbook-hero.has-cover .flightbook-band .avatar { margin-top: -52px; }
+}
+/* Telephone : photo au-dessus, texte sur toute la largeur. En deux colonnes,
+   le nom, les reperes et les boutons tenaient dans 160 px. */
+@media (max-width: 600px) {
+  .flightbook-hero::after { inset-inline-end: 14px; }
+  .flightbook-band { grid-template-columns: 1fr; gap: 14px; padding: 30px 18px 22px; }
+  .flightbook-hero.has-cover .flightbook-band { padding-top: 0; }
+  .flightbook-band .avatar { width: 88px; height: 88px; font-size: 40px; }
+  .flightbook-hero.has-cover .flightbook-band .avatar { margin-top: -44px; }
+  .flightbook-band h1 { font-size: 2rem; line-height: 1.12; }
+  .flightbook-band .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .flightbook-band .actions-row > * { justify-content: center; text-align: center; padding-inline: 12px; line-height: 1.25; }
+  .flightbook-band .actions-row > :first-child { grid-column: 1 / -1; }
+  .patch { grid-template-columns: 48px 1fr; column-gap: 14px; align-items: start; }
+  .patch > :nth-child(3) { grid-column: 2; justify-self: start; }
 }
 
 .stat-rail {
@@ -1760,6 +1777,8 @@ img.avatar { object-fit: cover; }
   .stat-rail { grid-template-columns: repeat(2, 1fr); }
   .stat-rail > div { border-inline-end: 0; border-top: 1px solid var(--rule); }
   .stat-rail > div:nth-child(odd) { border-inline-end: 1px solid var(--rule); }
+  /* Nombre impair de reperes : le dernier prend toute la rangee. */
+  .stat-rail > div:last-child:nth-child(odd) { grid-column: 1 / -1; border-inline-end: 0; }
 }
 
 /* Brevets en patches */
@@ -2563,7 +2582,7 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .map-bleed .map-wrap { border-radius: 0; border-left: 0; border-right: 0; border-top: 0; margin-bottom: 0 !important; }
 .map-bleed #aube-map { border-radius: 0 !important; }
 #carte.section-tight { margin-top: 0; margin-bottom: 28px; }
-@media (max-width: 760px) { .map-bleed .map-wrap #aube-map, .map-bleed #aube-map { height: 58vh !important; min-height: 380px; } }
+@media (max-width: 760px) { .map-bleed .map-wrap #aube-map, .map-bleed #aube-map { height: clamp(420px, 70svh, 640px) !important; } }
 #pays.section-tight { margin-top: 0; }
 .section.section-tight { margin: 36px 0 44px; }
 .section.section-tight + .section.section-tight { margin-top: 0; }
@@ -2606,7 +2625,9 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(var(--amber-rgb), .25); }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }
-@media (max-width: 760px) { .map-wrap #aube-map { height: 340px !important; } }
+/* Telephone : 340 px laissaient une bande de carte sous les boutons ; la carte
+   prend maintenant l'essentiel de l'ecran (svh : barre du navigateur deduite). */
+@media (max-width: 760px) { .map-wrap #aube-map { height: clamp(420px, 70svh, 640px) !important; } }
 
 /* ============ Écritures ourdou et bengalie ============
    Les polices ne sont chargées que pour la langue concernée (base.html).
