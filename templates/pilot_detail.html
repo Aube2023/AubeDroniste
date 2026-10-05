@@ -8,25 +8,42 @@
 {% set is_org = pilot.kind in ('company', 'school', 'shop') %}
 {% set display_name = (pilot.business_name or pilot.full_name) if is_org else pilot.full_name %}
 {% block content %}
+{# Fiche d'organisation : nom de l'organisation (pas de la personne), logo carré,
+   bandeau à la couleur du type, coordonnées en boutons ; les rubriques propres
+   aux pilotes (brevets, flotte) n'apparaissent que si elles sont remplies. #}
+{% set is_company = (pilot.kind == 'company') %}
+{% set org_named = is_org and (pilot.business_name or '')|trim and (pilot.business_name or '')|trim != (pilot.full_name or '')|trim %}
+{% if is_org and not org_named and current_user and current_user.id == pilot.id %}
+<div class="alert org-nudge">
+  <strong>{{ t('org.nudge_title') }}</strong>
+  <p>{{ t('org.nudge_body') }}</p>
+  <a class="cta" href="{{ url_for('pilot_edit') }}#business_name">{{ t('org.nudge_cta') }}</a>
+</div>
+{% endif %}
 
-<section class="flightbook-hero{% if pilot.cover_path %} has-cover{% endif %}">
+<section class="flightbook-hero{% if pilot.cover_path or is_org %} has-cover{% endif %}{% if is_org %} org-hero kind-{{ pilot.kind }}{% endif %}">
+  {% if is_org %}<span class="org-label">{{ t('org.label_' ~ pilot.kind) }}</span>{% endif %}
   {% if pilot.cover_path %}
   {# Image de couverture : bandeau paysage, la photo de profil chevauche son bord bas. #}
   <div class="flightbook-cover">
     <img src="{{ url_for('media_file', filename=pilot.cover_path[8:]) }}"
          alt="{{ t('tpl.couverture_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
   </div>
+  {% elif is_org %}
+  <div class="org-banner" aria-hidden="true"></div>
   {% endif %}
   <div class="flightbook-band">
-    {% if pilot.avatar_path %}
-    <img class="avatar big avatar-zoom" src="{{ url_for('media_file', filename=pilot.avatar_path[8:]) }}"
+    {% set _logo = pilot.org_logo_path if (is_org and pilot.org_logo_path) else pilot.avatar_path %}
+    {% if _logo %}
+    <img class="avatar big avatar-zoom{% if is_org %} org-logo{% endif %}" src="{{ url_for('media_file', filename=_logo[8:]) }}"
          alt="{{ t('tpl.photo_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
     {% else %}
-    <div class="avatar big">{{ display_name[:1] }}</div>
+    <div class="avatar big{% if is_org %} org-logo{% endif %}">{{ display_name[:1] }}</div>
     {% endif %}
     <div>
       <span class="callsign">{{ t('tpl.profil') }} nº {{ pilot.pilot_no or pilot.id }}</span>
       <h1>{{ display_name }} <span class="kind-badge kind-{{ pilot.kind or 'pro' }}">{{ kind_label(pilot.kind or 'pro') }}</span> {% if pilot.is_verified %}<span class="badge verified">{{ t('tpl.verifie') }}</span>{% endif %}</h1>
+      {% if org_named %}<div class="org-rep">{{ t('org.represented_by', name=pilot.full_name) }}</div>{% endif %}
       <div class="loc">
         {{ pilot.country or '—' }}{% if pilot.city %} · {{ pilot.city }}{% endif %}
       </div>
@@ -46,17 +63,12 @@
         </ul>
       </div>
       {% endif %}
-      {% if is_org and pilot.portfolio_url %}
-      <div style="margin-top: 12px;">
-        <a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="ghost">🌐 {% if is_school %}{{ t('tpl.site_web_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.site_web_de_la_boutique') }}{% else %}{{ t('tpl.site_web_de_l_entreprise') }}{% endif %} ↗</a>
-      </div>
-      {% endif %}
-      {% if is_org and (pilot.business_email or pilot.phone) %}
-      <div style="margin-top: 12px;">
-        <span class="eyebrow" style="margin-bottom: 6px;">{% if is_school %}{{ t('tpl.coordonnees_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.coordonnees_de_la_boutique') }}{% else %}{{ t('tpl.coordonnees_de_l_entreprise') }}{% endif %}</span>
-        {% if pilot.business_email %}<a href="mailto:{{ pilot.business_email }}" class="ghost" style="display:block; margin-bottom:4px;">✉️ {{ pilot.business_email }}</a>{% endif %}
-        {% if pilot.phone %}<a href="tel:{{ pilot.phone|replace(' ', '') }}" class="ghost">📞 {{ pilot.phone }}</a>{% endif %}
-      </div>
+      {% if is_org and (pilot.portfolio_url or pilot.business_email or pilot.phone) %}
+      <ul class="org-contacts" aria-label="{% if is_school %}{{ t('tpl.coordonnees_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.coordonnees_de_la_boutique') }}{% else %}{{ t('tpl.coordonnees_de_l_entreprise') }}{% endif %}">
+        {% if pilot.phone %}<li><a href="tel:{{ pilot.phone|replace(' ', '') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span>{{ pilot.phone }}</span></a></li>{% endif %}
+        {% if pilot.business_email %}<li><a href="mailto:{{ pilot.business_email }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg><span>{{ pilot.business_email }}</span></a></li>{% endif %}
+        {% if pilot.portfolio_url %}<li><a href="{{ pilot.portfolio_url }}" target="_blank" rel="noopener noreferrer" title="{% if is_school %}{{ t('tpl.site_web_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.site_web_de_la_boutique') }}{% else %}{{ t('tpl.site_web_de_l_entreprise') }}{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>{{ pilot.portfolio_url|replace('https://', '')|replace('http://', '')|replace('www.', '')|trim('/') }}</span></a></li>{% endif %}
+      </ul>
       {% endif %}
       {% if not is_org and pilot.business_email %}
       <div style="margin-top: 12px;">
@@ -87,25 +99,29 @@
       {% endif %}
     </div>
   </div>
-  <div class="stat-rail">
+  <div class="stat-rail{% if is_org %} org-rail{% endif %}">
     <div>
       <span class="v">{% if pilot.rating.count %}{{ '%.1f' % pilot.rating.avg }}<span style="color: var(--amber);"> ★</span>{% else %}—{% endif %}</span>
       <span class="k">{{ t('tpl.note') }} · {{ pilot.rating.count }} {{ t('tpl.avis') }}</span>
     </div>
+    {% if not is_org or (pilot.years_experience or 0) > 0 %}
     <div>
       <span class="v">{{ pilot.years_experience or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ t('tpl.ans') }}</span></span>
       <span class="k">{{ t('tpl.experience') }}</span>
     </div>
+    {% endif %}
     {% if is_school or is_shop %}
     <div>
       <span class="v">{{ pilot.school_programs.replace('\r','').split('\n')|map('trim')|select|list|length if pilot.school_programs else 0 }}</span>
       <span class="k">{% if is_shop %}{{ t('tpl.produits') }}{% else %}{{ t('tpl.formations_2') }}{% endif %}</span>
     </div>
     {% else %}
+    {% if not is_org or pilot.hourly_rate %}
     <div>
       <span class="v">{% if pilot.hourly_rate %}{{ pilot.hourly_rate|int }}{% else %}—{% endif %}<span style="color: var(--ink-dim); font-size: 1rem;"> {{ pilot.p_currency or '' }}/h</span></span>
       <span class="k">{{ t('tpl.tarif_horaire') }}</span>
     </div>
+    {% endif %}
     <div>
       <span class="v">{{ pilot.travel_radius_km or 0 }}<span style="color: var(--ink-dim); font-size: 1rem;"> km</span></span>
       <span class="k">{{ t('tpl.rayon') }}</span>
@@ -127,9 +143,10 @@
 </div>
 {% endif %}
 
-<div class="{% if not is_school and not is_shop %}grid-2{% endif %}">
+{% set show_certs = not is_school and not is_shop and (not is_company or pilot.certifications) %}
+<div class="{% if show_certs %}grid-2{% endif %}">
   <div class="card">
-    <span class="eyebrow">{% if is_school %}{{ t('tpl.a_propos_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.a_propos_de_la_boutique') }}{% else %}{{ t('tpl.specialites_operationnelles') }}{% endif %}</span>
+    <span class="eyebrow">{% if is_school %}{{ t('tpl.a_propos_de_l_ecole') }}{% elif is_shop %}{{ t('tpl.a_propos_de_la_boutique') }}{% elif is_company %}{{ t('org.services') }}{% else %}{{ t('tpl.specialites_operationnelles') }}{% endif %}</span>
     {% if not is_school and not is_shop %}
     {% if pilot.specialties %}
       {% for gname, codes in mission_groups %}
@@ -218,7 +235,7 @@
     {% endif %}
   </div>
 
-  {% if not is_school and not is_shop %}
+  {% if show_certs %}
   <div class="card">
     <span class="eyebrow">{{ t('tpl.brevets_qualifications') }}</span>
     <div class="patches" style="margin-top: 12px;">
@@ -257,7 +274,7 @@
   {% endif %}
 </div>
 
-{% if not is_school and not is_shop %}
+{% if not is_school and not is_shop and (not is_company or pilot.drones) %}
 <section class="card">
   <div class="row-between" style="align-items: end; margin-bottom: 14px;">
     <div>
@@ -476,7 +493,7 @@
   </div>
   {% else %}
   <div class="stars" style="font-size: 1.5rem; margin-bottom: 8px;">{% for _ in range(5) %}<span style="color: var(--ink-faint);">★</span>{% endfor %}</div>
-  <p class="muted">{% if is_school %}{{ t('tpl.pas_encore_d_avis_soyez_le') }}{% else %}{{ t('tpl.pas_encore_d_avis_soyez_le_2') }}{% endif %}</p>
+  <p class="muted">{% if is_school %}{{ t('tpl.pas_encore_d_avis_soyez_le') }}{% elif is_shop %}{{ t('org.reviews_empty_shop') }}{% elif is_company %}{{ t('org.reviews_empty') }}{% else %}{{ t('tpl.pas_encore_d_avis_soyez_le_2') }}{% endif %}</p>
   {% endfor %}
 </section>
 

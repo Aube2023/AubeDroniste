@@ -205,7 +205,7 @@
   </div>
 
   <h2>{{ t('tpl.presentation') }}</h2>
-  <label>{{ t('tpl.marque_societe_raison_sociale') }}<input name="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="{{ t('tpl.ex_skyvision_drone_ou_votre_nom') }}"></label>
+  <label>{{ t('tpl.marque_societe_raison_sociale') }}<input name="business_name" id="business_name" value="{{ profile.business_name or '' }}" maxlength="120" placeholder="{{ t('tpl.ex_skyvision_drone_ou_votre_nom') }}"></label>
   <p class="form-hint">{{ t('tpl.affichee_en_en_tete_de_vos') }}</p>
   <label>{{ t('tpl.courriel_de_compagnie_public') }}<input name="business_email" type="email" value="{{ profile.business_email or '' }}" maxlength="160" placeholder="{{ t('tpl.ex_contact_skyvisiondrone_ca') }}"></label>
   <p class="form-hint">{{ t('tpl.affiche_sur_votre_fiche_publique_pour') }}</p>

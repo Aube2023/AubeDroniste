@@ -2037,7 +2037,10 @@ def register():
                 # le nom saisi + les champs propres aux organismes (site web,
                 # offres proposees), modifiables ensuite dans le profil.
                 services.upsert_pilot_profile(
-                    user_id, business_name=full_name,
+                    user_id,
+                    # Nom de l'organisation saisi a part (depuis le 2026-10-05) ;
+                    # le nom de la personne reste le repli.
+                    business_name=(request.form.get("business_name") or "").strip()[:120] or full_name,
                     portfolio_url=(request.form.get("website") or "").strip()[:300] or None,
                     school_programs=(request.form.get("school_programs") or "").strip()[:2000] or None,
                 )

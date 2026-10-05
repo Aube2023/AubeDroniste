@@ -55,14 +55,19 @@
           {% endfor %}
         </div>
         <p class="field-hint">{{ t('register.kind_editable') }}</p>
+        {# Organisation : son nom a part du nom de la personne. Avant, le seul
+           champ « Nom et prenom » devenait le nom public de l'entreprise. #}
         <div id="school-extra" class="wizard-grid" hidden>
-          <label class="wl"><span class="lbl"><span data-kl="school">{{ t('register.school_website') }}</span><span data-kl="shop" hidden>{{ t('register.shop_website') }}</span> <em>({{ t('register.optional') }})</em></span>
-            <input name="website" type="url" value="{{ f.get('website', '') }}" placeholder="https://votre-ecole.ca">
+          <label class="wl" style="grid-column: 1 / -1;"><span class="lbl"><span data-kl="company">{{ t('org.name_company') }}</span><span data-kl="school" hidden>{{ t('org.name_school') }}</span><span data-kl="shop" hidden>{{ t('org.name_shop') }}</span> <abbr class="req" title="{{ t('register.required') }}">*</abbr></span>
+            <input name="business_name" id="reg-business" maxlength="120" value="{{ f.get('business_name', '') }}" autocomplete="organization">
+            <span class="field-hint">{{ t('org.name_hint') }}</span>
           </label>
-          <label class="wl"><span class="lbl"><span data-kl="school">{{ t('register.school_courses') }}</span><span data-kl="shop" hidden>{{ t('register.shop_products') }}</span> <em>({{ t('register.one_per_line_optional') }})</em></span>
+          <label class="wl"><span class="lbl"><span data-kl="company">{{ t('tpl.site_web_de_l_entreprise') }}</span><span data-kl="school" hidden>{{ t('register.school_website') }}</span><span data-kl="shop" hidden>{{ t('register.shop_website') }}</span> <em>({{ t('register.optional') }})</em></span>
+            <input name="website" type="url" value="{{ f.get('website', '') }}" placeholder="https://">
+          </label>
+          <label class="wl" id="reg-programs"><span class="lbl"><span data-kl="school">{{ t('register.school_courses') }}</span><span data-kl="shop" hidden>{{ t('register.shop_products') }}</span> <em>({{ t('register.one_per_line_optional') }})</em></span>
             <textarea name="school_programs" rows="3" maxlength="2000" placeholder="Opérations de base (Transports Canada)&#10;Opérations avancées (Transports Canada)&#10;A2 / STS (EASA)">{{ f.get('school_programs', '') }}</textarea>
           </label>
-          <p class="field-hint" style="grid-column: 1 / -1;">{{ t('register.school_note') }}</p>
         </div>
       </div>
     </section>
@@ -71,7 +76,7 @@
     <section class="wizard-step" data-step="2">
       <h2>{{ t('register.step_identity') }}</h2>
       <div class="wizard-grid">
-        <label class="wl"><span class="lbl">{{ t('register.full_name') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr> <em>({{ t('register.or_school_name') }})</em></span>
+        <label class="wl"><span class="lbl">{{ t('register.full_name') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr></span>
           <input name="full_name" required value="{{ f.get('full_name', '') }}" placeholder="{{ t('register.full_name_ph') }}" autocomplete="name">
         </label>
         <label class="wl"><span class="lbl">{{ t('register.username') }} <abbr class="req" title="{{ t('register.required') }}">*</abbr> <em>({{ t('register.aubemail_address')|lower }})</em></span>
@@ -170,11 +175,16 @@
     var role = (form.querySelector('input[name="role"]:checked') || {}).value;
     kindBlock.hidden = (role === 'client');
     var kind = (form.querySelector('input[name="kind"]:checked') || {}).value;
-    var org = (kind === 'school' || kind === 'shop');
+    var org = (kind === 'school' || kind === 'shop' || kind === 'company');
+    var kl = (kind === 'shop' || kind === 'company') ? kind : 'school';
     extra.hidden = !(role !== 'client' && org);
     form.querySelectorAll('[data-kl]').forEach(function (n) {
-      n.hidden = (n.getAttribute('data-kl') !== (kind === 'shop' ? 'shop' : 'school'));
+      n.hidden = (n.getAttribute('data-kl') !== kl);
     });
+    // Nom de l'organisation obligatoire seulement quand le bloc est visible
+    // (un champ requis cache bloquerait l'envoi des autres profils).
+    document.getElementById('reg-business').required = !extra.hidden;
+    document.getElementById('reg-programs').hidden = (kind === 'company');
   }
   form.querySelectorAll('input[name="role"], input[name="kind"]').forEach(function (r) { r.addEventListener('change', syncRole); });
   {% if request.args.get('kind') and not form %}
