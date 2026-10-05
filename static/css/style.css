@@ -971,6 +971,17 @@ img.avatar { object-fit: cover; }
   .thread-back { display: inline-block; }
   .bubble { max-width: 86%; }
 }
+/* Telephone : les boutons du fil (voir la fiche, decrire ma demande, voir la
+   mission...) passent sous le nom ; sur la meme ligne, ils le recouvraient. */
+@media (max-width: 600px) {
+  .thread-head { flex-wrap: wrap; row-gap: 10px; }
+  .thread-links { flex: 1 1 100%; }
+  .thread-links > a, .thread-links > form { flex: 1 1 0; }
+  .thread-links .ghost, .thread-links .cta { width: 100%; text-align: center; line-height: 1.25; }
+  .composer { padding: 10px 12px; }
+  .composer textarea { padding: 11px 14px; font-size: 15px; }
+  .composer .cta { padding: 12px 16px; }
+}
 /* Badge non-lus dans la barre du haut */
 .nav-badge {
   display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
