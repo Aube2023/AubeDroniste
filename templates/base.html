@@ -12,10 +12,10 @@
   {% set _url = seo_alternates.get(lang) or (canonical_base ~ request.path) %}
   <title>{% block title %}{{ _title }}{% endblock %}</title>
   <meta name="description" content="{{ _desc }}">
-  <link rel="canonical" href="{{ _url }}">
+  {% if not _seo.no_canonical %}<link rel="canonical" href="{{ _url }}">{% endif %}
   <meta name="robots" content="{{ _seo.robots or 'index, follow, max-image-preview:large, max-snippet:-1' }}">
-  {% for code, href in seo_alternates.items() %}<link rel="alternate" hreflang="{{ code }}" href="{{ href }}">
-  {% endfor %}{% if seo_alternates %}<link rel="alternate" hreflang="x-default" href="{{ seo_alternates['fr'] }}">{% endif %}
+  {% if not _seo.no_canonical %}{% for code, href in seo_alternates.items() %}<link rel="alternate" hreflang="{{ code }}" href="{{ href }}">
+  {% endfor %}{% if seo_alternates %}<link rel="alternate" hreflang="x-default" href="{{ seo_alternates['fr'] }}">{% endif %}{% endif %}
 
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='brand/favicon.svg') }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32x32.png') }}">

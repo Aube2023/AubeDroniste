@@ -752,6 +752,7 @@ def index():
         kind_counts=services.count_pilots_by_kind(),
         home_partners=services.list_partners(),
         latest_missions=services.latest_missions(8),
+        latest_reviews=services.latest_reviews(3),
         country_breakdown=services.country_breakdown(12),
         faq_entries=content.faq(getattr(g, "lang", i18n.DEFAULT), featured_only=True),
         seo=seo.home(getattr(g, "lang", i18n.DEFAULT)),
@@ -931,8 +932,10 @@ def _register_page(step: int = 2):
 
 
 def _register_seo():
-    return seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="register.page_title",
-                           description_key="register.lead")
+    out = seo.simple_page(getattr(g, "lang", i18n.DEFAULT), title_key="register.page_title",
+                          description_key="register.lead")
+    # /inscription?role=pilot : meme page, profil preselectionne.
+    return seo.query_variant(out) if request.args else out
 
 
 def _login_seo():
@@ -1585,7 +1588,8 @@ def pilots_search():
         "pilots_search.html", pilots=pilots, params=params,
         kind_counts=services.count_pilots_by_kind(params["only_available"]),
         map_center=_map_center(geo),
-        seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params),
+        seo=seo.pilots_list(getattr(g, "lang", i18n.DEFAULT), params,
+                            filtered=bool(request.args)),
         hub=_directory_hub(),
     )
 
@@ -1860,7 +1864,7 @@ def mission_detail(mission_id):
 # ---------------------------------------------------------------------------
 
 @app.route("/inscription", methods=["GET", "POST"])
-@security.rate_limit(per_minute=6, per_hour=40)
+@security.rate_limit(per_minute=6, per_hour=40, methods=("POST",))
 def register():
     if request.method == "POST":
         username = auth.normalize_username(request.form.get("username") or "")

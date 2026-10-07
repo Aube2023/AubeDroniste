@@ -372,3 +372,17 @@ def test_titre_et_description_de_l_accueil_tiennent_dans_google():
         assert len(title) <= 60, (lang, len(title), title)
     for lang, desc in seo._S["home.description"].items():
         assert len(desc) <= 160, (lang, len(desc), desc)
+
+
+def test_variantes_par_parametres_hors_index(client):
+    """/pilotes?kind=pro et /inscription?role=pilot reprennent la page nue :
+    noindex, follow et pas de canonique vers une autre adresse (audit du
+    2026-10-07 : titres, descriptions et contenus en double). Les pages nues
+    restent indexables avec leur canonique."""
+    for bare, variant in (("/pilotes", "/pilotes?kind=pro"), ("/inscription", "/inscription?role=pilot")):
+        html = client.get(bare).data.decode()
+        assert 'name="robots" content="index, follow' in html
+        assert f'<link rel="canonical" href="{seo.CANONICAL_BASE}{bare}">' in html
+        html = client.get(variant).data.decode()
+        assert 'name="robots" content="noindex, follow"' in html
+        assert 'rel="canonical"' not in html and 'hreflang=' not in html

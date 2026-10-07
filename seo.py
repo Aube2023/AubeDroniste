@@ -295,15 +295,26 @@ def contact_page(lang="fr"):
     return {"title": title, "description": desc, "jsonld": [ld]}
 
 
-def pilots_list(lang="fr", params=None):
+def query_variant(out: dict) -> dict:
+    """Variante d'une page par parametres (/pilotes?kind=pro,
+    /inscription?role=pilot) : meme contenu ou presque que la page nue. Hors
+    de l'index, liens suivis, et sans canonique ni hreflang vers une autre
+    adresse (Google deconseille de melanger noindex et canonique). Les pages
+    par pays, ville et specialite ont leurs propres adresses indexables."""
+    return {**out, "robots": "noindex, follow", "no_canonical": True}
+
+
+def pilots_list(lang="fr", params=None, *, filtered=False):
     params = params or {}
     city, country = params.get("city") or "", params.get("country") or ""
     if city or country:
         loc = {"city": city} if city else {"country": country}
-        return {"title": _s(lang, "pilots_list.title_place", **loc),
-                "description": _s(lang, "pilots_list.description_place", **loc)}
-    return {"title": _s(lang, "pilots_list.title"),
-            "description": _s(lang, "pilots_list.description")}
+        out = {"title": _s(lang, "pilots_list.title_place", **loc),
+               "description": _s(lang, "pilots_list.description_place", **loc)}
+    else:
+        out = {"title": _s(lang, "pilots_list.title"),
+               "description": _s(lang, "pilots_list.description")}
+    return query_variant(out) if filtered else out
 
 
 def missions_list(lang="fr"):

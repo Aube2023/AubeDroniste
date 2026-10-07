@@ -92,12 +92,15 @@ def client_ip() -> str:
     return _client_ip()
 
 
-def rate_limit(per_minute: int = 10, per_hour: int = 100, key: Optional[str] = None):
-    """Decorateur : limite N hits / fenetre par IP (et par endpoint)."""
+def rate_limit(per_minute: int = 10, per_hour: int = 100, key: Optional[str] = None,
+               methods: Optional[tuple] = None):
+    """Decorateur : limite N hits / fenetre par IP (et par endpoint).
+    `methods` : ne compter que ces methodes (ex. ("POST",) pour qu'afficher
+    un formulaire ne consomme pas le quota des envois)."""
     def deco(view):
         @wraps(view)
         def wrapped(*args, **kwargs):
-            if current_app.config.get("TESTING"):
+            if current_app.config.get("TESTING") or (methods and request.method not in methods):
                 return view(*args, **kwargs)
             ip = _client_ip()
             bucket_key = (ip, key or request.endpoint)

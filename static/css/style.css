@@ -1945,6 +1945,12 @@ img.avatar { object-fit: cover; }
   color: var(--ink); line-height: 1.5;
 }
 .review-quote q::before, .review-quote q::after { content: ""; }
+.review-quote blockquote { margin: 0; }
+.review-quote .stars .off { color: var(--ink-faint); }
+.review-quote cite a { color: inherit; }
+.review-quote cite a:hover { color: var(--amber); }
+/* Accueil : derniers avis côte à côte, une colonne sur téléphone. */
+.review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 32px; }
 .review-quote cite {
   display: block;
   font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;

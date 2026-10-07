@@ -188,6 +188,25 @@
 </section>
 {% endif %}
 
+{% if latest_reviews %}
+{# Avis réels uniquement (réservation payée) ; rien tant qu'il n'y en a pas. #}
+<section class="section" id="avis">
+  <div class="section-header centered">
+    <span class="eyebrow">{{ t('tpl.retours_d_experience') }}</span>
+    <h2>{{ t('tpl.avis_des_clients') }}</h2>
+  </div>
+  <div class="review-grid">
+    {% for r in latest_reviews %}
+    <figure class="review-quote">
+      <div class="stars" aria-label="{{ r.rating }}/5">{% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}<span class="off">★</span>{% endfor %}</div>
+      <blockquote><q>{{ r.comment }}</q></blockquote>
+      <figcaption><cite>{{ mask_name(r.author_name) }} · <a href="{{ url_for('pilot_detail', user_id=r.pilot_id) }}">{{ r.pilot_name }}</a> · {{ r.created_at[:10] }}</cite></figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="section" id="comment-ca-marche">
   <div class="section-header centered">
     <span class="eyebrow">{{ t('home.steps.eyebrow') }}</span>

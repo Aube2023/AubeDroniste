@@ -2741,6 +2741,26 @@ def reviews_for(user_id: int, limit: int = 20) -> list:
     return [dict(r) for r in rows]
 
 
+def latest_reviews(limit: int = 3) -> list:
+    """Derniers avis ecrits, pour l'accueil. Que des avis reels : chacun est
+    rattache a une reservation payee (reviewable_booking_for), et la section
+    reste cachee tant qu'il n'y en a aucun. Toutes les notes, pas un tri des
+    meilleures ; auteur et pilote encore inscrits."""
+    rows = db.fetchall(
+        "SELECT r.rating, r.comment, r.created_at, a.full_name AS author_name, "
+        "       t.id AS pilot_id, t.full_name, COALESCE(p.kind, 'pro') AS kind, p.business_name "
+        "FROM reviews r "
+        "JOIN users a ON a.id = r.author_user_id "
+        "JOIN users t ON t.id = r.target_user_id "
+        "LEFT JOIN pilot_profiles p ON p.user_id = t.id "
+        "WHERE TRIM(COALESCE(r.comment, '')) <> '' "
+        "  AND a.deleted_at IS NULL AND t.deleted_at IS NULL "
+        "ORDER BY r.created_at DESC, r.id DESC LIMIT ?",
+        (limit,),
+    )
+    return [{**dict(r), "pilot_name": public_name(dict(r))} for r in rows]
+
+
 def reviewable_booking_for(client_user_id: int, pilot_user_id: int) -> Optional[dict]:
     """Retourne une reservation reelle (escrow finance) entre ce client et ce
     pilote, sur laquelle le client peut deposer/modifier un avis — sinon None.
