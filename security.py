@@ -176,8 +176,8 @@ def apply_security_headers(resp):
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; "
         "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com https://unpkg.com/maplibre-gl@4.7.1/dist/ https://aubemail.com https://captcha.aubeetoilee.com; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com/maplibre-gl@4.7.1/dist/; "
-        "font-src 'self' data: https://fonts.gstatic.com; "
+        "style-src 'self' 'unsafe-inline' https://unpkg.com/maplibre-gl@4.7.1/dist/; "
+        "font-src 'self' data:; "
         "img-src 'self' data: blob: https:; "
         "worker-src 'self' blob:; "
         "child-src 'self' blob:; "

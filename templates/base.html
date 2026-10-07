@@ -72,15 +72,10 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
-  {% if lang == 'ur' %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">{% endif %}
-  {% if lang in ('ar', 'fa') %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap">{% endif %}
-  {% if lang == 'bn' %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap">{% endif %}
-  {% if lang == 'am' %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap">{% endif %}
-  {% if lang == 'ta' %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap">{% endif %}
-  {% if lang == 'th' %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">{% endif %}
+  {# Polices servies par le site (scripts/self_host_fonts.py) : rien chez Google. #}
+  <link rel="stylesheet" href="{{ static_v('css/fonts.css') }}">
+  {% set _script_font = {'ur': 'ur', 'ar': 'arab', 'fa': 'arab', 'bn': 'bn', 'am': 'am', 'ta': 'ta', 'th': 'th'}.get(lang) %}
+  {% if _script_font %}<link rel="stylesheet" href="{{ static_v('css/fonts-' ~ _script_font ~ '.css') }}">{% endif %}
   <link rel="stylesheet" href="{{ static_v('css/style.css') }}">
 </head>
 <body>
