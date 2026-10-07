@@ -10,12 +10,12 @@
       </span>
     </div>
     {% if p.cover_path %}
-    <div class="cover"><img src="{{ url_for('media_file', filename=p.cover_path[8:]) }}" alt="" loading="lazy"></div>
+    <div class="cover"><img src="{{ thumb(p.cover_path, 640) }}" alt="" width="640" height="240" loading="lazy" decoding="async"></div>
     {% endif %}
     <div class="body">
       {% if p.avatar_path %}
-      <img class="avatar" src="{{ url_for('media_file', filename=p.avatar_path[8:]) }}"
-           alt="{{ t('tpl.photo_pilote') }}" loading="lazy">
+      <img class="avatar" src="{{ thumb(p.avatar_path, 160) }}"
+           alt="{{ t('tpl.photo_pilote') }}" width="56" height="56" loading="lazy" decoding="async">
       {% else %}
       <div class="avatar">{{ masked[:1] }}</div>
       {% endif %}

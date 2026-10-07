@@ -178,7 +178,7 @@ def test_map_markers_expose_photo_and_number(client, make_user):
         db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (v["id"],))
     m = client.get("/api/map?country=Islande").get_json()
     by_id = {p["id"]: p for p in m["pilots"]}
-    assert by_id[u["id"]]["avatar"] == "/media/avatar_%d.jpg" % u["id"]
+    assert by_id[u["id"]]["avatar"] == "/media/w160/avatar_%d.jpg.webp" % u["id"]
     assert by_id[v["id"]]["avatar"] is None
     assert by_id[u["id"]]["no"] and by_id[v["id"]]["no"] == by_id[u["id"]]["no"] + 1
     assert "city" in by_id[u["id"]] and "rate" in by_id[u["id"]]

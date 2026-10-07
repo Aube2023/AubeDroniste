@@ -1414,8 +1414,8 @@
   "aubelink.owner_deleted": "Conta do proprietário excluída: o AubeLink já não é consultado em seu nome."
  },
  "seo": {
-  "home.title": "Contrate um piloto de drone certificado — Orçamentos grátis | AubePilot",
-  "home.description": "Encontre e reserve um piloto de drone certificado perto de você por CEP ou endereço: fotografia aérea, inspeção, mapeamento, eventos. Licenças verificadas, orçamentos grátis, pagamento em custódia.",
+  "home.title": "Contrate um piloto de drone certificado | AubePilot",
+  "home.description": "Encontre um piloto de drone certificado perto de você: fotografia aérea, inspeção, mapeamento, eventos. Orçamentos grátis, pagamento em custódia.",
   "pilots_list.title": "Pilotos de drone certificados para contratar | AubePilot",
   "pilots_list.title_place": "Pilotos de drone certificados em {place} | AubePilot",
   "pilots_list.description": "Compare pilotos de drone certificados: avaliações, preços, licenças e equipamento. Peça orçamentos grátis para fotografia aérea, inspeção, mapeamento ou eventos.",

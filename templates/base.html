@@ -118,7 +118,7 @@
       <a href="{{ url_for('mission_create') }}" class="cta">{{ t('nav.publish') }}</a>
       <a href="{{ url_for('dashboard') }}" class="account-chip" title="{{ t('nav.account') }}">
         {% if current_user.avatar_path %}
-          <img class="avatar js-self-avatar" data-username="{{ current_user.username }}" src="{{ url_for('media_file', filename=current_user.avatar_path[8:]) }}" alt="" width="30" height="30">
+          <img class="avatar js-self-avatar" data-username="{{ current_user.username }}" src="{{ thumb(current_user.avatar_path, 160) }}" alt="" width="30" height="30">
         {% else %}
           <span class="avatar js-self-avatar" data-username="{{ current_user.username }}">{{ (current_user.full_name or current_user.username or '?')[:1]|upper }}</span>
         {% endif %}
@@ -203,7 +203,7 @@
       <a href="mailto:support@aubemail.com" class="footer-mail">support@aubemail.com</a>
     </div>
     <nav aria-label="{{ t('footer.nav_label') }}">
-      <h4>{{ t('footer.nav_label') }}</h4>
+      <h2>{{ t('footer.nav_label') }}</h2>
       <a href="{{ url_for('index') }}" class="footer-in-tabs">{{ t('nav.home') }}</a>
       <a href="{{ url_for('pilots_search') }}" class="footer-in-tabs">{{ t('nav.pilots') }}</a>
       <a href="{{ url_for('missions_search') }}" class="footer-in-tabs">{{ t('nav.missions') }}</a>
@@ -213,7 +213,7 @@
       <a href="{{ url_for('jobs') }}">{{ t('opp.jobs_nav') }}</a>
     </nav>
     <nav aria-label="{{ t('footer.company') }}">
-      <h4>{{ t('footer.company') }}</h4>
+      <h2>{{ t('footer.company') }}</h2>
       <a href="{{ url_for('index') }}#comment-ca-marche">{{ t('footer.how') }}</a>
       <a href="{{ url_for('updates') }}">{{ t('footer.updates') }}</a>
       <a href="{{ url_for('faq') }}">{{ t('footer.faq') }}</a>
@@ -222,7 +222,7 @@
     </nav>
     {% if social_links %}
     <nav aria-label="{{ t('footer.follow') }}">
-      <h4>{{ t('footer.follow') }}</h4>
+      <h2>{{ t('footer.follow') }}</h2>
       {% for name, url in social_links %}<a href="{{ url }}" rel="me noopener" target="_blank">{{ name }}</a>{% endfor %}
     </nav>
     {% endif %}

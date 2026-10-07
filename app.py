@@ -34,6 +34,7 @@ import payments
 import security
 import seo
 import services
+import thumbs
 from config import (
     ALLOWED_DOC_EXT,
     CANCELLATION_GRACE_HOURS,
@@ -617,6 +618,8 @@ def _inject_helpers():
             lang=getattr(g, "lang", i18n.DEFAULT)),
         # Nom public d'une fiche : ecole en clair, personne masquee
         "public_name": services.public_name,
+        # Miniature WebP d'une image de /media (voir thumbs.py) : thumb(p.avatar_path, 160)
+        "thumb": thumbs.url,
         "activity_bucket": services.activity_bucket,
         "drone_label": lambda c: _label(DRONE_CATEGORIES, c, c),
         "auth_label": lambda c: _label(LICENCE_AUTHORITIES, c, c),
@@ -3109,12 +3112,7 @@ def pilot_upload_avatar():
         return redirect(url_for("pilot_edit"))
 
     # Remplacement : supprime l'ancien fichier sur disque s'il existait.
-    old = services.clear_user_avatar(user["id"])
-    if old and old.startswith("uploads/"):
-        try:
-            os.remove(os.path.join(UPLOAD_DIR, old[len("uploads/"):]))
-        except OSError:
-            pass
+    _remove_upload(services.clear_user_avatar(user["id"]))
 
     safe = f"avatar_u{user['id']}_{int(time.time())}.{ext}"
     f.save(os.path.join(UPLOAD_DIR, safe))
@@ -3126,12 +3124,7 @@ def pilot_upload_avatar():
 @app.route("/espace/pilote/avatar/supprimer", methods=["POST"])
 @auth.login_required
 def pilot_delete_avatar():
-    old = services.clear_user_avatar(g.user["id"])
-    if old and old.startswith("uploads/"):
-        try:
-            os.remove(os.path.join(UPLOAD_DIR, old[len("uploads/"):]))
-        except OSError:
-            pass
+    _remove_upload(services.clear_user_avatar(g.user["id"]))
     flash("Photo de profil retiree.", "info")
     return redirect(url_for("pilot_edit"))
 
@@ -3147,6 +3140,7 @@ def _remove_upload(rel) -> None:
             os.remove(os.path.join(UPLOAD_DIR, rel[len("uploads/"):]))
         except OSError:
             pass
+        thumbs.remove(rel)
 
 
 @app.route("/espace/pilote/couverture", methods=["POST"])
@@ -3223,7 +3217,36 @@ def media_file(filename):
     if ext in _MEDIA_BLOCKED_EXT:
         abort(404)
     resp = make_response(send_from_directory(UPLOAD_DIR, filename))
-    resp.headers["Cache-Control"] = "public, max-age=86400"
+    # Chaque envoi recoit un nom neuf (horodate) : le contenu d'une adresse ne
+    # change jamais, le navigateur peut le garder un an.
+    resp.headers["Cache-Control"] = _MEDIA_CACHE
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Content-Disposition"] = "inline"
+    return resp
+
+
+_MEDIA_CACHE = "public, max-age=31536000, immutable"
+
+
+@app.route("/media/w<int:width>/<path:filename>")
+def media_thumb(width, filename):
+    """Copie WebP reduite d'une image publique (thumbs.py). Memes gardes que
+    /media ; sans Pillow ou sur un fichier illisible, renvoie a l'original."""
+    if not filename.endswith(".webp"):
+        abort(404)
+    name = filename[:-len(".webp")]
+    if ".." in name or name.startswith("/") or not _MEDIA_PUBLIC_RE.match(name):
+        abort(404)
+    if width not in thumbs.WIDTHS or not thumbs.is_raster(name):
+        abort(404)
+    if not os.path.isfile(os.path.join(UPLOAD_DIR, name)):
+        abort(404)
+    path = thumbs.ensure(name, width)
+    if not path:
+        return redirect(url_for("media_file", filename=name))
+    resp = make_response(send_from_directory(os.path.dirname(path), os.path.basename(path),
+                                             mimetype="image/webp"))
+    resp.headers["Cache-Control"] = _MEDIA_CACHE
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Content-Disposition"] = "inline"
     return resp
@@ -3380,6 +3403,7 @@ def pilot_portfolio_delete(item_id):
             os.remove(os.path.join(UPLOAD_DIR, item["stored_filename"]))
         except OSError:
             pass
+        thumbs.remove(item["stored_filename"])
         if item.get("thumb_filename"):
             try:
                 os.remove(os.path.join(UPLOAD_DIR, item["thumb_filename"]))

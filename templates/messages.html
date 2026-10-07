@@ -25,7 +25,7 @@
     {% endif %}
     <a class="inbox-item {{ 'on' if c_on else '' }} {{ 'unread' if c.unread else '' }}" href="{{ c_href }}">
       {% if c.peer_avatar %}
-      <img class="avatar" src="{{ url_for('media_file', filename=c.peer_avatar[8:]) }}" alt="" loading="lazy">
+      <img class="avatar" src="{{ thumb(c.peer_avatar, 160) }}" alt="" width="42" height="42" loading="lazy" decoding="async">
       {% else %}
       <span class="avatar">{{ (c.peer_name or '?')[:1]|upper }}</span>
       {% endif %}

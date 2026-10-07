@@ -61,8 +61,8 @@
             <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
           </video>
         {% else %}
-          <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or it.original_filename }}" loading="lazy">
+          <img src="{{ thumb(it.stored_filename, 1280) }}" data-full="{{ url_for('media_file', filename=it.stored_filename) }}"
+               width="1280" height="800" alt="{{ it.title or it.original_filename }}" loading="lazy" decoding="async">
         {% endif %}
       </div>
       <div class="media-body">

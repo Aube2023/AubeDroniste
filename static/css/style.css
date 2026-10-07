@@ -1095,7 +1095,7 @@ img.avatar { object-fit: cover; }
 .footer-mail { font-family: var(--mono); font-size: .9rem; color: var(--ink); }
 .footer-mail:hover { color: var(--amber); }
 .footer-grid nav { display: flex; flex-direction: column; gap: 9px; }
-.footer-grid nav h4 {
+.footer-grid nav h2 {
   margin: 4px 0 6px;
   font: 600 11px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--ink-dim);

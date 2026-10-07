@@ -26,7 +26,8 @@
   {% if pilot.cover_path %}
   {# Image de couverture : bandeau paysage, la photo de profil chevauche son bord bas. #}
   <div class="flightbook-cover">
-    <img src="{{ url_for('media_file', filename=pilot.cover_path[8:]) }}"
+    <img src="{{ thumb(pilot.cover_path, 1920) }}" data-full="{{ url_for('media_file', filename=pilot.cover_path[8:]) }}"
+         width="1920" height="600" fetchpriority="high"
          alt="{{ t('tpl.couverture_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
   </div>
   {% elif is_org %}
@@ -35,7 +36,8 @@
   <div class="flightbook-band">
     {% set _logo = pilot.org_logo_path if (is_org and pilot.org_logo_path) else pilot.avatar_path %}
     {% if _logo %}
-    <img class="avatar big avatar-zoom{% if is_org %} org-logo{% endif %}" src="{{ url_for('media_file', filename=_logo[8:]) }}"
+    <img class="avatar big avatar-zoom{% if is_org %} org-logo{% endif %}" src="{{ thumb(_logo, 320) }}"
+         data-full="{{ url_for('media_file', filename=_logo[8:]) }}" width="96" height="96"
          alt="{{ t('tpl.photo_de') }} {{ display_name }}" data-zoom tabindex="0" role="button">
     {% else %}
     <div class="avatar big{% if is_org %} org-logo{% endif %}">{{ display_name[:1] }}</div>
@@ -289,7 +291,7 @@
     {% for d in pilot.drones %}
     <div class="fleet-card">
       {% if d.photo_path %}
-      <div class="fleet-photo"><img src="{{ url_for('media_file', filename=d.photo_path[8:]) }}" alt="{{ d.brand }} {{ d.model }}" loading="lazy"></div>
+      <div class="fleet-photo"><img src="{{ thumb(d.photo_path, 640) }}" alt="{{ d.brand }} {{ d.model }}" width="640" height="400" loading="lazy" decoding="async"></div>
       {% else %}
       <div class="fleet-photo fleet-photo-empty" aria-hidden="true">
         <svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6"/><circle cx="54" cy="10" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="54" cy="30" r="6"/><rect x="24" y="14" width="16" height="12" rx="3"/><path d="M15 14l9 3M49 14l-9 3M15 26l9-3M49 26l-9-3"/></svg>
@@ -341,8 +343,8 @@
             <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
           </video>
         {% else %}
-          <img src="{{ url_for('media_file', filename=it.stored_filename) }}"
-               alt="{{ it.title or t('tpl.work') }}" loading="lazy">
+          <img src="{{ thumb(it.stored_filename, 1280) }}" data-full="{{ url_for('media_file', filename=it.stored_filename) }}"
+               width="1280" height="800" alt="{{ it.title or t('tpl.work') }}" loading="lazy" decoding="async">
         {% endif %}
       </div>
       {% if it.title or it.description %}

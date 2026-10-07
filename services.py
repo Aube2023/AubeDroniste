@@ -15,6 +15,7 @@ from typing import Iterable, Optional
 
 import db
 import i18n
+import thumbs
 from config import (
     CAMPAIGN_FEE_PCT,
     CAMPAIGN_GOAL_MAX,
@@ -3816,12 +3817,12 @@ def map_markers(*, country: str = "", mission_type: str = "", kind: str = "",
             # Tarif horaire affiche, ou rien (« sur devis » se lit sur la fiche).
             "rate": (f"{int(p['hourly_rate'])} {p.get('p_currency') or ''}/h".strip()
                      if p.get("hourly_rate") else ""),
-            # Photo publique (meme route /media que les cartes de l'annuaire).
-            "avatar": ("/media/" + p["avatar_path"][8:])
-                      if (p.get("avatar_path") or "").startswith("uploads/") else None,
-            # Image de couverture (bandeau paysage de la bulle).
-            "cover": ("/media/" + p["cover_path"][8:])
-                     if (p.get("cover_path") or "").startswith("uploads/") else None,
+            # Photo publique, en miniature WebP (thumbs.py) : la bulle l'affiche en 46 px.
+            "avatar": (thumbs.url(p["avatar_path"], 160)
+                       if (p.get("avatar_path") or "").startswith("uploads/") else None),
+            # Image de couverture (bandeau paysage de 84 px de haut dans la bulle).
+            "cover": (thumbs.url(p["cover_path"], 640)
+                      if (p.get("cover_path") or "").startswith("uploads/") else None),
         })
     m_out = []
     for m in missions:
@@ -4807,6 +4808,11 @@ def _remove_user_uploads(user_id: int) -> int:
                     log.warning("suppression fichier %s : %s", name, exc)
     except OSError as exc:
         log.warning("nettoyage des televersements de u%s : %s", user_id, exc)
+    # Les copies reduites (thumbs.py) partent avec les originaux.
+    try:
+        removed += thumbs.remove_matching(prefixes, folder=f"portfolio_u{user_id}")
+    except OSError as exc:
+        log.warning("nettoyage des miniatures de u%s : %s", user_id, exc)
     return removed
 
 

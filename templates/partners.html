@@ -20,7 +20,7 @@
   <article class="partner-card kind-{{ p.kind }}">
     <div class="partner-logo">
       {% if p.logo_path %}
-      <img src="{{ url_for('media_file', filename=p.logo_path[8:]) }}" alt="{{ p.name }}" loading="lazy">
+      <img src="{{ thumb(p.logo_path, 320) }}" alt="{{ p.name }}" loading="lazy" decoding="async">
       {% else %}
       <span aria-hidden="true">{{ p.name[:1] }}</span>
       {% endif %}

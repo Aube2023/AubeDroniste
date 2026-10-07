@@ -50,7 +50,7 @@
 <section class="card" id="partenaire-{{ p.id }}">
   <div class="row-between" style="align-items: start; gap: 12px; flex-wrap: wrap;">
     <div style="display: flex; gap: 14px; align-items: center;">
-      {% if p.logo_path %}<img src="{{ url_for('media_file', filename=p.logo_path[8:]) }}" alt="" style="width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--rule); border-radius: 10px; background: #fff;">{% endif %}
+      {% if p.logo_path %}<img src="{{ thumb(p.logo_path, 160) }}" alt="" style="width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--rule); border-radius: 10px; background: #fff;">{% endif %}
       <div>
         <h2 style="margin: 0 0 4px;">{{ p.name }}</h2>
         <div class="muted mono small" style="text-transform: uppercase; letter-spacing: .12em;">#{{ p.id }} · {{ kind_labels.get(p.kind, p.kind) }} · {{ 'actif' if p.is_active else 'masqué' }}{% if p.url %} · <a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.url }}</a>{% endif %}</div>

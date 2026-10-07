@@ -114,11 +114,11 @@ def test_couverture_sur_les_cartes_et_la_carte(make_user, auth_client, app_ctx, 
     head, card = html.split(f'data-pilot-id="{u["id"]}"')
     assert "has-cover" in head[-160:]                 # classe sur la balise <a> de cette carte
     card = card.split("</a>")[0]
-    assert '<div class="cover"><img src="/media/' + rel[8:] in card
+    assert '<div class="cover"><img src="/media/w640/' + rel[8:] + '.webp"' in card
     # Pilotes vedettes de l'accueil (la base de test est partagee : on
     # verifie la donnee, pas les 8 premiers affiches) et charge utile de la carte.
     feat = [p for p in services.featured_pilots(1000) if p["id"] == u["id"]]
     assert feat and feat[0]["cover_path"] == rel
     markers = services.map_markers(country="Canada")
     mine = [p for p in markers["pilots"] if p["id"] == u["id"]]
-    assert mine and mine[0]["cover"] == "/media/" + rel[8:]
+    assert mine and mine[0]["cover"] == "/media/w640/" + rel[8:] + ".webp"

@@ -27,7 +27,7 @@
   <div class="avatar-uploader">
     {% if profile.avatar_path %}
       <img class="js-self-avatar avatar-frame" data-username="{{ current_user.username }}"
-           src="{{ url_for('media_file', filename=profile.avatar_path[8:]) }}"
+           src="{{ thumb(profile.avatar_path, 320) }}"
            alt="{{ t('tpl.avatar_de') }} {{ current_user.full_name }}">
     {% else %}
       <div class="js-self-avatar avatar-frame placeholder" data-username="{{ current_user.username }}">
@@ -65,7 +65,7 @@
   <p class="muted" style="margin: 8px 0 12px;">{{ t('tpl.couverture_intro') }}</p>
   <div class="cover-uploader">
     {% if profile.cover_path %}
-      <img class="cover-frame" src="{{ url_for('media_file', filename=profile.cover_path[8:]) }}"
+      <img class="cover-frame" src="{{ thumb(profile.cover_path, 1280) }}"
            alt="{{ t('tpl.couverture_de') }} {{ current_user.full_name }}">
     {% else %}
       <div class="cover-frame placeholder" aria-hidden="true">
@@ -101,7 +101,7 @@
   <div class="chips" style="gap: 8px; margin-bottom: 12px;">
     {% for it in portfolio[:6] %}
       {% if it.kind == 'image' %}
-      <img src="{{ url_for('media_file', filename=it.stored_filename) }}" alt=""
+      <img src="{{ thumb(it.stored_filename, 160) }}" alt=""
            loading="lazy" style="width: 76px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--rule);">
       {% else %}
       <span class="tag">🎬 {{ it.title or t('tpl.video') }}</span>
@@ -440,7 +440,7 @@
     <div class="drone row-between" id="drone-{{ d.id }}" style="gap: 14px; align-items: center; flex-wrap: wrap;">
       <div style="display: flex; gap: 14px; align-items: center; min-width: 0;">
         {% if d.photo_path %}
-        <img src="{{ url_for('media_file', filename=d.photo_path[8:]) }}" alt="" style="width: 72px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--rule); flex: 0 0 auto;">
+        <img src="{{ thumb(d.photo_path, 160) }}" alt="" style="width: 72px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--rule); flex: 0 0 auto;">
         {% else %}
         <span class="muted" style="width: 72px; height: 54px; border: 1px dashed var(--rule); border-radius: 8px; display: grid; place-items: center; font-size: 10px; flex: 0 0 auto;">{{ t('tpl.sans_photo') }}</span>
         {% endif %}

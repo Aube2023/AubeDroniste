@@ -14,6 +14,9 @@ stripe>=8.0
 # Generation PDF des devis (pur Python, aucune dependance systeme)
 reportlab>=4.0
 
+# Miniatures WebP des photos de /media (thumbs.py) ; deja tire par reportlab
+Pillow>=10.0
+
 # Production-only (decommenter / installer separement)
 # gunicorn>=21.0
 # pytest>=8.0  # pour la suite de tests

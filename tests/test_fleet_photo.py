@@ -20,7 +20,8 @@ def test_photo_a_l_ajout_puis_remplacee(make_user, auth_client, app_ctx, client)
     d = db.fetchone("SELECT * FROM pilot_drones WHERE pilot_user_id=?", (u["id"],))
     assert d["photo_path"] and d["photo_path"].startswith("uploads/u") and "_drone_" in d["photo_path"]
     html = client.get(f"/pilotes/{u['id']}").data.decode()
-    assert 'class="fleet-photo"' in html and "/media/" + d["photo_path"][8:] in html
+    # Servie en miniature WebP (thumbs.py), pas en pleine taille.
+    assert 'class="fleet-photo"' in html and "/media/w640/" + d["photo_path"][8:] + ".webp" in html
     # Fiche technique longue : une liste, une ligne par point-virgule
     assert 'class="fleet-spec-list"' in html and "<li>Capteur CMOS 4/3 de 20 MP</li>" in html
     # Remplacement après coup, depuis l'espace pilote

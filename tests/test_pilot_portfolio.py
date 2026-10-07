@@ -284,7 +284,7 @@ def test_vignettes_du_profil_pointent_le_bon_fichier(auth_client, make_user, app
     services.upsert_pilot_profile(u["id"], is_available=1)
     _ajoute_piece(db, u["id"], nom="vue.jpg")
     html = auth_client(u["id"]).get("/espace/pilote").data.decode()
-    assert f'/media/portfolio_u{u["id"]}/vue.jpg' in html
+    assert f'/media/w160/portfolio_u{u["id"]}/vue.jpg.webp' in html
 
 
 def test_apercu_partage_reprend_une_realisation_sans_avatar(client, make_user, app_ctx):

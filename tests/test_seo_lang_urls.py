@@ -363,3 +363,12 @@ def test_page_admin_visites(client, auth_client, make_user, app_ctx):
     # reserve aux admins
     v = make_user("pas_admin", role="client")
     assert auth_client(v["id"]).get("/admin/visites").status_code == 403
+
+
+def test_titre_et_description_de_l_accueil_tiennent_dans_google():
+    """Google coupe le titre vers 60 caracteres et la description vers 160
+    (audit du 2026-10-07 : 62 et 204 en francais). Toutes les langues."""
+    for lang, title in seo._S["home.title"].items():
+        assert len(title) <= 60, (lang, len(title), title)
+    for lang, desc in seo._S["home.description"].items():
+        assert len(desc) <= 160, (lang, len(desc), desc)
