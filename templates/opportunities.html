@@ -20,7 +20,7 @@
   <a href="{{ url_for('jobs') }}" class="{{ 'on' if is_job else '' }}">{{ t('opp.jobs_nav') }} <span class="n">{{ counts.job }}</span></a>
 </nav>
 
-<form method="get" class="search-form centered" action="{{ url_for('jobs' if is_job else 'opportunities') }}">
+<form method="get" class="search-form centered wide" action="{{ url_for('jobs' if is_job else 'opportunities') }}">
   <div class="search-bar">
     <label class="search-field grow">
       <span>{{ t('opp.filter_q') }}</span>

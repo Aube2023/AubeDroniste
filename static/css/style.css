@@ -2457,6 +2457,9 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .search-count a { margin-inline-start: 8px; font-weight: 600; }
 .search-form { margin: 14px 0 18px; }
 .search-form.centered { max-width: 980px; margin-inline: auto; }
+/* Emplois et appels d'offres : jusqu'à cinq champs (mot-clé, pays, province,
+   ville, spécialité), la barre prend la largeur des fiches. */
+.search-form.centered.wide { max-width: 1180px; }
 .search-form.centered .search-options { justify-content: center; }
 .search-form.centered .near-note { text-align: center; }
 .search-bar {
