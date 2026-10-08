@@ -46,9 +46,14 @@
     {% if cities|length > 1 %}
     <label class="search-field">
       <span>{{ t('common.city') }}</span>
+      {# Sans pays : les villes rangées par pays ; en choisir une choisit aussi son pays (app.js). #}
       <select name="city" data-action="submit-on-change-select">
         <option value="">{{ t('opp.all_cities') }}</option>
+        {% if country %}
         {% for c in cities %}<option value="{{ c.city }}"{% if c.city == city %} selected{% endif %}>{{ c.city }} ({{ c.n }})</option>{% endfor %}
+        {% else %}
+        {% for grp in cities|groupby('country') %}<optgroup label="{{ country_name(grp.grouper) }}">{% for c in grp.list %}<option value="{{ c.city }}" data-country="{{ c.country }}"{% if c.city == city %} selected{% endif %}>{{ c.city }} ({{ c.n }})</option>{% endfor %}</optgroup>{% endfor %}
+        {% endif %}
       </select>
     </label>
     {% endif %}

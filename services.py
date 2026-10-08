@@ -4960,15 +4960,18 @@ def opportunity_regions(country: str = "", kind: str = "") -> list:
     return [dict(r) for r in db.fetchall(q, args)]
 
 
-def opportunity_cities(country: str, region: str = "", kind: str = "") -> list:
-    """Villes présentes parmi les fiches ouvertes d'un pays (et de sa
-    province si elle est choisie), avec leur nombre, par ordre alphabétique."""
-    q, args = f"SELECT city, COUNT(*) AS n FROM opportunities WHERE {_OPEN} AND city<>'' AND country=?", [country]
+def opportunity_cities(country: str = "", region: str = "", kind: str = "") -> list:
+    """Villes présentes parmi les fiches ouvertes, avec leur pays et leur
+    nombre : celles d'un pays (et de sa province si elle est choisie), ou de
+    tous les pays, par pays puis par ordre alphabétique."""
+    q, args = f"SELECT country, city, COUNT(*) AS n FROM opportunities WHERE {_OPEN} AND city<>''", []
+    if country:
+        q += " AND country=?"; args.append(country)
     if kind:
         q += " AND kind=?"; args.append(kind)
     if region:
         q += " AND region=?"; args.append(region)
-    q += " GROUP BY city ORDER BY city COLLATE NOCASE"
+    q += " GROUP BY country, city ORDER BY country, city COLLATE NOCASE"
     return [dict(r) for r in db.fetchall(q, args)]
 
 

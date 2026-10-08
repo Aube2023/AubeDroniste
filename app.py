@@ -1061,9 +1061,9 @@ def _opportunities_page(kind: str):
     lang = getattr(g, "lang", i18n.DEFAULT)
     country = (request.args.get("country") or "").strip()
     region = (request.args.get("region") or "").strip()
-    # Ville : seulement avec un pays, et seulement une ville de la liste (un
-    # vieux lien ou une autre province ne filtre pas en silence).
-    cities = services.opportunity_cities(country, region, kind) if country else []
+    # Ville : seulement une ville de la liste (un vieux lien ou une autre
+    # province ne filtre pas en silence). Sans pays, toutes les villes.
+    cities = services.opportunity_cities(country, region, kind)
     city = (request.args.get("city") or "").strip()
     if city not in {c["city"] for c in cities}:
         city = ""

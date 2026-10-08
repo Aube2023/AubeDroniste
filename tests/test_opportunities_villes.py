@@ -44,12 +44,24 @@ def test_villes_de_la_province_choisie(client, offres):
     assert ">Reykjavik (2)</option>" in html and "Akureyri" not in html.split('name="city"')[1].split("</select>")[0]
 
 
-def test_ville_inconnue_ou_sans_pays_ignoree(client, offres):
+def test_ville_d_une_autre_province_ignoree(client, offres):
     # Ville d'une autre province : ignorée, pas de liste vide en silence.
     html = client.get("/emplois?country=Islande&region=Norðurland&city=Reykjavik").data.decode()
     assert _titles(html) == ["Poste v4", "Poste v5"]
-    # Sans pays, pas de filtre ville.
-    assert 'name="city"' not in client.get("/emplois?city=Reykjavik").data.decode()
+    assert _titles(client.get("/emplois?country=Islande&city=Atlantide").data.decode()) == \
+        ["Poste v1", "Poste v2", "Poste v3", "Poste v4", "Poste v5"]
+
+
+def test_villes_sans_pays_rangees_par_pays(client, offres):
+    """Sans pays choisi (arrivée sur /emplois), le champ Ville est déjà là :
+    toutes les villes, rangées par pays ; chacune porte son pays pour que le
+    choix d'une ville choisisse aussi le pays (app.js)."""
+    html = client.get("/emplois").data.decode()
+    select = html.split('name="city"')[1].split("</select>")[0]
+    assert '<optgroup label="Islande">' in select
+    assert '<option value="Reykjavik" data-country="Islande">Reykjavik (2)</option>' in select
+    html = client.get("/emplois?city=Reykjavik").data.decode()
+    assert _titles(html) == ["Poste v1", "Poste v2"]
 
 
 def test_changer_de_pays_remet_province_et_ville(client, offres):

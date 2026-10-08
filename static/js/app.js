@@ -319,5 +319,9 @@ document.addEventListener('change', function (e) {
     var dep = name && el.form.elements[name];
     if (dep) dep.value = '';
   });
+  // Ville choisie dans la liste de tous les pays : son pays suit.
+  var opt = el.options[el.selectedIndex];
+  var country = opt && opt.getAttribute('data-country');
+  if (country && el.form.elements.country) el.form.elements.country.value = country;
   el.form.submit();
 });
