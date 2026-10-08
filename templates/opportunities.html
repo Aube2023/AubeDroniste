@@ -28,7 +28,7 @@
     </label>
     <label class="search-field">
       <span>{{ t('opp.filter_country') }}</span>
-      <select name="country" data-action="submit-on-change-select">
+      <select name="country" data-action="submit-on-change-select" data-resets="region city">
         <option value="">{{ t('opp.all_countries') }}</option>
         {% for c in countries %}<option value="{{ c.country }}"{% if c.country == country %} selected{% endif %}>{{ country_name(c.country) }} ({{ c.n }})</option>{% endfor %}
       </select>
@@ -36,9 +36,19 @@
     {% if regions|length > 1 %}
     <label class="search-field">
       <span>{{ t('opp.filter_region') }}</span>
-      <select name="region">
+      {# Changer de province recharge la page : la liste des villes suit. #}
+      <select name="region" data-action="submit-on-change-select" data-resets="city">
         <option value="">{{ t('opp.all_regions') }}</option>
         {% for r in regions %}<option value="{{ r.region }}"{% if r.region == region %} selected{% endif %}>{{ r.region }} ({{ r.n }})</option>{% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    {% if cities|length > 1 %}
+    <label class="search-field">
+      <span>{{ t('common.city') }}</span>
+      <select name="city" data-action="submit-on-change-select">
+        <option value="">{{ t('opp.all_cities') }}</option>
+        {% for c in cities %}<option value="{{ c.city }}"{% if c.city == city %} selected{% endif %}>{{ c.city }} ({{ c.n }})</option>{% endfor %}
       </select>
     </label>
     {% endif %}

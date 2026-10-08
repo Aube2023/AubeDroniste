@@ -1061,14 +1061,21 @@ def _opportunities_page(kind: str):
     lang = getattr(g, "lang", i18n.DEFAULT)
     country = (request.args.get("country") or "").strip()
     region = (request.args.get("region") or "").strip()
+    # Ville : seulement avec un pays, et seulement une ville de la liste (un
+    # vieux lien ou une autre province ne filtre pas en silence).
+    cities = services.opportunity_cities(country, region, kind) if country else []
+    city = (request.args.get("city") or "").strip()
+    if city not in {c["city"] for c in cities}:
+        city = ""
     specialty = (request.args.get("mission_type") or "").strip()
     text = (request.args.get("q") or "").strip()[:80]
     items = services.localize_opportunities(
-        services.list_opportunities(kind=kind, country=country, region=region, specialty=specialty, text=text,
-                                    limit=500 if kind == "job" else 200), lang)
+        services.list_opportunities(kind=kind, country=country, region=region, city=city, specialty=specialty,
+                                    text=text, limit=500 if kind == "job" else 200), lang)
     return render_template(
         "opportunities.html", kind=kind, items=items,
         regions=services.opportunity_regions(country, kind) if country else [],
+        cities=cities, city=city,
         countries=services.opportunity_countries(kind),
         counts={"tender": services.count_opportunities("tender"), "job": services.count_opportunities("job")},
         country=country, region=region, specialty=specialty, q=text,

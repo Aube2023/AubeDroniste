@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, kiểm tra, ảnh trực giao…",
   "opp.filter_region": "Tỉnh bang",
   "opp.all_regions": "Tất cả tỉnh bang",
+  "opp.all_cities": "Tất cả thành phố",
   "opp.filter_specialty": "Chuyên môn",
   "opp.all_specialties": "Tất cả chuyên môn",
   "opp.filter_btn": "Lọc",

@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, επιθεώρηση, ορθοφωτογραφία…",
   "opp.filter_region": "Επαρχία",
   "opp.all_regions": "Όλες οι επαρχίες",
+  "opp.all_cities": "Όλες οι πόλεις",
   "opp.filter_specialty": "Ειδικότητα",
   "opp.all_specialties": "Όλες οι ειδικότητες",
   "opp.filter_btn": "Φιλτράρισμα",

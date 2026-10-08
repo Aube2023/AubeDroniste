@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, inspeksyon, orthophoto…",
   "opp.filter_region": "Probinsya",
   "opp.all_regions": "Lahat ng probinsya",
+  "opp.all_cities": "Lahat ng lungsod",
   "opp.filter_specialty": "Espesyalidad",
   "opp.all_specialties": "Lahat ng espesyalidad",
   "opp.filter_btn": "I-filter",

@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, inspecție, ortofotoplan…",
   "opp.filter_region": "Provincie",
   "opp.all_regions": "Toate provinciile",
+  "opp.all_cities": "Toate orașele",
   "opp.filter_specialty": "Specialitate",
   "opp.all_specialties": "Toate specialitățile",
   "opp.filter_btn": "Filtrează",

@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, inspeksi, ortofoto…",
   "opp.filter_region": "Provinsi",
   "opp.all_regions": "Semua provinsi",
+  "opp.all_cities": "Semua kota",
   "opp.filter_specialty": "Spesialisasi",
   "opp.all_specialties": "Semua spesialisasi",
   "opp.filter_btn": "Saring",

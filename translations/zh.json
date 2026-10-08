@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR、巡检、正射影像…",
   "opp.filter_region": "省份",
   "opp.all_regions": "所有省份",
+  "opp.all_cities": "所有城市",
   "opp.filter_specialty": "专长",
   "opp.all_specialties": "所有专长",
   "opp.filter_btn": "筛选",

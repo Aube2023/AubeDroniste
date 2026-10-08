@@ -4866,8 +4866,9 @@ def _rowcount(cur) -> int:
 # Opportunites (appels d'offres publics, cf. opportunities.py)
 # ---------------------------------------------------------------------------
 
-def list_opportunities(*, kind: str = "", country: str = "", region: str = "", specialty: str = "",
-                       text: str = "", limit: int = 200, include_hidden: bool = False) -> list:
+def list_opportunities(*, kind: str = "", country: str = "", region: str = "", city: str = "",
+                       specialty: str = "", text: str = "", limit: int = 200,
+                       include_hidden: bool = False) -> list:
     """Fiches ouvertes : appels d'offres (kind=tender) les clôtures les plus
     proches d'abord (celles sans date à la fin), emplois (kind=job) les plus
     récents d'abord. L'admin voit aussi les fiches masquées et closes."""
@@ -4881,6 +4882,8 @@ def list_opportunities(*, kind: str = "", country: str = "", region: str = "", s
         q.append("AND country=?"); args.append(country)
     if region:
         q.append("AND region=?"); args.append(region)
+    if city:
+        q.append("AND city=?"); args.append(city)
     if specialty:
         q.append("AND (',' || specialties || ',') LIKE ?"); args.append(f"%,{specialty},%")
     if text:
@@ -4954,6 +4957,18 @@ def opportunity_regions(country: str = "", kind: str = "") -> list:
     if country:
         q += " AND country=?"; args.append(country)
     q += " GROUP BY region ORDER BY region=country, region"
+    return [dict(r) for r in db.fetchall(q, args)]
+
+
+def opportunity_cities(country: str, region: str = "", kind: str = "") -> list:
+    """Villes présentes parmi les fiches ouvertes d'un pays (et de sa
+    province si elle est choisie), avec leur nombre, par ordre alphabétique."""
+    q, args = f"SELECT city, COUNT(*) AS n FROM opportunities WHERE {_OPEN} AND city<>'' AND country=?", [country]
+    if kind:
+        q += " AND kind=?"; args.append(kind)
+    if region:
+        q += " AND region=?"; args.append(region)
+    q += " GROUP BY city ORDER BY city COLLATE NOCASE"
     return [dict(r) for r in db.fetchall(q, args)]
 
 

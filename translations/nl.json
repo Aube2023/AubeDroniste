@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, inspectie, orthofoto…",
   "opp.filter_region": "Provincie",
   "opp.all_regions": "Alle provincies",
+  "opp.all_cities": "Alle steden",
   "opp.filter_specialty": "Specialisatie",
   "opp.all_specialties": "Alle specialisaties",
   "opp.filter_btn": "Filteren",

@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, 점검, 정사영상…",
   "opp.filter_region": "주",
   "opp.all_regions": "모든 주",
+  "opp.all_cities": "모든 도시",
   "opp.filter_specialty": "전문 분야",
   "opp.all_specialties": "모든 전문 분야",
   "opp.filter_btn": "필터",

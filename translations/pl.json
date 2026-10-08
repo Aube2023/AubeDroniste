@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, inspekcja, ortofotomapa…",
   "opp.filter_region": "Prowincja",
   "opp.all_regions": "Wszystkie prowincje",
+  "opp.all_cities": "Wszystkie miasta",
   "opp.filter_specialty": "Specjalizacja",
   "opp.all_specialties": "Wszystkie specjalizacje",
   "opp.filter_btn": "Filtruj",

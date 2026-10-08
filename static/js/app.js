@@ -309,8 +309,15 @@ document.addEventListener('change', function (e) {
 
 
 // Liste déroulante qui envoie son formulaire dès le choix (filtre pays des
-// appels d'offres : la liste des provinces dépend du pays).
+// appels d'offres : la liste des provinces dépend du pays). data-resets
+// nomme les listes qui en dépendent : remises à « toutes », sinon l'ancienne
+// province ou ville partirait avec le nouveau pays et ne donnerait rien.
 document.addEventListener('change', function (e) {
   var el = e.target;
-  if (el && el.tagName === 'SELECT' && el.getAttribute('data-action') === 'submit-on-change-select' && el.form) el.form.submit();
+  if (!(el && el.tagName === 'SELECT' && el.getAttribute('data-action') === 'submit-on-change-select' && el.form)) return;
+  (el.getAttribute('data-resets') || '').split(' ').forEach(function (name) {
+    var dep = name && el.form.elements[name];
+    if (dep) dep.value = '';
+  });
+  el.form.submit();
 });

@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR, การตรวจสอบ, ออร์โธโฟโต…",
   "opp.filter_region": "รัฐ",
   "opp.all_regions": "ทุกรัฐ",
+  "opp.all_cities": "ทุกเมือง",
   "opp.filter_specialty": "ความเชี่ยวชาญ",
   "opp.all_specialties": "ทุกความเชี่ยวชาญ",
   "opp.filter_btn": "กรอง",

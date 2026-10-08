@@ -1228,6 +1228,7 @@
   "opp.filter_q_ph": "LiDAR、点検、オルソ画像…",
   "opp.filter_region": "州",
   "opp.all_regions": "すべての州",
+  "opp.all_cities": "すべての都市",
   "opp.filter_specialty": "専門分野",
   "opp.all_specialties": "すべての専門分野",
   "opp.filter_btn": "絞り込む",
