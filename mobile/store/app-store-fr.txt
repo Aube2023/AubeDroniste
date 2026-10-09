@@ -27,23 +27,24 @@ URL de suppression du compte (si demandée) : https://pilot.aubeetoilee.com/supp
 
 Pratiques en matière de données (« étiquettes de confidentialité ») :
 Suivi (tracking) : NON. Aucune publicité, aucun traceur, aucun partage avec des courtiers de données.
-Données collectées, toutes « liées à l'identité de l'utilisateur », aucune utilisée pour le suivi,
-finalité « Fonctionnalités de l'app » pour chacune (plus « Gestion du compte » pour nom, courriel, identifiant) :
+Données collectées (cases à cocher), toutes « liées à l'identité de l'utilisateur », aucune utilisée pour le suivi,
+finalité « Fonctionnalité de l'app » pour chacune :
 - Coordonnées > Nom
-- Coordonnées > Adresse courriel
+- Coordonnées > Adresse e-mail
 - Coordonnées > Numéro de téléphone (facultatif)
 - Coordonnées > Adresse physique (lieu de la mission)
-- Localisation > Position approximative (ville, rayon de recherche)
-- Localisation > Position précise (facultative : boutons « Activer ma zone », « Près de moi »)
-- Infos financières > Infos de paiement (saisies chez Stripe, prestataire de paiement ; finalité ajoutée : prévention de la fraude)
-- Achats > Historique d'achats (missions payées)
-- Contenu de l'utilisateur > Courriels ou messages texte (messages entre client et pilote)
-- Contenu de l'utilisateur > Photos ou vidéos (portfolio, livrables)
-- Contenu de l'utilisateur > Autre contenu de l'utilisateur (bio, avis, devis, brevets, fichiers)
+- Emplacement > Emplacement précis (lieu de mission géocodé, position du pilote arrondie à 100 m)
+- Emplacement > Emplacement approximatif (code postal, rayon de recherche)
+- Contenu utilisateur > E-mails ou SMS (messages entre client et pilote)
+- Contenu utilisateur > Photos ou vidéos (portfolio, livrables)
+- Contenu utilisateur > Assistance client (formulaire de contact)
+- Contenu utilisateur > Autre contenu utilisateur (bio, avis, devis, brevets, assurance, fichiers)
 - Identifiants > Identifiant de l'utilisateur
-- Autres données > Autres types de données (pièce d'identité jointe à un brevet, si fournie)
-Diagnostics, analyses, publicité, identifiant de l'appareil : rien de collecté.
-(Alignées sur la « Sécurité des données » remplie pour Play le 2026-09-20.)
+- Achats (missions payées)
+NE PAS cocher « Informations de paiement » : carte et compte bancaire sont saisis chez Stripe, AubePilot n'y a
+jamais accès (définition d'Apple : dans ce cas, non collectées). Rien en santé, contacts, historique, diagnostic,
+données d'utilisation, identifiant de l'appareil.
+(Proches de la « Sécurité des données » de Play du 2026-09-20 ; Play classe Stripe en « infos de paiement », Apple non.)
 
 === Classification par âge (questionnaire) ===
 Violence, contenu sexuel, grossièretés, drogues, alcool, tabac, horreur, jeux d'argent, concours : Aucun
