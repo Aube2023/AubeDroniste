@@ -45,6 +45,7 @@ from config import (
     PLATFORM_FEE_TIERS,
     ANDROID_CERT_SHA256,
     ANDROID_PACKAGE,
+    IOS_APP_IDS,
     AUBECREW_URL,
     AUBEMAIL_URL,
     AUTO_RELEASE_DAYS,
@@ -782,6 +783,26 @@ def assetlinks_json():
             "sha256_cert_fingerprints": ANDROID_CERT_SHA256,
         },
     }])
+
+
+@app.route("/.well-known/apple-app-site-association")
+def apple_app_site_association():
+    """Liens universels iOS : declare que l'app iPhone (equipe + bundle id)
+    ouvre les liens du site. Servi en JSON, sans redirection : iOS le
+    telecharge via le CDN d'Apple a l'installation de l'app. Les fichiers
+    statiques et les medias restent dans le navigateur."""
+    excluded = ["/static/*", "/media/*", "/sw.js", "/.well-known/*"]
+    resp = jsonify({
+        "applinks": {
+            "details": [{
+                "appIDs": IOS_APP_IDS,
+                "components": [{"/": p, "exclude": True} for p in excluded]
+                + [{"/": "*"}],
+            }],
+        },
+    })
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
 
 
 @app.route("/sw.js")

@@ -46,3 +46,7 @@ app.*.map.json
 
 # Cle de signature Play et ses mots de passe : jamais dans git.
 /cles/
+
+# Binaires iOS (IPA, archive) : comme les APK, hors git.
+*.ipa
+*.xcarchive/

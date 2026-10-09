@@ -70,6 +70,56 @@ void main() {
             isTrue));
   });
 
+  group('shouldOpenExternally sur iOS (documents dans la WebView)', () {
+    Uri u(String s) => Uri.parse(s);
+    const site = 'https://pilot.aubeetoilee.com';
+    bool ios(String s) => shouldOpenExternally(u(s), inlineDocuments: true);
+
+    test('pdf (devis) -> INTERNE, garde la session',
+        () => expect(ios('$site/reservations/1/devis.pdf'), isFalse));
+    test('document (brevet) -> INTERNE',
+        () => expect(ios('$site/pilotes/1/brevets/2/document'), isFalse));
+    test('download (livrable) -> toujours externe',
+        () => expect(ios('$site/reservations/1/livrables/2/download'), isTrue));
+    test('mailto -> toujours externe',
+        () => expect(ios('mailto:a@b.com'), isTrue));
+    test('domaine tiers -> toujours externe',
+        () => expect(ios('https://www.facebook.com/x'), isTrue));
+  });
+
+  group('isIgnorableLoadError', () {
+    test('annulation WKWebView (-999) ignoree',
+        () => expect(isIgnorableLoadError(-999), isTrue));
+    test('chargement interrompu WKWebView (102) ignore',
+        () => expect(isIgnorableLoadError(102), isTrue));
+    test('hote introuvable iOS (-1003) -> hors-ligne',
+        () => expect(isIgnorableLoadError(-1003), isFalse));
+    test('pas de reseau iOS (-1009) -> hors-ligne',
+        () => expect(isIgnorableLoadError(-1009), isFalse));
+    test('Android ERROR_HOST_LOOKUP (-2) -> hors-ligne',
+        () => expect(isIgnorableLoadError(-2), isFalse));
+  });
+
+  group('appUserAgent', () {
+    const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) '
+        'AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
+    test('Android : agent court inchange',
+        () => expect(appUserAgent(ios: false),
+            'AubePilotMobile/$kAppVersion (Android)'));
+    test('iOS : marque ajoutee a l agent de la WebView',
+        () => expect(appUserAgent(ios: true, webViewAgent: safari),
+            '$safari AubePilotMobile/$kAppVersion (iOS)'));
+    test('iOS sans agent de la WebView : marque seule',
+        () => expect(appUserAgent(ios: true),
+            'AubePilotMobile/$kAppVersion (iOS)'));
+    test('le serveur reconnait l app (app.APP_UA_MARK)',
+        () => expect(
+            appUserAgent(ios: true, webViewAgent: safari)
+                .toLowerCase()
+                .contains('aubepilotmobile'),
+            isTrue));
+  });
+
   group('cancelLabelFor', () {
     test('francais', () => expect(cancelLabelFor('fr'), 'Annuler'));
     test('anglais', () => expect(cancelLabelFor('en'), 'Cancel'));

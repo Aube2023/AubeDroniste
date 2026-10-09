@@ -43,6 +43,16 @@ ANDROID_CERT_SHA256 = [
     ).split(",") if f.strip()
 ]
 
+# App iOS (liens universels) : sert /.well-known/apple-app-site-association
+# pour que les liens https://pilot.aubeetoilee.com ouvrent l'app iPhone.
+# Identifiant = equipe Apple (Team ID) + bundle id de mobile/ios. Surcharge
+# possible par IOS_APP_IDS (identifiants separes par virgules).
+IOS_APP_IDS = [
+    a.strip() for a in os.environ.get(
+        "IOS_APP_IDS", "A78LGGU44D.com.aubeetoilee.aubepilot",
+    ).split(",") if a.strip()
+]
+
 for _d in (DATA_DIR, UPLOAD_DIR, MAIL_DUMP_DIR):
     os.makedirs(_d, exist_ok=True)
 

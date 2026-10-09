@@ -26,3 +26,19 @@ def test_assetlinks_declare_app_et_certificats(client):
     assert DEBUG_KEY in prints
     for fp in prints:
         assert re.fullmatch(r"[0-9A-F]{2}(:[0-9A-F]{2}){31}", fp), fp
+
+
+def test_apple_app_site_association_declare_app_ios(client):
+    """Liens universels iOS : l'app iPhone (equipe Apple + bundle id) doit
+    figurer dans le fichier, servi en JSON a l'adresse exacte, sans .json."""
+    r = client.get("/.well-known/apple-app-site-association")
+    assert r.status_code == 200
+    assert r.mimetype == "application/json"
+    (detail,) = r.get_json()["applinks"]["details"]
+    assert detail["appIDs"] == ["A78LGGU44D.com.aubeetoilee.aubepilot"]
+    comps = detail["components"]
+    # Le joker final ouvre tout le reste du site dans l'app ; les exclusions
+    # doivent le preceder (iOS s'arrete a la premiere regle qui correspond).
+    assert comps[-1] == {"/": "*"}
+    excluded = {c["/"] for c in comps if c.get("exclude")}
+    assert {"/static/*", "/media/*"} <= excluded

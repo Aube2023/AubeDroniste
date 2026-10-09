@@ -12,27 +12,34 @@
 //  - deep links : les liens pilot.aubeetoilee.com ouvrent l'app sur la bonne page
 //  - alert() / confirm() / prompt() de la page en boites natives
 //  - splash de premier chargement aux couleurs de la marque
+//
+// Meme code pour Android et iOS ; les ecarts propres a WKWebView (agent,
+// geste de retour, PDF, erreurs d'annulation) sont signales sur place.
 import 'dart:async';
+import 'dart:io' show Directory, File, Platform;
 
 import 'package:app_links/app_links.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 const String kSiteUrl = 'https://pilot.aubeetoilee.com';
 const String kSiteHost = 'pilot.aubeetoilee.com';
 
 /// Version annoncee dans l'agent (`AubePilotMobile/<version>`) : la garder
 /// alignee sur pubspec.yaml.
-const String kAppVersion = '1.5.0';
+const String kAppVersion = '1.6.0';
 
-/// Canal natif (MainActivity.kt) : garde la session entre deux lancements.
-/// Le cookie de session est HttpOnly (invisible du JS) et le CookieManager
-/// Android ne l'ecrit sur disque que par intermittence — le natif le
+/// Canal natif (MainActivity.kt, AppDelegate.swift) : garde la session entre
+/// deux lancements. Le cookie de session est HttpOnly (invisible du JS) et la
+/// WebView peut le perdre (ecriture disque intermittente sur Android, cookie
+/// de session navigateur efface a la fermeture sur iOS) — le natif le
 /// sauvegarde et le reinjecte au demarrage si la WebView l'a perdu.
 const MethodChannel kSessionChannel = MethodChannel('aubepilot/session');
 
@@ -106,8 +113,11 @@ int? tabIndexForPath(String path) {
 
 /// Decide si une URL doit s'ouvrir HORS WebView (app externe / navigateur) :
 /// schemes non-web (mailto/tel), domaines tiers (hors site et hors Stripe), et
-/// telechargements que la WebView Android ne gere pas. Fonction PURE (testable).
-bool shouldOpenExternally(Uri uri) {
+/// telechargements que la WebView Android ne gere pas. [inlineDocuments] : la
+/// WebView sait afficher PDF et documents (iOS) — ils restent dans l'app, avec
+/// la session, au lieu d'ouvrir Safari sur la page de connexion. Les
+/// telechargements (/download) sortent toujours. Fonction PURE (testable).
+bool shouldOpenExternally(Uri uri, {bool inlineDocuments = false}) {
   if (uri.scheme != 'http' && uri.scheme != 'https') return true;
   final h = uri.host;
   // Egalite stricte ou vrai sous-domaine : un simple endsWith('stripe.com')
@@ -117,13 +127,34 @@ bool shouldOpenExternally(Uri uri) {
   final isPayment = isDomain(h, 'stripe.com') || isDomain(h, 'stripe.network');
   if (h != kSiteHost && !isPayment) return true;
   final path = uri.path.toLowerCase();
+  if (path.endsWith('/download')) return true;
+  if (inlineDocuments) return false;
   if (path.endsWith('.pdf') ||
       path.endsWith('/document') ||
-      path.endsWith('/download') ||
       path.startsWith('/media/')) {
     return true;
   }
   return false;
+}
+
+/// Erreurs de chargement qui ne sont PAS une panne de reseau : WKWebView
+/// signale -999 (NSURLErrorCancelled) quand une navigation en remplace une
+/// autre (onglet touche pendant un chargement, lien touche deux fois) et 102
+/// (WebKitErrorFrameLoadInterruptedByPolicyChange) quand une reponse ne
+/// s'affiche pas. Sans ce filtre, l'ecran hors-ligne surgirait a tort. Les
+/// codes Android (ERROR_*, de -1 a -16) ne se chevauchent pas. Fonction PURE.
+bool isIgnorableLoadError(int errorCode) =>
+    errorCode == -999 || errorCode == 102;
+
+/// Agent annonce au site. Le serveur y cherche « AubePilotMobile » (app._in_app)
+/// pour retirer sa barre d'onglets et son pied de page. Sur iOS on l'ajoute a
+/// l'agent Safari de la WebView (Stripe et les autres pages tierces gardent un
+/// navigateur reconnu) ; Android garde l'agent court des versions precedentes.
+/// Fonction PURE (testable).
+String appUserAgent({required bool ios, String? webViewAgent}) {
+  final mark = 'AubePilotMobile/$kAppVersion (${ios ? 'iOS' : 'Android'})';
+  final base = (webViewAgent ?? '').trim();
+  return ios && base.isNotEmpty ? '$base $mark' : mark;
 }
 
 /// « Annuler » dans les 31 langues du site (cle common.cancel de i18n.py et
@@ -215,11 +246,15 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light, // iOS : fond clair, texte sombre
     systemNavigationBarColor: kPaper,
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
-  // Demande les permissions au demarrage (silencieux si deja accorde)
-  unawaited(_requestPermissions());
+  // Android : demande les permissions au demarrage (silencieux si deja
+  // accorde). iOS : pas de demande a froid (refusee par l'App Review) ; la
+  // WebView demande la position quand la page s'en sert, et l'appareil photo
+  // passe par le selecteur de fichiers du systeme.
+  if (Platform.isAndroid) unawaited(_requestPermissions());
   runApp(const AubePilotApp());
 }
 
@@ -275,13 +310,20 @@ class _WebHomeState extends State<WebHome> {
   @override
   void initState() {
     super.initState();
-    final params = WebViewPlatform.instance is AndroidWebViewPlatform
-        ? AndroidWebViewControllerCreationParams()
-        : const PlatformWebViewControllerCreationParams();
+    final PlatformWebViewControllerCreationParams params;
+    if (WebViewPlatform.instance is AndroidWebViewPlatform) {
+      params = AndroidWebViewControllerCreationParams();
+    } else if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+      params = WebKitWebViewControllerCreationParams(
+        allowsInlineMediaPlayback: true,
+        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+      );
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
     _controller = WebViewController.fromPlatformCreationParams(params)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(kPaper)
-      ..setUserAgent('AubePilotMobile/$kAppVersion (Android)')
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: _onNavigationRequest,
         onPageStarted: (url) {
@@ -300,6 +342,12 @@ class _WebHomeState extends State<WebHome> {
           unawaited(_persistSession());
           unawaited(_syncTheme());
           unawaited(_syncLang());
+          if (kDebugMode) {
+            final js = _captureSetup().js;
+            if (js != null && js.isNotEmpty) {
+              unawaited(_controller.runJavaScript(js).catchError((_) {}));
+            }
+          }
           setState(() {
             _loading = false;
             _firstLoad = false;
@@ -309,6 +357,7 @@ class _WebHomeState extends State<WebHome> {
         onWebResourceError: (error) {
           // Seule une erreur de la page principale (pas une image ou un
           // script tiers) doit declencher l'ecran hors-ligne.
+          if (isIgnorableLoadError(error.errorCode)) return;
           if (error.isForMainFrame ?? true) {
             setState(() {
               _offline = true;
@@ -331,6 +380,12 @@ class _WebHomeState extends State<WebHome> {
       });
       // <input type="file"> (brevet, logo, avatar) -> selecteur natif
       platform.setOnShowFileSelector(_onShowFileSelector);
+    }
+    if (platform is WebKitWebViewController) {
+      // Glisser depuis le bord gauche = page precedente, comme dans Safari
+      // (l'iPhone n'a pas de bouton retour). <input type="file"> passe par le
+      // selecteur de WKWebView (photos, appareil photo, fichiers).
+      unawaited(platform.setAllowsBackForwardNavigationGestures(true));
     }
 
     // Sans ces gestionnaires, la WebView n'affiche pas les boites du site :
@@ -366,7 +421,21 @@ class _WebHomeState extends State<WebHome> {
     } catch (_) {
       // canal absent (autre plateforme / vieux binaire) : sans gravite
     }
+    String? webViewAgent;
+    if (Platform.isIOS) {
+      try {
+        webViewAgent = await _controller.getUserAgent();
+      } catch (_) {}
+    }
+    await _controller.setUserAgent(
+        appUserAgent(ios: Platform.isIOS, webViewAgent: webViewAgent));
     Uri start = Uri.parse(kSiteUrl);
+    if (kDebugMode) {
+      final forced = _captureSetup().start;
+      if (forced != null && forced.startsWith('/')) {
+        start = Uri.parse('$kSiteUrl$forced');
+      }
+    }
     try {
       final initial = await _appLinks.getInitialLink();
       // Scheme verifie aussi : un intent forge en http:// ou autre ne doit
@@ -403,12 +472,30 @@ class _WebHomeState extends State<WebHome> {
     // Schemes non-web, domaines tiers et telechargements -> app externe.
     // (Stripe Checkout reste DANS la WebView : il y fonctionne bien et garde
     // le parcours de paiement fluide.)
-    if (shouldOpenExternally(uri)) {
+    if (shouldOpenExternally(uri, inlineDocuments: Platform.isIOS)) {
       unawaited(launchUrl(uri, mode: LaunchMode.externalApplication)
           .catchError((_) => false));
       return NavigationDecision.prevent;
     }
     return NavigationDecision.navigate;
+  }
+
+  /// Debug seulement (absent du binaire publie) : mise en scene des captures
+  /// de magasin depuis le simulateur. Fichier `aubepilot_capture.txt` du
+  /// dossier temporaire de l'app : 1re ligne = page de depart (/pilotes/1),
+  /// le reste = script joue a chaque fin de chargement (ex. AubeMap.focus(1)
+  /// pour ne montrer que la fiche n° 1). Un fichier et non des variables
+  /// d'environnement : sur iOS, Platform.environment est toujours vide.
+  ({String? start, String? js}) _captureSetup() {
+    try {
+      final f = File('${Directory.systemTemp.path}/aubepilot_capture.txt');
+      if (!f.existsSync()) return (start: null, js: null);
+      final lines = f.readAsLinesSync();
+      if (lines.isEmpty) return (start: null, js: null);
+      return (start: lines.first.trim(), js: lines.skip(1).join('\n'));
+    } catch (_) {
+      return (start: null, js: null);
+    }
   }
 
   /// Sauvegarde native du cookie de session apres chaque page : couvre la
@@ -453,6 +540,7 @@ class _WebHomeState extends State<WebHome> {
           SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: dark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor: dark ? kInk : kPaper,
             systemNavigationBarIconBrightness:
                 dark ? Brightness.light : Brightness.dark,

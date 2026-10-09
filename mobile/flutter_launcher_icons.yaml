@@ -2,10 +2,14 @@
 # icon.png : icone classique (Android < 8) ; icon-foreground.png : premier
 # plan adaptatif deja place dans la zone sure (marque large de 46 dp sur
 # 108 dp), d'ou l'inset a 0.
+# icon-ios.png : carre plein 1024 sans transparence (icon-512.svg sans le
+# rayon des coins) ; iOS arrondit lui-meme et l'App Store refuse l'alpha.
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: "assets/icon.png"
+  image_path_ios: "assets/icon-ios.png"
+  remove_alpha_ios: true
   adaptive_icon_background: "#082744"
   adaptive_icon_foreground: "assets/icon-foreground.png"
   adaptive_icon_foreground_inset: 0

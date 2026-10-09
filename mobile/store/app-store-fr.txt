@@ -1,0 +1,120 @@
+Fiche App Store de AubePilot (iPhone), en français (Canada), langue principale.
+Champs dans l'ordre d'App Store Connect. Limites d'Apple entre parenthèses.
+
+=== Création de l'app (Mes apps > + > Nouvelle app) ===
+Plateforme : iOS
+Nom : AubePilot
+Langue principale : Français (Canada)
+Identifiant de lot (bundle ID) : com.aubeetoilee.aubepilot   (déjà enregistré par Xcode)
+SKU : aubepilot-ios
+Accès utilisateur : Accès complet
+
+=== Informations sur l'app ===
+Nom (30) : AubePilot
+Sous-titre (30) : Pilotes de drone près de vous
+Catégorie principale : Économie et entreprise
+Catégorie secondaire : Photo et vidéo
+Droits sur le contenu : non, l'app ne contient ni n'affiche de contenu tiers sous licence
+Classification par âge : voir plus bas
+
+=== Prix et disponibilité ===
+Prix : Gratuit
+Disponibilité : tous les pays (le site couvre 31 langues)
+
+=== Confidentialité de l'app ===
+URL de la politique de confidentialité : https://pilot.aubeetoilee.com/confidentialite
+URL de suppression du compte (si demandée) : https://pilot.aubeetoilee.com/supprimer-mon-compte
+
+Pratiques en matière de données (« étiquettes de confidentialité ») :
+Suivi (tracking) : NON. Aucune publicité, aucun traceur, aucun partage avec des courtiers de données.
+Données collectées, toutes « liées à l'identité de l'utilisateur », aucune utilisée pour le suivi,
+finalité « Fonctionnalités de l'app » pour chacune (plus « Gestion du compte » pour nom, courriel, identifiant) :
+- Coordonnées > Nom
+- Coordonnées > Adresse courriel
+- Coordonnées > Numéro de téléphone (facultatif)
+- Coordonnées > Adresse physique (lieu de la mission)
+- Localisation > Position approximative (ville, rayon de recherche)
+- Localisation > Position précise (facultative : boutons « Activer ma zone », « Près de moi »)
+- Infos financières > Infos de paiement (saisies chez Stripe, prestataire de paiement ; finalité ajoutée : prévention de la fraude)
+- Achats > Historique d'achats (missions payées)
+- Contenu de l'utilisateur > Courriels ou messages texte (messages entre client et pilote)
+- Contenu de l'utilisateur > Photos ou vidéos (portfolio, livrables)
+- Contenu de l'utilisateur > Autre contenu de l'utilisateur (bio, avis, devis, brevets, fichiers)
+- Identifiants > Identifiant de l'utilisateur
+- Autres données > Autres types de données (pièce d'identité jointe à un brevet, si fournie)
+Diagnostics, analyses, publicité, identifiant de l'appareil : rien de collecté.
+(Alignées sur la « Sécurité des données » remplie pour Play le 2026-09-20.)
+
+=== Classification par âge (questionnaire) ===
+Violence, contenu sexuel, grossièretés, drogues, alcool, tabac, horreur, jeux d'argent, concours : Aucun
+Thèmes médicaux : Aucun
+Accès Web non restreint : Non (seuls le site et le paiement Stripe s'ouvrent dans l'app ; les autres liens partent dans Safari)
+Contenu généré par les utilisateurs : Oui (fiches, portfolios, avis, messages)
+Messagerie et discussion : Oui (messages entre client et pilote)
+Contrôles parentaux / vérification d'âge : Non
+Publicité : Non
+
+=== Version 1.6.0 (page de la version) ===
+Texte promotionnel (170) :
+Cherchez un pilote de drone par code postal, comparez brevets, assurance et avis, puis payez en ligne : le montant reste retenu jusqu'à la livraison.
+
+Description (4000) :
+AubePilot met en relation les personnes et les entreprises qui ont besoin d'images ou de relevés aériens avec des pilotes de drone, partout dans le monde.
+
+POUR LES CLIENTS
+• Cherchez par code postal, adresse ou ville : les pilotes s'affichent sur la carte et dans la liste, du plus proche au plus éloigné.
+• Chaque fiche montre les brevets, l'assurance, la flotte, le portfolio et les avis des clients.
+• Filtrez sur les pilotes dont le brevet a été contrôlé par notre équipe, ou dont l'attestation d'assurance responsabilité civile a été vérifiée.
+• Publiez une mission gratuitement et recevez des devis, ou écrivez directement à un pilote depuis sa fiche.
+• Payez en ligne : le montant reste retenu par Stripe jusqu'à ce que vous validiez la livraison.
+• Si la mission ne se passe pas comme convenu, ouvrez un litige tant que les fonds sont retenus.
+
+POUR LES PILOTES
+• Créez votre fiche : brevets, spécialités, rayon d'action, drones, forfaits à prix fixe, photos et vidéos.
+• Recevez un courriel quand une mission est publiée dans votre rayon.
+• Répondez par un devis détaillé, exportable en PDF, et livrez vos fichiers dans la réservation.
+• Vous êtes payé après la validation de la livraison, ou automatiquement 7 jours après si le client ne répond pas.
+• Consultez les appels d'offres publics et les offres d'emploi du drone, repris chaque nuit de sources officielles dans plusieurs pays.
+
+COMBIEN ÇA COÛTE
+Chercher un pilote, publier une mission et recevoir des devis est gratuit, sans abonnement. Une commission est incluse dans le prix affiché et n'est prélevée que sur les missions payées : 20 %, puis 15 % à partir de la 4e mission entre le même client et le même pilote, et 10 % à partir de la 10e.
+
+AUSSI DANS L'APPLI
+• Le site et l'appli se lisent en 31 langues.
+• Mode nuit et six palettes de couleurs.
+• Annuaire des écoles de pilotage, des entreprises de services et des boutiques.
+
+AubePilot est un service de L'Aube Étoilée inc., à Montréal. Une question : support@aubemail.com
+
+Mots-clés (100, séparés par des virgules ; « drone » et « pilote » sont déjà dans le nom et le sous-titre) :
+télépilote,photo aérienne,vidéo,inspection,toiture,cartographie,immobilier,devis,chantier,UAV
+
+URL d'assistance : https://pilot.aubeetoilee.com/contact
+URL marketing : https://pilot.aubeetoilee.com
+Copyright : 2026 L'Aube Étoilée inc.
+
+Captures d'écran iPhone 6,9 pouces (1320 x 2868, obligatoires ; Apple les réduit pour les autres tailles) :
+mobile/store/captures-ios-fr/1-accueil.png ... 6-emplois.png (dans l'ordre)
+Pas de captures iPad : l'app est réservée à l'iPhone (TARGETED_DEVICE_FAMILY = 1).
+
+Build : 1.6.0 (8), envoyé depuis Xcode (Organizer) ou Transporter.
+Conformité du chiffrement : déjà réglée dans le binaire (ITSAppUsesNonExemptEncryption = NO), aucune question à l'envoi.
+
+=== Informations pour l'examen de l'app (App Review) ===
+Connexion requise : Oui
+Nom d'utilisateur : playreview@aubemail.com
+Mot de passe : celui du compte d'examen commun (laube-mail/app/release/PLAY-REVIEW-ACCOUNT.txt)
+Coordonnées : Nicolas Breidi, support@aubemail.com, numéro de téléphone du compte développeur
+
+Notes pour l'examinateur (en anglais, l'équipe d'examen lit l'anglais) :
+AubePilot is a marketplace that connects clients with professional drone pilots (aerial photography, roof inspections, mapping, surveys). The app gives native navigation (bottom tab bar, offline screen, native dialogs, universal links, swipe-back) on top of our responsive service at pilot.aubeetoilee.com.
+
+Sign in with the demo account above from the "Mon espace" tab. You can browse pilots on the map (Pilotes tab), open a pilot profile, send a message, and see missions (Missions tab).
+
+Payments: clients pay drone pilots for real-world services (filming, inspections) performed outside the app, through Stripe. Under guideline 3.1.3(e) these are physical services, so in-app purchase does not apply. There are no subscriptions and no digital content for sale.
+
+User-generated content (guideline 1.2): pilot profiles, missions, job posts and conversations can be reported (« Signaler »), any user can be blocked (« Bloquer ») from the conversation, and our team reviews every report. Terms of use: https://pilot.aubeetoilee.com/cgu
+
+Account deletion (guideline 5.1.1(v)): Mon espace > Paramètres (/espace/parametres), block « Vos données »: type SUPPRIMER and tap « Supprimer mon compte ». Also described at https://pilot.aubeetoilee.com/supprimer-mon-compte
+
+Location is requested only when the user taps a location button (« Activer ma zone », « Près de moi ») to search pilots around them. The camera and photo library are used only when the user attaches a file (licence, profile photo, deliverable).

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>fr</string>
+	<key>CFBundleDisplayName</key>
+	<string>AubePilot</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>AubePilot</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.business</string>
+	<!-- HTTPS seulement (chiffrement exempte) : evite la question export a
+	     chaque envoi sur App Store Connect. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- Les liens universels sont lus par app_links (main.dart) : le routeur
+	     de Flutter ne doit pas les intercepter. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
+	<!-- Textes affiches par iOS quand la page demande la position (recherche
+	     par rayon) ou quand un champ fichier propose l'appareil photo ou la
+	     phototheque (brevet, logo, photo de profil, livrables). -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>AubePilot utilise votre position pour afficher les pilotes et les missions autour de vous.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>AubePilot utilise l'appareil photo pour photographier un document (brevet, assurance) ou votre photo de profil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AubePilot accède à vos photos pour joindre une image à votre profil, à un brevet ou à un livrable.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AubePilot utilise le micro seulement si vous filmez une vidéo à joindre à un livrable.</string>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+</dict>
+</plist>
