@@ -93,8 +93,11 @@ URL d'assistance : https://pilot.aubeetoilee.com/contact
 URL marketing : https://pilot.aubeetoilee.com
 Copyright : 2026 L'Aube Étoilée inc.
 
-Captures d'écran iPhone 6,9 pouces (1320 x 2868, obligatoires ; Apple les réduit pour les autres tailles) :
-mobile/store/captures-ios-fr/1-accueil.png ... 6-emplois.png (dans l'ordre)
+Captures d'écran « iPhone avec Dynamic Island (écran moyen) », 6,1 ou 6,3 pouces, obligatoires
+(App Store Connect d'octobre 2026 : 1206 x 2622 ou 1179 x 2556) :
+mobile/store/captures-ios-fr-1206x2622/1-accueil.png ... 6-emplois.png (dans l'ordre)
+Originaux en 6,9 pouces (1320 x 2868) dans mobile/store/captures-ios-fr/.
+Onglets iPhone Duo, iPad et Apple Watch : rien à charger (app iPhone seulement).
 Pas de captures iPad : l'app est réservée à l'iPhone (TARGETED_DEVICE_FAMILY = 1).
 
 En-tête (une seule ressource, montrée en tête de fiche et dans les résultats de recherche) :
