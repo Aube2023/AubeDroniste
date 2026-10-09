@@ -97,6 +97,10 @@ Captures d'écran iPhone 6,9 pouces (1320 x 2868, obligatoires ; Apple les rédu
 mobile/store/captures-ios-fr/1-accueil.png ... 6-emplois.png (dans l'ordre)
 Pas de captures iPad : l'app est réservée à l'iPhone (TARGETED_DEVICE_FAMILY = 1).
 
+En-tête (une seule ressource, montrée en tête de fiche et dans les résultats de recherche) :
+mobile/store/app-store-entete-5244x2950.png (à charger en priorité), ou app-store-entete-3840x1646.png.
+Sans texte : Apple superpose le nom et l'icône de l'app. Généré à partir de static/brand/logo-mark-white.svg.
+
 Build : 1.6.0 (8), envoyé depuis Xcode (Organizer) ou Transporter.
 Conformité du chiffrement : déjà réglée dans le binaire (ITSAppUsesNonExemptEncryption = NO), aucune question à l'envoi.
 
