@@ -139,6 +139,94 @@
 </section>
 {% endif %}
 
+{% if stats %}
+{# « Mes statistiques » : tout vient de l'activite reelle (services.pilot_stats).
+   Un bloc a zero est remplace par un conseil qui mene a une action : un
+   tableau de « 0 » dirait au pilote que la plateforme ne lui rapporte rien. #}
+<section class="section dash-stats" id="stats" style="margin: 48px 0 32px;">
+  <div class="dash-stats-head">
+    <div><span class="eyebrow">{{ t('stats.eyebrow') }}</span><h2>{{ t('stats.h2') }}</h2></div>
+    <nav class="dir-tabs" aria-label="{{ t('stats.period_label') }}">
+      {% for p in ('30', '365', 'all') %}
+      <a href="{{ url_for('dashboard', stats=p) }}#stats"{% if stats.period == p %} class="on" aria-current="page"{% endif %}>{{ t('stats.period_' ~ p) }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  <div class="cockpit-grid">
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.views') }}</span>
+      {% if stats.views %}
+      <span class="num-big">{{ stats.views }}</span>
+      {% if stats.conversion %}<div class="muted small mono tile-qualifier">{{ t('stats.conversion', pct=stats.conversion) }}</div>{% endif %}
+      {% else %}
+      <p class="stats-tip">{{ t('stats.tip_views') }}</p>
+      {% endif %}
+      {% if stats.weeks_total %}
+      <figure class="stats-weeks">
+        <div class="bars">
+          {% for w in stats.weeks %}{% set tip = t('stats.week_tip', date=w.start, n=w.n) %}
+          <span class="col" tabindex="0" role="img" aria-label="{{ tip }}" data-tip="{{ tip }}"><span class="bar{{ '' if w.n else ' zero' }}"{% if w.n %} style="height: {{ [w.pct, 4]|max }}%"{% endif %}></span></span>
+          {% endfor %}
+        </div>
+        <figcaption>{{ t('stats.weeks_caption') }}</figcaption>
+      </figure>
+      {% endif %}
+      {% if not stats.views %}
+      <div class="footnote"><a href="{{ url_for('pilot_detail', user_id=current_user.id) }}">{{ t('stats.link_profile') }}</a></div>
+      {% endif %}
+    </div>
+
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.requests') }}</span>
+      {% if stats.requests %}
+      <span class="num-big">{{ stats.requests }}</span>
+      <div class="muted small mono tile-qualifier">{{ t('stats.requests_split', a=stats.req_missions, b=stats.req_messages) }}</div>
+      {% else %}
+      <p class="stats-tip">{{ t('stats.tip_requests') }}</p>
+      {% endif %}
+      {% if stats.bids %}
+      <div class="mini-profile" style="margin-top: 12px;">
+        <div class="row"><span>{{ t('stats.bids') }}</span><strong>{{ stats.bids }} · {{ t('stats.bids_accepted', n=stats.bids_accepted) }}</strong></div>
+      </div>
+      {% endif %}
+      {% if not stats.requests %}
+      <div class="footnote"><a href="{{ url_for('pilot_portfolio') }}">{{ t('stats.link_portfolio') }}</a> &nbsp;·&nbsp; <a href="{{ url_for('pilot_packages') }}">{{ t('stats.link_packages') }}</a></div>
+      {% endif %}
+    </div>
+
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.contracts') }}</span>
+      {% if stats.contracts %}
+      <span class="num-big">{{ stats.contracts }}</span>
+      <div class="muted small mono tile-qualifier">{{ t('stats.contracts_completed', n=stats.contracts_completed) }}</div>
+      <div class="mini-profile" style="margin-top: 12px;">
+        {% for m in stats.money %}
+        <div class="row"><span>{{ t('stats.value') }}</span><strong>{{ m.gross }}</strong></div>
+        <div class="row"><span>{{ t('stats.net') }}</span><strong>{{ m.net }}</strong></div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="stats-tip">{{ t('stats.tip_contracts') }}</p>
+      <div class="footnote"><a href="{{ url_for('opportunities') }}">{{ t('stats.link_tenders') }}</a></div>
+      {% endif %}
+    </div>
+
+    {% if stats.types %}
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.types') }}</span>
+      <div class="mini-profile">
+        {% for ty in stats.types %}
+        <div class="row"><span>{{ mission_label(ty.code) }}</span><strong>{{ ty.n }}</strong></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <p class="muted small">{{ t('stats.source') }}</p>
+</section>
+{% endif %}
+
 {% if my_opportunities %}
 <section class="section" style="margin: 48px 0 32px;">
   <span class="eyebrow">{{ t('opp.eyebrow') }}</span>

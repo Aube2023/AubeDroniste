@@ -2232,6 +2232,8 @@ def dashboard():
         portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
         vis=services.pilot_visibility(user["id"]) if is_pilot else None,
         profile_views=services.profile_view_counts(user["id"]) if is_pilot else None,
+        stats=(services.pilot_stats(user["id"], request.args.get("stats", "all"))
+               if is_pilot else None),
     )
 
 

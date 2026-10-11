@@ -10,7 +10,7 @@ import os
 import logging
 import math
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 
 import db
@@ -352,6 +352,115 @@ def most_viewed_profiles(days: int = 30, limit: int = 10) -> list:
         "WHERE v.day >= date('now', ?) GROUP BY v.pilot_user_id ORDER BY views DESC LIMIT ?",
         (f"-{max(1, int(days))} days", int(limit)),
     )]
+
+
+# « Mes statistiques » du pilote (2026-10-11). Tout vient de l'activite reelle
+# sur la plateforme (vues de fiche, demandes, devis, reservations payees) :
+# rien n'est declare a la main, contrairement aux annuaires sans transaction.
+STATS_PERIODS = ("30", "365", "all")
+STATS_WEEKS = 12
+
+
+def _money_lines(rows) -> list:
+    """[{currency, gross, net}] -> textes « 1 250 CAD » (espace fine)."""
+    def fmt(x, cur):
+        return f"{float(x or 0):,.0f}".replace(",", " ") + f" {cur}"
+    return [{"currency": r["currency"], "gross": fmt(r["gross"], r["currency"]),
+             "net": fmt(r["net"], r["currency"])} for r in rows]
+
+
+def pilot_stats(pilot_user_id: int, period: str = "all") -> dict:
+    """Chiffres de la section « Mes statistiques » sur la periode demandee
+    (30 jours, 12 mois ou depuis le debut).
+
+    - visites : vues de fiche (hors robots et hors le pilote lui-meme) ;
+    - demandes : missions qui le visent (« Réserver » / « Contacter »), hors
+      celles qu'il cree lui-meme depuis un fil, + premiers messages directs
+      (un fil par client, date du premier message) ;
+    - devis envoyes / acceptes ;
+    - mandats conclus : reservations payees (sequestre ou reglement en
+      direct), ni annulees ni remboursees ; montants par devise, brut et net
+      de la commission retenue ;
+    - types de travaux de ces mandats ;
+    - courbe des visites des 12 dernieres semaines (quelle que soit la periode).
+    """
+    uid = int(pilot_user_id)
+    if period not in STATS_PERIODS:
+        period = "all"
+    since = {"30": "-30 days", "365": "-365 days"}.get(period)
+
+    def window(col, is_day=False):
+        if not since:
+            return "", ()
+        return (f" AND {col} >= date('now', ?)" if is_day
+                else f" AND {col} >= datetime('now', ?)"), (since,)
+
+    w, a = window("day", is_day=True)
+    views = int(db.fetchone(
+        f"SELECT COALESCE(SUM(views), 0) AS n FROM profile_views WHERE pilot_user_id=?{w}",
+        (uid, *a))["n"])
+
+    w, a = window("created_at")
+    req_missions = int(db.fetchone(
+        f"SELECT COUNT(*) AS n FROM missions WHERE targeted_pilot_id=? AND from_contact=0{w}",
+        (uid, *a))["n"])
+    w, a = window("first_at")
+    req_messages = int(db.fetchone(
+        "SELECT COUNT(*) AS n FROM (SELECT MIN(created_at) AS first_at FROM direct_messages "
+        f"WHERE pilot_user_id=? GROUP BY client_user_id) WHERE 1=1{w}",
+        (uid, *a))["n"])
+    requests = req_missions + req_messages
+
+    w, a = window("created_at")
+    bids = db.fetchone(
+        "SELECT COUNT(*) AS n, COALESCE(SUM(status='accepted'), 0) AS accepted "
+        f"FROM bids WHERE pilot_user_id=?{w}", (uid, *a))
+
+    w, a = window("b.paid_at")
+    concluded = (" FROM bookings b JOIN missions m ON m.id = b.mission_id "
+                 "WHERE b.pilot_user_id=? AND b.paid_at IS NOT NULL "
+                 f"AND b.status NOT IN ('cancelled', 'refunded'){w}")
+    contracts = db.fetchone(
+        "SELECT COUNT(*) AS n, COALESCE(SUM(b.status='completed'), 0) AS completed" + concluded,
+        (uid, *a))
+    money = _money_lines(db.fetchall(
+        "SELECT b.currency, SUM(b.agreed_price) AS gross, "
+        "       SUM(b.agreed_price - b.platform_fee) AS net" + concluded +
+        " GROUP BY b.currency ORDER BY gross DESC", (uid, *a)))
+    types = [{"code": r["code"], "n": int(r["n"])} for r in db.fetchall(
+        "SELECT m.mission_type AS code, COUNT(*) AS n" + concluded +
+        " GROUP BY m.mission_type ORDER BY n DESC, code", (uid, *a))]
+
+    # Courbe : semaine 0 = les 7 derniers jours (aujourd'hui compris, UTC
+    # comme date('now')), affichee de la plus ancienne a la plus recente.
+    per_week = {int(r["w"]): int(r["n"]) for r in db.fetchall(
+        "SELECT CAST((julianday(date('now')) - julianday(day)) / 7 AS INTEGER) AS w, "
+        "SUM(views) AS n FROM profile_views WHERE pilot_user_id=? AND day > date('now', ?) "
+        "GROUP BY w", (uid, f"-{7 * STATS_WEEKS} days"))}
+    today = datetime.now(timezone.utc).date()
+    top = max(per_week.values(), default=0)
+    weeks = []
+    for wk in range(STATS_WEEKS - 1, -1, -1):
+        n = per_week.get(wk, 0)
+        weeks.append({"n": n, "start": (today - timedelta(days=7 * wk + 6)).isoformat(),
+                      "pct": round(100 * n / top) if top else 0})
+
+    # Taux visite -> demande en pour cent entier (« < 1 » plutot qu'un 0
+    # trompeur). Masque si une demande arrive sans visite comptee (lien direct
+    # vers un forfait) : un taux au-dessus de 100 % ne voudrait rien dire.
+    conversion = None
+    if views and requests and requests <= views:
+        pct = 100 * requests / views
+        conversion = "< 1" if pct < 1 else str(round(pct))
+    return {
+        "period": period, "views": views,
+        "requests": requests, "req_missions": req_missions, "req_messages": req_messages,
+        "conversion": conversion,
+        "bids": int(bids["n"]), "bids_accepted": int(bids["accepted"]),
+        "contracts": int(contracts["n"]), "contracts_completed": int(contracts["completed"]),
+        "money": money, "types": types,
+        "weeks": weeks, "weeks_total": sum(x["n"] for x in weeks),
+    }
 
 
 def visits_daily_detail(days: int = 30) -> list:

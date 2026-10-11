@@ -275,7 +275,21 @@ def faq_categories(lang: str = "fr") -> list:
 UPDATES_LANGS = ("fr", "en", "es")
 
 _UPDATES = [
-    ("2026-09", {"fr": "Septembre 2026", "en": "September 2026", "es": "Septiembre de 2026"}, [
+    ("2026-10", {"fr": "Octobre 2026", "en": "October 2026", "es": "Octubre de 2026"}, [
+        {"fr": "Pilotes : « Mes statistiques » dans votre espace. Visites de votre fiche semaine par semaine, "
+               "demandes reçues, part des visites qui deviennent une demande, devis acceptés, mandats payés avec "
+               "leur valeur et votre part après commission, types de travaux. Sur 30 jours, 12 mois ou depuis le "
+               "début, tiré de l'activité réelle sur le site : rien à remplir à la main.",
+         "en": "Pilots: \"My statistics\" in your dashboard. Weekly visits to your profile, requests received, "
+               "share of visits that turn into a request, accepted quotes, paid contracts with their value and "
+               "your share after commission, types of work. Over 30 days, 12 months or all time, drawn from real "
+               "activity on the site: nothing to fill in by hand.",
+         "es": "Pilotos: « Mis estadísticas » en su espacio. Visitas a su ficha semana a semana, solicitudes "
+               "recibidas, parte de las visitas que se convierten en solicitud, presupuestos aceptados, contratos "
+               "pagados con su valor y su parte tras la comisión, tipos de trabajo. En 30 días, 12 meses o desde "
+               "el inicio, a partir de la actividad real en el sitio: nada que rellenar a mano."},
+    ]),
+    ("2026-09",{"fr": "Septembre 2026", "en": "September 2026", "es": "Septiembre de 2026"}, [
         {"fr": "Entreprises et écoles : publiez gratuitement vos offres d'emploi drone, avec votre logo. Chaque "
                "offre est vérifiée avant sa mise en ligne, puis paraît en tête de la page Emplois.",
          "en": "Companies and schools: post your drone job offers for free, with your logo. Each offer is checked "
