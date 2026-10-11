@@ -327,10 +327,17 @@ def visits_by_referrer(days: int = 30, *, limit: int = 25) -> dict:
     return {"rows": out[:limit], "families": fam, "total": total if out else 0}
 
 
-def bump_profile_view(pilot_user_id: int) -> None:
+def bump_profile_view(pilot_user_id: int, country: Optional[str] = None) -> None:
+    """Une vue de fiche, et son pays (ISO2 deja resolu, « ?? » s'il manque)."""
     db.execute(
         "INSERT INTO profile_views(day, pilot_user_id, views) VALUES(date('now'), ?, 1) "
         "ON CONFLICT(day, pilot_user_id) DO UPDATE SET views = views + 1", (int(pilot_user_id),),
+    )
+    db.execute(
+        "INSERT INTO profile_view_countries(day, pilot_user_id, country, views) "
+        "VALUES(date('now'), ?, ?, 1) "
+        "ON CONFLICT(day, pilot_user_id, country) DO UPDATE SET views = views + 1",
+        (int(pilot_user_id), (country or "??").upper()[:2]),
     )
 
 
@@ -359,6 +366,8 @@ def most_viewed_profiles(days: int = 30, limit: int = 10) -> list:
 # rien n'est declare a la main, contrairement aux annuaires sans transaction.
 STATS_PERIODS = ("30", "365", "all")
 STATS_WEEKS = 12
+STATS_TOP_COUNTRIES = 5
+PROFILE_COUNTRIES_SINCE = "2026-10-11"   # premier jour de profile_view_countries
 
 
 def _money_lines(rows) -> list:
@@ -369,7 +378,34 @@ def _money_lines(rows) -> list:
              "net": fmt(r["net"], r["currency"])} for r in rows]
 
 
-def pilot_stats(pilot_user_id: int, period: str = "all") -> dict:
+def _visit_countries(pilot_user_id: int, window: tuple, lang: str) -> list:
+    """Pays des visites de la fiche : les 5 premiers, puis « autres pays » et
+    « non localise » regroupes. [{code, flag, name, n, pct}]."""
+    import geoip
+    w, a = window
+    rows = db.fetchall(
+        "SELECT country, SUM(views) AS n FROM profile_view_countries "
+        f"WHERE pilot_user_id=?{w} GROUP BY country ORDER BY n DESC, country",
+        (int(pilot_user_id), *a))
+    known = [(r["country"], int(r["n"])) for r in rows if r["country"] != "??"]
+    unknown = sum(int(r["n"]) for r in rows if r["country"] == "??")
+    total = sum(n for _c, n in known) + unknown
+    if not total:
+        return []
+    out = [{"code": c, "flag": geoip.flag(c),
+            "name": i18n.country_name(geoip.country_fr(c), lang), "n": n}
+           for c, n in known[:STATS_TOP_COUNTRIES]]
+    others = sum(n for _c, n in known[STATS_TOP_COUNTRIES:])
+    if others:
+        out.append({"code": "*", "flag": "", "name": i18n.t("stats.countries_other", lang), "n": others})
+    if unknown:
+        out.append({"code": "??", "flag": "🌐", "name": i18n.t("stats.countries_unknown", lang), "n": unknown})
+    for r in out:
+        r["pct"] = round(100 * r["n"] / total)
+    return out
+
+
+def pilot_stats(pilot_user_id: int, period: str = "all", lang: str = "fr") -> dict:
     """Chiffres de la section « Mes statistiques » sur la periode demandee
     (30 jours, 12 mois ou depuis le debut).
 
@@ -382,6 +418,7 @@ def pilot_stats(pilot_user_id: int, period: str = "all") -> dict:
       direct), ni annulees ni remboursees ; montants par devise, brut et net
       de la commission retenue ;
     - types de travaux de ces mandats ;
+    - pays des visites (comptes depuis PROFILE_COUNTRIES_SINCE seulement) ;
     - courbe des visites des 12 dernieres semaines (quelle que soit la periode).
     """
     uid = int(pilot_user_id)
@@ -399,6 +436,13 @@ def pilot_stats(pilot_user_id: int, period: str = "all") -> dict:
     views = int(db.fetchone(
         f"SELECT COALESCE(SUM(views), 0) AS n FROM profile_views WHERE pilot_user_id=?{w}",
         (uid, *a))["n"])
+
+    countries = _visit_countries(uid, (w, a), lang)
+    # Les pays ne sont releves que depuis PROFILE_COUNTRIES_SINCE : on le dit
+    # tant que la periode commence avant, sinon leur total semblerait faux.
+    period_start = (datetime.now(timezone.utc).date() - timedelta(days=int(period))).isoformat() \
+        if since else ""
+    countries_since = PROFILE_COUNTRIES_SINCE if period_start < PROFILE_COUNTRIES_SINCE else ""
 
     w, a = window("created_at")
     req_missions = int(db.fetchone(
@@ -459,6 +503,7 @@ def pilot_stats(pilot_user_id: int, period: str = "all") -> dict:
         "bids": int(bids["n"]), "bids_accepted": int(bids["accepted"]),
         "contracts": int(contracts["n"]), "contracts_completed": int(contracts["completed"]),
         "money": money, "types": types,
+        "countries": countries, "countries_since": countries_since,
         "weeks": weeks, "weeks_total": sum(x["n"] for x in weeks),
     }
 

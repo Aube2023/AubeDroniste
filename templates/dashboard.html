@@ -177,6 +177,22 @@
       {% endif %}
     </div>
 
+    {% if stats.countries %}
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.countries') }}</span>
+      <ul class="stats-countries">
+        {% for c in stats.countries %}
+        <li>
+          <span class="cname">{% if c.flag %}<span aria-hidden="true">{{ c.flag }}</span> {% endif %}{{ c.name }}</span>
+          <strong>{{ c.n }}</strong>
+          <span class="cbar" aria-hidden="true"><span style="width: {{ [c.pct, 2]|max }}%"></span></span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if stats.countries_since %}<div class="footnote">{{ t('stats.countries_since', date=stats.countries_since|replace('-', '‑')) }}</div>{% endif %}
+    </div>
+    {% endif %}
+
     <div class="cockpit-tile">
       <span class="label">{{ t('stats.requests') }}</span>
       {% if stats.requests %}

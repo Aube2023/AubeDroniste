@@ -354,8 +354,8 @@ def _count_visit(resp):
         # Provenance : pays resolu a la volee, jamais l'IP (voir geoip.py) ;
         # page vue et domaine d'origine (jamais le chemin du referent).
         if request.endpoint in LANG_ENDPOINTS:
-            services.bump_country_visit(geoip.country_code(security.client_ip()),
-                                        is_bot=bot)
+            country = geoip.country_code(security.client_ip())
+            services.bump_country_visit(country, is_bot=bot)
             services.bump_page_visit(request.path, is_bot=bot, referrer=request.referrer,
                                      own_host=request.host)
             # Vues de fiche : pour le pilote, hors robots et hors lui-meme.
@@ -363,7 +363,7 @@ def _count_visit(resp):
                 pid = (request.view_args or {}).get("user_id")
                 me = getattr(g, "user", None)
                 if pid and not (me and me["id"] == pid):
-                    services.bump_profile_view(pid)
+                    services.bump_profile_view(pid, country)
     except Exception:
         pass
     return resp
@@ -2232,7 +2232,8 @@ def dashboard():
         portfolio_count=len(services.list_portfolio_items(user["id"])) if is_pilot else 0,
         vis=services.pilot_visibility(user["id"]) if is_pilot else None,
         profile_views=services.profile_view_counts(user["id"]) if is_pilot else None,
-        stats=(services.pilot_stats(user["id"], request.args.get("stats", "all"))
+        stats=(services.pilot_stats(user["id"], request.args.get("stats", "all"),
+                                    getattr(g, "lang", i18n.DEFAULT))
                if is_pilot else None),
     )
 

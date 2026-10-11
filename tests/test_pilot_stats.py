@@ -99,3 +99,50 @@ def test_espace_pilote_avec_activite(auth_client, app_ctx, client_user, pilot_us
 def test_client_sans_section_stats(auth_client, client_user):
     html = auth_client(client_user["id"]).get("/espace").get_data(as_text=True)
     assert 'id="stats"' not in html
+
+
+def test_pays_des_visites(app_ctx, make_user):
+    """5 premiers pays, puis « autres pays » et « non localisé » regroupés ;
+    les vues d'avant le relevé des pays n'y figurent pas."""
+    import db
+    import services
+    pilot = make_user("stats_pays", role="pilot")
+    for code, n in (("CA", 6), ("FR", 3), ("US", 2), ("BE", 1), ("CH", 1), ("MA", 1), ("SN", 1), (None, 2)):
+        for _ in range(n):
+            services.bump_profile_view(pilot["id"], code)
+    db.execute("INSERT INTO profile_views(day, pilot_user_id, views) VALUES(date('now', '-90 days'), ?, 4)",
+               (pilot["id"],))
+    s = services.pilot_stats(pilot["id"], "all", "fr")
+    assert s["views"] == 21
+    rows = [(c["code"], c["n"]) for c in s["countries"]]
+    assert rows == [("CA", 6), ("FR", 3), ("US", 2), ("BE", 1), ("CH", 1), ("*", 2), ("??", 2)]
+    assert s["countries"][0]["name"] == "Canada" and s["countries"][0]["flag"] == "🇨🇦"
+    assert s["countries"][0]["pct"] == 35                      # 6 / 17 vues localisées ou non
+    assert s["countries"][-2]["name"] == "Autres pays" and s["countries"][-1]["name"] == "Non localisé"
+    assert s["countries_since"] == services.PROFILE_COUNTRIES_SINCE
+    assert services.pilot_stats(pilot["id"], "all", "en")["countries"][-1]["name"] == "Not located"
+
+
+def test_espace_affiche_les_pays(auth_client, make_user, app_ctx):
+    import services
+    pilot = make_user("stats_pays_page", role="pilot")
+    services.bump_profile_view(pilot["id"], "CA")
+    html = auth_client(pilot["id"]).get("/espace").get_data(as_text=True)
+    assert "Pays des visiteurs" in html and "Canada" in html
+    since = services.PROFILE_COUNTRIES_SINCE.replace("-", "\u2011")    # tiret insecable
+    assert f"Pays relevés depuis le {since}" in html
+
+
+def test_visite_de_fiche_compte_le_pays(client, make_user, app_ctx, monkeypatch):
+    import db
+    import geoip
+    pilot = make_user("stats_pays_visite", role="pilot")
+    monkeypatch.setattr(geoip, "country_code", lambda ip: "FR")
+    client.get(f"/pilotes/{pilot['id']}")
+    row = db.fetchone("SELECT country, views FROM profile_view_countries WHERE pilot_user_id=?", (pilot["id"],))
+    assert (row["country"], row["views"]) == ("FR", 1)
+
+
+def test_politique_mentionne_les_pays_des_vues_de_fiche(client):
+    html = client.get("/confidentialite").get_data(as_text=True)
+    assert "compteur de vues par jour et par pays" in html

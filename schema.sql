@@ -485,6 +485,17 @@ CREATE TABLE IF NOT EXISTS profile_views (
 );
 CREATE INDEX IF NOT EXISTS idx_profile_views_pilot ON profile_views(pilot_user_id, day);
 
+-- Pays des visites d'une fiche pilote, par jour (depuis 2026-10-11) : meme
+-- filtre que profile_views ; pays resolu a la volee, IP jamais conservee.
+CREATE TABLE IF NOT EXISTS profile_view_countries (
+    day           TEXT NOT NULL,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    country       TEXT NOT NULL,                -- code ISO2, '??' si non localise
+    views         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, pilot_user_id, country)
+);
+CREATE INDEX IF NOT EXISTS idx_profile_view_countries_pilot ON profile_view_countries(pilot_user_id, day);
+
 
 -- Livrables proposes par un pilote : ce que le CLIENT recoit (panorama 360,
 -- orthophoto, rapport d'inspection...), par opposition aux capacites du
