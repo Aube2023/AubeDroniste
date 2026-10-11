@@ -276,15 +276,18 @@ UPDATES_LANGS = ("fr", "en", "es")
 
 _UPDATES = [
     ("2026-10", {"fr": "Octobre 2026", "en": "October 2026", "es": "Octubre de 2026"}, [
-        {"fr": "Pilotes : « Mes statistiques » dans votre espace. Visites de votre fiche semaine par semaine, "
+        {"fr": "Pilotes : « Mes statistiques » dans votre espace. Visites de votre fiche semaine par semaine, leur pays et leur provenance (Google, Facebook, recherche "
+               "AubePilot, lien direct...), "
                "demandes reçues, part des visites qui deviennent une demande, devis acceptés, mandats payés avec "
                "leur valeur et votre part après commission, types de travaux. Sur 30 jours, 12 mois ou depuis le "
                "début, tiré de l'activité réelle sur le site : rien à remplir à la main.",
-         "en": "Pilots: \"My statistics\" in your dashboard. Weekly visits to your profile, requests received, "
+         "en": "Pilots: \"My statistics\" in your dashboard. Weekly visits to your profile, their country and where they come from (Google, Facebook, AubePilot "
+               "search, direct link...), requests received, "
                "share of visits that turn into a request, accepted quotes, paid contracts with their value and "
                "your share after commission, types of work. Over 30 days, 12 months or all time, drawn from real "
                "activity on the site: nothing to fill in by hand.",
-         "es": "Pilotos: « Mis estadísticas » en su espacio. Visitas a su ficha semana a semana, solicitudes "
+         "es": "Pilotos: « Mis estadísticas » en su espacio. Visitas a su ficha semana a semana, su país y su origen (Google, Facebook, búsqueda en AubePilot, "
+               "enlace directo...), solicitudes "
                "recibidas, parte de las visitas que se convierten en solicitud, presupuestos aceptados, contratos "
                "pagados con su valor y su parte tras la comisión, tipos de trabajo. En 30 días, 12 meses o desde "
                "el inicio, a partir de la actividad real en el sitio: nada que rellenar a mano."},

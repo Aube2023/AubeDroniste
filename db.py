@@ -246,6 +246,7 @@ _ADD_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_visit_referrers_day ON visit_referrers(day)",
     "CREATE INDEX IF NOT EXISTS idx_profile_views_pilot ON profile_views(pilot_user_id, day)",
     "CREATE INDEX IF NOT EXISTS idx_profile_view_countries_pilot ON profile_view_countries(pilot_user_id, day)",
+    "CREATE INDEX IF NOT EXISTS idx_profile_view_sources_pilot ON profile_view_sources(pilot_user_id, day)",
     "CREATE INDEX IF NOT EXISTS idx_pilot_links_user ON pilot_links(pilot_user_id)",
     "CREATE INDEX IF NOT EXISTS idx_campaign_pilot ON pilot_campaigns(pilot_user_id, status)",
     "CREATE INDEX IF NOT EXISTS idx_contrib_campaign ON campaign_contributions(campaign_id, status)",
@@ -384,6 +385,15 @@ _ADD_TABLES = [
     country       TEXT NOT NULL,                -- code ISO2, '??' si non localise
     views         INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (day, pilot_user_id, country)
+)""",
+    # Provenance des visites d'une fiche pilote, par jour (depuis 2026-10-11) :
+    # nom de domaine d'origine seulement, ou rubrique d'AubePilot, jamais le chemin.
+    """CREATE TABLE IF NOT EXISTS profile_view_sources (
+    day           TEXT NOT NULL,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source        TEXT NOT NULL,                -- domaine d'origine, 'direct', 'aubepilot:search|site'
+    views         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, pilot_user_id, source)
 )""",
     # Compteur de visites du site (valeur cumulee ; affichee + config.SITE_VISIT_BASE).
     """CREATE TABLE IF NOT EXISTS site_counters (

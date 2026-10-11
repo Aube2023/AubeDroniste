@@ -255,26 +255,74 @@ def referrer_host(referrer: Optional[str], own_host: str = "") -> Optional[str]:
     return host[:120]
 
 
+def _host_matches(host: str, patterns) -> bool:
+    h = host.lower()
+    for s in patterns:
+        if s.endswith("."):                      # famille de domaines : google., yahoo.
+            if h == s[:-1] or h.startswith(s) or ("." + s) in ("." + h):
+                return True
+        elif h == s or h.endswith("." + s):      # domaine exact ou sous-domaine
+            return True
+    return False
+
+
 def referrer_family(host: str) -> str:
     """search | social | direct | site : pour regrouper la provenance."""
     if host == "direct":
         return "direct"
-    h = host.lower()
-
-    def match(patterns):
-        for s in patterns:
-            if s.endswith("."):                  # famille de domaines : google., yahoo.
-                if h == s[:-1] or h.startswith(s) or ("." + s) in ("." + h):
-                    return True
-            elif h == s or h.endswith("." + s):  # domaine exact ou sous-domaine
-                return True
-        return False
-
-    if match(SEARCH_ENGINE_HOSTS):
+    if _host_matches(host, SEARCH_ENGINE_HOSTS):
         return "search"
-    if match(SOCIAL_HOSTS):
+    if _host_matches(host, SOCIAL_HOSTS):
         return "social"
     return "site"
+
+
+# Noms parlants des sites d'origine les plus courants, pour le pilote.
+SOURCE_NAMES = (
+    ("google.", "Google"), ("bing.com", "Bing"), ("duckduckgo.com", "DuckDuckGo"), ("yahoo.", "Yahoo"),
+    ("ecosia.org", "Ecosia"), ("qwant.com", "Qwant"), ("brave.com", "Brave"), ("yandex.", "Yandex"),
+    ("baidu.com", "Baidu"), ("facebook.com", "Facebook"), ("fb.com", "Facebook"),
+    ("instagram.com", "Instagram"), ("linkedin.com", "LinkedIn"), ("lnkd.in", "LinkedIn"),
+    ("t.co", "X"), ("x.com", "X"), ("twitter.com", "X"), ("youtube.com", "YouTube"),
+    ("youtu.be", "YouTube"), ("whatsapp.com", "WhatsApp"), ("reddit.com", "Reddit"),
+    ("tiktok.com", "TikTok"), ("pinterest.", "Pinterest"), ("t.me", "Telegram"),
+    ("threads.net", "Threads"), ("snapchat.com", "Snapchat"), ("chatgpt.com", "ChatGPT"),
+    ("perplexity.ai", "Perplexity"),
+)
+# Pages d'AubePilot qui listent des pilotes (chemin sans prefixe de langue).
+PILOT_LISTING_PATHS = ("/", "/pilotes", "/ecoles", "/part-107")
+
+
+def profile_view_source(referrer: Optional[str], own_host: str = "") -> str:
+    """Provenance d'une vue de fiche : domaine d'origine (« google.ca »),
+    « direct », ou pour une navigation interne « aubepilot:search » (accueil
+    et carte, annuaire, pays, specialites, ecoles, Part 107) ou
+    « aubepilot:site » (toute autre page). Jamais le chemin lui-meme."""
+    host = referrer_host(referrer, own_host)
+    if host:
+        return host
+    try:
+        from urllib.parse import urlsplit
+        path = urlsplit(referrer or "").path or "/"
+    except ValueError:
+        return "aubepilot:site"
+    rest = i18n.split_prefix(path)[1].rstrip("/") or "/"
+    parts = rest.split("/")
+    if rest in PILOT_LISTING_PATHS or (len(parts) > 2 and parts[1] == "pilotes" and not parts[2].isdigit()):
+        return "aubepilot:search"
+    return "aubepilot:site"
+
+
+def source_label(source: str, lang: str) -> str:
+    """Nom montre au pilote pour une provenance."""
+    special = {"direct": "stats.source_direct", "aubepilot:search": "stats.source_search",
+               "aubepilot:site": "stats.source_site"}
+    if source in special:
+        return i18n.t(special[source], lang)
+    for pattern, name in SOURCE_NAMES:
+        if _host_matches(source, (pattern,)):
+            return name
+    return source
 
 
 def bump_page_visit(path: str, *, is_bot: bool = False, referrer: Optional[str] = None,
@@ -327,8 +375,10 @@ def visits_by_referrer(days: int = 30, *, limit: int = 25) -> dict:
     return {"rows": out[:limit], "families": fam, "total": total if out else 0}
 
 
-def bump_profile_view(pilot_user_id: int, country: Optional[str] = None) -> None:
-    """Une vue de fiche, et son pays (ISO2 deja resolu, « ?? » s'il manque)."""
+def bump_profile_view(pilot_user_id: int, country: Optional[str] = None,
+                      source: Optional[str] = None) -> None:
+    """Une vue de fiche, son pays (ISO2 deja resolu, « ?? » s'il manque) et
+    sa provenance (voir profile_view_source)."""
     db.execute(
         "INSERT INTO profile_views(day, pilot_user_id, views) VALUES(date('now'), ?, 1) "
         "ON CONFLICT(day, pilot_user_id) DO UPDATE SET views = views + 1", (int(pilot_user_id),),
@@ -338,6 +388,12 @@ def bump_profile_view(pilot_user_id: int, country: Optional[str] = None) -> None
         "VALUES(date('now'), ?, ?, 1) "
         "ON CONFLICT(day, pilot_user_id, country) DO UPDATE SET views = views + 1",
         (int(pilot_user_id), (country or "??").upper()[:2]),
+    )
+    db.execute(
+        "INSERT INTO profile_view_sources(day, pilot_user_id, source, views) "
+        "VALUES(date('now'), ?, ?, 1) "
+        "ON CONFLICT(day, pilot_user_id, source) DO UPDATE SET views = views + 1",
+        (int(pilot_user_id), (source or "direct")[:120]),
     )
 
 
@@ -368,6 +424,7 @@ STATS_PERIODS = ("30", "365", "all")
 STATS_WEEKS = 12
 STATS_TOP_COUNTRIES = 5
 PROFILE_COUNTRIES_SINCE = "2026-10-11"   # premier jour de profile_view_countries
+PROFILE_SOURCES_SINCE = "2026-10-11"     # premier jour de profile_view_sources
 
 
 def _money_lines(rows) -> list:
@@ -405,6 +462,30 @@ def _visit_countries(pilot_user_id: int, window: tuple, lang: str) -> list:
     return out
 
 
+def _visit_sources(pilot_user_id: int, window: tuple, lang: str) -> list:
+    """Provenance des visites de la fiche, regroupee par nom (google.com et
+    google.ca -> Google) : les 5 premieres, puis « autres sites ».
+    [{name, n, pct}]."""
+    w, a = window
+    by_name: dict = {}
+    for r in db.fetchall(
+            "SELECT source, SUM(views) AS n FROM profile_view_sources "
+            f"WHERE pilot_user_id=?{w} GROUP BY source", (int(pilot_user_id), *a)):
+        name = source_label(r["source"], lang)
+        by_name[name] = by_name.get(name, 0) + int(r["n"])
+    total = sum(by_name.values())
+    if not total:
+        return []
+    ranked = sorted(by_name.items(), key=lambda kv: (-kv[1], kv[0]))
+    out = [{"name": name, "n": n} for name, n in ranked[:STATS_TOP_COUNTRIES]]
+    others = sum(n for _name, n in ranked[STATS_TOP_COUNTRIES:])
+    if others:
+        out.append({"name": i18n.t("stats.sources_other", lang), "n": others})
+    for r in out:
+        r["pct"] = round(100 * r["n"] / total)
+    return out
+
+
 def pilot_stats(pilot_user_id: int, period: str = "all", lang: str = "fr") -> dict:
     """Chiffres de la section « Mes statistiques » sur la periode demandee
     (30 jours, 12 mois ou depuis le debut).
@@ -419,6 +500,7 @@ def pilot_stats(pilot_user_id: int, period: str = "all", lang: str = "fr") -> di
       de la commission retenue ;
     - types de travaux de ces mandats ;
     - pays des visites (comptes depuis PROFILE_COUNTRIES_SINCE seulement) ;
+    - provenance des visites (depuis PROFILE_SOURCES_SINCE seulement) ;
     - courbe des visites des 12 dernieres semaines (quelle que soit la periode).
     """
     uid = int(pilot_user_id)
@@ -438,11 +520,13 @@ def pilot_stats(pilot_user_id: int, period: str = "all", lang: str = "fr") -> di
         (uid, *a))["n"])
 
     countries = _visit_countries(uid, (w, a), lang)
+    sources = _visit_sources(uid, (w, a), lang)
     # Les pays ne sont releves que depuis PROFILE_COUNTRIES_SINCE : on le dit
     # tant que la periode commence avant, sinon leur total semblerait faux.
     period_start = (datetime.now(timezone.utc).date() - timedelta(days=int(period))).isoformat() \
         if since else ""
     countries_since = PROFILE_COUNTRIES_SINCE if period_start < PROFILE_COUNTRIES_SINCE else ""
+    sources_since = PROFILE_SOURCES_SINCE if period_start < PROFILE_SOURCES_SINCE else ""
 
     w, a = window("created_at")
     req_missions = int(db.fetchone(
@@ -504,6 +588,7 @@ def pilot_stats(pilot_user_id: int, period: str = "all", lang: str = "fr") -> di
         "contracts": int(contracts["n"]), "contracts_completed": int(contracts["completed"]),
         "money": money, "types": types,
         "countries": countries, "countries_since": countries_since,
+        "sources": sources, "sources_since": sources_since,
         "weeks": weeks, "weeks_total": sum(x["n"] for x in weeks),
     }
 

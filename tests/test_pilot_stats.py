@@ -143,6 +143,68 @@ def test_visite_de_fiche_compte_le_pays(client, make_user, app_ctx, monkeypatch)
     assert (row["country"], row["views"]) == ("FR", 1)
 
 
-def test_politique_mentionne_les_pays_des_vues_de_fiche(client):
+def test_politique_mentionne_pays_et_provenance_des_vues_de_fiche(client):
     html = client.get("/confidentialite").get_data(as_text=True)
-    assert "compteur de vues par jour et par pays" in html
+    assert "compteur de vues par jour, par pays et par provenance" in html
+    assert "jamais l&#39;adresse de la page" in html or "jamais l'adresse de la page" in html
+
+
+def test_provenance_d_une_vue():
+    import services
+    own = "pilot.aubeetoilee.com"
+    cas = {
+        None: "direct",
+        "": "direct",
+        "https://www.google.ca/": "google.ca",
+        "https://l.facebook.com/l.php?u=x": "l.facebook.com",
+        f"https://{own}/": "aubepilot:search",
+        f"https://{own}/en/": "aubepilot:search",
+        f"https://{own}/pilotes?q=toiture": "aubepilot:search",
+        f"https://{own}/es/pilotes/pays/canada/quebec": "aubepilot:search",
+        f"https://{own}/pilotes/specialite/immobilier": "aubepilot:search",
+        f"https://{own}/part-107": "aubepilot:search",
+        f"https://{own}/ecoles": "aubepilot:search",
+        f"https://{own}/pilotes/12": "aubepilot:site",
+        f"https://{own}/missions/3": "aubepilot:site",
+    }
+    for ref, attendu in cas.items():
+        assert services.profile_view_source(ref, own) == attendu, ref
+    assert services.source_label("google.ca", "fr") == "Google"
+    assert services.source_label("m.facebook.com", "fr") == "Facebook"
+    assert services.source_label("lnkd.in", "fr") == "LinkedIn"
+    assert services.source_label("aubeetoilee.com", "fr") == "aubeetoilee.com"
+    assert services.source_label("direct", "en") == "Direct (bookmark, email, app)"
+
+
+def test_provenance_regroupee(app_ctx, make_user):
+    import services
+    pilot = make_user("stats_sources", role="pilot")
+    for source, n in (("google.com", 3), ("google.ca", 2), ("l.facebook.com", 2), ("facebook.com", 1),
+                      ("aubepilot:search", 4), ("direct", 1), ("lnkd.in", 1), ("aubeetoilee.com", 1),
+                      ("aubepilot:site", 1)):
+        for _ in range(n):
+            services.bump_profile_view(pilot["id"], "CA", source)
+    s = services.pilot_stats(pilot["id"], "all", "fr")
+    rows = [(c["name"], c["n"]) for c in s["sources"]]
+    assert rows[:3] == [("Google", 5), ("Recherche AubePilot (accueil, carte, annuaire)", 4), ("Facebook", 3)]
+    assert len(rows) == 6 and rows[-1] == ("Autres sites", 2)
+    assert sum(n for _name, n in rows) == 16 == s["views"]
+    assert s["sources_since"] == services.PROFILE_SOURCES_SINCE
+
+
+def test_visite_de_fiche_compte_la_provenance(client, make_user, app_ctx):
+    import db
+    pilot = make_user("stats_sources_visite", role="pilot")
+    client.get(f"/pilotes/{pilot['id']}", headers={"Referer": "https://www.facebook.com/"})
+    client.get(f"/en/pilotes/{pilot['id']}", headers={"Referer": "http://localhost.localdomain/en/pilotes?q=x"})
+    rows = {r["source"]: r["views"] for r in db.fetchall(
+        "SELECT source, views FROM profile_view_sources WHERE pilot_user_id=?", (pilot["id"],))}
+    assert rows == {"facebook.com": 1, "aubepilot:search": 1}
+
+
+def test_espace_affiche_la_provenance(auth_client, make_user, app_ctx):
+    import services
+    pilot = make_user("stats_sources_page", role="pilot")
+    services.bump_profile_view(pilot["id"], "CA", "instagram.com")
+    html = auth_client(pilot["id"]).get("/espace").get_data(as_text=True)
+    assert "Provenance des visites" in html and "Instagram" in html

@@ -2840,12 +2840,12 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 }
 .stats-weeks .col:nth-child(n+7)::after { inset-inline-start: auto; inset-inline-end: 0; }
 .stats-weeks .col:hover::after, .stats-weeks .col:focus::after { opacity: 1; }
-.stats-countries { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 12px; }
-.stats-countries li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; font-size: 14px; }
-.stats-countries .cname { color: var(--ink-soft); min-width: 0; overflow-wrap: anywhere; }
-.stats-countries strong { color: var(--ink); font-variant-numeric: tabular-nums; }
-.stats-countries .cbar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--rule-soft); overflow: hidden; }
-.stats-countries .cbar span { display: block; height: 100%; border-radius: 2px; background: var(--amber); }
+.stats-shares { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 12px; }
+.stats-shares li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; font-size: 14px; }
+.stats-shares .cname { color: var(--ink-soft); min-width: 0; overflow-wrap: anywhere; }
+.stats-shares strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.stats-shares .cbar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--rule-soft); overflow: hidden; }
+.stats-shares .cbar span { display: block; height: 100%; border-radius: 2px; background: var(--amber); }
 .stats-weeks figcaption {
   margin-top: 6px; font: 500 10px/1.3 var(--mono); letter-spacing: .08em;
   text-transform: uppercase; color: var(--ink-dim);

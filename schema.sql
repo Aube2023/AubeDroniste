@@ -496,6 +496,17 @@ CREATE TABLE IF NOT EXISTS profile_view_countries (
 );
 CREATE INDEX IF NOT EXISTS idx_profile_view_countries_pilot ON profile_view_countries(pilot_user_id, day);
 
+-- Provenance des visites d'une fiche pilote, par jour (depuis 2026-10-11) :
+-- nom de domaine d'origine seulement, ou rubrique d'AubePilot, jamais le chemin.
+CREATE TABLE IF NOT EXISTS profile_view_sources (
+    day           TEXT NOT NULL,
+    pilot_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source        TEXT NOT NULL,                -- domaine d'origine, 'direct', 'aubepilot:search|site'
+    views         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, pilot_user_id, source)
+);
+CREATE INDEX IF NOT EXISTS idx_profile_view_sources_pilot ON profile_view_sources(pilot_user_id, day);
+
 
 -- Livrables proposes par un pilote : ce que le CLIENT recoit (panorama 360,
 -- orthophoto, rapport d'inspection...), par opposition aux capacites du

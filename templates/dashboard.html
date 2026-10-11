@@ -180,7 +180,7 @@
     {% if stats.countries %}
     <div class="cockpit-tile">
       <span class="label">{{ t('stats.countries') }}</span>
-      <ul class="stats-countries">
+      <ul class="stats-shares">
         {% for c in stats.countries %}
         <li>
           <span class="cname">{% if c.flag %}<span aria-hidden="true">{{ c.flag }}</span> {% endif %}{{ c.name }}</span>
@@ -190,6 +190,22 @@
         {% endfor %}
       </ul>
       {% if stats.countries_since %}<div class="footnote">{{ t('stats.countries_since', date=stats.countries_since|replace('-', '‑')) }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if stats.sources %}
+    <div class="cockpit-tile">
+      <span class="label">{{ t('stats.sources') }}</span>
+      <ul class="stats-shares">
+        {% for c in stats.sources %}
+        <li>
+          <span class="cname">{{ c.name }}</span>
+          <strong>{{ c.n }}</strong>
+          <span class="cbar" aria-hidden="true"><span style="width: {{ [c.pct, 2]|max }}%"></span></span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if stats.sources_since %}<div class="footnote">{{ t('stats.sources_since', date=stats.sources_since|replace('-', '‑')) }}</div>{% endif %}
     </div>
     {% endif %}
 

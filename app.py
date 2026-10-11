@@ -363,7 +363,8 @@ def _count_visit(resp):
                 pid = (request.view_args or {}).get("user_id")
                 me = getattr(g, "user", None)
                 if pid and not (me and me["id"] == pid):
-                    services.bump_profile_view(pid, country)
+                    services.bump_profile_view(
+                        pid, country, services.profile_view_source(request.referrer, request.host))
     except Exception:
         pass
     return resp
