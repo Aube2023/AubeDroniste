@@ -222,6 +222,7 @@ _static_ver_cache: dict = {}
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
     "missions_search": None, "mission_detail": None, "schools": None, "gallery": None,
+    "before_you_fly": None,
     "opportunities": None, "jobs": None,
     "job_detail": None,
     "partners": None,
@@ -999,6 +1000,18 @@ def schools():
     return render_template(
         "schools.html", schools=schools_list,
         seo=seo.schools_page(lang),
+    )
+
+
+@app.route("/avant-de-faire-voler")
+def before_you_fly():
+    """« Avant de faire voler » : deux reperes generaux pour le client, valables
+    dans tous les pays (verifier la reglementation locale, verifier le
+    pilote), sans entrer dans les regles d'un pays en particulier."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    return render_template(
+        "before_you_fly.html",
+        seo=seo.simple_page(lang, title_key="fly.title", description_key="fly.description"),
     )
 
 

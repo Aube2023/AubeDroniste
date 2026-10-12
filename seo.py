@@ -131,6 +131,7 @@ PUBLIC_ROUTES = [
     ("/opportunites", "0.8", "daily"),
     ("/emplois", "0.8", "daily"),
     ("/faq", "0.6", "monthly"),
+    ("/avant-de-faire-voler", "0.5", "monthly"),
     ("/nouveautes", "0.5", "weekly"),
     ("/part-107", "0.7", "weekly"),
     ("/contact", "0.5", "monthly"),

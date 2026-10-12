@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+{# Deux reperes generaux, valables dans tous les pays : pas de regles par pays
+   ici (elles changent, et l'autorite locale fait foi). #}
+<nav class="breadcrumb" aria-label="{{ t('nav.breadcrumb') }}">
+  <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a> ›
+  <a href="{{ url_for('faq') }}">{{ t('footer.faq') }}</a>
+</nav>
+
+<div class="search-head">
+  <span class="eyebrow">{{ t('fly.eyebrow') }}</span>
+  <h1>{{ t('fly.h1') }}</h1>
+  <p class="lead muted">{{ t('fly.lead') }}</p>
+</div>
+
+<div class="grid-2 fly-points">
+  <section class="card">
+    <h2 class="card-title">{{ t('fly.rules_h') }}</h2>
+    <p>{{ t('fly.rules_p') }}</p>
+  </section>
+  <section class="card">
+    <h2 class="card-title">{{ t('fly.pilot_h') }}</h2>
+    <p>{{ t('fly.pilot_p') }}</p>
+  </section>
+</div>
+
+<p class="muted small fly-note">{{ t('fly.note') }}</p>
+<p><a href="{{ url_for('pilots_search', only_verified=1) }}" class="cta">{{ t('fly.cta') }}</a></p>
+
+{% endblock %}

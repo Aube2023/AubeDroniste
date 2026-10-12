@@ -2249,6 +2249,13 @@ img.avatar { object-fit: cover; }
   padding: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
 .gallery-cta p { margin: 0; }
+
+/* ---- page « Avant de faire voler » ---- */
+.fly-points { margin-top: 8px; }
+.fly-points .card { margin: 0; }
+.fly-points .card-title { font-size: 1.3rem; margin-bottom: 10px; }
+.fly-points .card p { margin: 0; }
+.fly-note { margin: 18px 0 14px; max-width: 70ch; }
 /* Accueil sur telephone : deux colonnes compactes plutot que six photos
    pleine largeur empilees. */
 @media (max-width: 600px) {
