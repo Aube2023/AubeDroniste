@@ -984,6 +984,10 @@ def count_certifications_pending() -> int:
     return int(row["n"]) if row else 0
 
 
+# Brevet encore valide (pas de date d'échéance, ou échéance pas dépassée).
+_CERT_VALID_SQL = "(expires_at IS NULL OR expires_at='' OR expires_at >= date('now'))"
+
+
 def refresh_user_verified(user_id: int) -> bool:
     """Badge profil : users.is_verified = 1 ssi au moins un brevet verifie
     par l'admin et non expire. Recalcule a chaque revue / suppression /
@@ -991,7 +995,7 @@ def refresh_user_verified(user_id: int) -> bool:
     row = db.fetchone(
         "SELECT COUNT(*) AS n FROM pilot_certifications "
         "WHERE pilot_user_id=? AND is_verified=1 "
-        "  AND (expires_at IS NULL OR expires_at='' OR expires_at >= date('now'))",
+        "  AND " + _CERT_VALID_SQL,
         (user_id,),
     )
     flag = 1 if row and row["n"] else 0
@@ -1634,9 +1638,12 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "  FROM reviews GROUP BY target_user_id"
         ") r ON r.target_user_id = u.id "
         "LEFT JOIN ("
+        # Un brevet vérifié mais expiré ne compte plus : ni pastille d'autorité
+        # (« ✓ FAA »), ni filtre « vérifiés » (CGU art. 8, même règle que
+        # refresh_user_verified).
         "  SELECT pilot_user_id, COUNT(*) AS n_certs, "
-        "         SUM(is_verified) AS n_verified, "
-        "         GROUP_CONCAT(DISTINCT CASE WHEN is_verified=1 THEN authority END) "
+        "         SUM(CASE WHEN is_verified=1 AND " + _CERT_VALID_SQL + " THEN 1 ELSE 0 END) AS n_verified, "
+        "         GROUP_CONCAT(DISTINCT CASE WHEN is_verified=1 AND " + _CERT_VALID_SQL + " THEN authority END) "
         "           AS verified_auths "
         "  FROM pilot_certifications GROUP BY pilot_user_id"
         ") c ON c.pilot_user_id = u.id "

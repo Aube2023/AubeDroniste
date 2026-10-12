@@ -3698,6 +3698,10 @@ def booking_devis_pdf(booking_id):
         abort(404)
     if g.user["id"] not in (booking["client_user_id"], booking["pilot_user_id"]):
         abort(403)
+    # Coordonnees du pilote (courriel, telephone, site) : revelees au client
+    # seulement une fois la reservation payee (CGU art. 12), comme sur la fiche.
+    if not services.has_funded_relation(g.user["id"], booking["pilot_user_id"]):
+        booking = dict(booking, pilot_email=None, pilot_phone=None, pilot_portfolio_url=None)
     import pdfgen
     pdf = pdfgen.devis_pdf(booking, _mission_label(booking.get("mission_type") or ""))
     resp = make_response(pdf)

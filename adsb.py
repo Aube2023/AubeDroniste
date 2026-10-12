@@ -1,8 +1,8 @@
 """Trafic aérien en direct (ADS-B) autour d'un point, pour la carte.
 
-Source : adsb.lol, réseau communautaire de récepteurs, données en CC0
-(usage commercial permis, pas d'attribution exigée ; on le crédite quand
-même). Pas de clé. L'app relaie côté serveur avec un cache court par zone :
+Source : adsb.lol, réseau communautaire de récepteurs. Licence ODbL 1.0
+(indiquée sur adsb.lol/docs/open-data/api, vérifié le 2026-10-12) : on
+crédite la source sur la carte et dans les mentions légales. Pas de clé. L'app relaie côté serveur avec un cache court par zone :
 le navigateur ne parle qu'à notre domaine, et dix visiteurs sur la même
 ville ne coûtent qu'une requête toutes les dix secondes.
 

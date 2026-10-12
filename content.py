@@ -76,12 +76,12 @@ _FAQ = [
      {"fr": "Comment se passe le paiement ?",
       "en": "How does payment work?"},
      {"fr": "Vous acceptez un devis, puis vous payez 100 % du montant, qui reste "
-            "sous séquestre (Stripe). Le pilote ne touche les fonds ({pilot_share} % "
+            "sous séquestre sur le compte de paiement d'AubePilot, chez Stripe. Le pilote ne touche les fonds ({pilot_share} % "
             "du prix) qu'après votre validation de la livraison, ou automatiquement "
             "{auto_release_days} jours après la livraison si vous ne répondez pas. "
             "Aucun acompte versé au pilote avant la mission.",
       "en": "You accept a quote, then pay 100% of the amount, which is held in "
-            "escrow (Stripe). The pilot only receives the funds ({pilot_share}% of "
+            "escrow on AubePilot's payment account, with Stripe. The pilot only receives the funds ({pilot_share}% of "
             "the price) once you validate the delivery, or automatically "
             "{auto_release_days} days after delivery if you don't respond. No "
             "deposit is paid to the pilot before the mission."}),
@@ -90,11 +90,12 @@ _FAQ = [
       "en": "What if the mission goes wrong?"},
      {"fr": "Tant que les fonds sont sous séquestre, vous pouvez ouvrir un litige "
             "depuis la réservation. Notre équipe examine les échanges et les "
-            "livrables, puis rembourse tout ou partie du montant si la prestation "
-            "n'a pas été réalisée comme convenu.",
+            "livrables, puis verse sa part au pilote ou rembourse intégralement le "
+            "client si la prestation n'a pas été réalisée comme convenu.",
       "en": "While funds are in escrow you can open a dispute from the booking. "
-            "Our team reviews the exchanges and deliverables, then refunds all or "
-            "part of the amount if the service was not delivered as agreed."}),
+            "Our team reviews the exchanges and deliverables, then either pays the "
+            "pilot their share or fully refunds the client if the service was not "
+            "delivered as agreed."}),
     ("cancel", "payment", False,
      {"fr": "Puis-je annuler une mission réservée ?",
       "en": "Can I cancel a booked mission?"},
@@ -517,9 +518,9 @@ _PART107 = {
              "Quotes, missions, messaging, reviews and portfolio, in 31 languages. A pilot in Texas and a "
              "client in Québec work the same way."),
         ],
-        "pilots_h": "Part 107 pilots listed",
-        "empty": "No U.S. pilot is listed yet. Be the first in your state: your page goes live the day your "
-                 "certificate is checked.",
+        "pilots_h": "Pilots listed in the United States",
+        "empty": "No U.S. pilot is listed yet. Be the first in your state: your page goes live as soon as you "
+                 "sign up, and the Part 107 badge appears once your certificate is checked.",
         "note": "Commercial drone operations in the United States require an FAA Remote Pilot Certificate "
                 "(14 CFR Part 107). AubePilot shows the badge only after checking the certificate; recreational "
                 "flyers are welcome too, listed as such.",
@@ -543,9 +544,9 @@ _PART107 = {
              "Devis, missions, messagerie, avis et portfolio, en 31 langues. Un pilote au Texas et un client au "
              "Québec travaillent de la même façon."),
         ],
-        "pilots_h": "Pilotes Part 107 inscrits",
+        "pilots_h": "Pilotes inscrits aux États-Unis",
         "empty": "Aucun pilote américain inscrit pour le moment. Soyez le premier de votre État : votre fiche est "
-                 "en ligne le jour où votre brevet est contrôlé.",
+                 "en ligne dès l'inscription, et le badge Part 107 apparaît une fois votre brevet contrôlé.",
         "note": "Aux États-Unis, l'usage commercial d'un drone exige un Remote Pilot Certificate de la FAA "
                 "(14 CFR Part 107). AubePilot n'affiche le badge qu'après contrôle du certificat ; les pilotes "
                 "récréatifs sont les bienvenus aussi, présentés comme tels.",
@@ -569,9 +570,9 @@ _PART107 = {
              "Presupuestos, misiones, mensajería, reseñas y portafolio, en 31 idiomas. Un piloto en Texas y un "
              "cliente en Quebec trabajan de la misma manera."),
         ],
-        "pilots_h": "Pilotos Part 107 inscritos",
+        "pilots_h": "Pilotos inscritos en Estados Unidos",
         "empty": "Todavía no hay ningún piloto estadounidense inscrito. Sea el primero de su estado: su ficha "
-                 "está en línea el día en que se comprueba su licencia.",
+                 "está en línea desde la inscripción, y la insignia Part 107 aparece una vez comprobada su licencia.",
         "note": "En Estados Unidos, el uso comercial de un dron exige un Remote Pilot Certificate de la FAA "
                 "(14 CFR Part 107). AubePilot muestra la insignia solo tras comprobar el certificado; los pilotos "
                 "recreativos también son bienvenidos, presentados como tales.",

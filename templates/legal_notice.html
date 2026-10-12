@@ -1,71 +1,99 @@
 {% extends "base.html" %}
-{% block title %}Mentions légales · Aube Pilot{% endblock %}
+{% block title %}Mentions légales · AubePilot{% endblock %}
 {% block content %}
 
 <article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
 
 <h1>Mentions légales</h1>
-<p class="muted small">Dernière mise à jour : 9 mai 2026</p>
+<p class="muted small">Dernière mise à jour : 12 octobre 2026</p>
 
-<h2>Éditeur du site</h2>
+<h2>1. Éditeur</h2>
 <p>
-<strong>Aube Pilot</strong> est une marque exploitée par<br>
-<strong>L'Aube Étoilée</strong><br>
-Entreprise individuelle / société en cours d'immatriculation<br>
-Adresse : Montréal, Québec, Canada<br>
+AubePilot est une plateforme numérique de mise en relation dédiée aux pilotes de drones,
+aux entreprises, aux écoles et aux particuliers.
+</p>
+<p>
+La plateforme est exploitée par <strong>L'Aube Étoilée inc.</strong>, entreprise établie au Québec, Canada.<br>
+Adresse : Montréal (Québec), Canada<br>
 Courriel : <a href="mailto:support@aubemail.com">support@aubemail.com</a><br>
-Représentant légal : Nicolas Breidi
+Site : <a href="https://pilot.aubeetoilee.com">pilot.aubeetoilee.com</a>
 </p>
 
-<h2>Hébergement</h2>
+<h2>2. Nature du service</h2>
 <p>
-<strong>Vultr Holdings, LLC</strong><br>
-319 Clematis Street, Suite 900, West Palm Beach, FL 33401, USA<br>
-Datacenter principal : Toronto (Canada)
+AubePilot fournit des outils de présentation professionnelle, de recherche, de communication
+et de mise en relation.
+</p>
+<p>
+AubePilot n'est ni un employeur ni un exploitant des vols réalisés par les utilisateurs.
+Les pilotes demeurent indépendants et responsables de leurs prestations.
+</p>
+<p>
+AubePilot n'est affilié à aucune autorité de l'aviation civile (FAA, Transports Canada, EASA,
+DGAC, SACAA ou autre) et n'est approuvé par aucune d'entre elles. Leurs noms servent uniquement
+à désigner les brevets que les pilotes déclarent. Le badge « vérifié » est attribué par
+l'équipe d'AubePilot après contrôle du justificatif, et non par ces autorités.
 </p>
 
-<h2>Paiements</h2>
+<h2>3. Hébergement et paiements</h2>
 <p>
-Les paiements en escrow sont opérés par <strong>Stripe Payments Europe, Ltd.</strong>
-(Irlande) et <strong>Stripe, Inc.</strong> (États-Unis), via Stripe Connect.
+La plateforme utilise des prestataires techniques tiers pour son hébergement, son fonctionnement
+et, lorsque cette fonctionnalité est disponible, le traitement sécurisé des paiements.
+</p>
+<p>
+Les modalités applicables sont décrites dans les
+<a href="{{ url_for('page_terms') }}">Conditions générales d'utilisation</a> et la
+<a href="{{ url_for('page_privacy') }}">Politique de confidentialité</a>.
 </p>
 
-<h2>Propriété intellectuelle</h2>
+<h2>4. Propriété intellectuelle</h2>
 <p>
-Les éléments graphiques, le code, les textes et le nom <em>Aube Pilot</em>
-sont protégés. Toute reproduction non autorisée est interdite. Les contenus
-publiés par les utilisateurs (profils, missions, avis, photos) restent
-leur propriété ; en publiant, l'utilisateur accorde à Aube Pilot une
-licence non exclusive, mondiale et gratuite d'utilisation aux seules fins
-d'exploitation du service.
+Le nom, les logiciels, les interfaces et les contenus propres à AubePilot sont protégés par
+les lois applicables.
+</p>
+<p>
+Les utilisateurs conservent leurs droits sur leurs contenus. Ils autorisent AubePilot à les
+utiliser uniquement dans les conditions nécessaires au fonctionnement du service et
+conformément aux Conditions générales d'utilisation.
 </p>
 
-<h2>Médiateur de la consommation</h2>
+<h2>5. Sources des données affichées</h2>
 <p>
-Conformément à l'article 14 du règlement UE n° 524/2013, les utilisateurs
-européens peuvent recourir à la plateforme européenne de
-<a href="https://ec.europa.eu/consumers/odr" rel="noopener">règlement en ligne des litiges</a>.
-Pour le Québec, la médiation est assurée par notre service interne
-(<a href="mailto:support@aubemail.com">support@aubemail.com</a>) ; en cas
-d'échec, l'<a href="https://www.opc.gouv.qc.ca" rel="noopener">Office de la protection du consommateur du Québec</a>
-peut être saisi.
-</p>
-
-<h2>Sources de données cartographiques</h2>
-<p>
-La carte utilise les données © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a>
-(fond de carte <a href="https://openfreemap.org" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" rel="noopener">OpenMapTiles</a>).
-La recherche par code postal ou adresse s'appuie sur
+La carte utilise les données © <a href="https://www.openstreetmap.org/copyright" rel="noopener">contributeurs OpenStreetMap</a>
+(licence ODbL), le fond de carte <a href="https://openfreemap.org" rel="noopener">OpenFreeMap</a>
+et © <a href="https://openmaptiles.org" rel="noopener">OpenMapTiles</a>. L'imagerie satellite
+est fournie par Esri et ses fournisseurs. La recherche par code postal ou adresse s'appuie sur
 <a href="https://nominatim.org" rel="noopener">Nominatim</a> (OpenStreetMap) et, pour les
 régions de tri d'acheminement canadiennes, sur les données postales de
 <a href="https://www.geonames.org" rel="noopener">GeoNames</a> (licence CC BY 4.0).
+Le trafic aérien vient de <a href="https://www.adsb.lol" rel="noopener">adsb.lol</a>
+(licence ODbL 1.0).
 </p>
 
-<h2>Liens utiles</h2>
+<h2>6. Réclamations et signalements</h2>
+<p>
+Toute réclamation, question ou signalement peut être transmis à :
+<a href="mailto:support@aubemail.com"><strong>support@aubemail.com</strong></a>
+</p>
+<p>
+Les demandes sont examinées de manière impartiale, sans préjudice des droits et recours
+prévus par la loi.
+</p>
+
+<h2>7. Documents applicables</h2>
 <ul>
-  <li><a href="{{ url_for('page_privacy') }}">Politique de confidentialité (Loi 25)</a></li>
   <li><a href="{{ url_for('page_terms') }}">Conditions générales d'utilisation</a></li>
+  <li><a href="{{ url_for('page_privacy') }}">Politique de confidentialité</a></li>
 </ul>
+
+<h2>8. Droit applicable</h2>
+<p>
+AubePilot est exploité depuis le Québec, Canada.
+</p>
+<p>
+Les présentes mentions sont soumises aux lois applicables, sans limiter les droits impératifs
+dont bénéficient les utilisateurs selon leur juridiction.
+</p>
 
 </article>
 
