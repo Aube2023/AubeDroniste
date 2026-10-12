@@ -2211,8 +2211,13 @@ img.avatar { object-fit: cover; }
 .media-frame {
   background: #000; aspect-ratio: 16 / 10;
   display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
 }
-.media-frame img, .media-frame video { width: 100%; height: 100%; display: block; }
+/* Le media remplit le cadre sans le dimensionner : une photo en hauteur
+   agrandissait sa tuile (et toute la rangee). La visionneuse montre l'entier. */
+.media-frame img, .media-frame video {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+}
 .media-frame img   { object-fit: cover; }
 .media-frame video { object-fit: contain; }
 .media-body { padding: 14px; }
@@ -2222,9 +2227,17 @@ img.avatar { object-fit: cover; }
 }
 
 /* ---- galerie publique des realisations (/realisations + accueil) ---- */
-.gallery-grid { margin-top: 16px; }
+.gallery-grid { margin-top: 16px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .gallery-grid { grid-template-columns: 1fr; } }
+.gallery-item .media-frame { aspect-ratio: 4 / 3; }
 .gallery-item .media-body { padding: 10px 14px 12px; }
-.gallery-item .media-title { margin-top: 0; font-size: 1rem; }
+/* Titre sur une ligne, sa place gardee meme vide : toutes les tuiles ont la
+   meme hauteur, sans blanc sous la legende. */
+.gallery-item .media-title {
+  margin: 0 0 6px; font-size: 1rem; min-height: 1.25em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .gallery-pilot {
   display: flex; align-items: center; gap: 8px; min-width: 0;
   color: var(--ink); text-decoration: none; font-size: 14px;
@@ -2256,8 +2269,8 @@ img.avatar { object-fit: cover; }
 .fly-points .card-title { font-size: 1.3rem; margin-bottom: 10px; }
 .fly-points .card p { margin: 0; }
 .fly-note { margin: 18px 0 14px; max-width: 70ch; }
-/* Accueil sur telephone : deux colonnes compactes plutot que six photos
-   pleine largeur empilees. */
+/* Accueil : 6 photos = 2 rangees pleines de 3, puis 3 rangees de 2 sur
+   telephone (colonnes compactes plutot que six photos empilees). */
 @media (max-width: 600px) {
   #realisations .gallery-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   #realisations .media-title, #realisations .gp-city { display: none; }

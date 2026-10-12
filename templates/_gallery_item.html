@@ -13,7 +13,7 @@
     {% endif %}
   </div>
   <figcaption class="media-body">
-    {% if it.title %}<div class="media-title">{{ it.title }}</div>{% endif %}
+    <div class="media-title"{% if it.title %} title="{{ it.title }}"{% endif %}>{{ it.title or '' }}</div>
     <a class="gallery-pilot" href="{{ url_for('pilot_detail', user_id=it.pilot_id) }}">
       {% if it.avatar_path %}<img src="{{ thumb(it.avatar_path, 160) }}" alt="" width="28" height="28" loading="lazy" decoding="async">{% else %}<span class="gp-initial" aria-hidden="true">{{ it.pilot_name[:1] }}</span>{% endif %}
       <span class="gp-name">{{ it.pilot_name }}</span>{% if it.city %}<span class="gp-city">{{ it.city }}</span>{% endif %}
