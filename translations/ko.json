@@ -69,7 +69,7 @@
   "nav.zone": "내 주변",
   "nav.skip": "본문으로 건너뛰기",
   "nav.lang_label": "언어 선택",
-  "nav.payouts_country": "회원님의 국가에서는 아직 온라인 결제를 이용할 수 없습니다. 미션 제안은 계속 가능하며, 정산은 수동으로 진행됩니다.",
+  "nav.payouts_country": "회원님의 국가에서는 아직 온라인 결제를 이용할 수 없습니다. 프로필은 공개되고 견적도 보낼 수 있지만, 고객이 아직 AubePilot을 통해 결제할 수는 없습니다.",
   "nav.payouts_activate": "결제 수단을 활성화하세요",
   "nav.payouts_activate_p": "의뢰인이 미션을 확정하는 즉시 대금을 받을 수 있습니다.",
   "nav.payouts_cta": "Stripe 설정하기 →",

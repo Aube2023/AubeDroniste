@@ -69,7 +69,7 @@
   "nav.zone": "Moja okolica",
   "nav.skip": "Przejdź do treści",
   "nav.lang_label": "Wybierz język",
-  "nav.payouts_country": "Płatności online nie są jeszcze dostępne w Państwa kraju. Można nadal składać oferty na zlecenia; wypłata zostanie zrealizowana ręcznie.",
+  "nav.payouts_country": "Płatności online nie są jeszcze dostępne w Państwa kraju. Profil jest widoczny i można wysyłać oferty, ale klienci nie mogą jeszcze zapłacić przez AubePilot.",
   "nav.payouts_activate": "Aktywuj płatności",
   "nav.payouts_activate_p": "aby otrzymywać zapłatę, gdy tylko klient zatwierdzi zlecenie.",
   "nav.payouts_cta": "Skonfiguruj Stripe →",

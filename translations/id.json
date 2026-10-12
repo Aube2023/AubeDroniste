@@ -30,7 +30,7 @@
   "nav.zone": "Zona saya",
   "nav.skip": "Lompat ke konten",
   "nav.lang_label": "Pilih bahasa",
-  "nav.payouts_country": "Pembayaran daring belum tersedia di negara Anda. Anda tetap bisa menawarkan misi; pencairan dilakukan secara manual.",
+  "nav.payouts_country": "Pembayaran daring belum tersedia di negara Anda. Profil Anda terlihat dan Anda bisa mengirim penawaran harga, tetapi klien belum bisa membayar Anda melalui AubePilot.",
   "nav.payouts_activate": "Aktifkan pembayaran Anda",
   "nav.payouts_activate_p": "agar dibayar begitu klien memvalidasi misi.",
   "nav.payouts_cta": "Siapkan Stripe →",

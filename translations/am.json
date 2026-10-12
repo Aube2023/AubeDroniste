@@ -69,7 +69,7 @@
   "nav.zone": "አካባቢዬ",
   "nav.skip": "ወደ ይዘቱ ዝለል",
   "nav.lang_label": "ቋንቋ ይምረጡ",
-  "nav.payouts_country": "በአገርዎ የመስመር ላይ ክፍያ ገና አልተጀመረም። አሁንም ተልዕኮዎችን ማቅረብ ይችላሉ፤ ክፍያው በእጅ ይላካል።",
+  "nav.payouts_country": "በአገርዎ የመስመር ላይ ክፍያ ገና አልተጀመረም። መገለጫዎ ይታያል፣ የዋጋ ግምትም መላክ ይችላሉ፤ ነገር ግን ደንበኞች በAubePilot በኩል ገና ሊከፍሉዎ አይችሉም።",
   "nav.payouts_activate": "ክፍያዎችዎን ያግብሩ",
   "nav.payouts_activate_p": "ደንበኛ ተልዕኮ እንዳጸደቀ ወዲያውኑ ለመከፈል።",
   "nav.payouts_cta": "Stripe ያዋቅሩ →",

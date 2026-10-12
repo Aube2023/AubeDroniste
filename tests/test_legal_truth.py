@@ -59,3 +59,31 @@ def test_page_part107_ne_prete_pas_la_verification_a_la_faa(client):
     assert "FAA-verified" not in html
     assert "the day your certificate is checked" not in html
     assert "checked against the FAA registry" in html
+
+
+def test_fenetre_de_grace_remboursement_integral_meme_a_moins_de_24_h():
+    """CGU art. 14.1 : jusqu'à 2 h après le paiement, remboursement intégral,
+    même si la mission a lieu dans moins de 24 h."""
+    from datetime import datetime, timedelta, timezone
+    import services
+    now = datetime.now(timezone.utc)
+    res = services.compute_cancellation_fee({
+        "agreed_price": 1000,
+        "scheduled_at": (now + timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S"),
+        "paid_at": (now - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+    })
+    assert res["within_grace"] and not res["is_late"]
+    assert res["fee_amount"] == 0.0 and res["service_fee_amount"] == 0.0
+    assert res["refund_amount"] == 1000.0
+
+
+def test_pas_de_versement_manuel_promis():
+    """Aucun outil de versement manuel n'existe : le site ne doit pas le promettre."""
+    import content
+    import i18n
+    for code in i18n.SUPPORTED:
+        texte = i18n.t("nav.payouts_country", code)
+        assert "AubePilot" in texte, code
+    faq = " ".join(q["answer"] for lang in ("fr", "en") for q in content.faq(lang))
+    assert "manuellement par notre équipe" not in faq and "pays out manually" not in faq
+    assert "Maghreb" not in faq

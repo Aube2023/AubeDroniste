@@ -2548,6 +2548,12 @@ def compute_cancellation_fee(booking: dict) -> dict:
             service_fee_amount = round(
                 min(price * service_fee_pct / 100.0, CANCELLATION_SERVICE_FEE_CAP), 2,
             )
+        else:
+            # CGU art. 14.1 : dans la fenetre de grace, remboursement integral,
+            # meme a moins de 24 h de la mission (pas de dedommagement tardif).
+            is_late = False
+            fee_pct = 0.0
+            fee_amount = 0.0
     refund_amount = round(max(0.0, price - fee_amount - service_fee_amount), 2)
     return {
         "is_late": is_late,

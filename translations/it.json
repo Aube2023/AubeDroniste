@@ -69,7 +69,7 @@
   "nav.zone": "La mia zona",
   "nav.skip": "Vai al contenuto",
   "nav.lang_label": "Scegli la lingua",
-  "nav.payouts_country": "I pagamenti online non sono ancora disponibili nel Suo paese: può comunque proporre missioni, il versamento avverrà manualmente.",
+  "nav.payouts_country": "I pagamenti online non sono ancora disponibili nel Suo paese: il Suo profilo è visibile e può inviare preventivi, ma i clienti non possono ancora pagarLa tramite AubePilot.",
   "nav.payouts_activate": "Attivi i Suoi pagamenti",
   "nav.payouts_activate_p": "per essere pagato non appena un cliente conferma una missione.",
   "nav.payouts_cta": "Configura Stripe →",

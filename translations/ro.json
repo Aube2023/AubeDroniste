@@ -69,7 +69,7 @@
   "nav.zone": "Zona mea",
   "nav.skip": "Sari la conținut",
   "nav.lang_label": "Alegeți limba",
-  "nav.payouts_country": "Plățile online nu sunt încă disponibile în țara dumneavoastră. Puteți totuși propune misiuni; plata către dumneavoastră se va face manual.",
+  "nav.payouts_country": "Plățile online nu sunt încă disponibile în țara dumneavoastră. Profilul dumneavoastră este vizibil și puteți trimite oferte, dar clienții nu vă pot plăti încă prin AubePilot.",
   "nav.payouts_activate": "Activați-vă plățile",
   "nav.payouts_activate_p": "pentru a fi plătit de îndată ce un client validează o misiune.",
   "nav.payouts_cta": "Configurează Stripe →",

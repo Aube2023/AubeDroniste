@@ -69,7 +69,7 @@
   "nav.zone": "Mijn zone",
   "nav.skip": "Naar de inhoud",
   "nav.lang_label": "Taal kiezen",
-  "nav.payouts_country": "Online betalingen zijn in jouw land nog niet beschikbaar. Je kunt wel opdrachten aanbieden; de uitbetaling gebeurt dan handmatig.",
+  "nav.payouts_country": "Online betalingen zijn in jouw land nog niet beschikbaar. Je profiel is zichtbaar en je kunt offertes sturen, maar klanten kunnen je nog niet via AubePilot betalen.",
   "nav.payouts_activate": "Activeer je betalingen",
   "nav.payouts_activate_p": "om betaald te worden zodra een klant een opdracht bevestigt.",
   "nav.payouts_cta": "Stripe instellen →",

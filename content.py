@@ -180,13 +180,13 @@ _FAQ = [
      {"fr": "Vous activez vos paiements en quelques minutes (Stripe Connect, "
             "vérification d'identité incluse). Dès que le client valide la "
             "livraison, {pilot_share} % du prix part automatiquement vers votre "
-            "compte bancaire. Dans les pays non couverts par Stripe, le versement "
-            "est fait manuellement par notre équipe.",
+            "compte bancaire. Dans les pays que Stripe ne couvre pas encore, le "
+            "paiement en ligne d'une mission n'est pas encore possible.",
       "en": "You activate payouts in a few minutes (Stripe Connect, identity "
             "check included). As soon as the client validates delivery, "
             "{pilot_share}% of the price is automatically transferred to your bank "
-            "account. In countries not covered by Stripe, our team pays out "
-            "manually."}),
+            "account. In countries Stripe does not cover yet, online payment for a "
+            "mission is not available yet."}),
     ("packages", "pilots", False,
      {"fr": "Puis-je proposer des forfaits à prix fixe ?",
       "en": "Can I offer fixed-price packages?"},
@@ -214,10 +214,10 @@ _FAQ = [
      {"fr": "Partout. La recherche par code postal ou adresse fonctionne dans le "
             "monde entier, les brevets de toutes les autorités sont acceptés et "
             "les paiements sous séquestre sont disponibles dans plus de 45 pays "
-            "(Canada, France, États-Unis, Europe, Maghreb…).",
+            "(Canada, France, États-Unis, Royaume-Uni, Europe, Inde, Brésil…).",
       "en": "Everywhere. Postal code and address search works worldwide, licences "
             "from every authority are accepted and escrow payments are available "
-            "in more than 45 countries (Canada, France, USA, Europe, Maghreb…)."}),
+            "in more than 45 countries (Canada, France, USA, UK, Europe, India, Brazil…)."}),
     ("bilingual", "platform", False,
      {"fr": "AubePilot est-elle bilingue ? Existe-t-il une application ?",
       "en": "Is AubePilot bilingual? Is there an app?"},

@@ -4361,13 +4361,14 @@ def stripe_onboard():
             url = payments.fresh_onboarding_link(account_id)
     except payments.StripeCountryUnsupportedError:
         # Pays non supporte par Stripe Connect : on ne cree pas de compte
-        # casse. Le pilote peut quand meme proposer des missions ; versement
-        # manuel. Cf. payments.country_is_payable / bandeau base.html.
+        # casse. Le pilote peut proposer des devis, mais aucun outil de
+        # versement manuel n'existe : le client ne peut pas le payer en ligne.
+        # Cf. payments.country_is_payable / bandeau base.html.
         flash(
             "Les paiements Stripe ne sont pas encore disponibles dans votre "
-            "pays. Vous pouvez tout de même proposer des missions — le "
-            "versement se fera manuellement. Si votre pays est incorrect, "
-            "corrigez-le dans votre profil.",
+            "pays. Votre fiche reste visible et vous pouvez proposer des devis, "
+            "mais un client ne peut pas encore vous payer par AubePilot. Si "
+            "votre pays est incorrect, corrigez-le dans votre profil.",
             "info",
         )
         return redirect(url_for("pilot_edit"))

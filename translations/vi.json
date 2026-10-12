@@ -30,7 +30,7 @@
   "nav.zone": "Khu vực của tôi",
   "nav.skip": "Đi tới nội dung",
   "nav.lang_label": "Chọn ngôn ngữ",
-  "nav.payouts_country": "Thanh toán trực tuyến chưa khả dụng ở quốc gia của bạn. Bạn vẫn có thể nhận nhiệm vụ; việc chi trả sẽ được thực hiện thủ công.",
+  "nav.payouts_country": "Thanh toán trực tuyến chưa khả dụng ở quốc gia của bạn. Hồ sơ của bạn vẫn hiển thị và bạn có thể gửi báo giá, nhưng khách hàng chưa thể thanh toán cho bạn qua AubePilot.",
   "nav.payouts_activate": "Kích hoạt thanh toán",
   "nav.payouts_activate_p": "để được trả tiền ngay khi khách hàng xác nhận nhiệm vụ.",
   "nav.payouts_cta": "Thiết lập Stripe →",

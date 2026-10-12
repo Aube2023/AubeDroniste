@@ -69,7 +69,7 @@
   "nav.zone": "マイエリア",
   "nav.skip": "本文へ移動",
   "nav.lang_label": "言語を選択",
-  "nav.payouts_country": "お住まいの国ではオンライン決済はまだご利用いただけません。案件への応募は可能で、報酬は手動でお支払いします。",
+  "nav.payouts_country": "お住まいの国ではオンライン決済はまだご利用いただけません。プロフィールは公開され、見積もりも送れますが、クライアントはまだAubePilot経由でお支払いできません。",
   "nav.payouts_activate": "決済を有効化",
   "nav.payouts_activate_p": "して、依頼者が案件を確定した時点で報酬を受け取りましょう。",
   "nav.payouts_cta": "Stripeを設定 →",

@@ -30,7 +30,7 @@
   "nav.zone": "Minha zona",
   "nav.skip": "Ir para o conteúdo",
   "nav.lang_label": "Escolher o idioma",
-  "nav.payouts_country": "Os pagamentos on-line ainda não estão disponíveis no seu país. Você pode propor missões; o repasse será feito manualmente.",
+  "nav.payouts_country": "Os pagamentos on-line ainda não estão disponíveis no seu país. Seu perfil fica visível e você pode enviar orçamentos, mas os clientes ainda não podem pagar você pelo AubePilot.",
   "nav.payouts_activate": "Ative seus pagamentos",
   "nav.payouts_activate_p": "para receber assim que um cliente validar uma missão.",
   "nav.payouts_cta": "Configurar o Stripe →",
