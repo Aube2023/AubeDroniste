@@ -19,7 +19,7 @@ def test_existing_aubemail_identity_is_not_reprovisioned(
         raise AssertionError("un compte AubeMail existant ne doit pas etre reprovisionne")
 
     monkeypatch.setattr(aubemail_client, "provision_account", forbidden_provision)
-    response = client.post("/inscription", data={
+    response = client.post("/inscription", data={"accept_terms": "1", 
         "username": username,
         "password": "mot-de-passe-solide",
         "confirm": "mot-de-passe-solide",

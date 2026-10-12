@@ -184,21 +184,22 @@ PLATFORM_FEE_PCT = PLATFORM_FEE_TIERS[0][1]     # taux de base (1re mission), af
 # Part reversee au pilote (derivee : l'affichage ne doit JAMAIS coder "80 %" en dur).
 PILOT_SHARE_PCT = 100.0 - PLATFORM_FEE_PCT
 
-# Annulation tardive cote client : preavis exige (heures) avant
-# mission.start_date. En dessous de ce preavis, le client dedomage le pilote
-# a hauteur de LATE_CANCELLATION_FEE_PCT du prix convenu, et est rembourse
-# du reste. Au-dessus, refund integral et aucune penalite.
+# Annulation par le CLIENT apres paiement (CGU v2.2 art. 14.1) : tout ce
+# qui est retenu va au PILOTE, AubePilot ne garde rien. Fenetre de grace de
+# CANCELLATION_GRACE_HOURS apres le paiement : remboursement integral. Ensuite,
+# le pilote est dedommage de CANCELLATION_PILOT_FEE_PCT (plafonne a
+# CANCELLATION_PILOT_FEE_CAP), ou de LATE_CANCELLATION_FEE_PCT si l'annulation
+# arrive a moins de LATE_CANCELLATION_HOURS de la mission. Les deux ne se
+# cumulent pas. Le pilote qui se desiste ne coute jamais rien au client.
 LATE_CANCELLATION_HOURS = 24
 LATE_CANCELLATION_FEE_PCT = 25.0
 
-# Frais de service retenus par la plateforme quand le CLIENT annule APRES
-# paiement : ferme le contournement « payer pour obtenir le contact du pilote,
-# annuler avec preavis, traiter en direct ». Fenetre de grace juste apres le
-# paiement (erreur, changement d'avis immediat) : remboursement integral.
-# Le pilote qui se desiste ne coute jamais rien au client (remboursement
-# integral, mission remise en ligne).
 CANCELLATION_GRACE_HOURS = 2
-CANCELLATION_SERVICE_FEE_PCT = 10.0
+
+# Version des CGU acceptee a l'inscription (users.terms_version). A changer
+# avec templates/legal_terms.html.
+TERMS_VERSION = "2.2"
+CANCELLATION_PILOT_FEE_PCT = 10.0
 
 # Collectes « Soutenez ce pilote » : un pilote verifie explique quel materiel
 # il veut financer et pourquoi ; chaque contribution lui est versee des
@@ -214,7 +215,7 @@ CAMPAIGN_GOAL_MIN, CAMPAIGN_GOAL_MAX = 200.0, 50000.0
 # Minimum 10 : sous ce montant, les 0,30 fixes de Stripe mangent la part.
 CONTRIBUTION_MIN, CONTRIBUTION_MAX = 10.0, 5000.0
 CONTRIBUTION_PRESETS = (20, 50, 100, 250)
-CANCELLATION_SERVICE_FEE_CAP = 150.0   # plafond, en unites de la devise de la mission
+CANCELLATION_PILOT_FEE_CAP = 150.0   # plafond, en unites de la devise de la mission
 
 # Statuts
 MISSION_STATUS = ("open", "assigned", "in_progress", "done", "cancelled")

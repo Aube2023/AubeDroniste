@@ -355,6 +355,8 @@
   "register.bullet_fee": "Comision de platformă doar pe misiunile livrate ({fee} %, degresiv).",
   "register.eco_pre": "Autentificare comună cu ecosistemul",
   "register.eco_post": ".",
+  "register.accept_terms": "Sunt major(ă) și accept Condițiile de utilizare și Politica de confidențialitate AubePilot.",
+  "register.err_terms": "Bifați căsuța pentru a vă confirma vârsta și a accepta Condițiile de utilizare și Politica de confidențialitate.",
   "register.create_account": "Creează-mi contul",
   "register.role_legend": "Rolul meu la decolare",
   "register.role_client": "Client",

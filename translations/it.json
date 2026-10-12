@@ -355,6 +355,8 @@
   "register.bullet_fee": "Commissione della piattaforma solo sulle missioni consegnate ({fee} %, decrescente).",
   "register.eco_pre": "Accesso condiviso con l'ecosistema",
   "register.eco_post": ".",
+  "register.accept_terms": "Sono maggiorenne e accetto le Condizioni d'uso e l'Informativa sulla privacy di AubePilot.",
+  "register.err_terms": "Spunti la casella per confermare la Sua età e accettare le Condizioni d'uso e l'Informativa sulla privacy.",
   "register.create_account": "Crea il mio account",
   "register.role_legend": "Il mio ruolo al decollo",
   "register.role_client": "Cliente",

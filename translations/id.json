@@ -273,6 +273,8 @@
   "register.bullet_fee": "Komisi platform hanya untuk misi yang diserahkan ({fee} %, menurun).",
   "register.eco_pre": "Login bersama dengan ekosistem",
   "register.eco_post": ".",
+  "register.accept_terms": "Saya sudah dewasa menurut hukum dan menerima Ketentuan penggunaan serta Kebijakan privasi AubePilot.",
+  "register.err_terms": "Centang kotak untuk mengonfirmasi usia Anda dan menerima Ketentuan penggunaan serta Kebijakan privasi.",
   "register.create_account": "Buat akun saya",
   "register.role_legend": "Peran saya saat lepas landas",
   "register.role_client": "Klien",

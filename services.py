@@ -38,8 +38,8 @@ from config import (
     MISSION_TYPES,
     MESSAGE_BANNED_PATTERNS,
     CANCELLATION_GRACE_HOURS,
-    CANCELLATION_SERVICE_FEE_CAP,
-    CANCELLATION_SERVICE_FEE_PCT,
+    CANCELLATION_PILOT_FEE_CAP,
+    CANCELLATION_PILOT_FEE_PCT,
     PLATFORM_FEE_PCT,
     PLATFORM_FEE_TIERS,
     PROFILE_KIND_CODES,
@@ -2501,20 +2501,23 @@ def _parse_db_datetime(value) -> Optional["datetime"]:
 
 
 def compute_cancellation_fee(booking: dict) -> dict:
-    """Calcule ce qui se passe si le CLIENT annule maintenant.
+    """Calcule ce qui se passe si le CLIENT annule maintenant (CGU v2.2,
+    art. 14.1). Tout ce qui est retenu va au PILOTE ; la plateforme ne garde
+    rien sur une annulation.
 
-    Deux retenues independantes sur le prix convenu :
-      - dedommagement PILOTE si annulation tardive
-        (< LATE_CANCELLATION_HOURS avant la mission) : LATE_CANCELLATION_FEE_PCT ;
-      - frais de service PLATEFORME si le client a deja paye (le contact du
-        pilote lui a ete revele) et que la fenetre de grace
-        CANCELLATION_GRACE_HOURS apres le paiement est passee :
-        CANCELLATION_SERVICE_FEE_PCT, plafonne a CANCELLATION_SERVICE_FEE_CAP.
-        Sans `paid_at` (pas encore paye, ou simple simulation) : aucun frais.
+      - fenetre de grace (CANCELLATION_GRACE_HOURS apres le paiement) :
+        remboursement integral, quelle que soit la date de la mission ;
+      - ensuite, a moins de LATE_CANCELLATION_HOURS de la mission :
+        dedommagement pilote LATE_CANCELLATION_FEE_PCT ;
+      - ensuite, plus tot : dedommagement pilote CANCELLATION_PILOT_FEE_PCT,
+        plafonne a CANCELLATION_PILOT_FEE_CAP.
+    Les deux dedommagements ne se cumulent pas. Sans `paid_at` (simulation
+    avant paiement), seule la regle du preavis est montree ; l'annulation
+    d'une reservation non payee ne retient rien (cancel_booking_by_client).
 
     Renvoie : {
       "is_late", "fee_pct", "fee_amount",            # part pilote
-      "service_fee_pct", "service_fee_amount",       # part plateforme
+      "service_fee_pct", "service_fee_amount",       # part plateforme : toujours 0
       "within_grace", "grace_h", "grace_hours_left",
       "refund_amount",                               # rendu au client
       "hours_until", "preavis_h",
@@ -2537,30 +2540,25 @@ def compute_cancellation_fee(booking: dict) -> dict:
     paid_dt = _parse_db_datetime(booking.get("paid_at"))
     within_grace = False
     grace_hours_left = None
-    service_fee_pct = 0.0
-    service_fee_amount = 0.0
     if paid_dt is not None:
         elapsed_h = (now - paid_dt).total_seconds() / 3600.0
         within_grace = elapsed_h < CANCELLATION_GRACE_HOURS
         grace_hours_left = round(max(0.0, CANCELLATION_GRACE_HOURS - elapsed_h), 1)
-        if not within_grace:
-            service_fee_pct = CANCELLATION_SERVICE_FEE_PCT
-            service_fee_amount = round(
-                min(price * service_fee_pct / 100.0, CANCELLATION_SERVICE_FEE_CAP), 2,
-            )
-        else:
-            # CGU art. 14.1 : dans la fenetre de grace, remboursement integral,
-            # meme a moins de 24 h de la mission (pas de dedommagement tardif).
+        if within_grace:
             is_late = False
             fee_pct = 0.0
             fee_amount = 0.0
-    refund_amount = round(max(0.0, price - fee_amount - service_fee_amount), 2)
+        elif not is_late:
+            # Disponibilite du pilote reservee : dedommagement plafonne.
+            fee_pct = CANCELLATION_PILOT_FEE_PCT
+            fee_amount = round(min(price * fee_pct / 100.0, CANCELLATION_PILOT_FEE_CAP), 2)
+    refund_amount = round(max(0.0, price - fee_amount), 2)
     return {
         "is_late": is_late,
         "fee_pct": fee_pct,
         "fee_amount": fee_amount,
-        "service_fee_pct": service_fee_pct,
-        "service_fee_amount": service_fee_amount,
+        "service_fee_pct": 0.0,
+        "service_fee_amount": 0.0,
         "within_grace": within_grace,
         "grace_h": CANCELLATION_GRACE_HOURS,
         "grace_hours_left": grace_hours_left,
@@ -2639,8 +2637,8 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
         calc.update({"fee_amount": 0.0, "service_fee_amount": 0.0,
                      "service_fee_pct": 0.0, "refund_amount": 0.0})
 
-    # 1) Refund Stripe partiel au client. Le reste (dedommagement pilote +
-    #    frais de service) demeure sur le solde plateforme.
+    # 1) Refund Stripe partiel au client. Le reste (dedommagement pilote)
+    #    part ensuite vers le pilote.
     refund_done = True
     if paid and calc["refund_amount"] > 0:
         try:
@@ -2658,8 +2656,8 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
             _clear_payment_action(booking_id, action)
             return {"ok": False, "reason": "le remboursement a échoué; réservation inchangée"}
 
-    # 2) Dedommagement pilote (annulation tardive) : Transfer immediat vers
-    #    son compte Connect, cle d'idempotence distincte de la liberation.
+    # 2) Dedommagement pilote : Transfer immediat vers son compte Connect,
+    #    cle d'idempotence distincte de la liberation.
     transfer_id = None
     if paid and calc["fee_amount"] > 0:
         pilot_acc = get_pilot_stripe_account(booking["pilot_user_id"])

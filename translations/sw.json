@@ -355,6 +355,8 @@
   "register.bullet_fee": "Ada ya jukwaa kwenye kazi zilizowasilishwa pekee ({fee}%, inapungua).",
   "register.eco_pre": "Kuingia kwa pamoja na mfumo wa",
   "register.eco_post": ".",
+  "register.accept_terms": "Nimefikia umri wa utu uzima na ninakubali Masharti ya matumizi na Sera ya faragha ya AubePilot.",
+  "register.err_terms": "Weka alama kwenye kisanduku kuthibitisha umri wako na kukubali Masharti ya matumizi na Sera ya faragha.",
   "register.create_account": "Fungua akaunti yangu",
   "register.role_legend": "Jukumu langu wakati wa kupaa",
   "register.role_client": "Mteja",

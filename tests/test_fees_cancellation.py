@@ -3,7 +3,7 @@
 Regles testees (config.py) :
   PLATFORM_FEE_TIERS            20 % / 15 % / 10 % selon missions terminees entre les memes parties
   CANCELLATION_GRACE_HOURS      annulation client gratuite juste apres paiement
-  CANCELLATION_SERVICE_FEE_PCT  frais de service retenus apres la grace (plafonnes)
+  CANCELLATION_PILOT_FEE_PCT    dedommagement pilote apres la grace (plafonne), rien a la plateforme
   LATE_CANCELLATION_FEE_PCT     dedommagement pilote si preavis < LATE_CANCELLATION_HOURS
   cancel_booking_by_pilot       remboursement integral, mission remise en ligne
 
@@ -84,25 +84,25 @@ def test_accept_bid_applies_degressive_fee(app_ctx, make_user, prior, expected_p
 
 
 # ---------------------------------------------------------------------------
-# compute_cancellation_fee : frais de service + grace + plafond + tardif
+# compute_cancellation_fee (CGU v2.2 art. 14.1) : tout ce qui est retenu va
+# au pilote, rien a la plateforme ; grace, plafond, tardif sans cumul
 # ---------------------------------------------------------------------------
 
-def test_service_fee_after_grace_window():
+def test_pilot_compensation_after_grace_window():
     import services
-    from config import CANCELLATION_SERVICE_FEE_PCT, CANCELLATION_GRACE_HOURS
+    from config import CANCELLATION_PILOT_FEE_PCT, CANCELLATION_GRACE_HOURS
     res = services.compute_cancellation_fee({
         "agreed_price": 1000,
         "scheduled_at": _iso(_now() + timedelta(days=10)),      # preavis large
         "paid_at": _iso(_now() - timedelta(hours=CANCELLATION_GRACE_HOURS + 1)),
     })
-    assert res["is_late"] is False and res["fee_amount"] == 0.0
-    assert res["within_grace"] is False
-    assert res["service_fee_pct"] == CANCELLATION_SERVICE_FEE_PCT
-    assert res["service_fee_amount"] == 100.0
+    assert res["is_late"] is False and res["within_grace"] is False
+    assert res["fee_pct"] == CANCELLATION_PILOT_FEE_PCT and res["fee_amount"] == 100.0
+    assert res["service_fee_amount"] == 0.0
     assert res["refund_amount"] == 900.0
 
 
-def test_no_service_fee_within_grace_window():
+def test_nothing_kept_within_grace_window():
     import services
     res = services.compute_cancellation_fee({
         "agreed_price": 1000,
@@ -111,23 +111,23 @@ def test_no_service_fee_within_grace_window():
     })
     assert res["within_grace"] is True
     assert res["grace_hours_left"] is not None and res["grace_hours_left"] > 1.0
-    assert res["service_fee_amount"] == 0.0
+    assert res["fee_amount"] == 0.0 and res["service_fee_amount"] == 0.0
     assert res["refund_amount"] == 1000.0
 
 
-def test_service_fee_is_capped():
+def test_pilot_compensation_is_capped():
     import services
-    from config import CANCELLATION_SERVICE_FEE_CAP
+    from config import CANCELLATION_PILOT_FEE_CAP
     res = services.compute_cancellation_fee({
         "agreed_price": 5000,
         "scheduled_at": _iso(_now() + timedelta(days=10)),
         "paid_at": _iso(_now() - timedelta(days=1)),
     })
-    assert res["service_fee_amount"] == CANCELLATION_SERVICE_FEE_CAP == 150.0
+    assert res["fee_amount"] == CANCELLATION_PILOT_FEE_CAP == 150.0
     assert res["refund_amount"] == 4850.0
 
 
-def test_late_and_service_fee_stack():
+def test_late_cancellation_does_not_stack():
     import services
     from config import LATE_CANCELLATION_FEE_PCT
     res = services.compute_cancellation_fee({
@@ -137,17 +137,16 @@ def test_late_and_service_fee_stack():
     })
     assert res["is_late"] is True
     assert res["fee_amount"] == round(1000 * LATE_CANCELLATION_FEE_PCT / 100, 2) == 250.0
-    assert res["service_fee_amount"] == 100.0
-    assert res["refund_amount"] == 650.0
-    assert res["fee_amount"] + res["service_fee_amount"] + res["refund_amount"] == 1000.0
+    assert res["service_fee_amount"] == 0.0
+    assert res["refund_amount"] == 750.0
 
 
-def test_no_service_fee_when_not_paid():
+def test_nothing_kept_when_not_paid():
     import services
     res = services.compute_cancellation_fee({
         "agreed_price": 800, "scheduled_at": _iso(_now() + timedelta(days=3)),
     })
-    assert res["service_fee_amount"] == 0.0 and res["refund_amount"] == 800.0
+    assert res["fee_amount"] == 0.0 and res["refund_amount"] == 800.0
 
 
 # ---------------------------------------------------------------------------
@@ -166,21 +165,22 @@ def test_client_cancel_in_grace_is_free(funded_booking, client_user):
     assert b["status"] == "funded" and b["paid_at"]
     res = services.cancel_booking_by_client(funded_booking, client_user["id"], reason="erreur")
     assert res["ok"] and res["paid"] and res["within_grace"]
-    assert res["service_fee_amount"] == 0.0 and res["refund_amount"] == 1000.0
+    assert res["fee_amount"] == 0.0 and res["refund_amount"] == 1000.0
     b = services.get_booking(funded_booking)
     assert b["status"] == "cancelled" and b["cancelled_by"] == "client"
-    assert b["cancellation_service_fee"] == 0.0
+    assert b["cancellation_fee"] == 0.0 and b["cancellation_service_fee"] == 0.0
 
 
-def test_client_cancel_after_grace_keeps_service_fee(funded_booking, client_user):
+def test_client_cancel_after_grace_compensates_pilot(funded_booking, client_user):
     import services
     _backdate_payment(funded_booking, hours=5)
     res = services.cancel_booking_by_client(funded_booking, client_user["id"])
     assert res["ok"] and not res["within_grace"]
-    assert res["service_fee_amount"] == 100.0 and res["refund_amount"] == 900.0
+    assert res["fee_amount"] == 100.0 and res["refund_amount"] == 900.0
+    assert res["compensation_transfer"] and "cancel-compensation" in res["compensation_transfer"]
     b = services.get_booking(funded_booking)
-    assert b["cancellation_service_fee"] == 100.0
-    assert b["cancellation_fee"] == 0.0            # preavis suffisant : pilote non dedommage
+    assert b["cancellation_fee"] == 100.0
+    assert b["cancellation_service_fee"] == 0.0      # la plateforme ne garde rien
 
 
 def test_client_late_cancel_transfers_compensation_to_pilot(app_ctx, funded_booking, client_user):
@@ -191,8 +191,8 @@ def test_client_late_cancel_transfers_compensation_to_pilot(app_ctx, funded_book
                (_iso(_now() + timedelta(hours=2)), funded_booking))
     res = services.cancel_booking_by_client(funded_booking, client_user["id"])
     assert res["ok"] and res["is_late"]
-    assert res["fee_amount"] == 250.0 and res["service_fee_amount"] == 100.0
-    assert res["refund_amount"] == 650.0
+    assert res["fee_amount"] == 250.0 and res["service_fee_amount"] == 0.0
+    assert res["refund_amount"] == 750.0
     assert res["compensation_transfer"] and "cancel-compensation" in res["compensation_transfer"]
     b = services.get_booking(funded_booking)
     assert b["cancellation_fee"] == 250.0
@@ -280,7 +280,8 @@ def test_booking_page_shows_policy_and_pilot_withdraw(client, auth_client, funde
                                                       pilot_user, client_user):
     html = auth_client(client_user["id"]).get(f"/reservations/{funded_booking}").data.decode()
     assert "Fenêtre de grâce" in html or "fenêtre de grâce" in html
-    assert "frais de service" in html
+    assert "AubePilot ne garde rien sur une annulation" in html
+    assert "frais de service" not in html
     assert "Commission Aube (20%)" in html
     html = auth_client(pilot_user["id"]).get(f"/reservations/{funded_booking}").data.decode()
     assert "Me désister de la mission" in html
@@ -291,6 +292,7 @@ def test_cgu_and_faq_reflect_new_rules(client):
     assert "20 %" in html and "15 %" in html and "10 %" in html
     assert "Fenêtre de grâce" in html and "14.2 Par le Pilote" in html
     faq = client.get("/faq").data.decode()
-    assert "frais de service de 10 %" in faq
+    assert "reçoit 10 % du devis" in faq and "AubePilot ne garde rien sur une annulation" in faq
+    assert "frais de service" not in faq
     assert "remboursé à 100 %" in faq
     assert "30 %" not in faq

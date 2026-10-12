@@ -355,6 +355,8 @@
   "register.bullet_fee": "Prowizja platformy tylko od zrealizowanych zleceń ({fee}%, malejąca).",
   "register.eco_pre": "Wspólne logowanie z ekosystemem",
   "register.eco_post": ".",
+  "register.accept_terms": "Jestem pełnoletni(a) i akceptuję Warunki korzystania oraz Politykę prywatności AubePilot.",
+  "register.err_terms": "Zaznacz pole, aby potwierdzić wiek i zaakceptować Warunki korzystania oraz Politykę prywatności.",
   "register.create_account": "Załóż konto",
   "register.role_legend": "Moja rola na starcie",
   "register.role_client": "Klient",

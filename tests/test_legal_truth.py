@@ -87,3 +87,20 @@ def test_pas_de_versement_manuel_promis():
     faq = " ".join(q["answer"] for lang in ("fr", "en") for q in content.faq(lang))
     assert "manuellement par notre équipe" not in faq and "pays out manually" not in faq
     assert "Maghreb" not in faq
+
+
+def test_inscription_exige_l_acceptation_des_conditions(client, app_ctx):
+    """CGU art. 3 : sans la case cochée, aucun compte n'est créé ; avec,
+    la version acceptée et la date sont enregistrées."""
+    import config
+    import db
+    html = client.get("/inscription").get_data(as_text=True)
+    assert 'name="accept_terms"' in html and 'href="/cgu"' in html
+    form = {"username": "cgu_refus", "password": "demo1234", "confirm": "demo1234",
+            "full_name": "Sans Case", "role": "client", "country": "Canada"}
+    r = client.post("/inscription", data=form)
+    assert "Cochez la case" in r.get_data(as_text=True)
+    assert db.fetchone("SELECT id FROM users WHERE username='cgu_refus'") is None
+    client.post("/inscription", data={**form, "username": "cgu_ok", "accept_terms": "1"})
+    row = db.fetchone("SELECT terms_version, terms_accepted_at FROM users WHERE username='cgu_ok'")
+    assert row and row["terms_version"] == config.TERMS_VERSION and row["terms_accepted_at"]

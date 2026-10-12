@@ -355,6 +355,8 @@
   "register.bullet_fee": "کارمزد پلتفرم فقط برای مأموریت‌های تحویل‌شده ({fee}٪، کاهشی).",
   "register.eco_pre": "ورود مشترک با اکوسیستم ",
   "register.eco_post": ".",
+  "register.accept_terms": "به سن قانونی رسیده‌ام و شرایط استفاده و سیاست حریم خصوصی AubePilot را می‌پذیرم.",
+  "register.err_terms": "برای تأیید سن خود و پذیرش شرایط استفاده و سیاست حریم خصوصی، کادر را علامت بزنید.",
   "register.create_account": "ایجاد حساب من",
   "register.role_legend": "نقش من در شروع",
   "register.role_client": "مشتری",

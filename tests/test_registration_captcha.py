@@ -14,6 +14,7 @@ import db
 
 def _form(**over):
     data = {
+        "accept_terms": "1",
         "username": "cap_user",
         "password": "demo1234",
         "confirm": "demo1234",

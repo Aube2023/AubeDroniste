@@ -273,6 +273,8 @@
   "register.bullet_fee": "Comissão da plataforma só sobre missões entregues ({fee} %, decrescente).",
   "register.eco_pre": "Login compartilhado com o ecossistema",
   "register.eco_post": ".",
+  "register.accept_terms": "Sou maior de idade e aceito os Termos de uso e a Política de privacidade da AubePilot.",
+  "register.err_terms": "Marque a caixa para confirmar sua idade e aceitar os Termos de uso e a Política de privacidade.",
   "register.create_account": "Criar minha conta",
   "register.role_legend": "Meu papel na decolagem",
   "register.role_client": "Cliente",

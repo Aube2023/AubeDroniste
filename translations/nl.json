@@ -355,6 +355,8 @@
   "register.bullet_fee": "Platformcommissie alleen op geleverde opdrachten ({fee}%, dalend).",
   "register.eco_pre": "Gedeelde login met het ecosysteem van",
   "register.eco_post": ".",
+  "register.accept_terms": "Ik ben meerderjarig en ga akkoord met de Gebruiksvoorwaarden en het Privacybeleid van AubePilot.",
+  "register.err_terms": "Vink het vakje aan om je leeftijd te bevestigen en akkoord te gaan met de Gebruiksvoorwaarden en het Privacybeleid.",
   "register.create_account": "Mijn account aanmaken",
   "register.role_legend": "Mijn rol bij het opstijgen",
   "register.role_client": "Klant",

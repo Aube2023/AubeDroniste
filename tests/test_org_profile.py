@@ -16,7 +16,7 @@ def test_textes_org_dans_les_31_langues():
 
 def test_inscription_entreprise_garde_le_nom_de_l_entreprise(client):
     import services
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "username": "org_sky_x", "password": "demo1234", "confirm": "demo1234",
         "full_name": "Justin Exemple", "business_name": "SkyVision Drone",
         "role": "pilot", "kind": "company", "country": "Canada",

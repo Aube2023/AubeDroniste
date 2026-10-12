@@ -355,6 +355,8 @@
   "register.bullet_fee": "עמלת פלטפורמה רק על עבודות שסופקו ({fee}%, יורדת בהדרגה).",
   "register.eco_pre": "כניסה משותפת עם המערכת האקולוגית של ",
   "register.eco_post": ".",
+  "register.accept_terms": "אני בגיר/ה ומקבל/ת את תנאי השימוש ואת מדיניות הפרטיות של AubePilot.",
+  "register.err_terms": "סמנו את התיבה כדי לאשר את גילכם ולקבל את תנאי השימוש ואת מדיניות הפרטיות.",
   "register.create_account": "יצירת החשבון שלי",
   "register.role_legend": "התפקיד שלי בהמראה",
   "register.role_client": "לקוח",

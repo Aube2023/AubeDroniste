@@ -355,6 +355,8 @@
   "register.bullet_fee": "平台服务费仅针对已交付任务收取（{fee}%，逐级递减）。",
   "register.eco_pre": "与 ",
   "register.eco_post": " 生态系统共用登录账号。",
+  "register.accept_terms": "我已成年，并接受 AubePilot 的使用条款和隐私政策。",
+  "register.err_terms": "请勾选此框，以确认您的年龄并接受使用条款和隐私政策。",
   "register.create_account": "创建我的账号",
   "register.role_legend": "我的起飞角色",
   "register.role_client": "客户",

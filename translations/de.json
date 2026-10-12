@@ -273,6 +273,8 @@
   "register.bullet_fee": "Plattformgebühr nur auf gelieferte Aufträge ({fee} %, degressiv).",
   "register.eco_pre": "Gemeinsame Anmeldung mit dem Ökosystem",
   "register.eco_post": ".",
+  "register.accept_terms": "Ich bin volljährig und akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung von AubePilot.",
+  "register.err_terms": "Setzen Sie das Häkchen, um Ihr Alter zu bestätigen und die Nutzungsbedingungen sowie die Datenschutzerklärung zu akzeptieren.",
   "register.create_account": "Konto erstellen",
   "register.role_legend": "Meine Rolle beim Start",
   "register.role_client": "Kunde",

@@ -273,6 +273,8 @@
   "register.bullet_fee": "Phí nền tảng chỉ tính trên nhiệm vụ đã bàn giao ({fee} %, giảm dần).",
   "register.eco_pre": "Đăng nhập chung với hệ sinh thái",
   "register.eco_post": ".",
+  "register.accept_terms": "Tôi đã đủ tuổi thành niên và chấp nhận Điều khoản sử dụng cùng Chính sách quyền riêng tư của AubePilot.",
+  "register.err_terms": "Đánh dấu vào ô để xác nhận tuổi của bạn và chấp nhận Điều khoản sử dụng cùng Chính sách quyền riêng tư.",
   "register.create_account": "Tạo tài khoản",
   "register.role_legend": "Vai trò của tôi khi cất cánh",
   "register.role_client": "Khách hàng",

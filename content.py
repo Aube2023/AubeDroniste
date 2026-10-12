@@ -9,8 +9,8 @@
 from config import (
     AUTO_RELEASE_DAYS,
     CANCELLATION_GRACE_HOURS,
-    CANCELLATION_SERVICE_FEE_CAP,
-    CANCELLATION_SERVICE_FEE_PCT,
+    CANCELLATION_PILOT_FEE_CAP,
+    CANCELLATION_PILOT_FEE_PCT,
     LATE_CANCELLATION_FEE_PCT,
     LATE_CANCELLATION_HOURS,
     PILOT_SHARE_PCT,
@@ -25,8 +25,8 @@ _FMT = {
     "late_hours": LATE_CANCELLATION_HOURS,
     "late_fee": int(LATE_CANCELLATION_FEE_PCT),
     "grace_hours": CANCELLATION_GRACE_HOURS,
-    "service_fee": int(CANCELLATION_SERVICE_FEE_PCT),
-    "service_fee_cap": int(CANCELLATION_SERVICE_FEE_CAP),
+    "service_fee": int(CANCELLATION_PILOT_FEE_PCT),
+    "service_fee_cap": int(CANCELLATION_PILOT_FEE_CAP),
     # paliers degressifs (missions terminees entre les memes parties)
     "tier2_from": PLATFORM_FEE_TIERS[1][0] + 1 if len(PLATFORM_FEE_TIERS) > 1 else 0,
     "tier2_fee": int(PLATFORM_FEE_TIERS[1][1]) if len(PLATFORM_FEE_TIERS) > 1 else int(PLATFORM_FEE_PCT),
@@ -100,21 +100,21 @@ _FAQ = [
      {"fr": "Puis-je annuler une mission réservée ?",
       "en": "Can I cancel a booked mission?"},
      {"fr": "Oui. Avant paiement, l'annulation est libre, et jusqu'à {grace_hours} h "
-            "après le paiement vous êtes remboursé intégralement. Passé ce délai, "
-            "des frais de service de {service_fee} % (max {service_fee_cap} dans la "
-            "devise de la mission) sont retenus, car le contact du pilote vous a été "
-            "révélé et sa date bloquée. Si vous annulez à moins de {late_hours} h de "
-            "la mission, {late_fee} % du devis dédommagent en plus le pilote. Le "
-            "reste vous est toujours remboursé. Si c'est le pilote qui se désiste, "
-            "vous êtes remboursé à 100 % et la mission est remise en ligne.",
+            "après le paiement vous êtes remboursé intégralement. Passé ce délai, le "
+            "pilote, dont la date était réservée, reçoit {service_fee} % du devis (max "
+            "{service_fee_cap} dans la devise de la mission), ou {late_fee} % si vous "
+            "annulez à moins de {late_hours} h de la mission ; les deux ne se cumulent "
+            "pas. AubePilot ne garde rien sur une annulation, et le reste vous est "
+            "toujours remboursé. Si c'est le pilote qui se désiste, vous êtes "
+            "remboursé à 100 % et la mission est remise en ligne.",
       "en": "Yes. Before payment, cancellation is free, and up to {grace_hours} h "
-            "after payment you get a full refund. After that, a {service_fee}% "
-            "service fee (max {service_fee_cap} in the mission currency) is kept, "
-            "because the pilot's contact was revealed and their date blocked. If "
-            "you cancel less than {late_hours} h before the mission, {late_fee}% of "
-            "the quote also compensates the pilot. The rest is always refunded. If "
-            "the pilot withdraws, you are refunded 100% and the mission goes back "
-            "online."}),
+            "after payment you get a full refund. After that, the pilot, whose date "
+            "was reserved, receives {service_fee}% of the quote (max "
+            "{service_fee_cap} in the mission currency), or {late_fee}% if you cancel "
+            "less than {late_hours} h before the mission; the two are not added "
+            "together. AubePilot keeps nothing on a cancellation, and the rest is "
+            "always refunded. If the pilot withdraws, you are refunded 100% and the "
+            "mission goes back online."}),
     ("verified", "clients", True,
      {"fr": "Qu'est-ce qu'un profil « vérifié » ?",
       "en": "What is a “verified” profile?"},

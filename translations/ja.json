@@ -355,6 +355,8 @@
   "register.bullet_fee": "プラットフォーム手数料は納品済みの案件のみ（{fee}%、段階的に引き下げ）。",
   "register.eco_pre": "ログインは",
   "register.eco_post": "エコシステムと共通。",
+  "register.accept_terms": "私は成年に達しており、AubePilotの利用規約とプライバシーポリシーに同意します。",
+  "register.err_terms": "年齢を確認し、利用規約とプライバシーポリシーに同意するには、チェックボックスをオンにしてください。",
   "register.create_account": "アカウントを作成",
   "register.role_legend": "離陸時の役割",
   "register.role_client": "依頼者",

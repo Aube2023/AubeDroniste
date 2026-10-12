@@ -38,8 +38,8 @@ import thumbs
 from config import (
     ALLOWED_DOC_EXT,
     CANCELLATION_GRACE_HOURS,
-    CANCELLATION_SERVICE_FEE_CAP,
-    CANCELLATION_SERVICE_FEE_PCT,
+    CANCELLATION_PILOT_FEE_CAP,
+    CANCELLATION_PILOT_FEE_PCT,
     LATE_CANCELLATION_FEE_PCT,
     LATE_CANCELLATION_HOURS,
     PLATFORM_FEE_TIERS,
@@ -458,8 +458,8 @@ def _inject_globals():
         "platform_fee_tiers": _fee_tiers_display(),
         "booking_fee_pct": services.booking_fee_pct,   # taux reel d'un booking
         "cancellation_grace_hours": CANCELLATION_GRACE_HOURS,
-        "cancellation_service_fee_pct": int(CANCELLATION_SERVICE_FEE_PCT),
-        "cancellation_service_fee_cap": int(CANCELLATION_SERVICE_FEE_CAP),
+        "cancellation_pilot_fee_pct": int(CANCELLATION_PILOT_FEE_PCT),
+        "cancellation_pilot_fee_cap": int(CANCELLATION_PILOT_FEE_CAP),
         "late_cancellation_hours": LATE_CANCELLATION_HOURS,
         "late_cancellation_fee_pct": int(LATE_CANCELLATION_FEE_PCT),
         # Blocage : le gabarit sait si l'utilisateur courant a bloque untel
@@ -929,6 +929,21 @@ def page_terms():
         campaign_fee_pct=int(config.CAMPAIGN_FEE_PCT),
         contribution_min=int(config.CONTRIBUTION_MIN),
         contribution_max=int(config.CONTRIBUTION_MAX),
+    )
+
+
+@app.route("/cgu/2.1")
+def page_terms_v2_1():
+    """Version 2.1 archivee (CGU art. 28 : les versions anterieures restent
+    consultables). Les frais d'annulation de l'epoque sont figes ici : ils ne
+    sont plus dans la configuration depuis la version 2.2."""
+    return render_template(
+        "legal_terms_v2_1.html", seo=_legal_seo("footer.terms"),
+        auto_release_days=config.AUTO_RELEASE_DAYS,
+        campaign_fee_pct=int(config.CAMPAIGN_FEE_PCT),
+        contribution_min=int(config.CONTRIBUTION_MIN),
+        contribution_max=int(config.CONTRIBUTION_MAX),
+        cancellation_service_fee_pct=10, cancellation_service_fee_cap=150,
     )
 
 
@@ -1937,6 +1952,11 @@ def register():
         if not username or not password or not full_name:
             flash("Identifiant, mot de passe et nom complet sont requis.", "error")
             return _register_page(2)
+        # CGU art. 3 : majorite + acceptation des CGU et de la politique de
+        # confidentialite, AVANT de creer quoi que ce soit (compte AubeMail compris).
+        if request.form.get("accept_terms") != "1":
+            flash(i18n.t("register.err_terms", getattr(g, "lang", i18n.DEFAULT)), "error")
+            return _register_page(3)
 
         # L'identifiant devient un compte systeme + une adresse @aubemail.com :
         # AubeMail n'accepte que [A-Za-z0-9_]. On refuse donc ici, avec un message
@@ -2066,6 +2086,10 @@ def register():
                 # provisionne juste au-dessus. Ne jamais en conserver une copie
                 # locale, meme si la propagation PAM prend quelques secondes.
                 external_password=not config.ALLOW_LOCAL_ACCOUNTS,
+            )
+            db.execute(
+                "UPDATE users SET terms_version=?, terms_accepted_at=datetime('now') WHERE id=?",
+                (config.TERMS_VERSION, user_id),
             )
             if role in ("pilot", "both") and kind in config.ORG_KINDS:
                 # Une ORGANISATION (entreprise, ecole, boutique) s'affiche sous
@@ -3740,12 +3764,9 @@ def booking_cancel_client(booking_id):
         flash("Réservation annulée (aucun paiement n'avait été effectué).", "success")
         return redirect(url_for("booking_detail", booking_id=booking_id))
     parts = []
-    if result["is_late"]:
-        parts.append(f"annulation tardive : {int(result['fee_pct'])} % du devis "
-                     f"({result['fee_amount']:.2f}) versés au pilote")
-    if result["service_fee_amount"] > 0:
-        parts.append(f"frais de service {int(result['service_fee_pct'])} % "
-                     f"({result['service_fee_amount']:.2f}) retenus")
+    if result["fee_amount"] > 0:
+        quand = "annulation à moins de 24 h" if result["is_late"] else "dédommagement"
+        parts.append(f"{quand} : {result['fee_amount']:.2f} versés au pilote")
     if parts:
         flash(f"Réservation annulée — {' ; '.join(parts)} ; "
               f"{result['refund_amount']:.2f} remboursés.", "info")

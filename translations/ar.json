@@ -273,6 +273,8 @@
   "register.bullet_fee": "عمولة المنصة على المهام المسلَّمة فقط ({fee} ٪، تنازلية).",
   "register.eco_pre": "مصادقة مشتركة مع منظومة",
   "register.eco_post": ".",
+  "register.accept_terms": "أنا بالغ السن القانونية وأقبل شروط الاستخدام وسياسة الخصوصية الخاصة بـ AubePilot.",
+  "register.err_terms": "ضع علامة في المربع لتأكيد سنك وقبول شروط الاستخدام وسياسة الخصوصية.",
   "register.create_account": "إنشاء حسابي",
   "register.role_legend": "دوري عند الإقلاع",
   "register.role_client": "عميل",

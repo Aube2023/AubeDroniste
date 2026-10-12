@@ -157,6 +157,9 @@ _ADD_COLUMNS = [
     # Reglement convenu hors plateforme (tant que Connect n'est pas ouvert) :
     # ni sequestre, ni commission, aucun mouvement Stripe.
     ("bookings", "settled_offline", "INTEGER NOT NULL DEFAULT 0"),
+    # Consentement a l'inscription (CGU art. 3) : version acceptee + date.
+    ("users", "terms_version", "TEXT"),
+    ("users", "terms_accepted_at", "TEXT"),
     ("bookings", "settled_offline_at", "TEXT"),
     # Palette d'accent choisie par le compte (cf. i18n.ACCENTS) ; NULL = « aube ».
     ("users", "accent", "TEXT"),

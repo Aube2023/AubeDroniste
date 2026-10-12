@@ -67,6 +67,7 @@ def test_register_foreign_pilot_creates_account_and_session(client, app_ctx):
     resp = client.post(
         "/inscription",
         data={
+            "accept_terms": "1",
             "username": username,
             "password": "demo1234",
             "confirm": "demo1234",
@@ -108,6 +109,7 @@ def test_register_password_mismatch_rerenders_and_creates_nothing(client, app_ct
     resp = client.post(
         "/inscription",
         data={
+            "accept_terms": "1",
             "username": username,
             "password": "demo1234",
             "confirm": "PASdupareil",
@@ -176,7 +178,7 @@ def test_inscription_en_assistant_trois_etapes(client):
 
 
 def test_inscription_erreur_rouvre_l_etape_et_garde_la_saisie(client):
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "role": "pilot", "kind": "school", "full_name": "École du Ciel", "username": "ecole_ciel",
         "password": "motdepasse1", "confirm": "autre_chose1", "country": "Canada", "city": "Québec",
     })
@@ -193,7 +195,7 @@ def test_courriel_de_secours_optionnel_et_refus_cible(client):
     rouvre l'étape 2 avec la saisie conservée."""
     html = client.get("/inscription").data.decode()
     assert 'name="recovery_email"' in html and "Courriel de secours" in html
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "role": "client", "full_name": "Marie Roy", "username": "marie_roy_sec",
         "password": "motdepasse1", "confirm": "motdepasse1", "recovery_email": "marie@aubemail.com",
     })

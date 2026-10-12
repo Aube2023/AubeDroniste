@@ -380,8 +380,9 @@
   <ul class="muted small" style="margin-top: 6px;">
     <li>Avant paiement : annulation libre.</li>
     <li>Jusqu'à <strong>{{ cp.grace_h }} h après le paiement</strong> : remboursement intégral (fenêtre de grâce).</li>
-    <li>Ensuite : des <strong>frais de service de {{ cancellation_service_fee_pct }} %</strong> (max {{ cancellation_service_fee_cap }} {{ booking.currency }}) sont retenus — le contact du pilote vous a été révélé et sa journée bloquée.</li>
-    <li>Préavis <strong>&lt; {{ cp.preavis_h }} h</strong> avant la mission : vous dédommagez en plus le pilote à hauteur de <strong>{{ late_cancellation_fee_pct }} %</strong> du devis.</li>
+    <li>Ensuite : le pilote, dont la journée était réservée, reçoit <strong>{{ cancellation_pilot_fee_pct }} %</strong> du devis (max {{ cancellation_pilot_fee_cap }} {{ booking.currency }}).</li>
+    <li>À moins de <strong>{{ cp.preavis_h }} h</strong> de la mission : le pilote reçoit <strong>{{ late_cancellation_fee_pct }} %</strong> du devis, au lieu des {{ cancellation_pilot_fee_pct }} % (pas de cumul).</li>
+    <li>AubePilot ne garde rien sur une annulation : tout ce qui est retenu va au pilote.</li>
     <li>Si c'est le pilote qui se désiste : remboursement intégral, sans frais.</li>
   </ul>
 
@@ -394,14 +395,9 @@
   </div>
   <ul class="muted small" style="margin-top: 6px;">
     {% if cp.within_grace %}
-      <li>✓ Fenêtre de grâce (encore {{ '%.1f'|format(cp.grace_hours_left or 0) }} h) · aucun frais de service</li>
-    {% elif cp.service_fee_amount > 0 %}
-      <li>Frais de service {{ '%g'|format(cp.service_fee_pct) }} % · <strong>{{ '%.2f'|format(cp.service_fee_amount) }} {{ booking.currency }}</strong> retenus</li>
-    {% endif %}
-    {% if cp.is_late %}
-      <li>⚠ <strong>Annulation tardive</strong> ({{ '%g'|format(cp.fee_pct) }} % au pilote) · <strong>{{ '%.2f'|format(cp.fee_amount) }} {{ booking.currency }}</strong></li>
-    {% else %}
-      <li>✓ Préavis suffisant · pas de dédommagement pilote</li>
+      <li>✓ Fenêtre de grâce (encore {{ '%.1f'|format(cp.grace_hours_left or 0) }} h) · remboursement intégral</li>
+    {% elif cp.fee_amount > 0 %}
+      <li>{% if cp.is_late %}⚠ <strong>Moins de {{ cp.preavis_h }} h avant la mission</strong>{% else %}Dédommagement du pilote{% endif %} ({{ '%g'|format(cp.fee_pct) }} %) · <strong>{{ '%.2f'|format(cp.fee_amount) }} {{ booking.currency }}</strong> versés au pilote</li>
     {% endif %}
     <li>Remboursé au client · <strong>{{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}</strong></li>
   </ul>
@@ -410,7 +406,7 @@
   <form method="post" action="{{ url_for('booking_cancel_client', booking_id=booking.id) }}"
         data-confirm="Confirmer l'annulation ?
 
-{% if booking.status == 'pending_payment' %}Aucun paiement effectué, annulation gratuite.{% else %}Remboursé : {{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}{% if cp.service_fee_amount > 0 %} (frais de service {{ '%.2f'|format(cp.service_fee_amount) }}){% endif %}{% if cp.is_late %} (dédommagement pilote {{ '%.2f'|format(cp.fee_amount) }}){% endif %}.{% endif %}"
+{% if booking.status == 'pending_payment' %}Aucun paiement effectué, annulation gratuite.{% else %}Remboursé : {{ '%.2f'|format(cp.refund_amount) }} {{ booking.currency }}{% if cp.fee_amount > 0 %} (dédommagement versé au pilote : {{ '%.2f'|format(cp.fee_amount) }}){% endif %}.{% endif %}"
         style="margin-top: 14px;">
     {{ csrf_input() }}
     <label class="small">Motif (facultatif)<textarea name="reason" rows="2" maxlength="500" placeholder="Empêchement, météo, changement de planning…"></textarea></label>

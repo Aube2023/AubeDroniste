@@ -355,6 +355,8 @@
   "register.bullet_fee": "प्लेटफर्म शुल्क सम्पन्न काममा मात्र ({fee}%, क्रमशः घट्दै)।",
   "register.eco_pre": "साझा लगइन, ",
   "register.eco_post": " इकोसिस्टमसँग।",
+  "register.accept_terms": "म कानुनी रूपमा वयस्क हुँ र AubePilot का प्रयोगका सर्तहरू र गोपनीयता नीति स्वीकार गर्छु।",
+  "register.err_terms": "आफ्नो उमेर पुष्टि गर्न र प्रयोगका सर्तहरू तथा गोपनीयता नीति स्वीकार गर्न बाकसमा चिन्ह लगाउनुहोस्।",
   "register.create_account": "मेरो खाता बनाउनुहोस्",
   "register.role_legend": "उडानमा मेरो भूमिका",
   "register.role_client": "ग्राहक",

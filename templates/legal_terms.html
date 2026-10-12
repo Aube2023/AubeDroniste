@@ -1,20 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Conditions d'utilisation · Aube Pilot{% endblock %}
+{% block title %}Conditions d'utilisation · AubePilot{% endblock %}
 {% block content %}
 {# Chaque chiffre vient de la configuration (commission, annulation, collectes,
    libération automatique) : la page ne peut pas promettre autre chose que ce
-   que le code fait. Relire en même temps que config.py à chaque changement. #}
+   que le code fait. Relire en même temps que config.py à chaque changement.
+   Nouvelle version : archiver l'ancienne (cf. legal_terms_v2_1.html, route
+   page_terms_v2_1), préavis de 30 jours et courriel aux Utilisateurs (art. 28). #}
 
 <article class="legal-page" style="max-width: 760px; margin: 40px auto; line-height: 1.7;">
 
 <span class="eyebrow">Termes et conditions</span>
 <h1>Conditions générales d'utilisation de la plateforme AubePilot</h1>
-<p><strong>Exploitée par L'Aube Étoilée</strong></p>
-<p class="muted small">Dernière mise à jour : 25 septembre 2026 · Entrée en vigueur : 25 septembre 2026 · Version 2.1</p>
+<p><strong>Exploitée par L'Aube Étoilée inc.</strong></p>
+<p class="muted small">Version 2.2 · Publiée le 12 octobre 2026 · Entrée en vigueur : 11 novembre 2026</p>
+
+<section class="card small" style="margin: 18px 0;">
+<strong>Ce qui change dans la version 2.2</strong>
+<ul style="margin: 6px 0;">
+  <li>Annulation (art. 14) : AubePilot ne garde plus rien ; ce qui est retenu après la fenêtre de grâce va au Pilote, sans cumul. Désistement pour météo ou sécurité sans pénalité pour le Pilote.</li>
+  <li>Non-contournement (art. 16) : limité à la prestation discutée sur AubePilot. Plus d'exclusivité de douze mois ni d'indemnité forfaitaire ; aucune pénalité en argent pour un Client Consommateur.</li>
+  <li>Droit de répondre avant une suspension et réexamen (art. 21) ; décision de litige écrite et motivée (art. 15).</li>
+  <li>Droits d'auteur sur les livrables et accord préalable pour toute publicité (art. 9).</li>
+  <li>Textes corrigés pour décrire ce que la Plateforme fait réellement (art. 2, 7, 12, 13, 15, 17, 24, 27, 28 et 30).</li>
+</ul>
+<p style="margin: 6px 0 0;">Depuis le 12 octobre 2026, AubePilot applique déjà les règles d'annulation et de
+non-contournement de la présente version, plus favorables aux Utilisateurs. Jusqu'au 11 novembre 2026,
+la <a href="{{ url_for('page_terms_v2_1') }}">version 2.1</a> s'applique pour le reste.</p>
+</section>
 
 <p>
 Les présentes conditions générales d'utilisation (les « Conditions ») forment une entente
-juridiquement contraignante entre L'Aube Étoilée, qui exploite la marque AubePilot, et toute
+juridiquement contraignante entre L'Aube Étoilée inc., qui exploite la marque AubePilot, et toute
 personne physique ou morale qui crée un compte, publie une mission, dépose un devis, réserve une
 prestation, soutient une collecte ou utilise les services de la Plateforme.
 </p>
@@ -64,7 +80,7 @@ relativement à l'utilisation d'AubePilot.
 <h2 id="a1">1. Définitions</h2>
 <p>Aux fins des présentes Conditions :</p>
 <ul>
-  <li>« <strong>L'Aube Étoilée</strong> » désigne l'entreprise qui exploite la Plateforme et la marque AubePilot, identifiée à l'article 30.</li>
+  <li>« <strong>L'Aube Étoilée</strong> » désigne L'Aube Étoilée inc., l'entreprise qui exploite la Plateforme et la marque AubePilot, identifiée à l'article 30.</li>
   <li>« <strong>AubePilot</strong> » désigne la marque sous laquelle L'Aube Étoilée exploite la Plateforme.</li>
   <li>« <strong>Plateforme</strong> » désigne le site pilot.aubeetoilee.com, l'application mobile, la carte interactive, l'annuaire des pilotes, les fiches et profils, la messagerie, le système de devis et de réservation, le paiement sous séquestre et les autres fonctionnalités associées.</li>
   <li>« <strong>Services</strong> » désigne l'ensemble des services rendus accessibles par L'Aube Étoilée au moyen de la Plateforme.</li>
@@ -74,7 +90,7 @@ relativement à l'utilisation d'AubePilot.
   <li>« <strong>Mission</strong> » désigne un besoin publié par un Client sur la Plateforme.</li>
   <li>« <strong>Devis</strong> » désigne une offre de prix et de prestation déposée par un Pilote sur une Mission.</li>
   <li>« <strong>Réservation</strong> » désigne le contrat de prestation né de l'acceptation d'un Devis par le Client.</li>
-  <li>« <strong>Séquestre</strong> » désigne la conservation, sur le compte de paiement de la Plateforme, des sommes payées par le Client jusqu'à la clôture de la Réservation.</li>
+  <li>« <strong>Séquestre</strong> » désigne la conservation, sur le compte de paiement que L'Aube Étoilée détient auprès de son prestataire de paiement (Stripe), des sommes payées par le Client jusqu'à la clôture de la Réservation. Il ne s'agit ni d'un compte en fiducie ni d'un dépôt auprès d'un tiers indépendant.</li>
   <li>« <strong>Collecte</strong> » désigne une campagne de soutien financier ouverte par un Pilote pour un équipement, et « <strong>Contributeur</strong> » la personne qui y participe.</li>
   <li>« <strong>Contenu</strong> » désigne les textes, photographies, vidéos, logos, descriptions, coordonnées, documents, brevets, attestations et autres éléments fournis par un Utilisateur.</li>
   <li>« <strong>Badge</strong> » désigne tout indicateur de vérification ou de statut affiché sur un profil par AubePilot.</li>
@@ -83,9 +99,11 @@ relativement à l'utilisation d'AubePilot.
 
 <h2 id="a2">2. Objet et nature de la Plateforme</h2>
 <p>
-AubePilot est une place de marché qui met en relation des Pilotes de drone certifiés et des
-Clients ayant besoin d'une prestation aérienne (photographie et vidéo, inspection, cartographie,
-agriculture, événementiel, immobilier, sécurité, et autres), partout dans le monde.
+AubePilot est une place de marché qui met en relation des Pilotes de drone et des Clients ayant
+besoin d'une prestation aérienne (photographie et vidéo, inspection, cartographie, agriculture,
+événementiel, immobilier, sécurité, et autres), partout dans le monde. Un Pilote peut s'inscrire et
+présenter ses services avant la vérification de ses brevets ; le Badge indique les Pilotes dont un
+brevet a été vérifié (articles 7 et 8).
 </p>
 <p>
 La Plateforme permet aux Pilotes de présenter leurs compétences, brevets, assurances, flotte,
@@ -160,7 +178,8 @@ documents permettant raisonnablement de confirmer son statut.
 </p>
 <p>
 Ces documents sont examinés manuellement par l'équipe d'AubePilot. Ils conditionnent l'attribution
-d'un Badge et l'accès à certaines fonctionnalités (collectes, mise en avant), non l'accès au compte.
+d'un Badge et l'accès à certaines fonctionnalités (notamment les Collectes et le filtre « vérifiés » de
+la recherche), non l'accès au compte.
 Les exigences d'AubePilot sont propres à la Plateforme et ne constituent pas une déclaration quant
 aux obligations légales ou réglementaires de chaque Pilote.
 </p>
@@ -185,12 +204,18 @@ remet ce brevet en vérification, et le Badge tombe jusqu'à la nouvelle vérifi
 L'Utilisateur demeure propriétaire du Contenu dont il détient les droits. En le publiant, il accorde
 à L'Aube Étoilée une licence non exclusive, mondiale et gratuite d'héberger, stocker, reproduire,
 redimensionner, adapter au format, afficher et utiliser ce Contenu dans la mesure raisonnablement
-nécessaire à l'exploitation et à la promotion d'AubePilot : profil, carte, résultats de recherche,
-fiches partagées et communications directement liées à la Plateforme.
+nécessaire à l'exploitation d'AubePilot et à sa présentation sur la Plateforme : profil, carte,
+résultats de recherche, fiches et partage de ces fiches. Toute autre utilisation promotionnelle d'un
+Contenu (publicité, vidéo de présentation, réseaux sociaux d'AubePilot) demande l'accord préalable de
+l'Utilisateur concerné.
 </p>
 <p>
 Les livrables d'une Réservation (photographies, vidéos, fichiers) sont hébergés pour être remis au
-Client ; ils ne sont pas utilisés à des fins promotionnelles sans accord des parties. L'Utilisateur
+Client ; ils ne sont pas utilisés à des fins promotionnelles sans accord des parties. Sauf accord
+écrit contraire entre le Pilote et le Client (dans le Devis ou la messagerie), le Pilote conserve le
+droit d'auteur sur les livrables qu'il produit, et le Client reçoit, une fois la Réservation payée, le
+droit de les utiliser pour l'usage décrit dans la Mission. Une cession plus large (revente,
+exclusivité, usage non prévu) se convient entre eux. L'Utilisateur
 déclare disposer des droits nécessaires à ces utilisations. L'Aube Étoilée peut retirer tout Contenu
 qu'elle estime raisonnablement illégal, frauduleux, trompeur, contrefaisant, diffamatoire ou
 contraire aux présentes.
@@ -245,7 +270,7 @@ traitement des paiements sont compris dans la commission.
   <li>Le Pilote dépose un Devis (prix, délai, livrables, message). Il ne peut pas déposer de Devis sur sa propre Mission.</li>
   <li>Le Client ne voit le détail des Devis que sur ses propres Missions ; les autres Pilotes ne voient pas les prix.</li>
   <li>L'acceptation d'un Devis crée la Réservation, au prix et au taux de commission alors affichés.</li>
-  <li>Avant le paiement, la messagerie ne permet pas l'échange de coordonnées directes ; elles sont révélées une fois la Réservation payée.</li>
+  <li>Avant le paiement, la messagerie masque les coordonnées directes (courriel, numéro de téléphone, identifiants d'applications de messagerie). Une fois la Réservation payée, elle ne les masque plus et le devis PDF indique celles du Pilote. Les coordonnées professionnelles qu'un Pilote, une entreprise ou une école choisit d'afficher sur sa fiche sont publiques.</li>
   <li>Un Devis accepté mais non payé n'engage pas la disponibilité du Pilote.</li>
 </ul>
 
@@ -267,34 +292,45 @@ Le versement au Pilote (prix du Devis moins la commission) est déclenché :
 Pour recevoir ses versements, le Pilote ouvre un compte de paiement auprès du prestataire de la
 Plateforme (Stripe Connect), soumis à ses propres conditions et à une vérification d'identité.
 Les délais d'arrivée des fonds sur le compte bancaire du Pilote dépendent de ce prestataire et de
-sa banque. Un Pilote établi dans un pays que le prestataire ne dessert pas encore en est informé
-sur son profil ; il peut proposer des Missions, et le versement est alors réglé manuellement avec
-l'équipe d'AubePilot, aux mêmes conditions de commission.
+sa banque. Un Pilote établi dans un pays que ce prestataire ne dessert pas encore en est informé
+sur son profil ; il peut présenter ses services et déposer des Devis, mais le paiement en ligne
+d'une Réservation avec lui n'est pas encore possible.
 </p>
 <p>
-Sauf indication contraire, les prix sont exprimés dans la devise de la Mission. Chaque Utilisateur
-demeure responsable de ses propres obligations fiscales ; AubePilot ne perçoit ni ne remet de taxes
-sur les prestations conclues entre Pilotes et Clients.
+Sauf indication contraire, les prix sont exprimés dans la devise de la Mission. Lorsque cette devise
+diffère de celle du compte de paiement d'AubePilot ou de celle du Pilote, les sommes peuvent être
+converties au taux appliqué par le prestataire de paiement.
+</p>
+<p>
+AubePilot ne perçoit pas et ne remet pas, pour le compte des Pilotes, les taxes applicables à leurs
+prestations : chaque Pilote est responsable de les facturer et de les déclarer s'il y est tenu, et
+chaque Utilisateur de ses propres obligations fiscales. L'Aube Étoilée peut être tenue par la loi de
+communiquer aux autorités fiscales des renseignements sur les Pilotes et sur les sommes qui leur sont
+versées ; le Pilote fournit alors, sur demande, les renseignements exigés.
 </p>
 
 <h2 id="a14">14. Annulation et remboursement</h2>
 <h3>14.1 Par le Client</h3>
 <ul>
   <li><strong>Avant paiement</strong> : annulation libre et sans frais.</li>
-  <li><strong>Fenêtre de grâce</strong> : jusqu'à {{ cancellation_grace_hours }} h après le paiement, remboursement intégral.</li>
-  <li><strong>Après la fenêtre de grâce</strong> : des frais de service de <strong>{{ cancellation_service_fee_pct }} % du Devis</strong>, plafonnés à {{ cancellation_service_fee_cap }} unités de la devise de la Mission, sont retenus par AubePilot ; l'identité et les coordonnées du Pilote ont été révélées et sa disponibilité réservée.</li>
-  <li><strong>Préavis de moins de {{ late_cancellation_hours }} h</strong> avant la Mission : le Client dédommage en outre le Pilote à hauteur de <strong>{{ late_cancellation_fee_pct }} % du Devis</strong>, versé immédiatement au Pilote. Le solde est remboursé au Client.</li>
+  <li><strong>Fenêtre de grâce</strong> : jusqu'à {{ cancellation_grace_hours }} h après le paiement, remboursement intégral, quelle que soit la date de la Mission.</li>
+  <li><strong>Après la fenêtre de grâce</strong> : le Pilote, dont la disponibilité était réservée, reçoit un dédommagement de <strong>{{ cancellation_pilot_fee_pct }} % du Devis</strong>, plafonné à {{ cancellation_pilot_fee_cap }} unités de la devise de la Mission.</li>
+  <li><strong>À moins de {{ late_cancellation_hours }} h de la Mission</strong> (après la fenêtre de grâce) : le dédommagement du Pilote est de <strong>{{ late_cancellation_fee_pct }} % du Devis</strong>, au lieu du précédent ; les deux ne se cumulent pas.</li>
+  <li>Le dédommagement est versé en entier au Pilote. <strong>AubePilot ne garde rien sur une annulation</strong>. Le solde est remboursé au Client.</li>
 </ul>
 <h3>14.2 Par le Pilote</h3>
 <ul>
-  <li>Le Pilote peut se désister depuis la Réservation. Le Client est <strong>remboursé intégralement</strong>, sans frais, et la Mission est remise en ligne.</li>
-  <li>Le motif est transmis au Client. Les désistements répétés ou de complaisance, notamment pour traiter hors Plateforme, entraînent la suspension du profil.</li>
+  <li>Le Pilote peut se désister depuis la Réservation. Le Client est <strong>remboursé intégralement</strong>, sans frais, et la Mission est remise en ligne. Le motif est transmis au Client.</li>
+  <li><strong>Météo et sécurité</strong> : le Pilote reste seul juge de la sécurité du vol. S'il ne peut pas voler en sécurité à la date prévue (météo, restriction de l'espace aérien, autorisation refusée, panne du matériel), il en informe le Client par la messagerie et se désiste : le Client est remboursé intégralement et peut lui adresser une nouvelle demande pour une autre date depuis sa fiche. Un désistement pour ces motifs n'entraîne aucune pénalité pour le Pilote et ne compte pas parmi les désistements répétés.</li>
+  <li>Des désistements répétés sans motif de sécurité, ou de complaisance (notamment pour traiter hors Plateforme), peuvent entraîner les mesures de l'article 21, après que le Pilote a pu s'expliquer.</li>
 </ul>
 <p>
 Les montants retenus sont détaillés avant la confirmation de l'annulation et tracés dans la
 Réservation. Les remboursements sont effectués sur le moyen de paiement d'origine ; le délai de
-réapparition des fonds dépend de la banque du Client. Lorsqu'une loi applicable accorde à un
-Consommateur un droit impératif d'annulation ou de remboursement, ce droit demeure applicable.
+réapparition des fonds dépend de la banque du Client. Un Client Consommateur qui estime le
+dédommagement supérieur aux frais réellement engagés par le Pilote et au préjudice subi peut le
+contester en écrivant à <a href="mailto:support@aubemail.com">support@aubemail.com</a> ; il conserve
+en tout cas les droits et recours que la loi lui reconnaît.
 </p>
 
 <h2 id="a15">15. Livrables, validation et litiges</h2>
@@ -306,36 +342,47 @@ depuis la Réservation.
 <p>
 Un litige (livrable non conforme, absence du Pilote, conditions météo, désaccord sur l'étendue de
 la prestation) gèle le Séquestre : ni versement, ni libération automatique tant qu'il n'est pas
-réglé. AubePilot examine les éléments fournis par les deux parties (Devis, messagerie, livrables,
-explications) et statue dans un délai de sept jours ouvrés : versement de sa part au Pilote, ou
-remboursement intégral du Client. Une contestation bancaire (rétrofacturation) engagée par le Client
-auprès de sa banque gèle la Réservation de la même manière jusqu'à la décision du prestataire de
-paiement.
+réglé. AubePilot communique avec les deux parties, leur permet de présenter leurs explications et
+leurs pièces (Devis, messagerie, livrables), puis rend une décision écrite et motivée, en principe
+dans les sept jours ouvrés suivant la réception de ces explications. La décision prévoit soit le
+versement de sa part au Pilote, soit le remboursement intégral du Client : la Plateforme ne permet pas
+de remboursement partiel. Elle ne prive aucune partie de son droit de s'adresser aux tribunaux ou à
+un organisme de protection du consommateur.
 </p>
 <p>
-Les avis laissés après une Mission terminée sont publics, réciproques et ne peuvent être modifiés
-par la partie évaluée. AubePilot peut retirer un avis manifestement abusif, diffamatoire ou sans
-lien avec la Mission.
+Une contestation bancaire (rétrofacturation) engagée par le Client auprès de sa banque gèle la
+Réservation de la même manière, jusqu'à la décision de la banque et au règlement du dossier par
+AubePilot.
+</p>
+<p>
+Après une Mission terminée, le Client peut évaluer le Pilote et le Pilote peut évaluer le Client. Les
+avis sur un Pilote sont publics sur sa fiche. Un avis ne peut pas être modifié par la partie évaluée.
+AubePilot peut retirer un avis manifestement abusif, diffamatoire ou sans lien avec la Mission.
 </p>
 
 <h2 id="a16">16. Non-contournement</h2>
+<h3>16.1 Ce qui passe par AubePilot</h3>
 <p>
-Le Client et le Pilote mis en relation par AubePilot s'engagent, pour une durée de <strong>douze
-(12) mois</strong> à compter de leur première mise en relation, à faire transiter par la Plateforme
-toute prestation, tout Devis, tout paiement et toute prolongation issus de cette relation.
+Lorsqu'un Pilote a déposé un Devis sur une Mission, ou qu'un Client a écrit à un Pilote par la
+messagerie d'AubePilot au sujet d'une prestation, cette prestation, ses prolongations et ses
+compléments directs se concluent et se paient par la Plateforme. Pour cette prestation, il est
+interdit de convenir de la réaliser ou de la payer hors Plateforme, d'annuler la Réservation ou de
+se désister pour l'exécuter ensuite en direct, ou de la confier à un tiers hors Plateforme afin
+d'éviter la commission.
 </p>
+<h3>16.2 Ce qui reste libre</h3>
+<ul>
+  <li>Le Pilote garde ses clients et ses relations commerciales antérieures à sa première mise en relation sur AubePilot, quel qu'en soit le moyen de preuve (facture, devis, échange de courriels, contrat).</li>
+  <li>Une fois une Mission terminée ou annulée, le Client et le Pilote sont libres de travailler ensemble directement pour d'autres prestations.</li>
+</ul>
+<h3>16.3 En cas de contournement</h3>
 <p>
-Sont notamment prohibés : la prise de contact directe (courriel, téléphone, messagerie, réseau
-social) pour convenir ou exécuter une Mission hors Plateforme ; le règlement en espèces ou par tout
-autre canal hors Plateforme ; la sous-traitance d'une Mission AubePilot vers un canal tiers ; un
-désistement suivi d'une exécution en direct.
-</p>
-<p>
-En cas de contournement avéré, L'Aube Étoilée peut suspendre définitivement les comptes concernés,
-facturer une indemnité forfaitaire égale à <strong>deux fois la commission éludée</strong>, avec un
-minimum de 250 unités de la devise de la Mission, et engager tout recours utile. Cette clause ne
-s'applique pas aux relations commerciales préexistantes documentées (factures antérieures,
-contrat-cadre signé) à la première mise en relation sur AubePilot.
+Après avoir informé l'Utilisateur et lui avoir permis de s'expliquer (article 21), L'Aube Étoilée
+peut prendre les mesures de l'article 21. Elle peut aussi facturer à l'Utilisateur professionnel qui
+a participé au contournement la commission qui aurait été due sur la prestation contournée, au taux
+applicable, sans majoration ni minimum. Aucune indemnité en argent n'est réclamée à un Client
+Consommateur au titre du présent article ; L'Aube Étoilée conserve les recours que la loi lui
+reconnaît.
 </p>
 
 <h2 id="a17">17. Collectes « Soutenez ce pilote »</h2>
@@ -346,7 +393,7 @@ Un Pilote dont le brevet est vérifié peut ouvrir une Collecte pour financer un
 <ul>
   <li>Une contribution est un <strong>soutien volontaire</strong> à un Pilote indépendant : ce n'est ni un achat, ni un don ouvrant droit à un reçu fiscal, ni une prise de participation. Il n'y a pas de contrepartie garantie et <strong>pas de remboursement si l'objectif n'est pas atteint</strong>.</li>
   <li>Chaque contribution (de {{ contribution_min }} à {{ contribution_max }} unités de la devise) est versée au Pilote dès son paiement, moins <strong>{{ campaign_fee_pct }} % tout compris</strong> pour AubePilot, frais de paiement inclus.</li>
-  <li>Le Pilote s'engage à utiliser les fonds pour ce qu'il décrit. AubePilot peut fermer une Collecte trompeuse, suspendre le Pilote et, le cas échéant, rembourser les Contributeurs à partir des sommes non encore versées.</li>
+  <li>Le Pilote s'engage à utiliser les fonds pour ce qu'il décrit. AubePilot peut fermer une Collecte trompeuse et prendre à l'égard du Pilote les mesures de l'article 21. Les contributions étant versées au Pilote dès leur paiement, AubePilot ne peut pas les reprendre ; les Contributeurs conservent contre le Pilote les recours que la loi leur reconnaît.</li>
   <li>Le Pilote demeure seul responsable des obligations fiscales et déclaratives liées aux sommes reçues.</li>
 </ul>
 
@@ -416,7 +463,16 @@ Une résiliation peut être prononcée lorsque des plaintes crédibles et récur
 et après un examen raisonnable, montrent qu'un comportement est incompatible avec l'intégrité, la
 fiabilité ou la sécurité de la Plateforme, même si aucun incident isolé ne le justifierait à lui seul.
 </p>
-<h3>21.4 Effets</h3>
+<h3>21.4 Droit de répondre et réexamen</h3>
+<p>
+Sauf urgence (risque pour la sécurité des personnes, fraude manifeste, usurpation d'identité),
+L'Aube Étoilée informe l'Utilisateur par écrit des faits qui lui sont reprochés et lui laisse au
+moins sept jours pour répondre avant de suspendre ou de fermer son compte. Toute mesure est motivée.
+L'Utilisateur peut en demander le réexamen en écrivant à
+<a href="mailto:support@aubemail.com">support@aubemail.com</a>, avec tout élément nouveau ; cette
+demande ne le prive pas de ses recours devant les tribunaux.
+</p>
+<h3>21.5 Effets</h3>
 <p>
 Les Réservations payées en cours au moment d'une suspension sont menées à terme ou remboursées selon
 les articles 13 à 15. Aucune indemnité n'est due à l'Utilisateur suspendu ou résilié pour fraude,
@@ -451,11 +507,12 @@ prestataire de paiement.
 
 <h2 id="a24">24. Limitation de responsabilité</h2>
 <p>
-Dans toute la mesure permise par la loi, L'Aube Étoilée n'est pas responsable des actes, omissions,
-vols, prestations, inexécutions, déclarations ou dommages imputables à un Pilote, à un Client, à un
-Contributeur ou à un tiers, ni des dommages corporels ou matériels survenus lors d'une Mission.
-Les vérifications qu'elle effectue sont limitées à leur objet expressément indiqué ; chaque partie
-demeure responsable des vérifications qu'elle estime appropriées avant de contracter.
+L'Aube Étoilée n'est pas responsable des actes, omissions, vols, prestations, inexécutions ou
+déclarations d'un Pilote, d'un Client, d'un Contributeur ou d'un tiers, ni des dommages qui en
+résultent. Elle répond de sa propre faute ; elle n'exclut ni ne limite sa responsabilité pour un
+préjudice corporel ou moral, ni pour sa faute intentionnelle ou lourde. Les vérifications qu'elle
+effectue sont limitées à leur objet expressément indiqué ; chaque partie demeure responsable des
+vérifications qu'elle estime appropriées avant de contracter.
 </p>
 <p>
 Pour les Utilisateurs professionnels, et uniquement dans la mesure où la loi le permet, la
@@ -486,21 +543,38 @@ qualification ne sont utilisés que pour les vérifications décrites à l'artic
 <h2 id="a27">27. Communications électroniques</h2>
 <p>
 L'Utilisateur accepte de recevoir par courriel les communications nécessaires à l'administration de
-son compte et de ses Réservations : confirmations, alertes de Missions dans sa zone si elles sont
-activées, demandes de vérification, avis de paiement, de livraison, d'annulation ou de litige. Les
-préférences de notification se règlent dans les paramètres du compte. Les communications
+son compte et de ses Réservations : confirmations, demandes de vérification, avis de paiement, de
+livraison, d'annulation ou de litige. Un Pilote reçoit aussi les alertes de Missions publiées dans sa
+zone et le récapitulatif hebdomadaire des appels d'offres et des offres d'emploi de son pays ; ces
+envois sont activés à l'inscription et se désactivent dans les paramètres du compte, où se règlent
+toutes les préférences de notification. Les communications
 promotionnelles, s'il y en a, restent soumises à la législation canadienne anti-pourriel et au
 consentement requis ; leur retrait n'empêche pas l'envoi des communications transactionnelles.
 </p>
 
 <h2 id="a28">28. Modifications</h2>
 <p>
-L'Aube Étoilée peut modifier les Services, les taux et les présentes Conditions pour l'avenir. Une
-modification de commission ou de frais ne s'applique jamais à une Réservation déjà acceptée : le taux
-figé à l'acceptation du Devis demeure. Toute modification substantielle des présentes est annoncée par
-courriel et sur cette page au moins quinze (15) jours avant son entrée en vigueur ; la poursuite de
-l'utilisation vaut acceptation. Une modification ne peut priver un Utilisateur d'un droit impératif
-auquel il ne peut légalement renoncer.
+L'Aube Étoilée peut modifier pour l'avenir les éléments suivants des présentes : les fonctionnalités
+et les règles d'utilisation de la Plateforme, les taux de commission et les frais, ainsi que les
+règles de vérification, d'annulation, de litige et de non-contournement. Une modification de
+commission ou de frais ne s'applique jamais à une Réservation déjà acceptée : le taux figé à
+l'acceptation du Devis demeure.
+</p>
+<p>
+Toute modification est annoncée au moins trente (30) jours avant son entrée en vigueur, sur cette
+page et par un avis écrit envoyé par courriel à chaque Utilisateur. Cet avis, rédigé clairement,
+contient la nouvelle clause ou la clause modifiée, sa version antérieure, la date d'entrée en vigueur
+et les droits décrits ci-dessous. Les versions antérieures des présentes restent consultables.
+</p>
+<p>
+Lorsqu'une modification augmente les obligations de l'Utilisateur ou réduit celles de L'Aube Étoilée,
+l'Utilisateur peut la refuser et fermer son compte sans frais, pénalité ni indemnité, en avisant
+L'Aube Étoilée au plus tard trente (30) jours après son entrée en vigueur ; les Réservations déjà
+payées sont alors menées à terme ou remboursées selon les articles 13 à 15. Lorsque la loi exige un
+consentement exprès, L'Aube Étoilée le demande avant d'appliquer la modification. En attendant
+l'entrée en vigueur, L'Aube Étoilée peut appliquer plus tôt une règle plus favorable aux Utilisateurs.
+Une modification ne peut priver un Utilisateur d'un droit impératif auquel il ne peut légalement
+renoncer.
 </p>
 
 <h2 id="a29">29. Droit applicable et dispositions générales</h2>
@@ -536,7 +610,7 @@ L'Aube Étoilée et l'Utilisateur relativement aux Services.
 Le fournisseur et exploitant contractuel des Services offerts sous la marque AubePilot est :
 </p>
 <p>
-<strong>L'Aube Étoilée</strong><br>
+<strong>L'Aube Étoilée inc.</strong><br>
 Exploitant de la marque AubePilot<br>
 Montréal (Québec), Canada<br>
 Courriel : <a href="mailto:support@aubemail.com">support@aubemail.com</a><br>
@@ -545,8 +619,8 @@ Site : <a href="{{ url_for('index') }}">pilot.aubeetoilee.com</a>
 <p>
 Toute demande ou notification concernant les présentes Conditions, un compte, une Réservation, une
 Collecte ou l'utilisation d'AubePilot peut être transmise à cette adresse, ou depuis la page
-<a href="{{ url_for('contact_form') }}">Nous joindre</a>. Les coordonnées complètes de l'éditeur
-figurent dans les <a href="{{ url_for('page_legal') }}">mentions légales</a>.
+<a href="{{ url_for('contact_form') }}">Nous joindre</a>. Les
+<a href="{{ url_for('page_legal') }}">mentions légales</a> précisent l'identité de l'exploitant.
 </p>
 
 </article>

@@ -130,6 +130,15 @@
         <span class="field-hint" style="margin: 0;">{{ t('register.location_hint') }}</span>
       </div>
 
+      {# Consentement : CGU + politique de confidentialité + majorité (CGU art. 3).
+         Vérifié aussi côté serveur, enregistré sur le compte (terms_version). #}
+      <label style="display: flex; gap: 10px; align-items: flex-start; margin-top: 20px;">
+        <input type="checkbox" name="accept_terms" value="1" required style="margin-top: 4px;">
+        <span>{{ t('register.accept_terms') }} <abbr class="req">*</abbr><br>
+          <span class="small"><a href="{{ url_for('page_terms') }}" target="_blank" rel="noopener">{{ t('footer.terms') }}</a> · <a href="{{ url_for('page_privacy') }}" target="_blank" rel="noopener">{{ t('footer.privacy') }}</a></span>
+        </span>
+      </label>
+
       {# Piège anti-robot : caché aux humains (hors écran + aria-hidden). Doit rester vide. #}
       <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px; height:0; overflow:hidden;">
         <label>{{ t('register.honeypot') }}<input type="text" name="website_confirm" tabindex="-1" autocomplete="off"></label>

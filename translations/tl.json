@@ -355,6 +355,8 @@
   "register.bullet_fee": "Bayad sa plataporma sa mga naihatid na trabaho lamang ({fee}%, pababa habang tumatagal).",
   "register.eco_pre": "Iisang login sa ecosystem ng",
   "register.eco_post": ".",
+  "register.accept_terms": "Nasa hustong gulang na ako at tinatanggap ko ang Mga Tuntunin ng paggamit at ang Patakaran sa privacy ng AubePilot.",
+  "register.err_terms": "Lagyan ng tsek ang kahon para kumpirmahin ang iyong edad at tanggapin ang Mga Tuntunin ng paggamit at ang Patakaran sa privacy.",
   "register.create_account": "Gumawa ng aking account",
   "register.role_legend": "Ang aking papel sa pag-takeoff",
   "register.role_client": "Kliyente",

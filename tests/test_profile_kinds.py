@@ -20,7 +20,7 @@ def test_create_user_with_kind_and_fallback(app_ctx, make_user):
 
 def test_register_route_records_kind(client):
     import services
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "username": "kind_reg_rec", "password": "demo1234", "confirm": "demo1234",
         "full_name": "Rec Pilote", "role": "pilot", "kind": "recreational", "country": "France"})
     assert r.status_code in (302, 303)
@@ -30,7 +30,7 @@ def test_register_route_records_kind(client):
         assert services.get_pilot_profile(uid)["kind"] == "recreational"
     # ecole : le nom d'ecole est initialise avec le nom saisi
     client.get("/deconnexion")
-    client.post("/inscription", data={
+    client.post("/inscription", data={"accept_terms": "1", 
         "username": "kind_reg_school", "password": "demo1234", "confirm": "demo1234",
         "full_name": "Académie Drone Lyon", "role": "pilot", "kind": "school", "country": "France"})
     with client.application.app_context():
@@ -141,7 +141,7 @@ def test_home_has_school_card_and_shop_legend(client):
 def test_schools_page_and_full_school_signup(client):
     import services
     # inscription complete d'un organisme : site + formations des l'inscription
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "username": "kind_org_x", "password": "demo1234", "confirm": "demo1234",
         "full_name": "Centre RPAS Beauce", "role": "pilot", "kind": "school",
         "country": "Canada", "city": "Saint-Georges",

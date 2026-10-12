@@ -12,6 +12,7 @@ import db
 
 def _base_form(**over):
     data = {
+        "accept_terms": "1",
         "username": "hp_user_ok",
         "password": "demo1234",
         "confirm": "demo1234",

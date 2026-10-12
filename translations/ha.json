@@ -355,6 +355,8 @@
   "register.bullet_fee": "Kuɗin hidimar dandali kan ayyukan da aka kammala kawai ({fee}%, yana raguwa).",
   "register.eco_pre": "Shiga ɗaya da tsarin ",
   "register.eco_post": ".",
+  "register.accept_terms": "Na kai shekarun balaga kuma na yarda da Sharuɗɗan amfani da Manufar sirri ta AubePilot.",
+  "register.err_terms": "Yi alama a akwatin don tabbatar da shekarunka kuma ka yarda da Sharuɗɗan amfani da Manufar sirri.",
   "register.create_account": "Buɗe asusuna",
   "register.role_legend": "Matsayina a farkon tashi",
   "register.role_client": "Abokin ciniki",

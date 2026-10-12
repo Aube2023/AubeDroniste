@@ -143,7 +143,7 @@ def test_csrf_required_outside_testing(client):
     from app import app
     app.config["TESTING"] = False
     try:
-        r = client.post("/inscription", data={"username": "x"})
+        r = client.post("/inscription", data={"accept_terms": "1", "username": "x"})
         assert r.status_code == 403
     finally:
         app.config["TESTING"] = True
@@ -154,7 +154,7 @@ def test_register_creates_user_and_dumps_email(client):
     from config import MAIL_DUMP_DIR
     pre_count = len(os.listdir(MAIL_DUMP_DIR)) if os.path.isdir(MAIL_DUMP_DIR) else 0
 
-    r = client.post("/inscription", data={
+    r = client.post("/inscription", data={"accept_terms": "1", 
         "username": "testuser_smoke", "password": "demo1234",
         "confirm": "demo1234", "full_name": "Test User",
         "role": "client", "country": "France", "city": "Paris",

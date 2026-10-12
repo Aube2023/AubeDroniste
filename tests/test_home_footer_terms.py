@@ -35,9 +35,15 @@ def test_cgu_reprennent_la_configuration(client):
     assert f"{config.AUTO_RELEASE_DAYS} jours" in html
     assert f"{int(config.CAMPAIGN_FEE_PCT)} % tout compris" in html
     assert f"{config.CANCELLATION_GRACE_HOURS} h après le paiement" in html
-    assert "support@aubemail.com" in html and "Version 2.1" in html
+    assert "support@aubemail.com" in html and "Version 2.2" in html
     # Rien de promis que le code ne fait pas
     assert "abonnés Pro" not in html and "24 h." not in html
+    assert "réglé manuellement" not in html and "mise en avant)" not in html
+    assert "deux fois la commission" not in html and "douze\n(12) mois" not in html
+    # La version precedente reste consultable (art. 28)
+    old = client.get("/cgu/2.1").data.decode()
+    assert "Version 2.1" in old and "Version archivée" in old
+    assert "frais de service de <strong>10 % du Devis</strong>" in old
 
 
 def test_litige_tranche_pour_le_pilote(app_ctx, funded_booking, make_user):

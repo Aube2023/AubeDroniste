@@ -355,6 +355,8 @@
   "register.bullet_fee": "የመድረክ ክፍያ በተጠናቀቁ ተልዕኮዎች ላይ ብቻ ({fee}%፣ እየቀነሰ የሚሄድ)።",
   "register.eco_pre": "ከ",
   "register.eco_post": " ሥርዓተ-ምኅዳር ጋር የጋራ መግቢያ።",
+  "register.accept_terms": "ለአካለ መጠን ደርሻለሁ፤ የAubePilot የአጠቃቀም ውሎችንና የግላዊነት ፖሊሲን እቀበላለሁ።",
+  "register.err_terms": "ዕድሜዎን ለማረጋገጥና የአጠቃቀም ውሎችንና የግላዊነት ፖሊሲን ለመቀበል ሳጥኑን ምልክት ያድርጉ።",
   "register.create_account": "መለያዬን ፍጠር",
   "register.role_legend": "ሚናዬ ስነሳ",
   "register.role_client": "ደንበኛ",
