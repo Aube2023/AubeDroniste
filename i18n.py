@@ -2068,6 +2068,16 @@ except (OSError, ValueError) as _exc:
     import logging as _logging
     _logging.getLogger("aubepilot.i18n").error("translations/_stats.json illisible : %s", _exc)
 
+# Galerie publique des realisations /realisations (2026-10-12) : meme forme.
+_GALLERY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations", "_gallery.json")
+try:
+    with open(_GALLERY_FILE, encoding="utf-8") as _f:
+        for _key, _entry in json.load(_f).items():
+            _T[_key] = dict(_entry)
+except (OSError, ValueError) as _exc:
+    import logging as _logging
+    _logging.getLogger("aubepilot.i18n").error("translations/_gallery.json illisible : %s", _exc)
+
 EXTRA_LANGS = ("ar", "pt", "de", "vi", "id", "zh", "ja", "it", "sw", "tl", "fa", "ko", "pl",
                "am", "ne", "th", "ta", "he", "ha", "nl", "el", "ro")
 _TRANSLATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations")

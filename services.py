@@ -1596,6 +1596,23 @@ def delete_drone(drone_id: int, owner_user_id: int) -> bool:
 # Recherche pilotes
 # ---------------------------------------------------------------------------
 
+# Specialites d'un pilote en une colonne (« photo,toiture,… »), pour les puces
+# des cartes de l'annuaire : un client voit ce que fait le pilote sans ouvrir
+# la fiche. Sous-requete correlee sur la cle primaire de pilot_specialties.
+_SPECIALTY_CODES_SQL = (
+    "(SELECT GROUP_CONCAT(s.mission_type) FROM pilot_specialties s "
+    " WHERE s.pilot_user_id = u.id)"
+)
+_MISSION_ORDER = {code: i for i, (code, _label) in enumerate(MISSION_TYPES)}
+
+
+def _specialty_list(codes: Optional[str]) -> list:
+    """« toiture,photo » -> ['photo', 'toiture'] dans l'ordre du catalogue
+    (MISSION_TYPES), codes inconnus ecartes."""
+    found = {c for c in (codes or "").split(",") if c in _MISSION_ORDER}
+    return sorted(found, key=_MISSION_ORDER.__getitem__)
+
+
 def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
                   capability: str = "", text: str = "", lat: Optional[float] = None,
                   lng: Optional[float] = None, radius_km: int = DEFAULT_SEARCH_RADIUS_KM,
@@ -1629,7 +1646,8 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         "       COALESCE(r.review_count, 0) AS rating_count, "
         "       COALESCE(c.n_certs, 0) AS certs_total, "
         "       COALESCE(c.n_verified, 0) AS certs_verified, "
-        "       c.verified_auths AS verified_auths "
+        "       c.verified_auths AS verified_auths, "
+        f"       {_SPECIALTY_CODES_SQL} AS specialty_codes "
         "FROM users u "
         "JOIN pilot_profiles p ON p.user_id = u.id "
         "LEFT JOIN ("
@@ -1738,6 +1756,7 @@ def search_pilots(*, country: str = "", city: str = "", mission_type: str = "",
         }
         auths = r.pop("verified_auths", None) or ""
         r["verified_authorities"] = [a for a in auths.split(",") if a]
+        r["specialties"] = _specialty_list(r.pop("specialty_codes", None))
         enriched.append(r)
     if lat is not None and lng is not None:
         enriched.sort(key=lambda x: (x.get("distance_km") or 1e9, x.get("pilot_no") or 1e9))
@@ -3864,6 +3883,54 @@ def count_portfolio_items(pilot_user_id: int,
     return int(row["n"]) if row else 0
 
 
+# Galerie publique /realisations : les pieces de portfolio de tous les pilotes.
+# Ce sont les fichiers que chaque fiche publique montre deja ; la galerie les
+# rassemble pour qu'un client compare le travail avant de demander un devis.
+# Un compte supprime (ou qui n'est plus pilote) n'y figure plus.
+_PUBLIC_PORTFOLIO_FROM = (
+    "FROM pilot_portfolio_items i "
+    "JOIN users u ON u.id = i.pilot_user_id "
+    "LEFT JOIN pilot_profiles p ON p.user_id = u.id "
+    "WHERE u.role IN ('pilot', 'both') AND u.deleted_at IS NULL "
+    "  AND COALESCE(i.stored_filename, '') <> '' "
+)
+
+
+def public_portfolio(kind: str = "", limit: int = 120) -> list:
+    """Pieces de portfolio de tous les pilotes, les plus recentes d'abord.
+    `kind` : 'image', 'video' ou '' (tout)."""
+    sql = (
+        "SELECT i.id, i.title, i.kind, i.stored_filename, i.mime_type, "
+        "       u.id AS pilot_id, u.full_name, u.avatar_path, u.city, "
+        "       COALESCE(p.kind, 'pro') AS pilot_kind, p.business_name "
+        + _PUBLIC_PORTFOLIO_FROM
+    )
+    args: list = []
+    if kind in ("image", "video"):
+        sql += "AND i.kind = ? "
+        args.append(kind)
+    sql += "ORDER BY i.created_at DESC, i.id DESC LIMIT ?"
+    args.append(max(1, int(limit)))
+    out = []
+    for r in db.fetchall(sql, args):
+        d = dict(r)
+        d["pilot_name"] = public_name({"full_name": d["full_name"], "kind": d["pilot_kind"],
+                                       "business_name": d["business_name"]})
+        out.append(d)
+    return out
+
+
+def public_portfolio_counts() -> dict:
+    """Effectifs de la galerie pour ses onglets : {'all', 'image', 'video'}."""
+    rows = db.fetchall("SELECT i.kind, COUNT(*) AS n " + _PUBLIC_PORTFOLIO_FROM + "GROUP BY i.kind")
+    counts = {"image": 0, "video": 0}
+    for r in rows:
+        if r["kind"] in counts:
+            counts[r["kind"]] = int(r["n"])
+    counts["all"] = counts["image"] + counts["video"]
+    return counts
+
+
 def get_portfolio_item(item_id: int) -> Optional[dict]:
     row = db.fetchone(
         "SELECT * FROM pilot_portfolio_items WHERE id=?", (item_id,),
@@ -3956,7 +4023,8 @@ def featured_pilots(limit: int = 6) -> list:
     rows = db.fetchall(
         "SELECT u.id, p.pilot_no, u.full_name, u.country, u.city, u.is_verified, u.avatar_path, "
         "       u.cover_path, p.headline, p.hourly_rate, p.currency AS p_currency, "
-        "       COALESCE(p.kind, 'pro') AS kind, p.business_name, "
+        "       COALESCE(p.kind, 'pro') AS kind, p.business_name, p.travel_radius_km, "
+        f"       {_SPECIALTY_CODES_SQL} AS specialty_codes, "
         "       COALESCE(r.avg_rating, 0.0) AS rating_avg, "
         "       COALESCE(r.review_count, 0) AS rating_count "
         "FROM users u JOIN pilot_profiles p ON p.user_id=u.id "
@@ -3975,6 +4043,7 @@ def featured_pilots(limit: int = 6) -> list:
             "avg": round(float(d.pop("rating_avg") or 0.0), 2),
             "count": int(d.pop("rating_count") or 0),
         }
+        d["specialties"] = _specialty_list(d.pop("specialty_codes", None))
         out.append(d)
     return out
 

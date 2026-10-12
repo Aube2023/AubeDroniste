@@ -1,0 +1,22 @@
+{# Une piece de la galerie publique : attend `it` (services.public_portfolio).
+   Les photos s'ouvrent dans la visionneuse (app.js, .media-frame img) ; le
+   nom mene a la fiche du pilote. #}
+<figure class="media-figure gallery-item">
+  <div class="media-frame">
+    {% if it.kind == 'video' %}
+      <video controls preload="metadata">
+        <source src="{{ url_for('media_file', filename=it.stored_filename) }}" type="{{ it.mime_type }}">
+      </video>
+    {% else %}
+      <img src="{{ thumb(it.stored_filename, 640) }}" data-full="{{ url_for('media_file', filename=it.stored_filename) }}"
+           width="640" height="400" alt="{{ it.title or t('tpl.work') }}" loading="lazy" decoding="async">
+    {% endif %}
+  </div>
+  <figcaption class="media-body">
+    {% if it.title %}<div class="media-title">{{ it.title }}</div>{% endif %}
+    <a class="gallery-pilot" href="{{ url_for('pilot_detail', user_id=it.pilot_id) }}">
+      {% if it.avatar_path %}<img src="{{ thumb(it.avatar_path, 160) }}" alt="" width="28" height="28" loading="lazy" decoding="async">{% else %}<span class="gp-initial" aria-hidden="true">{{ it.pilot_name[:1] }}</span>{% endif %}
+      <span class="gp-name">{{ it.pilot_name }}</span>{% if it.city %}<span class="gp-city">{{ it.city }}</span>{% endif %}
+    </a>
+  </figcaption>
+</figure>

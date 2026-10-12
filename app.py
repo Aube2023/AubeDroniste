@@ -221,7 +221,8 @@ _static_ver_cache: dict = {}
 # sous /ru/faq en le declarant russe tromperait les moteurs.
 LANG_ENDPOINTS = {
     "index": None, "pilots_search": None, "pilot_detail": None,
-    "missions_search": None, "mission_detail": None, "schools": None, "opportunities": None, "jobs": None,
+    "missions_search": None, "mission_detail": None, "schools": None, "gallery": None,
+    "opportunities": None, "jobs": None,
     "job_detail": None,
     "partners": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
@@ -755,6 +756,7 @@ def index():
         home_partners=services.list_partners(),
         latest_missions=services.latest_missions(8),
         latest_reviews=services.latest_reviews(3),
+        home_gallery=services.public_portfolio(kind="image", limit=6),
         country_breakdown=services.country_breakdown(12),
         faq_entries=content.faq(getattr(g, "lang", i18n.DEFAULT), featured_only=True),
         seo=seo.home(getattr(g, "lang", i18n.DEFAULT)),
@@ -864,6 +866,8 @@ def _sitemap_entries() -> list:
     entries = [(path, "", prio, freq, langs_of(path)) for path, prio, freq in seo.PUBLIC_ROUTES]
     if services.partners_visible():
         entries.append(("/partenaires", "", "0.5", "monthly", langs_of("/partenaires")))
+    if services.public_portfolio_counts()["all"]:
+        entries.append(("/realisations", "", "0.6", "weekly", langs_of("/realisations")))
     all_langs = tuple(i18n.SUPPORTED)
     for p in services.sitemap_pilots():
         entries.append((f"/pilotes/{p['id']}", str(p.get("lastmod") or "")[:10], "0.7", "weekly", all_langs))
@@ -995,6 +999,26 @@ def schools():
     return render_template(
         "schools.html", schools=schools_list,
         seo=seo.schools_page(lang),
+    )
+
+
+@app.route("/realisations")
+def gallery():
+    """Galerie publique des realisations : les photos et videos du portfolio
+    de tous les pilotes, chacune liee a la fiche de son pilote. Hors index
+    tant qu'elle est vide ; les onglets ?type= sont des variantes."""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    kind = request.args.get("type", "")
+    if kind not in ("image", "video"):
+        kind = ""
+    counts = services.public_portfolio_counts()
+    page_seo = seo.simple_page(lang, title_key="gallery.title", description_key="gallery.description",
+                               robots=None if counts["all"] else "noindex, follow")
+    if kind:
+        page_seo = seo.query_variant(page_seo)
+    return render_template(
+        "gallery.html", items=services.public_portfolio(kind=kind), kind=kind,
+        counts=counts, seo=page_seo,
     )
 
 

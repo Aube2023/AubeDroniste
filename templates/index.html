@@ -85,8 +85,9 @@
         {% endif %}
         <div>
           <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
-          <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}</div>
+          <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}{% if p.travel_radius_km and (p.kind or 'pro') not in ('school', 'shop') %} · <span class="loc-city loc-radius" title="{{ t('tpl.rayon_de_deplacement_km') }}">{{ t('tpl.rayon') }} {{ p.travel_radius_km }} km</span>{% endif %}</div>
           {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
+          {% include "_spec_chips.html" %}
         </div>
       </div>
       <div class="foot">
@@ -97,6 +98,20 @@
     {% endfor %}
   </div>
 </section>
+
+{% if home_gallery %}
+{# Realisations recentes : de vraies photos du portfolio des pilotes, cachees
+   tant qu'il n'y en a aucune (comme les avis). #}
+<section class="section section-tight" id="realisations">
+  <div class="row-between section-line">
+    <h2>{{ t('gallery.home_h') }}</h2>
+    <a href="{{ url_for('gallery') }}" class="ghost">{{ t('gallery.home_all') }}</a>
+  </div>
+  <div class="media-grid gallery-grid">
+    {% for it in home_gallery %}{% include "_gallery_item.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="section section-tight" id="pays">
   <div class="country-grid">

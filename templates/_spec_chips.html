@@ -1,0 +1,12 @@
+{# Puces de specialites d'une carte pilote (3 au plus, puis « +N » avec les
+   autres en infobulle). Attend `p` avec `specialties` (codes MISSION_TYPES).
+   Pas pour les ecoles ni les boutiques, qui ne font pas de missions. #}
+{% if p.specialties and (p.kind or 'pro') not in ('school', 'shop') %}
+<div class="spec-chips">
+  {% for code in p.specialties[:3] %}<span class="spec-chip">{{ mission_label(code) }}</span>{% endfor %}
+  {% if p.specialties|length > 3 %}
+  {% set _rest = [] %}{% for code in p.specialties[3:] %}{% set _ = _rest.append(mission_label(code)) %}{% endfor %}
+  <span class="spec-chip more" title="{{ _rest|join(' · ') }}">+{{ p.specialties|length - 3 }}</span>
+  {% endif %}
+</div>
+{% endif %}

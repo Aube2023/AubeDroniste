@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<nav class="breadcrumb" aria-label="{{ t('nav.breadcrumb') }}">
+  <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a> ›
+  <a href="{{ url_for('pilots_search') }}">{{ t('nav.pilots') }}</a>
+</nav>
+
+<div class="search-head">
+  <span class="eyebrow">{{ t('gallery.eyebrow') }}</span>
+  <h1>{{ t('gallery.h1') }}</h1>
+  <p class="lead muted">{{ t('gallery.lead') }}</p>
+</div>
+
+<section>
+  <nav class="dir-tabs" aria-label="{{ t('gallery.filter_label') }}">
+    <a href="{{ url_for('gallery') }}" class="{{ 'on' if not kind else '' }}">{{ t('gallery.all') }} <span class="n">{{ counts.all }}</span></a>
+    <a href="{{ url_for('gallery', type='image') }}" class="{{ 'on' if kind == 'image' else '' }}">{{ t('gallery.photos') }} <span class="n">{{ counts.image }}</span></a>
+    <a href="{{ url_for('gallery', type='video') }}" class="{{ 'on' if kind == 'video' else '' }}">{{ t('gallery.videos') }} <span class="n">{{ counts.video }}</span></a>
+  </nav>
+
+  {% if items %}
+  <div class="media-grid gallery-grid">
+    {% for it in items %}{% include "_gallery_item.html" %}{% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><strong>{{ t('gallery.empty') }}</strong></div>
+  {% endif %}
+
+  <div class="gallery-ctas">
+    <div class="gallery-cta">
+      <p>{{ t('gallery.client_cta') }}</p>
+      <a href="{{ url_for('mission_create') if current_user else url_for('register') }}" class="cta">{{ t('nav.publish') }}</a>
+    </div>
+    <div class="gallery-cta">
+      <p>{{ t('gallery.pilot_cta') }}</p>
+      {% if current_user and current_user.role in ('pilot', 'both') %}
+      <a href="{{ url_for('pilot_portfolio') }}" class="ghost">{{ t('gallery.pilot_cta_btn') }}</a>
+      {% else %}
+      <a href="{{ url_for('register') }}?role=pilot" class="ghost">{{ t('footer.become_pilot') }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
