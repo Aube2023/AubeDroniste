@@ -5,15 +5,98 @@ import WebKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  /// Moteur Flutter cree au lancement : les plugins s'y enregistrent ici,
+  /// avant le super.application, comme avant le passage aux scenes. La scene
+  /// (SceneDelegate) l'affiche ensuite dans sa fenetre.
+  let moteur = FlutterEngine(name: "aubepilot")
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    if let registrar = registrar(forPlugin: "AubePilotSession") {
+    moteur.run()
+    GeneratedPluginRegistrant.register(with: moteur)
+    if let registrar = moteur.registrar(forPlugin: "AubePilotSession") {
       SessionStore.register(messenger: registrar.messenger())
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+
+/// Cycle de vie par scene (UIScene), obligatoire avec le SDK d'iOS 27 : une
+/// app compilee avec Xcode 27 sans UIApplicationSceneManifest est tuee au
+/// lancement sur iOS 27 (TN3187). C'est ce qui a fait refuser 1.6.0 (8)
+/// (regle 2.1, iPad Air sous iPadOS 27).
+///
+/// La scene cree la fenetre et y montre le moteur de l'AppDelegate. Les liens
+/// entrants (app_links) et les passages premier plan / arriere-plan arrivent
+/// desormais ici : on les relaie a l'AppDelegate, qui les distribue aux plugins
+/// comme avant.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+  var window: UIWindow?
+
+  private var app: AppDelegate? { UIApplication.shared.delegate as? AppDelegate }
+
+  func scene(
+    _ scene: UIScene, willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    guard let windowScene = scene as? UIWindowScene, let app = app else { return }
+    // Scene recreee (iPad) : on reprend l'ecran deja lie au moteur.
+    let ecran: FlutterViewController
+    if let existant = app.moteur.viewController {
+      ecran = existant
+    } else {
+      ecran = FlutterViewController(engine: app.moteur, nibName: nil, bundle: nil)
+      ecran.loadDefaultSplashScreenView()
+    }
+    let fenetre = UIWindow(windowScene: windowScene)
+    fenetre.rootViewController = ecran
+    fenetre.makeKeyAndVisible()
+    window = fenetre
+    app.window = fenetre
+    // Ouverture a froid par un lien : il arrive ici, pas dans openURLContexts.
+    if !connectionOptions.urlContexts.isEmpty {
+      self.scene(scene, openURLContexts: connectionOptions.urlContexts)
+    }
+    for activite in connectionOptions.userActivities {
+      self.scene(scene, continue: activite)
+    }
+  }
+
+  func sceneDidDisconnect(_ scene: UIScene) {
+    window = nil
+    app?.window = nil
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    for contexte in URLContexts {
+      var options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+      options[.sourceApplication] = contexte.options.sourceApplication
+      options[.annotation] = contexte.options.annotation
+      options[.openInPlace] = contexte.options.openInPlace
+      _ = app?.application(UIApplication.shared, open: contexte.url, options: options)
+    }
+  }
+
+  func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    _ = app?.application(UIApplication.shared, continue: userActivity) { _ in }
+  }
+
+  func sceneDidBecomeActive(_ scene: UIScene) {
+    app?.applicationDidBecomeActive(UIApplication.shared)
+  }
+
+  func sceneWillResignActive(_ scene: UIScene) {
+    app?.applicationWillResignActive(UIApplication.shared)
+  }
+
+  func sceneWillEnterForeground(_ scene: UIScene) {
+    app?.applicationWillEnterForeground(UIApplication.shared)
+  }
+
+  func sceneDidEnterBackground(_ scene: UIScene) {
+    app?.applicationDidEnterBackground(UIApplication.shared)
   }
 }
 
