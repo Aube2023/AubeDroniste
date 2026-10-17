@@ -5,7 +5,7 @@ AubePilot · Devis revise / Revised bid
 {{ pilot.full_name }} a soumis une nouvelle version de son devis.
 
 Mission : {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
-Tarif revise (revision {{ bid.revision_no }}) : {{ bid.price|int }} {{ bid.currency }}
+Tarif revise (revision {{ bid.revision_no }}) : {{ bid.price|int }} {{ bid.currency }}{% if bid.tax_amount %} + taxes {{ '%.2f'|format(bid.tax_amount) }} = {{ '%.2f'|format(bid.price + bid.tax_amount) }} {{ bid.currency }}{% endif %}
 {% if bid.eta_hours %}Delai estime : {{ bid.eta_hours }} h{% endif %}
 {% if bid.description %}
 Description :
@@ -22,7 +22,7 @@ Voir : {{ site_url }}/missions/{{ mission.id }}
 {{ pilot.full_name }} sent a revised bid.
 
 Mission: {{ mission.title }} ({{ mission.country }}{% if mission.city %} - {{ mission.city }}{% endif %})
-Quoted (revision {{ bid.revision_no }}): {{ bid.price|int }} {{ bid.currency }}
+Quoted (revision {{ bid.revision_no }}): {{ bid.price|int }} {{ bid.currency }}{% if bid.tax_amount %} + tax {{ '%.2f'|format(bid.tax_amount) }} = {{ '%.2f'|format(bid.price + bid.tax_amount) }} {{ bid.currency }}{% endif %}
 {% if bid.eta_hours %}Lead time: {{ bid.eta_hours }} h{% endif %}
 
 Review: {{ site_url }}/missions/{{ mission.id }}

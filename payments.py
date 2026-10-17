@@ -232,8 +232,13 @@ def get_pilot_status(account_id: Optional[str]) -> dict:
 # ---------------------------------------------------------------------------
 
 def create_checkout_session(*, booking_id: int, amount: float, currency: str,
-                            mission_title: str, client_email: str) -> Tuple[str, str]:
+                            mission_title: str, client_email: str,
+                            tax_lines: Optional[list] = None) -> Tuple[str, str]:
     """Cree une Checkout Session Stripe (paiement carte hosted).
+
+    `amount` = prix de la mission avant taxes ; `tax_lines` = [{name, amount}]
+    : une ligne par taxe du pilote (TPS, TVQ...), que le recu Stripe montre a
+    part. Total = services.booking_amount_cents, que le webhook verifie.
 
     Retourne (session_id, redirect_url). En mode fake, retourne une URL locale
     qui simule le paiement.
@@ -250,21 +255,32 @@ def create_checkout_session(*, booking_id: int, amount: float, currency: str,
                 f"{SITE_URL}/stripe/fake-checkout/{booking_id}")
 
     amount_cents = int(round(float(amount) * 100))
+    line_items = [{
+        "price_data": {
+            "currency": currency.lower(),
+            "product_data": {
+                "name": f"Mission #{booking_id} — {mission_title[:80]}",
+                "description": "Réservation de prestation drone via AubePilot",
+            },
+            "unit_amount": amount_cents,
+        },
+        "quantity": 1,
+    }]
+    for tl in tax_lines or ():
+        cents = int(round(float(tl["amount"]) * 100))
+        if cents > 0:
+            line_items.append({
+                "price_data": {"currency": currency.lower(),
+                               "product_data": {"name": str(tl["name"])[:120]},
+                               "unit_amount": cents},
+                "quantity": 1,
+            })
+            amount_cents += cents
     session = s.checkout.Session.create(
         mode="payment",
         payment_method_types=["card"],
         customer_email=client_email,
-        line_items=[{
-            "price_data": {
-                "currency": currency.lower(),
-                "product_data": {
-                    "name": f"Mission #{booking_id} — {mission_title[:80]}",
-                    "description": "Réservation de prestation drone via AubePilot",
-                },
-                "unit_amount": amount_cents,
-            },
-            "quantity": 1,
-        }],
+        line_items=line_items,
         metadata={"booking_id": str(booking_id)},
         # Le paiement lui-meme porte le numero de reservation (lisible dans le
         # dashboard) et le groupe de transfert que le virement au pilote reprend.

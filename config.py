@@ -184,6 +184,15 @@ PLATFORM_FEE_PCT = PLATFORM_FEE_TIERS[0][1]     # taux de base (1re mission), af
 # Part reversee au pilote (derivee : l'affichage ne doit JAMAIS coder "80 %" en dur).
 PILOT_SHARE_PCT = 100.0 - PLATFORM_FEE_PCT
 
+# Taxes de vente (voir taxes.py). L'editeur, L'Aube Etoilee inc., est inscrit
+# aux fichiers de la TPS/TVH et de la TVQ : sa commission est taxable pour un
+# pilote etabli au Canada, TAXES COMPRISES dans le taux ci-dessus (comme les
+# frais Stripe), detaxee pour un pilote a l'etranger. Les taxes des pilotes
+# inscrits s'ajoutent a leur devis et leur sont reversees en entier.
+PLATFORM_LEGAL_NAME = "L'Aube Étoilée inc."
+PLATFORM_GST_NUMBER = os.environ.get("AUBEPILOT_GST_NUMBER", "713093946 RT0001")
+PLATFORM_QST_NUMBER = os.environ.get("AUBEPILOT_QST_NUMBER", "1230658818 TQ0001")
+
 # Annulation par le CLIENT apres paiement (CGU v2.2 art. 14.1) : tout ce
 # qui est retenu va au PILOTE, AubePilot ne garde rien. Fenetre de grace de
 # CANCELLATION_GRACE_HOURS apres le paiement : remboursement integral. Ensuite,

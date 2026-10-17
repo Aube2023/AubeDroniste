@@ -34,6 +34,7 @@ import payments
 import security
 import seo
 import services
+import taxes
 import thumbs
 from config import (
     ALLOWED_DOC_EXT,
@@ -638,8 +639,30 @@ def _inject_helpers():
         # Anti-bypass : nom anonymise dans toutes les listes / cartes
         # (la fiche detail decide cas par cas via has_funded_relation).
         "mask_name": services.mask_full_name,
+        # Taxes (taxes.py) : lignes stockees en JSON sur le devis et la
+        # reservation, noms traduits (TPS / GST...), totaux client et pilote.
+        "tax_lines": taxes.loads,
+        "tax_label": _tax_label,
+        "is_canada": taxes.is_canada,
+        "tax_rates": lambda lines: taxes.rates_label(
+            lines, _tax_label, comma=getattr(g, "lang", i18n.DEFAULT) == "fr"),
+        "booking_total": services.booking_total,
+        "pilot_net": services.pilot_net,
+        "platform_tax_ids": {"name": config.PLATFORM_LEGAL_NAME,
+                             "gst": config.PLATFORM_GST_NUMBER,
+                             "qst": config.PLATFORM_QST_NUMBER},
         **_pilot_payout_context(),
     }
+
+
+def _tax_label(code: str) -> str:
+    """Nom affiche d'une taxe : GST -> « TPS » en francais, « GST » ailleurs."""
+    return i18n.t(f"tax.{code}", lang=getattr(g, "lang", i18n.DEFAULT))
+
+
+def _pct(rate) -> str:
+    """Taux a la francaise : 9.975 -> « 9,975 », 5.0 -> « 5 »."""
+    return f"{float(rate):g}".replace(".", ",")
 
 
 # ---------------------------------------------------------------------------
@@ -1941,8 +1964,27 @@ def mission_detail(mission_id):
         threads=threads,
         french_only=french_only,
         bookings_by_bid=bookings_by_bid,
+        bid_tax_note=_bid_tax_note(user, mission),
         seo=mission_seo,
     )
+
+
+def _bid_tax_note(user, mission: dict) -> str:
+    """Phrase sous le prix du formulaire de devis, pour un pilote etabli au
+    Canada : les taxes qui s'ajouteront pour le client (taxes.mission_taxes),
+    ou le rappel qu'il n'a declare aucun numero. Vide ailleurs."""
+    if not user or user.get("role") not in ("pilot", "both") \
+            or not taxes.is_canada(user.get("country")):
+        return ""
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    party = services.pilot_tax_party(user["id"])
+    if not (party.get("gst_number") or party.get("qst_number")):
+        return i18n.t("tax.bid_none", lang)
+    preview = taxes.mission_taxes(100, party, mission)
+    if not preview["lines"]:
+        return ""
+    return i18n.t("tax.bid_added", lang, taxes=taxes.rates_label(
+        preview["lines"], _tax_label, comma=lang == "fr"))
 
 
 # ---------------------------------------------------------------------------
@@ -2542,6 +2584,31 @@ def pilot_edit():
     )
 
 
+@app.route("/espace/pilote/taxes", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=10, per_hour=60)
+def pilot_taxes():
+    """Numeros de TPS/TVH et de TVQ du pilote inscrit (vides = petit
+    fournisseur) : ses taxes s'ajoutent alors a ses prochains devis."""
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    try:
+        gst = taxes.normalize_gst(request.form.get("gst_number"))
+        qst = taxes.normalize_qst(request.form.get("qst_number"))
+    except ValueError as exc:
+        flash(i18n.t(f"tax.err_{exc}", lang), "error")
+        return redirect(url_for("pilot_edit") + "#taxes")
+    services.set_pilot_tax_numbers(user["id"], gst, qst)
+    db.execute(
+        "INSERT INTO audit_log (user_id, action, target, payload) VALUES (?, 'pilot_tax_numbers', ?, ?)",
+        (user["id"], f"user:{user['id']}", json.dumps({"gst": gst, "qst": qst})),
+    )
+    flash(i18n.t("tax.saved", lang), "success")
+    return redirect(url_for("pilot_edit") + "#taxes")
+
+
 @app.route("/espace/pilote/certification", methods=["POST"])
 @auth.login_required
 def pilot_add_certification():
@@ -2899,7 +2966,8 @@ def admin_stripe():
                            withdrawable=services.withdrawable(d.get("balance") or {}, reserve),
                            auto_payout={"enabled": config.AUTO_PAYOUT_ENABLED, "min": config.AUTO_PAYOUT_MIN,
                                         "buffer": config.AUTO_PAYOUT_BUFFER},
-                           platform_country=config.STRIPE_PLATFORM_COUNTRY, seo=_NOINDEX)
+                           platform_country=config.STRIPE_PLATFORM_COUNTRY,
+                           tax_summary=services.tax_summary(), seo=_NOINDEX)
 
 
 @app.route("/admin/stripe/retirer", methods=["POST"])
@@ -4378,6 +4446,8 @@ def contact_quote(client_id, pilot_id):
         "contact_quote.html", conv=conv, client=dict(client), packages=packages, form=form,
         thread=services.contact_thread(client_id, pilot_id, user["id"])[-6:], seo=_NOINDEX,
         default_currency=_currency_for_country(user.get("country")),
+        # Lieu pas encore choisi : estimation d'apres le client, recalculee au depot.
+        bid_tax_note=_bid_tax_note(user, {"country": client["country"], "city": client["city"]}),
     )
 
 
@@ -4534,6 +4604,12 @@ def booking_pay(booking_id):
                         booking_id, exc)
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
+    # Taxes du pilote inscrit : une ligne chacune sur le recu, avec son numero.
+    tax_lines = [{"name": f"{i18n.t('tax.' + l['code'], 'fr')} ({_pct(l['rate'])} %) · "
+                          f"{booking.get('pilot_business_name') or booking.get('pilot_name') or ''} "
+                          f"n° {l.get('number') or ''}".replace("  ", " "),
+                  "amount": l["amount"]}
+                 for l in taxes.loads(booking.get("taxes"))]
     try:
         session_id, url = payments.create_checkout_session(
             booking_id=booking["id"],
@@ -4541,6 +4617,7 @@ def booking_pay(booking_id):
             currency=booking["currency"],
             mission_title=booking.get("mission_title", "Mission AubePilot"),
             client_email=g.user["email"],
+            tax_lines=tax_lines,
         )
     except payments.PaymentUnavailableError:
         flash("Le paiement en ligne est indisponible. Aucun débit n'a été effectué.", "error")
@@ -4780,7 +4857,8 @@ def _stripe_webhook(secret):
                 booking = services.get_booking(int(bid))
             except (TypeError, ValueError):
                 booking = None
-            expected_cents = int(round(float(booking["agreed_price"]) * 100)) if booking else None
+            # Prix + taxes du pilote, ligne par ligne comme la session Checkout.
+            expected_cents = services.booking_amount_cents(booking) if booking else None
             valid = bool(
                 booking
                 and booking.get("stripe_session_id") == str(session_id)

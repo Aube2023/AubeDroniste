@@ -99,8 +99,14 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
         topMargin=18 * mm, bottomMargin=16 * mm,
         title=f"Devis - reservation {booking.get('id')}",
     )
+    import taxes
     cur = booking.get("currency") or "EUR"
-    total = float(booking.get("agreed_price") or 0)
+    price = float(booking.get("agreed_price") or 0)
+    # Taxes du pilote inscrit (taxes.py), en sus du prix : chaque ligne porte
+    # le numero sous lequel il les percoit.
+    tax_lines = taxes.loads(booking.get("taxes"))
+    total = round(price + sum(float(l["amount"]) for l in tax_lines), 2)
+    tax_name = {"GST": "TPS", "HST": "TVH", "QST": "TVQ"}
     ref = booking.get("id")
     date = (booking.get("created_at") or "")[:10]
 
@@ -156,6 +162,10 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
         pilot_block.append(Paragraph(_esc(contact), S["small"]))
     if booking.get("pilot_portfolio_url"):
         pilot_block.append(Paragraph(_esc(booking["pilot_portfolio_url"]), S["small"]))
+    numbers = " · ".join(f"{tax_name.get(l['code'], l['code'])} {l.get('number') or ''}"
+                         for l in tax_lines)
+    if numbers:
+        pilot_block.append(Paragraph(_esc(numbers), S["small"]))
 
     client_block = [Paragraph(_esc(booking.get("client_name") or "—"), S["body"])]
     client_loc = " · ".join(x for x in [booking.get("client_city"),
@@ -204,10 +214,16 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
 
     # --- Echeancier de paiement ---
     el.append(Paragraph("MONTANTS &amp; ÉCHÉANCIER", S["eyebrow"]))
-    rows = [
-        ["Désignation", "Montant"],
+    rows = [["Désignation", "Montant"]]
+    if tax_lines:
+        rows.append(["Prestation (prix avant taxes)", _money(price, cur)])
+        for l in tax_lines:
+            rate = f"{float(l['rate']):g}".replace(".", ",")
+            rows.append([f"{tax_name.get(l['code'], l['code'])} {rate} % · n° {l.get('number') or ''}",
+                         _money(float(l["amount"]), cur)])
+    rows += [
         ["Règlement à la réservation (100 % — conservé sous séquestre)", _money(total, cur)],
-        ["TOTAL À RÉGLER", _money(total, cur)],
+        ["TOTAL À RÉGLER" + (" (TAXES COMPRISES)" if tax_lines else ""), _money(total, cur)],
     ]
     t = Table(rows, colWidths=[110 * mm, 50 * mm])
     t.setStyle(TableStyle([

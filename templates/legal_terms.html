@@ -12,7 +12,7 @@
 <span class="eyebrow">Termes et conditions</span>
 <h1>Conditions générales d'utilisation de la plateforme AubePilot</h1>
 <p><strong>Exploitée par L'Aube Étoilée inc.</strong></p>
-<p class="muted small">Version 2.2 · Publiée le 12 octobre 2026 · Entrée en vigueur : 11 novembre 2026</p>
+<p class="muted small">Version 2.2 · Publiée le 12 octobre 2026, complétée le 16 octobre 2026 (taxes) · Entrée en vigueur : 11 novembre 2026</p>
 
 <section class="card small" style="margin: 18px 0;">
 <strong>Ce qui change dans la version 2.2</strong>
@@ -22,10 +22,12 @@
   <li>Droit de répondre avant une suspension et réexamen (art. 21) ; décision de litige écrite et motivée (art. 15).</li>
   <li>Droits d'auteur sur les livrables et accord préalable pour toute publicité (art. 9).</li>
   <li>Textes corrigés pour décrire ce que la Plateforme fait réellement (art. 2, 7, 12, 13, 15, 17, 24, 27, 28 et 30).</li>
+  <li>Taxes de vente (art. 11, 13 et 14) : les taxes d'un Pilote inscrit aux fichiers de la TPS/TVH ou de la TVQ s'ajoutent à ses Devis et lui sont reversées en entier ; la commission d'AubePilot est taxes comprises.</li>
 </ul>
 <p style="margin: 6px 0 0;">Depuis le 12 octobre 2026, AubePilot applique déjà les règles d'annulation et de
 non-contournement de la présente version, plus favorables aux Utilisateurs. Jusqu'au 11 novembre 2026,
-la <a href="{{ url_for('page_terms_v2_1') }}">version 2.1</a> s'applique pour le reste.</p>
+la <a href="{{ url_for('page_terms_v2_1') }}">version 2.1</a> s'applique pour le reste. Les règles de taxes
+s'appliquent depuis le 16 octobre 2026 : elles découlent de la loi, et la commission ne change pas.</p>
 </section>
 
 <p>
@@ -261,7 +263,12 @@ Missions <em>terminées</em> entre le même Client et le même Pilote :
 </ul>
 <p>
 Le taux appliqué est figé à l'acceptation du Devis et affiché sur la Réservation. Les frais de
-traitement des paiements sont compris dans la commission.
+traitement des paiements sont compris dans la commission. Les taxes de vente qui s'appliquent à la
+commission y sont aussi comprises : pour un Pilote établi au Canada, la TPS (ou la TVH de sa province)
+et, au Québec, la TVQ, que L'Aube Étoilée inc. (TPS {{ platform_tax_ids.gst }}, TVQ {{ platform_tax_ids.qst }})
+remet aux autorités fiscales ; pour un Pilote établi à l'étranger, la commission est détaxée. Leur
+montant figure sur la Réservation. La commission se calcule sur le prix du Devis avant les taxes du
+Pilote.
 </p>
 
 <h2 id="a12">12. Missions, devis et réservation</h2>
@@ -276,12 +283,12 @@ traitement des paiements sont compris dans la commission.
 
 <h2 id="a13">13. Paiement sous séquestre et versement</h2>
 <p>
-Le Client paie <strong>100 % du montant du Devis</strong> à la Réservation, par carte, au moyen du
+Le Client paie <strong>100 % du montant du Devis</strong>, taxes du Pilote comprises le cas échéant, à la Réservation, par carte, au moyen du
 prestataire de paiement de la Plateforme (Stripe). Les sommes sont conservées sous Séquestre sur le
 compte de paiement de la Plateforme. Aucun acompte n'est versé au Pilote avant la Mission.
 </p>
 <p>
-Le versement au Pilote (prix du Devis moins la commission) est déclenché :
+Le versement au Pilote (prix du Devis moins la commission, plus les taxes qu'il a fait payer au Client) est déclenché :
 </p>
 <ul>
   <li>lorsque le Client valide la livraison ; ou</li>
@@ -302,11 +309,16 @@ diffère de celle du compte de paiement d'AubePilot ou de celle du Pilote, les s
 converties au taux appliqué par le prestataire de paiement.
 </p>
 <p>
-AubePilot ne perçoit pas et ne remet pas, pour le compte des Pilotes, les taxes applicables à leurs
-prestations : chaque Pilote est responsable de les facturer et de les déclarer s'il y est tenu, et
-chaque Utilisateur de ses propres obligations fiscales. L'Aube Étoilée peut être tenue par la loi de
-communiquer aux autorités fiscales des renseignements sur les Pilotes et sur les sommes qui leur sont
-versées ; le Pilote fournit alors, sur demande, les renseignements exigés.
+Un Pilote inscrit aux fichiers de la TPS/TVH, et de la TVQ au Québec, indique ses numéros dans son
+profil. Ses taxes, calculées selon la province où la Mission a lieu, s'ajoutent alors au prix de ses
+Devis ; elles figurent sur le devis et sur la Réservation avec ses numéros, le Client les paie avec le
+prix, et elles sont versées en entier au Pilote avec son solde. Le Pilote reste le fournisseur de la
+prestation : il répond de l'exactitude de ses numéros, déclare et remet lui-même ces taxes, ainsi que
+toute autre taxe applicable à ses prestations (taxe de vente provinciale, taxe d'un autre pays). Un
+Pilote non inscrit n'ajoute aucune taxe. Chaque Utilisateur demeure responsable de ses propres
+obligations fiscales. L'Aube Étoilée peut être tenue par la loi de communiquer aux autorités fiscales
+des renseignements sur les Pilotes et sur les sommes qui leur sont versées ; le Pilote fournit alors,
+sur demande, les renseignements exigés.
 </p>
 
 <h2 id="a14">14. Annulation et remboursement</h2>
@@ -314,8 +326,8 @@ versées ; le Pilote fournit alors, sur demande, les renseignements exigés.
 <ul>
   <li><strong>Avant paiement</strong> : annulation libre et sans frais.</li>
   <li><strong>Fenêtre de grâce</strong> : jusqu'à {{ cancellation_grace_hours }} h après le paiement, remboursement intégral, quelle que soit la date de la Mission.</li>
-  <li><strong>Après la fenêtre de grâce</strong> : le Pilote, dont la disponibilité était réservée, reçoit un dédommagement de <strong>{{ cancellation_pilot_fee_pct }} % du Devis</strong>, plafonné à {{ cancellation_pilot_fee_cap }} unités de la devise de la Mission.</li>
-  <li><strong>À moins de {{ late_cancellation_hours }} h de la Mission</strong> (après la fenêtre de grâce) : le dédommagement du Pilote est de <strong>{{ late_cancellation_fee_pct }} % du Devis</strong>, au lieu du précédent ; les deux ne se cumulent pas.</li>
+  <li><strong>Après la fenêtre de grâce</strong> : le Pilote, dont la disponibilité était réservée, reçoit un dédommagement de <strong>{{ cancellation_pilot_fee_pct }} % du montant payé</strong> (Devis et, le cas échéant, taxes du Pilote), plafonné à {{ cancellation_pilot_fee_cap }} unités de la devise de la Mission.</li>
+  <li><strong>À moins de {{ late_cancellation_hours }} h de la Mission</strong> (après la fenêtre de grâce) : le dédommagement du Pilote est de <strong>{{ late_cancellation_fee_pct }} % du montant payé</strong>, au lieu du précédent ; les deux ne se cumulent pas.</li>
   <li>Le dédommagement est versé en entier au Pilote. <strong>AubePilot ne garde rien sur une annulation</strong>. Le solde est remboursé au Client.</li>
 </ul>
 <h3>14.2 Par le Pilote</h3>
@@ -392,7 +404,7 @@ Un Pilote dont le brevet est vérifié peut ouvrir une Collecte pour financer un
 </p>
 <ul>
   <li>Une contribution est un <strong>soutien volontaire</strong> à un Pilote indépendant : ce n'est ni un achat, ni un don ouvrant droit à un reçu fiscal, ni une prise de participation. Il n'y a pas de contrepartie garantie et <strong>pas de remboursement si l'objectif n'est pas atteint</strong>.</li>
-  <li>Chaque contribution (de {{ contribution_min }} à {{ contribution_max }} unités de la devise) est versée au Pilote dès son paiement, moins <strong>{{ campaign_fee_pct }} % tout compris</strong> pour AubePilot, frais de paiement inclus.</li>
+  <li>Chaque contribution (de {{ contribution_min }} à {{ contribution_max }} unités de la devise) est versée au Pilote dès son paiement, moins <strong>{{ campaign_fee_pct }} % tout compris</strong> pour AubePilot, frais de paiement et taxes sur cette part inclus.</li>
   <li>Le Pilote s'engage à utiliser les fonds pour ce qu'il décrit. AubePilot peut fermer une Collecte trompeuse et prendre à l'égard du Pilote les mesures de l'article 21. Les contributions étant versées au Pilote dès leur paiement, AubePilot ne peut pas les reprendre ; les Contributeurs conservent contre le Pilote les recours que la loi leur reconnaît.</li>
   <li>Le Pilote demeure seul responsable des obligations fiscales et déclaratives liées aux sommes reçues.</li>
 </ul>

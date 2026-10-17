@@ -69,6 +69,10 @@ CREATE TABLE IF NOT EXISTS pilot_profiles (
     stripe_account_id      TEXT,                  -- "acct_..." ou "acct_fake_..."
     stripe_charges_enabled INTEGER NOT NULL DEFAULT 0,
     stripe_payouts_enabled INTEGER NOT NULL DEFAULT 0,
+    -- Taxes de vente (taxes.py) : pilote inscrit aux fichiers. Vides = petit
+    -- fournisseur, aucune taxe ajoutee a ses devis.
+    gst_number        TEXT,                        -- TPS/TVH « 123456789 RT0001 »
+    qst_number        TEXT,                        -- TVQ « 1234567890 TQ0001 »
     pilot_no          INTEGER UNIQUE,              -- numero public du profil : 1, 2, 3... dans l'ordre de creation
     updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -187,6 +191,8 @@ CREATE TABLE IF NOT EXISTS bids (
     terms           TEXT,                          -- conditions / details techniques
     revision_no     INTEGER NOT NULL DEFAULT 1,    -- numero de revision
     client_response TEXT,                          -- raison de refus client
+    taxes           TEXT,                          -- taxes du pilote inscrit (JSON, taxes.py)
+    tax_amount      REAL NOT NULL DEFAULT 0,       -- leur total, en sus du prix
     status          TEXT NOT NULL DEFAULT 'pending',
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
@@ -225,6 +231,11 @@ CREATE TABLE IF NOT EXISTS bookings (
     currency        TEXT NOT NULL DEFAULT 'EUR',
     platform_fee    REAL NOT NULL DEFAULT 0,
     platform_fee_pct REAL,                       -- taux applique (commission degressive)
+    -- Taxes (taxes.py) : celles du pilote, payees par le client en sus du prix
+    -- et reversees au pilote ; celles comprises dans la commission.
+    taxes           TEXT,
+    tax_amount      REAL NOT NULL DEFAULT 0,
+    fee_taxes       TEXT,
     scheduled_at    TEXT,
     status          TEXT NOT NULL DEFAULT 'pending_payment',
     completed_at    TEXT,

@@ -8,9 +8,9 @@ Mission         : {{ mission.title }}
 Client          : {{ client.full_name }}
 Lieu            : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
 
-Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}
+Montant convenu : {{ booking.agreed_price|int }} {{ booking.currency }}{% if booking.tax_amount %} + vos taxes {{ '%.2f'|format(booking.tax_amount) }} (reversées en entier){% endif %}
 Commission {{ booking_fee_pct(booking)|int }}% : {{ booking.platform_fee }} {{ booking.currency }}
-Vous toucherez  : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
+Vous toucherez  : {{ (booking.agreed_price + (booking.tax_amount or 0) - booking.platform_fee)|int }} {{ booking.currency }}
 
 Réservation : {{ site_url }}/reservations/{{ booking.id }}
 
@@ -26,9 +26,9 @@ Mission       : {{ mission.title }}
 Client        : {{ client.full_name }}
 Location      : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
 
-Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}
+Agreed amount : {{ booking.agreed_price|int }} {{ booking.currency }}{% if booking.tax_amount %} + your sales tax {{ '%.2f'|format(booking.tax_amount) }} (paid to you in full){% endif %}
 Platform fee  : {{ booking.platform_fee }} {{ booking.currency }} ({{ booking_fee_pct(booking)|int }}%)
-You receive   : {{ (booking.agreed_price - booking.platform_fee)|int }} {{ booking.currency }}
+You receive   : {{ (booking.agreed_price + (booking.tax_amount or 0) - booking.platform_fee)|int }} {{ booking.currency }}
 
 Booking: {{ site_url }}/reservations/{{ booking.id }}
 

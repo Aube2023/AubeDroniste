@@ -188,6 +188,16 @@ _ADD_COLUMNS = [
     # Numero public du profil pilote (1, 2, 3... dans l'ordre de creation des
     # profils), a la place de l'id SQLite qui ne repart pas a 1 apres une purge.
     ("pilot_profiles", "pilot_no", "INTEGER"),
+    # Taxes de vente (cf. taxes.py, 2026-10-16) : numeros du pilote inscrit,
+    # taxes ajoutees au devis puis a la reservation (JSON + total), part de
+    # taxes comprise dans la commission.
+    ("pilot_profiles", "gst_number", "TEXT"),
+    ("pilot_profiles", "qst_number", "TEXT"),
+    ("bids", "taxes", "TEXT"),
+    ("bids", "tax_amount", "REAL NOT NULL DEFAULT 0"),
+    ("bookings", "taxes", "TEXT"),
+    ("bookings", "tax_amount", "REAL NOT NULL DEFAULT 0"),
+    ("bookings", "fee_taxes", "TEXT"),
     # Demande reservee a un pilote (bouton « Réserver » / « Contacter ») :
     # invisible de l'annuaire des missions, de la carte et des alertes.
     ("missions", "is_private", "INTEGER NOT NULL DEFAULT 0"),

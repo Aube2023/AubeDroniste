@@ -1,0 +1,8 @@
+{# Taxes du pilote inscrit, en sus du prix du devis (bids.taxes, cf. taxes.py).
+   Variable attendue : bid. #}
+{% if bid.tax_amount %}
+<div class="muted small mono" style="margin-top: 4px;">
+  + {% for l in tax_lines(bid.taxes) %}{{ tax_label(l.code) }} {{ '%.2f'|format(l.amount) }}{% if not loop.last %} + {% endif %}{% endfor %}
+  · {{ t('tax.total_incl') }} <strong>{{ '%.2f'|format(bid.price + bid.tax_amount) }} {{ bid.currency }}</strong>
+</div>
+{% endif %}

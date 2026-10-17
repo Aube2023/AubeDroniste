@@ -129,6 +129,34 @@
   {% endif %}
 </section>
 
+<section class="card" style="margin-top: 18px;">
+  <span class="eyebrow">Taxes à déclarer</span>
+  <p class="muted small" style="max-width: 76ch;">
+    {{ platform_tax_ids.name }} · TPS {{ platform_tax_ids.gst }} · TVQ {{ platform_tax_ids.qst }}.
+    La commission est <strong>taxes comprises</strong> : pour un pilote au Canada, elle contient la TPS (ou la TVH
+    de sa province) et, au Québec, la TVQ, à remettre ; pour un pilote à l'étranger, elle est détaxée. Mois du
+    versement au pilote pour les missions, du paiement pour les collectes. Les taxes des pilotes inscrits passent
+    par la plateforme mais leur sont reversées en entier : ce sont eux qui les remettent.
+  </p>
+  {% if tax_summary %}
+  <table class="table-simple" style="width: 100%;">
+    <thead><tr><th style="text-align:start;">Mois</th><th>Devise</th><th>Commissions</th><th>dont TPS</th><th>dont TVH</th><th>dont TVQ</th><th>Taxes des pilotes (reversées)</th></tr></thead>
+    {% for r in tax_summary %}
+    <tr>
+      <td class="mono">{{ r.month }}</td><td>{{ r.currency }}</td>
+      <td class="mono">{{ '%.2f'|format(r.commissions) }}</td>
+      <td class="mono">{{ '%.2f'|format(r.fee.get('GST', 0)) }}</td>
+      <td class="mono">{{ '%.2f'|format(r.fee.get('HST', 0)) }}</td>
+      <td class="mono">{{ '%.2f'|format(r.fee.get('QST', 0)) }}</td>
+      <td class="mono small">{% for code, amt in r.pilot.items() %}{{ tax_label(code) }} {{ '%.2f'|format(amt) }}{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">Aucune commission encaissée pour l'instant.</p>
+  {% endif %}
+</section>
+
 {% if d.connected %}
 <section class="card" style="margin-top: 18px;">
   <span class="eyebrow">Comptes pilotes connectés</span>

@@ -651,7 +651,8 @@ def get_pilot_profile(user_id: int) -> Optional[dict]:
         "p.insurance_reviewed_at, "
         "p.portfolio_url, p.accepts_urgent, p.updated_at AS pilot_updated_at, "
         "COALESCE(p.stripe_charges_enabled, 0) AS stripe_charges_enabled, "
-        "COALESCE(p.stripe_payouts_enabled, 0) AS stripe_payouts_enabled, p.stripe_account_id "
+        "COALESCE(p.stripe_payouts_enabled, 0) AS stripe_payouts_enabled, p.stripe_account_id, "
+        "p.gst_number, p.qst_number "
         "FROM users u LEFT JOIN pilot_profiles p ON p.user_id = u.id "
         "WHERE u.id=?",
         (user_id,),
@@ -2150,7 +2151,8 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
     """
     require_pilot_payment_ready(pilot_user_id, lang)
     mission = db.fetchone(
-        "SELECT client_user_id, status FROM missions WHERE id=?", (mission_id,)
+        "SELECT client_user_id, status, country, region, city, address, lat, lng "
+        "FROM missions WHERE id=?", (mission_id,)
     )
     if not mission:
         raise LookupError("mission introuvable")
@@ -2158,6 +2160,11 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
         raise ValueError("vous ne pouvez pas soumissionner sur votre propre mission")
     if mission["status"] != "open":
         raise ValueError("cette mission n'accepte plus de devis")
+    # Taxes du pilote inscrit, figees sur le devis : ce que le client voit est
+    # ce qu'il paiera (cf. taxes.py).
+    import taxes
+    tx = taxes.mission_taxes(price, pilot_tax_party(pilot_user_id), dict(mission))
+    tax_json, tax_amount = taxes.dumps(tx["lines"]), tx["total"]
     existing = db.fetchone(
         "SELECT id, revision_no, price, currency, eta_hours, message, "
         "       description, deliverables, terms, status, client_response "
@@ -2183,27 +2190,28 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
         new_rev = int(existing["revision_no"] or 1) + 1
         db.execute(
             "UPDATE bids SET price=?, currency=?, eta_hours=?, message=?, "
-            "  description=?, deliverables=?, terms=?, "
+            "  description=?, deliverables=?, terms=?, taxes=?, tax_amount=?, "
             "  status='pending', client_response=NULL, "
             "  revision_no=?, updated_at=datetime('now') "
             "WHERE id=?",
             (price, currency, eta_hours, message, description, deliverables,
-             terms, new_rev, existing["id"]),
+             terms, tax_json, tax_amount, new_rev, existing["id"]),
         )
         bid_id = existing["id"]
     else:
         cur = db.execute(
             "INSERT INTO bids (mission_id, pilot_user_id, price, currency, "
-            "  eta_hours, message, description, deliverables, terms) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "  eta_hours, message, description, deliverables, terms, taxes, tax_amount) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(mission_id, pilot_user_id) DO UPDATE SET "
             "  price=excluded.price, currency=excluded.currency, "
             "  eta_hours=excluded.eta_hours, message=excluded.message, "
             "  description=excluded.description, "
             "  deliverables=excluded.deliverables, terms=excluded.terms, "
+            "  taxes=excluded.taxes, tax_amount=excluded.tax_amount, "
             "  status='pending', updated_at=datetime('now')",
             (mission_id, pilot_user_id, price, currency, eta_hours, message,
-             description, deliverables, terms),
+             description, deliverables, terms, tax_json, tax_amount),
         )
         bid_id = cur.lastrowid or (existing["id"] if existing else 0)
 
@@ -2228,7 +2236,7 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
                 "price": price, "currency": currency,
                 "eta_hours": eta_hours, "message": message,
                 "description": description, "deliverables": deliverables,
-                "terms": terms,
+                "terms": terms, "taxes": tax_json, "tax_amount": tax_amount,
                 "revision_no": (int(existing["revision_no"] or 1) + 1) if is_revision else 1,
             }
             if client and mission and pilot:
@@ -2376,6 +2384,49 @@ def booking_fee_pct(booking: dict) -> float:
     return round(fee * 100.0 / price, 1) if price else PLATFORM_FEE_PCT
 
 
+def pilot_tax_party(pilot_user_id: int) -> dict:
+    """Ce qu'il faut a taxes.py pour un pilote : pays, ville, coordonnees,
+    numeros de TPS/TVH et de TVQ."""
+    row = db.fetchone(
+        "SELECT u.country, u.city, u.lat, u.lng, p.gst_number, p.qst_number "
+        "FROM users u LEFT JOIN pilot_profiles p ON p.user_id=u.id WHERE u.id=?",
+        (pilot_user_id,),
+    )
+    return dict(row) if row else {}
+
+
+def set_pilot_tax_numbers(user_id: int, gst_number: str, qst_number: str):
+    """Numeros deja normalises (taxes.normalize_gst / normalize_qst) ; vides
+    = non inscrit. Valent pour les devis deposes ensuite."""
+    db.execute("INSERT OR IGNORE INTO pilot_profiles (user_id) VALUES (?)", (user_id,))
+    db.execute(
+        "UPDATE pilot_profiles SET gst_number=?, qst_number=?, updated_at=datetime('now') "
+        "WHERE user_id=?",
+        (gst_number or None, qst_number or None, user_id),
+    )
+
+
+def booking_total(booking: dict) -> float:
+    """Ce que le client paie : prix convenu + taxes du pilote."""
+    return round(float(booking.get("agreed_price") or 0)
+                 + float(booking.get("tax_amount") or 0), 2)
+
+
+def booking_amount_cents(booking: dict) -> int:
+    """Montant de la session Checkout en cents : la ligne de la mission plus
+    une ligne par taxe, arrondies comme payments.create_checkout_session les
+    envoie. Le webhook compare le paiement recu a ce montant."""
+    import taxes
+    return int(round(float(booking.get("agreed_price") or 0) * 100)) + sum(
+        int(round(float(l["amount"]) * 100)) for l in taxes.loads(booking.get("taxes")))
+
+
+def pilot_net(booking: dict) -> float:
+    """Ce qui est vire au pilote : prix - commission (taxes comprises) + ses
+    taxes, qu'il remet lui-meme."""
+    return round(booking_total(booking) - float(booking.get("platform_fee") or 0), 2)
+
+
 def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
     """Accepte une enchere : cree booking, ferme les autres encheres,
     passe la mission en 'assigned'. Retourne booking_id.
@@ -2398,9 +2449,14 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
     if bid["pilot_user_id"] == client_user_id:
         raise ValueError("vous ne pouvez pas accepter votre propre devis")
     # Commission degressive : selon les missions deja terminees entre les deux.
+    # Calculee sur le prix AVANT les taxes du pilote, et taxes comprises
+    # (part declaree par la plateforme, cf. taxes.commission_taxes).
     prior = completed_missions_between(client_user_id, bid["pilot_user_id"])
     fee_pct = platform_fee_pct_for(prior)
     fee = round(bid["price"] * fee_pct / 100.0, 2)
+    import taxes
+    fee_tax_json = taxes.dumps(taxes.commission_taxes(
+        fee, pilot_tax_party(bid["pilot_user_id"]), dict(mission))["lines"])
     # Tout-ou-rien : verrou conditionnel + creation booking + cloture des
     # autres devis dans UNE transaction. Si le verrou echoue (rowcount=0),
     # une autre acceptation a deja eu lieu -> rollback complet + ValueError.
@@ -2415,11 +2471,13 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
         cur = db.execute(
             "INSERT INTO bookings "
             "(mission_id, bid_id, client_user_id, pilot_user_id, agreed_price, currency, "
-            " platform_fee, platform_fee_pct, scheduled_at, status) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')",
+            " platform_fee, platform_fee_pct, taxes, tax_amount, fee_taxes, scheduled_at, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')",
             (
                 mission_id, bid_id, client_user_id, bid["pilot_user_id"],
-                bid["price"], bid["currency"], fee, fee_pct, mission["start_date"],
+                bid["price"], bid["currency"], fee, fee_pct,
+                bid["taxes"], float(bid["tax_amount"] or 0), fee_tax_json,
+                mission["start_date"],
             ), commit=False,
         )
         booking_id = cur.lastrowid
@@ -2453,7 +2511,8 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
                          "country": mission["country"], "city": mission["city"]},
                 booking={"id": booking_id, "agreed_price": bid["price"],
                          "currency": bid["currency"], "platform_fee": fee,
-                         "platform_fee_pct": fee_pct},
+                         "platform_fee_pct": fee_pct, "taxes": bid["taxes"],
+                         "tax_amount": float(bid["tax_amount"] or 0)},
                 client=dict(client),
             )
     except Exception as exc:
@@ -2550,7 +2609,10 @@ def compute_cancellation_fee(booking: dict) -> dict:
     from config import LATE_CANCELLATION_HOURS, LATE_CANCELLATION_FEE_PCT
 
     now = datetime.now(timezone.utc)
-    price = float(booking.get("agreed_price") or 0)
+    # Sur ce que le client a paye, taxes du pilote comprises : un
+    # dedommagement retenu est repute taxes incluses (LTA art. 182), le
+    # pilote inscrit en remet la part.
+    price = booking_total(booking)
     start_dt = _parse_db_datetime(
         (booking.get("scheduled_at") or booking.get("mission_start_date") or "")
     )
@@ -2783,7 +2845,7 @@ def cancel_booking_by_pilot(booking_id: int, by_user: int,
             _clear_payment_action(booking_id, action)
             return {"ok": False, "reason": "paiement en cours de vérification; désistement non effectué"}
 
-    price = float(booking.get("agreed_price") or 0)
+    price = booking_total(booking)   # remboursement integral, taxes comprises
     paid = bool(booking.get("stripe_payment_intent_id")) and \
         booking["status"] in ("funded", "in_progress")
     refund_done = True
@@ -4476,7 +4538,7 @@ def mark_booking_settled_offline(booking_id: int, by_user: int) -> bool:
     cur = db.execute(
         "UPDATE bookings SET status='funded', settled_offline=1, "
         "settled_offline_at=datetime('now'), paid_at=datetime('now'), "
-        "platform_fee=0, platform_fee_pct=0 "
+        "platform_fee=0, platform_fee_pct=0, fee_taxes=NULL "
         "WHERE id=? AND status='pending_payment' AND payment_action IS NULL",
         (booking_id,),
     )
@@ -4535,7 +4597,7 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
         _clear_payment_action(booking_id, action)
         return False
 
-    pilot_amount = booking["agreed_price"] - booking["platform_fee"]
+    pilot_amount = pilot_net(booking)
     import payments
     transfer_id = payments.release_to_pilot(
         booking_id=booking["id"],
@@ -4584,7 +4646,7 @@ def confirm_completion(booking_id: int, by_user: int) -> bool:
                 context={"pilot": dict(pilot), "client": dict(client),
                          "booking": booking,
                          "amount_pilot": pilot_amount,
-                         "amount_total": booking["agreed_price"],
+                         "amount_total": booking_total(booking),
                          "fee": booking["platform_fee"]},
             )
     except Exception as exc:
@@ -4713,7 +4775,8 @@ def escrow_reserve() -> dict:
     de la plateforme vers sa banque."""
     out: dict = {}
     for r in db.fetchall(
-        "SELECT UPPER(currency) AS cur, COALESCE(SUM(agreed_price), 0) AS total "
+        "SELECT UPPER(currency) AS cur, "
+        "       COALESCE(SUM(agreed_price + COALESCE(tax_amount, 0)), 0) AS total "
         "FROM bookings WHERE status IN ('funded','in_progress','disputed') "
         "AND COALESCE(settled_offline, 0) = 0 GROUP BY UPPER(currency)"
     ):
@@ -4724,6 +4787,51 @@ def escrow_reserve() -> dict:
     ):
         out[r["cur"]] = out.get(r["cur"], 0.0) + float(r["total"] or 0)
     return {k: round(v, 2) for k, v in out.items() if v}
+
+
+def tax_summary(months: int = 12) -> list:
+    """Releve des taxes pour la declaration de L'Aube Etoilee (admin), par mois
+    et par devise, du plus recent au plus ancien :
+    - "fee" : part de taxes comprise dans les commissions gardees, c'est-a-
+      dire des reservations soldees (mois du versement au pilote) et des
+      soutiens de collecte (mois du paiement ; part calculee d'apres le lieu
+      actuel du pilote) ;
+    - "pilot" : taxes des pilotes inscrits, encaissees puis reversees en
+      entier, pour memoire (ce sont eux qui les remettent).
+    [{month, currency, commissions, fee: {code: montant}, pilot: {code: montant}}]"""
+    import taxes
+    out: dict = {}
+
+    def slot(month, cur):
+        return out.setdefault((month or "", cur or ""), {
+            "month": month or "", "currency": cur or "", "commissions": 0.0, "fee": {}, "pilot": {}})
+
+    def add(bucket, lines):
+        for l in lines:
+            bucket[l["code"]] = round(bucket.get(l["code"], 0.0) + float(l["amount"]), 2)
+
+    for r in db.fetchall(
+        "SELECT substr(released_at, 1, 7) AS month, UPPER(currency) AS cur, platform_fee, "
+        "       taxes, fee_taxes FROM bookings "
+        "WHERE status='completed' AND released_at IS NOT NULL AND COALESCE(settled_offline, 0)=0"
+    ):
+        s = slot(r["month"], r["cur"])
+        s["commissions"] = round(s["commissions"] + float(r["platform_fee"] or 0), 2)
+        add(s["fee"], taxes.loads(r["fee_taxes"]))
+        add(s["pilot"], taxes.loads(r["taxes"]))
+    for r in db.fetchall(
+        "SELECT substr(c.paid_at, 1, 7) AS month, UPPER(c.currency) AS cur, c.platform_fee, "
+        "       u.country, u.city, u.lat, u.lng "
+        "FROM campaign_contributions c JOIN pilot_campaigns pc ON pc.id=c.campaign_id "
+        "JOIN users u ON u.id=pc.pilot_user_id "
+        "WHERE c.status IN ('paid', 'transferred') AND c.paid_at IS NOT NULL"
+    ):
+        s = slot(r["month"], r["cur"])
+        s["commissions"] = round(s["commissions"] + float(r["platform_fee"] or 0), 2)
+        add(s["fee"], taxes.commission_taxes(r["platform_fee"], dict(r))["lines"])
+    rows = sorted(out.values(), key=lambda x: (x["month"], x["currency"]), reverse=True)
+    keep = sorted({r["month"] for r in rows}, reverse=True)[:months]
+    return [r for r in rows if r["month"] in keep]
 
 
 # Taux prudents pour convertir un sequestre d'une autre devise dans la devise

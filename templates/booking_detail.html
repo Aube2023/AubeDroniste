@@ -6,8 +6,13 @@
 {% set is_pilot  = current_user.id == booking.pilot_user_id %}
 {% set funded    = booking.status in ('funded','in_progress','completed','disputed') %}
 {% set platform_fee = booking.platform_fee or 0 %}
-{% set pilot_amount = booking.agreed_price - platform_fee %}
+{% set pilot_amount = pilot_net(booking) %}
 {% set fee_pct = booking_fee_pct(booking)|round|int %}
+{# Taxes (taxes.py) : celles du pilote inscrit, payees par le client en sus du
+   prix et reversees au pilote ; celles comprises dans la commission. #}
+{% set total = booking_total(booking) %}
+{% set btax = tax_lines(booking.taxes) %}
+{% set ftax = tax_lines(booking.fee_taxes) %}
 
 <div class="card">
   <div class="row-between" style="align-items: start;">
@@ -21,6 +26,7 @@
     </div>
     <div style="text-align: right;">
       <div class="price big">{{ booking.agreed_price|int }} {{ booking.currency }}</div>
+      {% if btax %}<div class="muted small mono">{{ t('tax.total_incl') }} {{ '%.2f'|format(total) }} {{ booking.currency }}</div>{% endif %}
       <span class="tag tag-{{ booking.status }}" style="margin-top: 6px;">{{ status_label(booking.status) }}</span>
     </div>
   </div>
@@ -28,11 +34,11 @@
   <div class="stat-rail" style="margin-top: 22px;">
     <div>
       <span class="v">{{ pilot_amount|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Net pilote ({{ 100 - fee_pct }}%)</span>
+      <span class="k">Net pilote ({{ 100 - fee_pct }}%{% if btax %} + {{ t('tax.pilot_taxes_short') }}{% endif %})</span>
     </div>
     <div>
       <span class="v">{{ platform_fee|int }}<span style="font-size: 1rem; color: var(--ink-dim);"> {{ booking.currency }}</span></span>
-      <span class="k">Commission Aube ({{ fee_pct }}%)</span>
+      <span class="k">Commission Aube ({{ fee_pct }}%{% if ftax %}, {{ t('tax.fee_included') }}{% endif %})</span>
     </div>
     <div>
       <span class="v" style="font-size: 1.1rem;">
@@ -60,7 +66,11 @@
   <h2 style="font-size: 1.3rem; margin: 4px 0 14px;">Ce qui a été convenu avec {% if is_client %}{{ booking.pilot_name }}{% else %}le client{% endif %}</h2>
 
   <div class="pay-recap" style="margin-bottom: 16px;">
-    <div class="row-between"><span class="muted">Prix convenu</span><strong>{{ booking.agreed_price|int }} {{ booking.currency }}</strong></div>
+    <div class="row-between"><span class="muted">{% if btax %}{{ t('tax.before_tax') }}{% else %}Prix convenu{% endif %}</span><strong>{{ booking.agreed_price|int }} {{ booking.currency }}</strong></div>
+    {% for l in btax %}
+    <div class="row-between"><span class="muted">{{ tax_rates([l]) }} · n° {{ l.number }}</span><span>{{ '%.2f'|format(l.amount) }} {{ booking.currency }}</span></div>
+    {% endfor %}
+    {% if btax %}<div class="row-between"><span class="muted">{{ t('tax.total_incl') }}</span><strong>{{ '%.2f'|format(total) }} {{ booking.currency }}</strong></div>{% endif %}
     {% if booking.bid_eta_hours %}<div class="row-between"><span class="muted">Délai estimé</span><span>{{ booking.bid_eta_hours }} h</span></div>{% endif %}
   </div>
 
@@ -117,7 +127,7 @@
   </div>
   <form method="post" action="{{ url_for('booking_settle_offline', booking_id=booking.id) }}"
         style="margin-top: 16px;"
-        data-confirm="Confirmer que vous avez réglé {{ booking.agreed_price|int }} {{ booking.currency }} au pilote en direct ? La mission pourra alors avancer.">
+        data-confirm="Confirmer que vous avez réglé {{ '%.2f'|format(total) if btax else booking.agreed_price|int }} {{ booking.currency }} au pilote en direct ? La mission pourra alors avancer.">
     {{ csrf_input() }}
     <button type="submit" class="cta">J'ai réglé le pilote en direct →</button>
   </form>
@@ -145,12 +155,15 @@
 
   <div class="pay-recap">
     <div class="row-between"><span class="muted">Montant de la mission</span><strong>{{ booking.agreed_price|int }} {{ booking.currency }}</strong></div>
-    <div class="row-between"><span class="muted">Conservé en séquestre</span><span>{{ booking.agreed_price|int }} {{ booking.currency }}</span></div>
+    {% for l in btax %}
+    <div class="row-between"><span class="muted">{{ tax_rates([l]) }}</span><span>{{ '%.2f'|format(l.amount) }} {{ booking.currency }}</span></div>
+    {% endfor %}
+    <div class="row-between"><span class="muted">Conservé en séquestre</span><span>{{ '%.2f'|format(total) if btax else booking.agreed_price|int }} {{ booking.currency }}</span></div>
   </div>
 
   <div class="cta-row" style="margin-top: 18px;">
     <a href="{{ url_for('booking_pay', booking_id=booking.id) }}" class="cta cta-big">
-      Payer {{ booking.agreed_price|int }} {{ booking.currency }}
+      Payer {{ '%.2f'|format(total) if btax else booking.agreed_price|int }} {{ booking.currency }}
     </a>
     <span class="muted small" style="align-self: center;">
       🔒 Paiement sécurisé via Stripe
@@ -229,6 +242,14 @@
     Net pilote : <strong>{{ pilot_amount|int }} {{ booking.currency }}</strong>
     · Commission Aube : {{ platform_fee|int }} {{ booking.currency }}
   </p>
+  {% if is_pilot and ftax %}
+  {# Mentions pour le pilote inscrit qui reclame ses credits de taxe (CTI/RTI). #}
+  <p class="muted small mono" style="margin-top: 6px;">
+    {{ t('tax.fee_included') }} :
+    {% for l in ftax %}{{ tax_label(l.code) }} {{ '%.2f'|format(l.amount) }}{% if not loop.last %} · {% endif %}{% endfor %}
+    — {{ t('tax.billed_by', name=platform_tax_ids.name) }} · {{ tax_label('GST') }} {{ platform_tax_ids.gst }} · {{ tax_label('QST') }} {{ platform_tax_ids.qst }}
+  </p>
+  {% endif %}
 </div>
 {% endif %}
 

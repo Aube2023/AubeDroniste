@@ -6,7 +6,7 @@ AUBEDRONISTE, NOUVELLE OFFRE / NEW BID
 
 Mission : {{ mission.title }}
 Lieu    : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
-Tarif   : {{ bid.price|int }} {{ bid.currency }}
+Tarif   : {{ bid.price|int }} {{ bid.currency }}{% if bid.tax_amount %} + taxes {{ '%.2f'|format(bid.tax_amount) }} = {{ '%.2f'|format(bid.price + bid.tax_amount) }} {{ bid.currency }}{% endif %}
 {% if bid.eta_hours %}Délai   : {{ bid.eta_hours }} h
 {% endif %}{% if bid.message %}Message : « {{ bid.message }} »
 {% endif %}
@@ -19,7 +19,7 @@ Voir l'offre : {{ site_url }}/missions/{{ mission.id }}
 
 Mission   : {{ mission.title }}
 Location  : {{ mission.country }}{% if mission.city %} · {{ mission.city }}{% endif %}
-Quoted    : {{ bid.price|int }} {{ bid.currency }}
+Quoted    : {{ bid.price|int }} {{ bid.currency }}{% if bid.tax_amount %} + tax {{ '%.2f'|format(bid.tax_amount) }} = {{ '%.2f'|format(bid.price + bid.tax_amount) }} {{ bid.currency }}{% endif %}
 {% if bid.eta_hours %}Lead time : {{ bid.eta_hours }} h
 {% endif %}{% if bid.message %}Message   : "{{ bid.message }}"
 {% endif %}

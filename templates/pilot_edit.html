@@ -163,6 +163,27 @@
 </section>
 {% endif %}
 
+{# ===== Taxes de vente (pilote etabli au Canada, cf. taxes.py) ===== #}
+{% if is_canada(profile.country) %}
+<section class="card" id="taxes">
+  <span class="eyebrow">{{ t('tpl.encaissement') }}</span>
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">{{ t('tax.section_title') }}</h2>
+  <p class="muted">{{ t('tax.section_p') }}</p>
+  <form method="post" action="{{ url_for('pilot_taxes') }}">
+    {{ csrf_input() }}
+    <div class="grid-2">
+      <label>{{ t('tax.gst_label') }}
+        <input name="gst_number" maxlength="24" autocomplete="off" placeholder="123456789 RT0001" value="{{ profile.gst_number or '' }}">
+      </label>
+      <label>{{ t('tax.qst_label') }}
+        <input name="qst_number" maxlength="24" autocomplete="off" placeholder="1234567890 TQ0001" value="{{ profile.qst_number or '' }}">
+      </label>
+    </div>
+    <button class="cta" type="submit">{{ t('tax.save') }}</button>
+  </form>
+</section>
+{% endif %}
+
 <form method="post" class="card">
         {{ csrf_input() }}
   <input type="hidden" name="profile_form" value="1">

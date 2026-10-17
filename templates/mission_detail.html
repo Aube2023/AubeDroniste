@@ -84,6 +84,7 @@
       </label>
       <label>Délai estimé (h)<input name="eta_hours" type="number" step="0.5" value="{{ my_bid.eta_hours if my_bid and my_bid.eta_hours else '' }}"></label>
     </div>
+    {% if bid_tax_note %}<p class="muted small" style="margin: -4px 0 12px;">{{ bid_tax_note }} <a href="{{ url_for('pilot_edit') }}#taxes">{{ t('tax.section_title') }} →</a></p>{% endif %}
 
     <label>Description du devis <span class="muted small">(obligatoire, ≥ 30 caractères)</span>
       <textarea name="description" rows="4" required minlength="30" placeholder="Approche, matériel, déroulé de la mission, hypothèses, exclusions…">{{ my_bid.description if my_bid else '' }}</textarea>
@@ -152,6 +153,7 @@
         </div>
         <div class="bid-price">
           <div class="price big">{{ b.price|int }} <span class="cur">{{ b.currency }}</span></div>
+          {% with bid=b %}{% include "_bid_taxes.html" %}{% endwith %}
           <span class="tag tag-{{ b.status }}">{{ status_label(b.status) }}</span>
         </div>
       </div>
@@ -271,6 +273,7 @@
         </div>
         <div class="bid-price">
           <div class="price big">{{ my_bid.price|int }} <span class="cur">{{ my_bid.currency }}</span></div>
+          {% with bid=my_bid %}{% include "_bid_taxes.html" %}{% endwith %}
           <span class="tag tag-{{ my_bid.status }}">{{ status_label(my_bid.status) }}</span>
         </div>
       </div>
