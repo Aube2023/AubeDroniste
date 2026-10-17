@@ -1,0 +1,9 @@
+{# Remplace un formulaire de devis tant que Stripe ne peut pas verser l'argent
+   du pilote a sa banque (services.pilot_payment_state : "none" ou "pending").
+   Le serveur refuse de toute facon le devis (services.require_pilot_payment_ready). #}
+<section class="card" style="border-left: 3px solid var(--amber);">
+  <span class="eyebrow">{{ t('tpl.encaissement') }}</span>
+  <h2 style="font-size: 1.3rem; margin: 0 0 6px;">{{ t('pay.lock_title') }}</h2>
+  <p class="muted">{{ t('pay.lock_p_' ~ pilot_pay_state) }}</p>
+  <a href="{{ url_for('stripe_onboard') }}" class="cta">{% if pilot_pay_state == 'pending' %}{{ t('pay.verify_cta') }}{% else %}{{ t('tpl.activer_mon_compte_stripe') }}{% endif %}</a>
+</section>

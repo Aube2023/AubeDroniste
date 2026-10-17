@@ -728,10 +728,12 @@ def pilot_visibility(user_id: int) -> dict:
         # Preuves hors plateforme : decisives tant que le reseau est jeune.
         ("links", bool(p.get("links")), 1, False),
     ]
-    # Ne reclamer Stripe que si Connect est reellement ouvert cote plateforme :
-    # sinon on demanderait au pilote une demarche qui n'aboutit pas.
-    if STRIPE_CONNECT_ENABLED:
-        items.append(("payouts", bool(p.get("stripe_charges_enabled")), 2, True))
+    # Ne reclamer Stripe que si Connect est reellement ouvert cote plateforme
+    # et dessert le pays du pilote : sinon on demanderait une demarche qui
+    # n'aboutit pas.
+    pay_state = pilot_payment_state(p)
+    if pay_state != "na":
+        items.append(("payouts", pay_state == "ok", 2, True))
     total = sum(w for _k, _ok, w, _b in items)
     done = sum(w for _k, ok, w, _b in items if ok)
     return {
@@ -2136,7 +2138,7 @@ def list_missions_by_pilot(pilot_user_id: int) -> list:
 def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
               currency: str = DEFAULT_CURRENCY, eta_hours: Optional[float] = None,
               message: str = "", description: str = "",
-              deliverables: str = "", terms: str = "") -> int:
+              deliverables: str = "", terms: str = "", lang: str = "fr") -> int:
     """Cree ou revise un devis pour une mission.
 
     - Premier devis : INSERT avec revision_no=1, statut 'pending'.
@@ -2144,7 +2146,9 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
       bid_revisions, incremente revision_no et repasse en 'pending'.
     - Mise a jour simple d'un devis 'pending' : on ecrase sans creer
       d'entree d'historique (le pilote retouche son brouillon).
+    - Refuse (ValueError) tant que Stripe ne peut pas payer le pilote.
     """
+    require_pilot_payment_ready(pilot_user_id, lang)
     mission = db.fetchone(
         "SELECT client_user_id, status FROM missions WHERE id=?", (mission_id,)
     )
@@ -3419,6 +3423,9 @@ def propose_quote_from_contact(client_id: int, pilot_id: int, *, mission: dict,
         raise ValueError("tarif invalide")
     if len((bid.get("description") or "").strip()) < 30:
         raise ValueError("décrivez votre devis en au moins 30 caractères")
+    # Avant de creer la demande au nom du client : sinon elle resterait
+    # orpheline, sans devis.
+    require_pilot_payment_ready(pilot_id, lang)
     mission_id = create_mission(client_id, **mission)
     db.execute(
         "UPDATE missions SET targeted_pilot_id=?, is_private=1, from_contact=1, from_package_id=? WHERE id=?",
@@ -3430,7 +3437,7 @@ def propose_quote_from_contact(client_id: int, pilot_id: int, *, mission: dict,
         eta_hours=bid.get("eta_hours"), message=(bid.get("message") or "").strip(),
         description=(bid.get("description") or "").strip(),
         deliverables=(bid.get("deliverables") or "").strip(),
-        terms=(bid.get("terms") or "").strip(),
+        terms=(bid.get("terms") or "").strip(), lang=lang,
     )
     import i18n
     note = i18n.t("contact.quote_posted", lang, title=mission.get("title") or "",
@@ -4371,6 +4378,39 @@ def get_pilot_stripe_account(user_id: int) -> Optional[str]:
         (user_id,),
     )
     return row["stripe_account_id"] if row else None
+
+
+def pilot_payment_state(profile: Optional[dict]) -> str:
+    """Ou en est un pilote avec son compte de paiement Stripe (profil de
+    get_pilot_profile) :
+    - "na"      rien a verifier : Connect ferme, ou pays que Stripe ne
+                dessert pas (le pilote propose des devis, le client ne peut
+                pas encore le payer en ligne, cf. CGU) ;
+    - "none"    pas encore de compte ;
+    - "pending" compte cree, mais Stripe attend encore des informations
+                (piece d'identite, selfie, adresse...) et n'envoie rien vers
+                sa banque : cas du 2026-10-16, transfert recu mais bloque ;
+    - "ok"      versements actifs.
+    Seuls les versements comptent : un compte « recipient » (pilote hors du
+    pays de la plateforme) n'encaisse jamais lui-meme."""
+    import config
+    if not config.STRIPE_CONNECT_ENABLED or not profile:
+        return "na"
+    import payments
+    if not payments.country_is_payable(profile.get("country") or ""):
+        return "na"
+    if not profile.get("stripe_account_id"):
+        return "none"
+    return "ok" if profile.get("stripe_payouts_enabled") else "pending"
+
+
+def require_pilot_payment_ready(pilot_user_id: int, lang: str = "fr"):
+    """Verrou avant tout devis : un pilote dont Stripe ne peut pas encore
+    verser l'argent a sa banque ne s'engage sur aucune mission. ValueError
+    (message pret a afficher) sinon."""
+    state = pilot_payment_state(get_pilot_profile(pilot_user_id))
+    if state in ("none", "pending"):
+        raise ValueError(i18n.t(f"pay.bid_locked_{state}", lang))
 
 
 def attach_payment_session(booking_id: int, session_id: str):

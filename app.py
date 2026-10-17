@@ -600,14 +600,19 @@ def _mission_group_label(name: str) -> str:
 
 def _pilot_payout_context() -> dict:
     """Contexte du bandeau « Activez vos paiements » pour le pilote connecte.
-    Non-pilote / anonyme -> pas de bandeau (valeurs True)."""
+    Non-pilote / anonyme -> pas de bandeau (valeurs True). `pilot_pay_state`
+    : voir services.pilot_payment_state ; tant qu'il vaut "none" ou
+    "pending", le pilote ne peut pas envoyer de devis."""
     u = getattr(g, "user", None)
     if not u or u.get("role") not in ("pilot", "both"):
-        return {"pilot_payouts_ok": True, "pilot_country_payable": True}
-    prof = services.get_pilot_profile(u["id"])
+        return {"pilot_payouts_ok": True, "pilot_country_payable": True, "pilot_pay_state": "na"}
+    state = services.pilot_payment_state(services.get_pilot_profile(u["id"]))
+    payable = payments.country_is_payable(u.get("country") or "")
     return {
-        "pilot_payouts_ok": bool(prof and prof.get("stripe_charges_enabled")),
-        "pilot_country_payable": payments.country_is_payable(u.get("country") or ""),
+        # Pays non desservi : bandeau d'explication (base.html) quand Connect est ouvert
+        "pilot_payouts_ok": state == "ok" or (state == "na" and payable),
+        "pilot_country_payable": payable,
+        "pilot_pay_state": state,
     }
 
 
@@ -3678,6 +3683,7 @@ def bid_place(mission_id):
             description=description,
             deliverables=(request.form.get("deliverables") or "").strip()[:2000],
             terms=(request.form.get("terms") or "").strip()[:2000],
+            lang=getattr(g, "lang", i18n.DEFAULT),
         )
     except (LookupError, ValueError) as exc:
         flash(str(exc), "error")
@@ -4503,7 +4509,10 @@ def booking_pay(booking_id):
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
     pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])
-    if not pilot_acc:
+    # Compte cree mais versements bloques par Stripe (verification en
+    # attente) : on n'encaisse pas un argent qu'on ne pourrait pas verser.
+    if not pilot_acc or services.pilot_payment_state(
+            services.get_pilot_profile(booking["pilot_user_id"])) == "pending":
         flash("Le pilote n'a pas finalisé son inscription Stripe, il a été notifié.", "error")
         try:
             import mailer

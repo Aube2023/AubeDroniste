@@ -21,6 +21,9 @@
   </details>
   {% endif %}
 
+  {% if pilot_pay_state in ('none', 'pending') %}
+  {% include "_pay_lock.html" %}
+  {% else %}
   <form method="post" class="auth-form auth-steps" id="quote-form">
     {{ csrf_input() }}
     {% if packages %}
@@ -89,6 +92,7 @@
 
     <button class="cta" type="submit">{{ t('contact.quote_submit') }}</button>
   </form>
+  {% endif %}
 </section>
 
 <script nonce="{{ csp_nonce }}">
