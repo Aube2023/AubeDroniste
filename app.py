@@ -651,7 +651,8 @@ def _inject_helpers():
         "pilot_net": services.pilot_net,
         "platform_tax_ids": {"name": config.PLATFORM_LEGAL_NAME,
                              "gst": config.PLATFORM_GST_NUMBER,
-                             "qst": config.PLATFORM_QST_NUMBER},
+                             "qst": config.PLATFORM_QST_NUMBER,
+                             "pst": {k: v for k, v in config.PLATFORM_PST_NUMBERS.items() if v}},
         **_pilot_payout_context(),
     }
 
@@ -1971,21 +1972,28 @@ def mission_detail(mission_id):
 
 
 def _bid_tax_note(user, mission: dict) -> str:
-    """Phrase sous le prix du formulaire de devis, pour un pilote etabli au
-    Canada : les taxes qui s'ajouteront pour le client (taxes.mission_taxes),
-    ou le rappel qu'il n'a declare aucun numero. Vide ailleurs."""
-    if not user or user.get("role") not in ("pilot", "both") \
-            or not taxes.is_canada(user.get("country")):
+    """Phrase sous le prix du formulaire de devis : pour un pilote etabli au
+    Canada, les taxes qui s'ajouteront pour le client (taxes.mission_taxes)
+    ou le rappel qu'il n'a declare aucun numero ; pour tout pilote, la TVP
+    que la plateforme percevra. Vide ailleurs."""
+    if not user or user.get("role") not in ("pilot", "both"):
         return ""
     lang = getattr(g, "lang", i18n.DEFAULT)
     party = services.pilot_tax_party(user["id"])
-    if not (party.get("gst_number") or party.get("qst_number")):
-        return i18n.t("tax.bid_none", lang)
     preview = taxes.mission_taxes(100, party, mission)
-    if not preview["lines"]:
-        return ""
-    return i18n.t("tax.bid_added", lang, taxes=taxes.rates_label(
-        preview["lines"], _tax_label, comma=lang == "fr"))
+    own = [l for l in preview["lines"] if l.get("by") != "platform"]
+    collected = [l for l in preview["lines"] if l.get("by") == "platform"]
+    notes = []
+    if taxes.is_canada(user.get("country")):
+        if not (party.get("gst_number") or party.get("qst_number")):
+            notes.append(i18n.t("tax.bid_none", lang))
+        elif own:
+            notes.append(i18n.t("tax.bid_added", lang, taxes=taxes.rates_label(
+                own, _tax_label, comma=lang == "fr")))
+    if collected:
+        notes.append(i18n.t("tax.bid_pst", lang, taxes=taxes.rates_label(
+            collected, _tax_label, comma=lang == "fr")))
+    return " ".join(notes)
 
 
 # ---------------------------------------------------------------------------
@@ -2968,7 +2976,8 @@ def admin_stripe():
                            auto_payout={"enabled": config.AUTO_PAYOUT_ENABLED, "min": config.AUTO_PAYOUT_MIN,
                                         "buffer": config.AUTO_PAYOUT_BUFFER},
                            platform_country=config.STRIPE_PLATFORM_COUNTRY,
-                           tax_summary=services.tax_summary(), seo=_NOINDEX)
+                           tax_summary=services.tax_summary(),
+                           pst_exposure=services.pst_exposure(), seo=_NOINDEX)
 
 
 @app.route("/admin/stripe/retirer", methods=["POST"])
@@ -4608,10 +4617,14 @@ def booking_pay(booking_id):
                         booking_id, exc)
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
-    # Taxes du pilote inscrit : une ligne chacune sur le recu, avec son numero.
+    # Taxes du pilote inscrit et TVP percue par la plateforme : une ligne
+    # chacune sur le recu, avec le nom et le numero de qui la percoit.
+    def _collector(l):
+        if l.get("by") == "platform":
+            return config.PLATFORM_LEGAL_NAME
+        return booking.get("pilot_business_name") or booking.get("pilot_name") or ""
     tax_lines = [{"name": f"{i18n.t('tax.' + l['code'], 'fr')} ({_pct(l['rate'])} %) · "
-                          f"{booking.get('pilot_business_name') or booking.get('pilot_name') or ''} "
-                          f"n° {l.get('number') or ''}".replace("  ", " "),
+                          f"{_collector(l)} n° {l.get('number') or ''}".replace("  ", " "),
                   "amount": l["amount"]}
                  for l in taxes.loads(booking.get("taxes"))]
     try:

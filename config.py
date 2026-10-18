@@ -199,6 +199,15 @@ PILOT_SHARE_PCT = 100.0 - PLATFORM_FEE_PCT
 PLATFORM_LEGAL_NAME = "L'Aube Étoilée inc."
 PLATFORM_GST_NUMBER = os.environ.get("AUBEPILOT_GST_NUMBER", "713093946 RT0001")
 PLATFORM_QST_NUMBER = os.environ.get("AUBEPILOT_QST_NUMBER", "1230658818 TQ0001")
+# TVP / TVD percue par AubePilot comme plateforme (taxes.py, point 3) : vide
+# tant que L'Aube Etoilee n'est pas inscrite dans la province, et rien n'y
+# est alors percu. Formats : C.-B. « PST-1234-5678 », Sask. numero de
+# permis de vendeur, Manitoba numero de TVD a 7 chiffres.
+PLATFORM_PST_NUMBERS = {
+    "BC": os.environ.get("AUBEPILOT_PST_BC", "").strip(),
+    "SK": os.environ.get("AUBEPILOT_PST_SK", "").strip(),
+    "MB": os.environ.get("AUBEPILOT_RST_MB", "").strip(),
+}
 
 # Annulation par le CLIENT apres paiement (CGU v2.2 art. 14.1) : tout ce
 # qui est retenu va au PILOTE, AubePilot ne garde rien. Fenetre de grace de

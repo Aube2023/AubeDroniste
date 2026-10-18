@@ -12,7 +12,7 @@
 <span class="eyebrow">Termes et conditions</span>
 <h1>Conditions générales d'utilisation de la plateforme AubePilot</h1>
 <p><strong>Exploitée par L'Aube Étoilée inc.</strong></p>
-<p class="muted small">Version 2.2 · Publiée le 12 octobre 2026, complétée le 16 octobre 2026 (taxes) · Entrée en vigueur : 11 novembre 2026</p>
+<p class="muted small">Version 2.2 · Publiée le 12 octobre 2026, complétée les 16 et 18 octobre 2026 (taxes) · Entrée en vigueur : 11 novembre 2026</p>
 
 <section class="card small" style="margin: 18px 0;">
 <strong>Ce qui change dans la version 2.2</strong>
@@ -22,7 +22,7 @@
   <li>Droit de répondre avant une suspension et réexamen (art. 21) ; décision de litige écrite et motivée (art. 15).</li>
   <li>Droits d'auteur sur les livrables et accord préalable pour toute publicité (art. 9).</li>
   <li>Textes corrigés pour décrire ce que la Plateforme fait réellement (art. 2, 7, 12, 13, 15, 17, 24, 27, 28 et 30).</li>
-  <li>Taxes de vente (art. 11, 13 et 14) : les taxes d'un Pilote inscrit aux fichiers de la TPS/TVH ou de la TVQ s'ajoutent à ses Devis et lui sont reversées en entier ; la commission d'AubePilot est taxes comprises.</li>
+  <li>Taxes de vente (art. 11, 13 et 14) : les taxes d'un Pilote inscrit aux fichiers de la TPS/TVH ou de la TVQ s'ajoutent à ses Devis et lui sont reversées en entier ; la commission d'AubePilot est taxes comprises ; en Saskatchewan et au Manitoba, la taxe de vente provinciale est perçue par la plateforme dès qu'elle y est inscrite.</li>
 </ul>
 <p style="margin: 6px 0 0;">Depuis le 12 octobre 2026, AubePilot applique déjà les règles d'annulation et de
 non-contournement de la présente version, plus favorables aux Utilisateurs. Jusqu'au 11 novembre 2026,
@@ -266,8 +266,9 @@ Le taux appliqué est figé à l'acceptation du Devis et affiché sur la Réserv
 traitement des paiements sont compris dans la commission. Les taxes de vente qui s'appliquent à la
 commission y sont aussi comprises : pour un Pilote établi au Canada, la TPS (ou la TVH de sa province)
 et, au Québec, la TVQ, que L'Aube Étoilée inc. (TPS {{ platform_tax_ids.gst }}, TVQ {{ platform_tax_ids.qst }})
-remet aux autorités fiscales ; pour un Pilote établi à l'étranger, la commission est détaxée. Leur
-montant figure sur la Réservation. La commission se calcule sur le prix du Devis avant les taxes du
+remet aux autorités fiscales ; pour un Pilote établi en Colombie-Britannique, la TVP de cette province
+aussi, dès que L'Aube Étoilée y est inscrite{% if platform_tax_ids.pst.BC %} (n° {{ platform_tax_ids.pst.BC }}){% endif %} ;
+pour un Pilote établi à l'étranger, la commission est détaxée. Leur montant figure sur la Réservation. La commission se calcule sur le prix du Devis avant les taxes du
 Pilote.
 </p>
 
@@ -314,8 +315,13 @@ profil. Ses taxes, calculées selon la province où la Mission a lieu, s'ajouten
 Devis ; elles figurent sur le devis et sur la Réservation avec ses numéros, le Client les paie avec le
 prix, et elles sont versées en entier au Pilote avec son solde. Le Pilote reste le fournisseur de la
 prestation : il répond de l'exactitude de ses numéros, déclare et remet lui-même ces taxes, ainsi que
-toute autre taxe applicable à ses prestations (taxe de vente provinciale, taxe d'un autre pays). Un
-Pilote non inscrit n'ajoute aucune taxe. Chaque Utilisateur demeure responsable de ses propres
+toute autre taxe applicable à ses prestations (taxe d'un autre pays, par exemple), sauf la taxe de vente
+provinciale que la loi charge la plateforme de percevoir. En Saskatchewan (TVP) et au Manitoba (TVD), sur
+les prestations qui y sont taxables (photo, vidéo, cartographie notamment), AubePilot ajoute cette taxe au
+prix du Devis, la perçoit et la remet elle-même dès que L'Aube Étoilée est inscrite dans la
+province{% if platform_tax_ids.pst.SK or platform_tax_ids.pst.MB %} ({% if platform_tax_ids.pst.SK %}TVP de la Saskatchewan n° {{ platform_tax_ids.pst.SK }}{% endif %}{% if platform_tax_ids.pst.SK and platform_tax_ids.pst.MB %}, {% endif %}{% if platform_tax_ids.pst.MB %}TVD du Manitoba n° {{ platform_tax_ids.pst.MB }}{% endif %}){% endif %} ;
+elle figure alors sur le Devis et sur la Réservation, et n'est pas versée au Pilote. Un Pilote non
+inscrit n'ajoute aucune taxe. Chaque Utilisateur demeure responsable de ses propres
 obligations fiscales. L'Aube Étoilée peut être tenue par la loi de communiquer aux autorités fiscales
 des renseignements sur les Pilotes et sur les sommes qui leur sont versées ; le Pilote fournit alors,
 sur demande, les renseignements exigés.

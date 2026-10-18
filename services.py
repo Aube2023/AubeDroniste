@@ -2151,7 +2151,7 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
     """
     require_pilot_payment_ready(pilot_user_id, lang)
     mission = db.fetchone(
-        "SELECT client_user_id, status, country, region, city, address, lat, lng "
+        "SELECT client_user_id, status, country, region, city, address, lat, lng, mission_type "
         "FROM missions WHERE id=?", (mission_id,)
     )
     if not mission:
@@ -2160,8 +2160,8 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
         raise ValueError("vous ne pouvez pas soumissionner sur votre propre mission")
     if mission["status"] != "open":
         raise ValueError("cette mission n'accepte plus de devis")
-    # Taxes du pilote inscrit, figees sur le devis : ce que le client voit est
-    # ce qu'il paiera (cf. taxes.py).
+    # Taxes du pilote inscrit et TVP percue par la plateforme, figees sur le
+    # devis : ce que le client voit est ce qu'il paiera (cf. taxes.py).
     import taxes
     tx = taxes.mission_taxes(price, pilot_tax_party(pilot_user_id), dict(mission))
     tax_json, tax_amount = taxes.dumps(tx["lines"]), tx["total"]
@@ -2407,7 +2407,7 @@ def set_pilot_tax_numbers(user_id: int, gst_number: str, qst_number: str):
 
 
 def booking_total(booking: dict) -> float:
-    """Ce que le client paie : prix convenu + taxes du pilote."""
+    """Ce que le client paie : prix convenu + taxes (du pilote et TVP)."""
     return round(float(booking.get("agreed_price") or 0)
                  + float(booking.get("tax_amount") or 0), 2)
 
@@ -2423,8 +2423,11 @@ def booking_amount_cents(booking: dict) -> int:
 
 def pilot_net(booking: dict) -> float:
     """Ce qui est vire au pilote : prix - commission (taxes comprises) + ses
-    taxes, qu'il remet lui-meme."""
-    return round(booking_total(booking) - float(booking.get("platform_fee") or 0), 2)
+    taxes, qu'il remet lui-meme. La TVP percue par la plateforme reste a
+    L'Aube Etoilee, qui la remet."""
+    import taxes
+    return round(booking_total(booking) - float(booking.get("platform_fee") or 0)
+                 - taxes.platform_collected(booking.get("taxes")), 2)
 
 
 def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
@@ -2608,11 +2611,14 @@ def compute_cancellation_fee(booking: dict) -> dict:
     from datetime import datetime, timezone
     from config import LATE_CANCELLATION_HOURS, LATE_CANCELLATION_FEE_PCT
 
+    import taxes
     now = datetime.now(timezone.utc)
     # Sur ce que le client a paye, taxes du pilote comprises : un
     # dedommagement retenu est repute taxes incluses (LTA art. 182), le
-    # pilote inscrit en remet la part.
-    price = booking_total(booking)
+    # pilote inscrit en remet la part. La TVP percue par la plateforme ne
+    # porte que sur une vente faite : rendue en entier au client.
+    total = booking_total(booking)
+    price = round(total - taxes.platform_collected(booking.get("taxes")), 2)
     start_dt = _parse_db_datetime(
         (booking.get("scheduled_at") or booking.get("mission_start_date") or "")
     )
@@ -2637,7 +2643,7 @@ def compute_cancellation_fee(booking: dict) -> dict:
             # Disponibilite du pilote reservee : dedommagement plafonne.
             fee_pct = CANCELLATION_PILOT_FEE_PCT
             fee_amount = round(min(price * fee_pct / 100.0, CANCELLATION_PILOT_FEE_CAP), 2)
-    refund_amount = round(max(0.0, price - fee_amount), 2)
+    refund_amount = round(max(0.0, total - fee_amount), 2)
     return {
         "is_late": is_late,
         "fee_pct": fee_pct,
@@ -4797,14 +4803,17 @@ def tax_summary(months: int = 12) -> list:
       soutiens de collecte (mois du paiement ; part calculee d'apres le lieu
       actuel du pilote) ;
     - "pilot" : taxes des pilotes inscrits, encaissees puis reversees en
-      entier, pour memoire (ce sont eux qui les remettent).
-    [{month, currency, commissions, fee: {code: montant}, pilot: {code: montant}}]"""
+      entier, pour memoire (ce sont eux qui les remettent) ;
+    - "collected" : TVP percue sur les missions par la plateforme, a remettre
+      par L'Aube Etoilee, par province (code « PST-SK », « RST-MB »).
+    [{month, currency, commissions, fee: {...}, pilot: {...}, collected: {...}}]"""
     import taxes
     out: dict = {}
 
     def slot(month, cur):
         return out.setdefault((month or "", cur or ""), {
-            "month": month or "", "currency": cur or "", "commissions": 0.0, "fee": {}, "pilot": {}})
+            "month": month or "", "currency": cur or "", "commissions": 0.0, "fee": {}, "pilot": {},
+            "collected": {}})
 
     def add(bucket, lines):
         for l in lines:
@@ -4818,7 +4827,10 @@ def tax_summary(months: int = 12) -> list:
         s = slot(r["month"], r["cur"])
         s["commissions"] = round(s["commissions"] + float(r["platform_fee"] or 0), 2)
         add(s["fee"], taxes.loads(r["fee_taxes"]))
-        add(s["pilot"], taxes.loads(r["taxes"]))
+        lines = taxes.loads(r["taxes"])
+        add(s["pilot"], [l for l in lines if l.get("by") != "platform"])
+        add(s["collected"], [dict(l, code=f"{l['code']}-{_pst_province(l)}")
+                             for l in lines if l.get("by") == "platform"])
     for r in db.fetchall(
         "SELECT substr(c.paid_at, 1, 7) AS month, UPPER(c.currency) AS cur, c.platform_fee, "
         "       u.country, u.city, u.lat, u.lng "
@@ -4832,6 +4844,38 @@ def tax_summary(months: int = 12) -> list:
     rows = sorted(out.values(), key=lambda x: (x["month"], x["currency"]), reverse=True)
     keep = sorted({r["month"] for r in rows}, reverse=True)[:months]
     return [r for r in rows if r["month"] in keep]
+
+
+def _pst_province(line: dict) -> str:
+    """Province d'une ligne de TVP percue (RST = Manitoba ; PST : d'apres le
+    taux, 6 % Sask., 7 % C.-B.)."""
+    if line.get("code") == "RST":
+        return "MB"
+    return "SK" if float(line.get("rate") or 0) == 6.0 else "BC"
+
+
+def pst_exposure() -> list:
+    """Ventes payees ou la TVP reviendrait a la plateforme (Sask., Manitoba,
+    types taxables) alors que L'Aube Etoilee n'y est pas inscrite : rien n'a
+    ete percu. Pour l'alerte de l'admin, par province et devise.
+    [{province, currency, count, amount}]"""
+    import taxes
+    out: dict = {}
+    for r in db.fetchall(
+        "SELECT b.agreed_price, UPPER(b.currency) AS cur, m.country, m.region, m.city, "
+        "       m.address, m.lat, m.lng, m.mission_type "
+        "FROM bookings b JOIN missions m ON m.id=b.mission_id "
+        "WHERE b.paid_at IS NOT NULL AND b.status NOT IN ('cancelled', 'refunded') "
+        "AND COALESCE(b.settled_offline, 0)=0"
+    ):
+        prov = taxes.mission_province(dict(r))
+        if not taxes.mission_pst_due(prov, r["mission_type"]) or taxes.platform_pst_number(prov):
+            continue
+        slot = out.setdefault((prov, r["cur"]), {"province": prov, "currency": r["cur"],
+                                                 "count": 0, "amount": 0.0})
+        slot["count"] += 1
+        slot["amount"] = round(slot["amount"] + float(r["agreed_price"] or 0), 2)
+    return sorted(out.values(), key=lambda x: (x["province"], x["currency"]))
 
 
 # Taux prudents pour convertir un sequestre d'une autre devise dans la devise

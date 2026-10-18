@@ -1,6 +1,7 @@
-"""Taxes de vente canadiennes sur AubePilot : TPS, TVH, TVQ.
+"""Taxes de vente canadiennes sur AubePilot : TPS, TVH, TVQ, TVP.
 
-Deux fournitures distinctes, deux regles :
+Deux fournitures distinctes, deux regles, plus la TVP percue par la
+plateforme (3.) :
 
 1. La MISSION, fournie par le pilote au client. Un pilote inscrit aux
    fichiers (numero de TPS/TVH, et de TVQ pour le Quebec) doit percevoir ses
@@ -22,13 +23,32 @@ Deux fournitures distinctes, deux regles :
 Taux en vigueur (2026) : TPS 5 % ; TVH 13 % en Ontario, 14 % en
 Nouvelle-Ecosse (depuis le 2025-04-01), 15 % au Nouveau-Brunswick, a
 Terre-Neuve-et-Labrador et a l'Ile-du-Prince-Edouard ; TVQ 9,975 % (calculee
-sur le prix avant TPS). Les taxes provinciales de vente (TVP de la C.-B., de
-la Saskatchewan, du Manitoba) restent a la charge du pilote.
+sur le prix avant TPS).
+
+3. La TVP de la Saskatchewan (6 %) et la TVD du Manitoba (7 %) : ces deux
+   provinces obligent la plateforme qui encaisse le paiement (« marketplace
+   facilitator ») a s'inscrire et a percevoir la taxe sur les ventes taxables
+   faites par son intermediaire, que le vendeur soit inscrit ou non
+   (Sask. IN 2020-08, Man. RST 064). AubePilot l'ajoute donc au devis, la
+   garde au versement et la remet : ligne marquee by=platform, hors du net
+   pilote. Seulement si L'Aube Etoilee est inscrite dans la province
+   (config.PLATFORM_PST_NUMBERS) : sans numero, rien n'est percu, et
+   services.pst_exposure() signale a l'admin les ventes qui l'exigeraient.
+   Taxable (prix entier, meme livre en fichiers) : photo et video (Sask.
+   PST-25, Man. RST 030), cartographie et 3D (donnees traitees, a faire
+   confirmer), suivi de chantier, surveillance. Exempt : inspection de
+   batiments et d'ouvrages, agriculture et epandage. Calculee sur le prix
+   avant TPS, sans taxe sur taxe.
+   Colombie-Britannique : la livraison numerique n'est pas taxable (PST 126),
+   rien sur la mission ; la commission (« online marketplace services ») porte
+   la TVP de 7 % pour un pilote etabli en C.-B. une fois la plateforme
+   inscrite (PST 142 ; seuil de 10 000 $), comprise dans la commission.
 
 Les lignes de taxes sont stockees en JSON sur le devis et la reservation
 (bids.taxes, bookings.taxes, bookings.fee_taxes) : [{code, rate, amount,
-number}], code dans GST | HST | QST. Ce qui a ete affiche au client est ce
-qui est encaisse, meme si le pilote change ses numeros ensuite.
+number[, by]}], code dans GST | HST | QST | PST | RST ; by="platform" pour
+une taxe percue et remise par L'Aube Etoilee. Ce qui a ete affiche au client
+est ce qui est encaisse, meme si le pilote change ses numeros ensuite.
 """
 import json
 import math
@@ -40,6 +60,18 @@ from typing import Optional
 GST_RATE = 5.0
 QST_RATE = 9.975
 HST_RATES = {"ON": 13.0, "NS": 14.0, "NB": 15.0, "NL": 15.0, "PE": 15.0}
+PST_RATES = {"BC": 7.0, "SK": 6.0, "MB": 7.0}
+PST_CODES = {"BC": "PST", "SK": "PST", "MB": "RST"}
+# Types de mission (config.MISSION_TYPES) sur lesquels la TVP de la Sask. et
+# la TVD du Manitoba s'appliquent : voir 3. ci-dessus.
+PST_TAXABLE_TYPES = frozenset({
+    "photo", "video", "cinema", "reportage", "mariage", "evenement",
+    "immobilier", "patrimoine",
+    "mapping", "3d", "topographie", "volumes",
+    "btp", "surveillance",
+})
+# Provinces ou la TVP d'une MISSION est percue par la plateforme.
+PST_MISSION_PROVINCES = ("SK", "MB")
 PROVINCES = ("AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT")
 
 
@@ -222,28 +254,57 @@ def _rates(province: Optional[str], gst: str, qst: str) -> list:
     return out
 
 
-def mission_taxes(price, pilot: dict, mission: dict) -> dict:
-    """Taxes que le pilote ajoute a son prix pour cette mission.
+def platform_pst_number(province: Optional[str]) -> str:
+    """Numero de TVP/TVD de L'Aube Etoilee dans cette province ; vide tant
+    qu'elle n'y est pas inscrite (rien n'est alors percu)."""
+    from config import PLATFORM_PST_NUMBERS
+    return (PLATFORM_PST_NUMBERS or {}).get(province or "", "") or ""
 
-    {"province", "lines": [{code, rate, amount, number}], "total"}. Sans
-    numero, ou mission hors du Canada : aucune ligne. Province introuvable :
-    celle du pilote ; a defaut, le Quebec s'il est inscrit a la TVQ."""
+
+def mission_pst_due(province: Optional[str], mission_type) -> bool:
+    """La TVP de cette mission revient-elle a la plateforme (inscrite ou
+    non) ? Sask. et Manitoba, types taxables seulement."""
+    return province in PST_MISSION_PROVINCES and (mission_type or "") in PST_TAXABLE_TYPES
+
+
+def mission_taxes(price, pilot: dict, mission: dict) -> dict:
+    """Taxes ajoutees au prix du pilote pour cette mission.
+
+    {"province", "lines": [{code, rate, amount, number[, by]}], "total"} :
+    celles du pilote inscrit (TPS/TVH, TVQ), puis la TVP percue par la
+    plateforme (by="platform") ou elle est inscrite. Mission hors du Canada :
+    aucune ligne. Province introuvable : celle du pilote ; a defaut, le
+    Quebec s'il est inscrit a la TVQ."""
     gst = (pilot or {}).get("gst_number") or ""
     qst = (pilot or {}).get("qst_number") or ""
     price = float(price or 0)
-    if not (gst or qst) or price <= 0 or not is_canada((mission or {}).get("country")):
+    mission = mission or {}
+    if price <= 0 or not is_canada(mission.get("country")):
         return {"province": None, "lines": [], "total": 0.0}
     prov = mission_province(mission) or person_province(pilot) or ("QC" if qst else None)
     lines = [{"code": code, "rate": rate, "amount": _part(price, rate), "number": num}
              for code, rate, num in _rates(prov, gst, qst)]
+    pst_number = platform_pst_number(prov)
+    if pst_number and mission_pst_due(prov, mission.get("mission_type")):
+        rate = PST_RATES[prov]
+        lines.append({"code": PST_CODES[prov], "rate": rate, "amount": _part(price, rate),
+                      "number": pst_number, "by": "platform"})
     return {"province": prov, "lines": lines, "total": _cents(sum(l["amount"] for l in lines))}
+
+
+def platform_collected(lines) -> float:
+    """Part des lignes percue et remise par la plateforme (TVP) : elle reste
+    a L'Aube Etoilee au versement, hors du net du pilote."""
+    return _cents(sum(float(l.get("amount") or 0) for l in loads(lines)
+                      if l.get("by") == "platform"))
 
 
 def commission_taxes(fee, pilot: dict, mission: Optional[dict] = None) -> dict:
     """Part de taxes COMPRISE dans la commission (fournie par la plateforme
     au pilote). Pilote hors du Canada : detaxee (lignes vides, zero_rated).
     Province du pilote, sinon celle de la mission, sinon le Quebec (province
-    de la plateforme)."""
+    de la plateforme). Pilote en C.-B. : TVP de 7 % en plus une fois la
+    plateforme inscrite."""
     from config import PLATFORM_GST_NUMBER, PLATFORM_QST_NUMBER
     fee = float(fee or 0)
     if fee <= 0:
@@ -252,6 +313,8 @@ def commission_taxes(fee, pilot: dict, mission: Optional[dict] = None) -> dict:
         return {"province": None, "lines": [], "total": 0.0, "zero_rated": True}
     prov = person_province(pilot) or mission_province(mission or {}) or "QC"
     rates = _rates(prov, PLATFORM_GST_NUMBER, PLATFORM_QST_NUMBER)
+    if prov == "BC" and platform_pst_number("BC"):
+        rates.append(("PST", PST_RATES["BC"], platform_pst_number("BC")))
     total_rate = sum(Decimal(str(r)) for _c, r, _n in rates)
     base = Decimal(str(fee)) * 100 / (100 + total_rate)
     lines = [{"code": code, "rate": rate, "amount": _part(base, rate), "number": num}

@@ -252,3 +252,131 @@ def test_devis_pdf_montre_les_taxes(make_user):
     bk = services.get_booking(services.accept_bid(mid, bid_id, c["id"]))
     pdf = pdfgen.devis_pdf(bk, "Inspection")
     assert pdf.startswith(b"%PDF")
+
+
+# ---------------------------------------------------------------------------
+# TVP / TVD percue par la plateforme (2026-10-18)
+# ---------------------------------------------------------------------------
+# Sask. et Manitoba chargent la plateforme qui encaisse de percevoir la taxe
+# de vente provinciale (marketplace facilitator), que le pilote soit inscrit
+# ou non. Rien n'est percu tant que L'Aube Etoilee n'y est pas inscrite.
+
+SK_NUM, MB_NUM, BC_NUM = "1234567", "7654321", "PST-1234-5678"
+
+
+@pytest.fixture()
+def pst_on(monkeypatch):
+    import config
+    monkeypatch.setitem(config.PLATFORM_PST_NUMBERS, "SK", SK_NUM)
+    monkeypatch.setitem(config.PLATFORM_PST_NUMBERS, "MB", MB_NUM)
+    monkeypatch.setitem(config.PLATFORM_PST_NUMBERS, "BC", BC_NUM)
+
+
+def test_tvp_sask_et_manitoba_percue_par_la_plateforme(pst_on):
+    import taxes
+    gst = {"country": "Canada", "gst_number": QC_GST}
+    sk = taxes.mission_taxes(300, gst, {"country": "Canada", "region": "Saskatchewan",
+                                        "mission_type": "photo"})
+    assert [(l["code"], l["amount"], l.get("by")) for l in sk["lines"]] == [
+        ("GST", 15.0, None), ("PST", 18.0, "platform")]
+    assert sk["lines"][1]["number"] == SK_NUM and sk["total"] == 33.0
+    # pilote non inscrit : la TVP s'applique quand meme, pas la TPS
+    mb = taxes.mission_taxes(300, {"country": "Canada"}, {"country": "Canada", "region": "Manitoba",
+                                                           "mission_type": "mapping"})
+    assert [(l["code"], l["amount"]) for l in mb["lines"]] == [("RST", 21.0)]
+    assert taxes.platform_collected(mb["lines"]) == 21.0
+    # inspection exemptee ; C.-B. : livraison numerique non taxable
+    assert taxes.mission_taxes(300, {}, {"country": "Canada", "region": "SK",
+                                         "mission_type": "toiture"})["lines"] == []
+    assert taxes.mission_taxes(300, {}, {"country": "Canada", "region": "BC",
+                                         "mission_type": "photo"})["lines"] == []
+
+
+def test_tvp_rien_sans_inscription_de_la_plateforme():
+    import taxes
+    assert taxes.mission_taxes(300, {}, {"country": "Canada", "region": "Saskatchewan",
+                                         "mission_type": "video"})["lines"] == []
+    bc = taxes.commission_taxes(60, {"country": "Canada", "city": "Vancouver", "lat": 49.28, "lng": -123.12})
+    assert [l["code"] for l in bc["lines"]] == ["GST"]
+
+
+def test_commission_c_b_comprend_la_tvp(pst_on):
+    import taxes
+    bc = taxes.commission_taxes(60, {"country": "Canada", "city": "Vancouver", "lat": 49.28, "lng": -123.12})
+    # 60 $ taxes comprises a 12 % : base 53,57
+    assert [(l["code"], l["amount"]) for l in bc["lines"]] == [("GST", 2.68), ("PST", 3.75)]
+    assert bc["lines"][1]["number"] == BC_NUM
+
+
+def _sask(make_user, mission_type="photo"):
+    import services
+    p = make_user("pst_p", role="pilot", country="Canada", city="Regina", lat=50.45, lng=-104.6)
+    c = make_user("pst_c", role="client", country="Canada", city="Saskatoon")
+    mid = services.create_mission(
+        c["id"], title="Ferme", description="Photos aeriennes d'une ferme", mission_type=mission_type,
+        country="Canada", region="Saskatchewan", city="Saskatoon", currency="CAD")
+    return p, c, mid
+
+
+def test_tvp_reste_a_la_plateforme_au_versement(make_user, monkeypatch, pst_on):
+    import payments, services
+    p, c, mid = _sask(make_user)
+    bid_id = services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
+    bk = services.get_booking(services.accept_bid(mid, bid_id, c["id"]))
+    assert bk["tax_amount"] == 18.0 and services.booking_total(bk) == 318.0
+    assert services.booking_amount_cents(bk) == 31800
+    assert services.pilot_net(bk) == 240.0                 # 300 - 60, sans la TVP
+    # annulation : la TVP est rendue en entier, le dedommagement porte sur le reste
+    late = dict(bk, paid_at="2020-01-01 00:00:00", scheduled_at="2020-01-01 00:00:00")
+    calc = services.compute_cancellation_fee(late)
+    assert calc["fee_amount"] + calc["refund_amount"] == pytest.approx(318.0)
+    assert calc["refund_amount"] >= 18.0 + 300 - calc["fee_amount"] - 0.001
+    services.set_pilot_stripe_account(p["id"], f"acct_fake_{p['id']}", True, True)
+    services.mark_booking_funded(bk["id"], payment_intent_id="pi_fake_pst")
+    sent = []
+    monkeypatch.setattr(payments, "release_to_pilot", lambda **kw: sent.append(kw) or "tr_fake_pst")
+    assert services.confirm_completion(bk["id"], c["id"])
+    assert sent[0]["pilot_amount"] == 240.0
+    month = services.get_booking(bk["id"])["released_at"][:7]
+    row = next(r for r in services.tax_summary() if r["month"] == month and r["currency"] == "CAD")
+    assert row["collected"].get("PST-SK", 0) >= 18.0
+    assert "PST" not in row["pilot"]
+
+
+def test_alerte_admin_vente_sans_inscription(make_user):
+    import services
+    p, c, mid = _sask(make_user, mission_type="video")
+    bid_id = services.place_bid(mid, p["id"], price=500, currency="CAD", description=DESC)
+    booking_id = services.accept_bid(mid, bid_id, c["id"])
+    assert services.get_booking(booking_id)["tax_amount"] == 0          # rien de percu
+    services.mark_booking_funded(booking_id, payment_intent_id="pi_fake_pst_exp")
+    sk = next(e for e in services.pst_exposure() if e["province"] == "SK" and e["currency"] == "CAD")
+    assert sk["count"] >= 1 and sk["amount"] >= 500
+
+
+def test_paiement_tvp_au_nom_de_la_plateforme(auth_client, make_user, monkeypatch, pst_on):
+    import config, payments, services
+    monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", True)
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+    p, c, mid = _sask(make_user)
+    services.set_pilot_stripe_account(p["id"], f"acct_fake_{p['id']}", True, True)
+    bid_id = services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
+    booking_id = services.accept_bid(mid, bid_id, c["id"])
+    seen = {}
+    monkeypatch.setattr(payments, "create_checkout_session",
+                        lambda **kw: seen.update(kw) or ("cs_pst", "https://checkout.example/pst"))
+    auth_client(c["id"]).post(f"/reservations/{booking_id}/payer")
+    (line,) = seen["tax_lines"]
+    assert line["amount"] == 18.0
+    assert "TVP" in line["name"] and "L'Aube Étoilée inc." in line["name"] and SK_NUM in line["name"]
+    html = unescape(auth_client(c["id"]).get(f"/reservations/{booking_id}").data.decode())
+    assert "perçue et remise par L'Aube Étoilée inc." in html
+
+
+def test_formulaire_de_devis_et_cgu_annoncent_la_tvp(auth_client, client, make_user, pst_on):
+    p, _c, mid = _sask(make_user)
+    html = unescape(auth_client(p["id"]).get(f"/missions/{mid}").data.decode())
+    assert "Le client paiera aussi TVP 6 %, que la plateforme perçoit et remet elle-même" in html
+    cgu = unescape(client.get("/cgu").data.decode())
+    assert "TVP de la Saskatchewan n° 1234567, TVD du Manitoba n° 7654321" in cgu
+    assert "(n° PST-1234-5678)" in cgu

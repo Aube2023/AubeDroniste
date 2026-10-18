@@ -106,7 +106,7 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
     # le numero sous lequel il les percoit.
     tax_lines = taxes.loads(booking.get("taxes"))
     total = round(price + sum(float(l["amount"]) for l in tax_lines), 2)
-    tax_name = {"GST": "TPS", "HST": "TVH", "QST": "TVQ"}
+    tax_name = {"GST": "TPS", "HST": "TVH", "QST": "TVQ", "PST": "TVP", "RST": "TVD"}
     ref = booking.get("id")
     date = (booking.get("created_at") or "")[:10]
 
@@ -162,8 +162,10 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
         pilot_block.append(Paragraph(_esc(contact), S["small"]))
     if booking.get("pilot_portfolio_url"):
         pilot_block.append(Paragraph(_esc(booking["pilot_portfolio_url"]), S["small"]))
+    # Numeros du pilote seulement : la TVP percue par la plateforme porte le
+    # numero de L'Aube Etoilee, indique sur sa ligne.
     numbers = " · ".join(f"{tax_name.get(l['code'], l['code'])} {l.get('number') or ''}"
-                         for l in tax_lines)
+                         for l in tax_lines if l.get("by") != "platform")
     if numbers:
         pilot_block.append(Paragraph(_esc(numbers), S["small"]))
 
@@ -219,7 +221,8 @@ def devis_pdf(booking: dict, mission_type_label: str = "") -> bytes:
         rows.append(["Prestation (prix avant taxes)", _money(price, cur)])
         for l in tax_lines:
             rate = f"{float(l['rate']):g}".replace(".", ",")
-            rows.append([f"{tax_name.get(l['code'], l['code'])} {rate} % · n° {l.get('number') or ''}",
+            by = " · perçue par L'Aube Étoilée inc." if l.get("by") == "platform" else ""
+            rows.append([f"{tax_name.get(l['code'], l['code'])} {rate} % · n° {l.get('number') or ''}{by}",
                          _money(float(l["amount"]), cur)])
     rows += [
         ["Règlement à la réservation (100 % — conservé sous séquestre)", _money(total, cur)],

@@ -138,9 +138,27 @@
     versement au pilote pour les missions, du paiement pour les collectes. Les taxes des pilotes inscrits passent
     par la plateforme mais leur sont reversées en entier : ce sont eux qui les remettent.
   </p>
+  <p class="muted small" style="max-width: 76ch;">
+    TVP de la Saskatchewan (6 %) et TVD du Manitoba (7 %) : la loi charge la plateforme de les percevoir
+    sur la photo, la vidéo, la cartographie, le suivi de chantier et la surveillance qui s'y vendent, et de
+    les remettre. Colombie-Britannique : TVP de 7 % comprise dans la commission des pilotes qui y sont établis,
+    à partir de 10 000 $ de revenus taxables dans la province.
+    {% if platform_tax_ids.pst %}Inscrite :
+    {% for prov, num in platform_tax_ids.pst.items() %}{{ prov }} {{ num }}{% if not loop.last %} · {% endif %}{% endfor %}.
+    {% else %}L'Aube Étoilée n'y est inscrite nulle part : rien n'est perçu. Une fois inscrite, mettre le
+    numéro dans <code>AUBEPILOT_PST_SK</code>, <code>AUBEPILOT_RST_MB</code> ou <code>AUBEPILOT_PST_BC</code>
+    (/etc/aubepilot.env), puis redémarrer.{% endif %}
+  </p>
+  {% if pst_exposure %}
+  <p class="flash flash-error" style="max-width: 76ch;">
+    Ventes payées où la taxe provinciale revenait à la plateforme, sans inscription (rien de perçu) :
+    {% for e in pst_exposure %}{{ e.province }} : {{ e.count }} réservation(s), {{ '%.2f'|format(e.amount) }} {{ e.currency }} avant taxes{% if not loop.last %} · {% endif %}{% endfor %}.
+    S'inscrire dans la province avant la prochaine vente.
+  </p>
+  {% endif %}
   {% if tax_summary %}
   <table class="table-simple" style="width: 100%;">
-    <thead><tr><th style="text-align:start;">Mois</th><th>Devise</th><th>Commissions</th><th>dont TPS</th><th>dont TVH</th><th>dont TVQ</th><th>Taxes des pilotes (reversées)</th></tr></thead>
+    <thead><tr><th style="text-align:start;">Mois</th><th>Devise</th><th>Commissions</th><th>dont TPS</th><th>dont TVH</th><th>dont TVQ</th><th>dont TVP C.-B.</th><th>TVP perçue (à remettre)</th><th>Taxes des pilotes (reversées)</th></tr></thead>
     {% for r in tax_summary %}
     <tr>
       <td class="mono">{{ r.month }}</td><td>{{ r.currency }}</td>
@@ -148,6 +166,8 @@
       <td class="mono">{{ '%.2f'|format(r.fee.get('GST', 0)) }}</td>
       <td class="mono">{{ '%.2f'|format(r.fee.get('HST', 0)) }}</td>
       <td class="mono">{{ '%.2f'|format(r.fee.get('QST', 0)) }}</td>
+      <td class="mono">{{ '%.2f'|format(r.fee.get('PST', 0)) }}</td>
+      <td class="mono small">{% for code, amt in r.collected.items() %}{{ code }} {{ '%.2f'|format(amt) }}{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
       <td class="mono small">{% for code, amt in r.pilot.items() %}{{ tax_label(code) }} {{ '%.2f'|format(amt) }}{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
     </tr>
     {% endfor %}
