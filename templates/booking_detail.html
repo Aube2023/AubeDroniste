@@ -282,7 +282,7 @@
     {% if is_pilot %}
       Téléversez photos, vidéos, ortho, ZIP, PDF (max {{ max_deliverable_mb }} Mo par fichier). Formats acceptés : JPEG/RAW/PNG/HEIC/TIFF, MP4/MOV/MKV, ZIP/7Z, PDF, LAS/LAZ/KML/GeoJSON, etc.
     {% else %}
-      Téléchargez vos rushs, ou envoyez-les directement sur votre <strong>AubeDrive</strong> (tous fichiers) ou <strong>AubePhotos</strong> (images uniquement).
+      Téléchargez vos rushs, ou envoyez-les directement sur votre <strong>AubeDrive</strong> (tous fichiers, dossier AubePilot) ou <strong>AubePhotos</strong> (photos et vidéos, album AubePilot).
     {% endif %}
   </p>
 
@@ -326,19 +326,23 @@
             ⤓ Télécharger
           </a>
           {% if is_client %}
+            {% if d.aubedrive_sent_at %}
+            <a class="ghost" href="{{ d.aubedrive_url or push_home.aubedrive }}" target="_blank" rel="noopener" title="{{ t('push.sent_label', service='AubeDrive') }}">✓ AubeDrive ↗</a>
+            {% else %}
             <form method="post" action="{{ url_for('booking_deliverable_push', booking_id=booking.id, deliv_id=d.id, service='aubedrive') }}" style="display: inline-block;">
                   {{ csrf_input() }}
-              <button class="ghost" type="submit" {% if d.aubedrive_url %}disabled title="Déjà envoyé"{% endif %}>
-                {% if d.aubedrive_url %}✓ AubeDrive{% else %}→ AubeDrive{% endif %}
-              </button>
+              <button class="ghost" type="submit">→ AubeDrive</button>
             </form>
-            {% if d.kind == 'image' %}
+            {% endif %}
+            {% if d.kind in ('image', 'video') %}
+            {% if d.aubephotos_sent_at %}
+            <a class="ghost" href="{{ d.aubephotos_url or push_home.aubephotos }}" target="_blank" rel="noopener" title="{{ t('push.sent_label', service='AubePhotos') }}">✓ AubePhotos ↗</a>
+            {% else %}
             <form method="post" action="{{ url_for('booking_deliverable_push', booking_id=booking.id, deliv_id=d.id, service='aubephotos') }}" style="display: inline-block;">
                   {{ csrf_input() }}
-              <button class="ghost" type="submit" {% if d.aubephotos_url %}disabled title="Déjà envoyé"{% endif %}>
-                {% if d.aubephotos_url %}✓ AubePhotos{% else %}→ AubePhotos{% endif %}
-              </button>
+              <button class="ghost" type="submit">→ AubePhotos</button>
             </form>
+            {% endif %}
             {% endif %}
           {% endif %}
           {% if is_pilot %}
@@ -349,11 +353,11 @@
           {% endif %}
         </div>
       </div>
-      {% if d.aubedrive_url or d.aubephotos_url %}
+      {% if d.aubedrive_sent_at or d.aubephotos_sent_at %}
       <div class="mono small muted" style="margin-top: 8px;">
-        {% if d.aubedrive_url %}<a href="{{ d.aubedrive_url }}" target="_blank" rel="noopener">↗ Sur AubeDrive</a>{% endif %}
-        {% if d.aubedrive_url and d.aubephotos_url %} · {% endif %}
-        {% if d.aubephotos_url %}<a href="{{ d.aubephotos_url }}" target="_blank" rel="noopener">↗ Sur AubePhotos</a>{% endif %}
+        {% if d.aubedrive_sent_at %}✓ {{ t('push.sent_label', service='AubeDrive') }} · {{ d.aubedrive_sent_at[:16] }} · <a href="{{ d.aubedrive_url or push_home.aubedrive }}" target="_blank" rel="noopener">{{ t('push.open', service='AubeDrive') }} ↗</a>{% endif %}
+        {% if d.aubedrive_sent_at and d.aubephotos_sent_at %}<br>{% endif %}
+        {% if d.aubephotos_sent_at %}✓ {{ t('push.sent_label', service='AubePhotos') }} · {{ d.aubephotos_sent_at[:16] }} · <a href="{{ d.aubephotos_url or push_home.aubephotos }}" target="_blank" rel="noopener">{{ t('push.open', service='AubePhotos') }} ↗</a>{% endif %}
       </div>
       {% endif %}
     </li>

@@ -127,6 +127,13 @@ ALLOWED_DELIVERABLE_EXT = {
 # URLs configurables via env pour dev/prod.
 AUBEDRIVE_URL = os.environ.get("AUBEDRIVE_URL", "https://drive.aubeetoilee.com")
 AUBEPHOTOS_URL = os.environ.get("AUBEPHOTOS_URL", "https://photos.aubeetoilee.com")
+# Adresse des appels serveur-a-serveur (aube_push.py). En prod, la boucle
+# locale (http://127.0.0.1:5011 et :5035) : nginx limite AubeDrive a 55 Mo.
+AUBEDRIVE_INTERNAL_URL = os.environ.get("AUBEDRIVE_INTERNAL_URL", AUBEDRIVE_URL)
+AUBEPHOTOS_INTERNAL_URL = os.environ.get("AUBEPHOTOS_INTERNAL_URL", AUBEPHOTOS_URL)
+# Secret partage par AubeDrive et AubePhotos (leur AUBE_INTERNAL_SECRET), en
+# en-tete X-Internal-Secret. Distinct de AUBE_INTERNAL_API_KEY (AubeMail).
+AUBE_INTERNAL_SECRET = os.environ.get("AUBE_INTERNAL_SECRET", "")
 # AubeCrew = gestion de flotte / equipage / logbook pour les pilotes
 AUBECREW_URL = os.environ.get("AUBECREW_URL", "https://crew.aubeetoilee.com")
 # AubeMail = identite centrale de l'ecosysteme. L'avatar y est unifie :

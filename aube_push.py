@@ -1,14 +1,18 @@
 """Push de livrables AubePilot vers AubeDrive / AubePhotos.
 
-Server-to-server : on POST le fichier multipart vers l'endpoint
-`/api/internal/upload` de chaque service Aube avec le username du
-proprietaire (le client) en clair et, si configuree, la cle interne
-partagee `AUBE_INTERNAL_API_KEY` en header `X-Aube-Internal-Key`.
+Server-to-server : on POST le fichier multipart vers le point d'entree interne
+de chaque service Aube, avec le courriel AubeMail du proprietaire (le client)
+et le secret partage `AUBE_INTERNAL_SECRET` en en-tete `X-Internal-Secret`
+(meme convention que leur /api/auth/provision) :
 
-Si l'endpoint n'existe pas encore (scaffold initial AubePhotos /
-quota AubeDrive), on log un warning et on retourne un dict
-`{"ok": False, "reason": "..."}`. Le bouton reste actif dans l'UI
-pour permettre la reessai apres deploiement de l'API.
+- AubeDrive  : /api/files/internal/upload, dossier racine « AubePilot » ;
+- AubePhotos : /api/photos/internal/upload, album « AubePilot ».
+
+Les deux renvoient `url`, le chemin relatif du dossier ou de l'album, qu'on
+rend absolu avec l'adresse publique du service pour le montrer au client.
+Les appels passent par l'adresse interne (AUBEDRIVE_INTERNAL_URL...) : sur
+le VPS, la boucle locale evite la limite de taille de nginx (55 Mo pour
+AubeDrive) alors qu'un livrable peut peser 1 Go.
 """
 from __future__ import annotations
 
@@ -19,100 +23,114 @@ from typing import Optional
 import requests
 
 from config import (
+    AUBE_INTERNAL_SECRET,
+    AUBEDRIVE_INTERNAL_URL,
     AUBEDRIVE_URL,
+    AUBEPHOTOS_INTERNAL_URL,
     AUBEPHOTOS_URL,
-    AUBE_INTERNAL_API_KEY,
     UPLOAD_DIR,
 )
 
 log = logging.getLogger("aubepilot.push")
 
-_TIMEOUT = (10, 120)  # connect, read (livrables peuvent etre lourds)
+_TIMEOUT = (10, 600)  # connect, read (livrables jusqu'a 1 Go)
+
+# Ce que AubePhotos sait afficher (son ALLOWED_MIME)
+PHOTOS_KINDS = ("image", "video")
+
+SERVICE_NAMES = {"aubedrive": "AubeDrive", "aubephotos": "AubePhotos"}
+
+# Codes d'erreur des services Aube ; ceux de SHOWN_ERRORS ont leur message
+# (cle i18n push.err_<code>), les autres (secret refuse, requete incomplete :
+# une faute de configuration chez nous) s'affichent comme « down ».
+_CODES = ("unauthorized", "missing", "type", "no_account", "locked", "quota")
+SHOWN_ERRORS = ("type", "no_account", "locked", "quota", "down", "file")
 
 
-def _post_internal_upload(*, base_url: str, file_path: str,
-                          original_filename: str, mime_type: Optional[str],
-                          username: str, booking_id: int,
-                          extra: Optional[dict] = None) -> dict:
-    """POST multipart sur <base_url>/api/internal/upload.
+def _post_internal_upload(*, internal_url: str, public_url: str, path: str,
+                          file_path: str, original_filename: str,
+                          mime_type: Optional[str], email: str, booking_id: int,
+                          extra: dict) -> dict:
+    """POST multipart sur <internal_url><path>.
 
-    Retourne {ok: bool, url: str|None, reason: str|None}.
-    """
+    Retourne {ok, url, code, reason} : url absolue (adresse publique) si ok ;
+    code dans _CODES, ou "down" (service injoignable ou reponse inattendue),
+    ou "file" (fichier local disparu)."""
     if not os.path.exists(file_path):
-        return {"ok": False, "url": None, "reason": "fichier local introuvable"}
-
-    headers = {}
-    if AUBE_INTERNAL_API_KEY:
-        headers["X-Aube-Internal-Key"] = AUBE_INTERNAL_API_KEY
+        return {"ok": False, "url": None, "code": "file", "reason": "fichier local introuvable"}
+    if not AUBE_INTERNAL_SECRET:
+        log.warning("push %s : AUBE_INTERNAL_SECRET absent", internal_url)
+        return {"ok": False, "url": None, "code": "down", "reason": "secret interne absent"}
 
     data = {
-        "username": username,             # proprietaire cible cote AubeDrive/Photos
+        "email": email,
         "source": "aubepilot",
         "source_booking_id": str(booking_id),
+        **extra,
     }
-    if extra:
-        data.update(extra)
-
     try:
         with open(file_path, "rb") as fh:
-            files = {
-                "file": (original_filename, fh,
-                         mime_type or "application/octet-stream"),
-            }
             r = requests.post(
-                f"{base_url.rstrip('/')}/api/internal/upload",
-                data=data, files=files, headers=headers, timeout=_TIMEOUT,
+                f"{internal_url.rstrip('/')}{path}",
+                data=data,
+                files={"file": (original_filename, fh, mime_type or "application/octet-stream")},
+                headers={"X-Internal-Secret": AUBE_INTERNAL_SECRET},
+                timeout=_TIMEOUT,
             )
     except requests.RequestException as exc:
-        log.warning("push %s failed: %s", base_url, exc)
-        return {"ok": False, "url": None, "reason": f"service injoignable : {exc}"}
-
-    if r.status_code == 404:
-        return {"ok": False, "url": None,
-                "reason": "API non disponible (endpoint manquant)"}
-    if r.status_code >= 400:
-        return {"ok": False, "url": None,
-                "reason": f"refus du service ({r.status_code})"}
+        log.warning("push %s failed: %s", internal_url, exc)
+        return {"ok": False, "url": None, "code": "down", "reason": f"service injoignable : {exc}"}
 
     try:
         body = r.json()
     except ValueError:
         body = {}
-    return {
-        "ok": True,
-        "url": body.get("url") or body.get("public_url"),
-        "reason": None,
-    }
+    if not isinstance(body, dict):
+        body = {}
+    if r.status_code >= 400 or not body.get("ok"):
+        code = body.get("code") if body.get("code") in _CODES else "down"
+        if code == "unauthorized":
+            log.error("push %s : secret interne refuse (%s)", internal_url, r.status_code)
+        else:
+            log.warning("push %s : %s %s", internal_url, r.status_code, body.get("error"))
+        return {"ok": False, "url": None, "code": code,
+                "reason": body.get("error") or f"refus du service ({r.status_code})"}
+
+    rel = body.get("url") or ""
+    url = f"{public_url.rstrip('/')}{rel}" if rel.startswith("/") else (rel or public_url)
+    return {"ok": True, "url": url, "code": None, "reason": None}
 
 
-def push_to_aubedrive(deliverable: dict, client_username: str,
-                      booking_id: int) -> dict:
-    """Envoie un livrable vers AubeDrive (drive.aubeetoilee.com).
-    Tous les types de fichiers acceptes."""
+def push_to_aubedrive(deliverable: dict, client_email: str, booking_id: int) -> dict:
+    """Envoie un livrable vers AubeDrive (drive.aubeetoilee.com), dossier
+    « AubePilot ». Tous les types de fichiers acceptes."""
     return _post_internal_upload(
-        base_url=AUBEDRIVE_URL,
+        internal_url=AUBEDRIVE_INTERNAL_URL,
+        public_url=AUBEDRIVE_URL,
+        path="/api/files/internal/upload",
         file_path=os.path.join(UPLOAD_DIR, deliverable["stored_filename"]),
         original_filename=deliverable["original_filename"],
         mime_type=deliverable.get("mime_type"),
-        username=client_username,
+        email=client_email,
         booking_id=booking_id,
-        extra={"folder": "AubePilot"},
+        extra={"folder_name": "AubePilot"},
     )
 
 
-def push_to_aubephotos(deliverable: dict, client_username: str,
-                       booking_id: int) -> dict:
-    """Envoie un livrable vers AubePhotos (photos.aubeetoilee.com).
-    Reservation aux images (image/* ou kind=='image')."""
-    if deliverable.get("kind") != "image":
-        return {"ok": False, "url": None,
-                "reason": "AubePhotos n'accepte que les images"}
+def push_to_aubephotos(deliverable: dict, client_email: str, booking_id: int) -> dict:
+    """Envoie un livrable vers AubePhotos (photos.aubeetoilee.com), album
+    « AubePilot ». Photos et videos seulement."""
+    if deliverable.get("kind") not in PHOTOS_KINDS:
+        return {"ok": False, "url": None, "code": "type",
+                "reason": "AubePhotos ne prend que les photos et les videos"}
     return _post_internal_upload(
-        base_url=AUBEPHOTOS_URL,
+        internal_url=AUBEPHOTOS_INTERNAL_URL,
+        public_url=AUBEPHOTOS_URL,
+        path="/api/photos/internal/upload",
         file_path=os.path.join(UPLOAD_DIR, deliverable["stored_filename"]),
         original_filename=deliverable["original_filename"],
         mime_type=deliverable.get("mime_type"),
-        username=client_username,
+        email=client_email,
         booking_id=booking_id,
         extra={"album": "AubePilot"},
     )

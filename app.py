@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from flask import has_request_context
+from markupsafe import Markup
 from flask import (
     Flask, abort, flash, g, jsonify, make_response, redirect,
     render_template, request, send_from_directory, url_for,
@@ -3822,6 +3823,8 @@ def booking_detail(booking_id):
         is_client_view=is_client_view,
         deliverables=services.list_deliverables(booking_id),
         max_deliverable_mb=MAX_DELIVERABLE_MB,
+        push_home={"aubedrive": f"{config.AUBEDRIVE_URL}/app",
+                   "aubephotos": f"{config.AUBEPHOTOS_URL}/app"},
     )
 
 
@@ -4057,27 +4060,28 @@ def booking_deliverable_push(booking_id, deliv_id, service):
     # du client.
     if g.user["id"] != booking["client_user_id"]:
         abort(403)
-    # username AubeMail du client (clef d'identite cross-services Aube)
-    client = db.fetchone("SELECT username FROM users WHERE id=?",
+    # Courriel AubeMail du client (clef d'identite cross-services Aube)
+    client = db.fetchone("SELECT username, email FROM users WHERE id=?",
                          (booking["client_user_id"],))
     if not client:
         abort(404)
+    email = client["email"] or f"{client['username']}@{config.EMAIL_DOMAIN}"
 
     if service == "aubedrive":
-        result = aube_push.push_to_aubedrive(d, client["username"], booking_id)
+        result = aube_push.push_to_aubedrive(d, email, booking_id)
     else:
-        result = aube_push.push_to_aubephotos(d, client["username"], booking_id)
+        result = aube_push.push_to_aubephotos(d, email, booking_id)
 
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    name = aube_push.SERVICE_NAMES[service]
     if result["ok"]:
         services.mark_deliverable_pushed(deliv_id, service, result["url"])
-        flash(f"Livrable envoye vers {service.capitalize()}.", "success")
+        flash(Markup('{} <a href="{}" target="_blank" rel="noopener">{} ↗</a>').format(
+            i18n.t("push.sent", lang, name=d["label"] or d["original_filename"], service=name),
+            result["url"], i18n.t("push.open", lang, service=name)), "success")
     else:
-        flash(
-            f"Envoi vers {service.capitalize()} echoue : "
-            f"{result.get('reason') or 'erreur inconnue'}. "
-            "Telechargez puis uploadez manuellement.",
-            "error",
-        )
+        code = result["code"] if result["code"] in aube_push.SHOWN_ERRORS else "down"
+        flash(i18n.t(f"push.err_{code}", lang, service=name, email=email), "error")
     return redirect(url_for("booking_detail", booking_id=booking_id))
 
 
