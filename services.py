@@ -2163,7 +2163,8 @@ def place_bid(mission_id: int, pilot_user_id: int, *, price: float,
     # Taxes du pilote inscrit et TVP percue par la plateforme, figees sur le
     # devis : ce que le client voit est ce qu'il paiera (cf. taxes.py).
     import taxes
-    tx = taxes.mission_taxes(price, pilot_tax_party(pilot_user_id), dict(mission))
+    tx = taxes.mission_taxes(price, pilot_tax_party(pilot_user_id), dict(mission),
+                             pilot_tax_party(mission["client_user_id"]))
     tax_json, tax_amount = taxes.dumps(tx["lines"]), tx["total"]
     existing = db.fetchone(
         "SELECT id, revision_no, price, currency, eta_hours, message, "
@@ -2385,8 +2386,9 @@ def booking_fee_pct(booking: dict) -> float:
 
 
 def pilot_tax_party(pilot_user_id: int) -> dict:
-    """Ce qu'il faut a taxes.py pour un pilote : pays, ville, coordonnees,
-    numeros de TPS/TVH et de TVQ."""
+    """Ce qu'il faut a taxes.py pour un pilote (ou un client : son adresse
+    fixe le lieu de fourniture) : pays, ville, coordonnees, numeros de
+    TPS/TVH et de TVQ."""
     row = db.fetchone(
         "SELECT u.country, u.city, u.lat, u.lng, p.gst_number, p.qst_number "
         "FROM users u LEFT JOIN pilot_profiles p ON p.user_id=u.id WHERE u.id=?",
@@ -2463,7 +2465,8 @@ def accept_bid(mission_id: int, bid_id: int, client_user_id: int, lang: str = "f
     fee = round(bid["price"] * fee_pct / 100.0, 2)
     import taxes
     fee_tax_json = taxes.dumps(taxes.commission_taxes(
-        fee, pilot_tax_party(bid["pilot_user_id"]), dict(mission))["lines"])
+        fee, pilot_tax_party(bid["pilot_user_id"]), dict(mission),
+        pilot_tax_party(client_user_id))["lines"])
     # Tout-ou-rien : verrou conditionnel + creation booking + cloture des
     # autres devis dans UNE transaction. Si le verrou echoue (rowcount=0),
     # une autre acceptation a deja eu lieu -> rollback complet + ValueError.
@@ -2605,7 +2608,8 @@ def compute_cancellation_fee(booking: dict) -> dict:
     d'une reservation non payee ne retient rien (cancel_booking_by_client).
 
     Renvoie : {
-      "is_late", "fee_pct", "fee_amount",            # part pilote
+      "is_late", "fee_pct", "fee_amount",            # part pilote (taxes comprises)
+      "platform_tax_amount",                         # dont taxe gardee par la plateforme
       "service_fee_pct", "service_fee_amount",       # part plateforme : toujours 0
       "within_grace", "grace_h", "grace_hours_left",
       "refund_amount",                               # rendu au client
@@ -2619,10 +2623,12 @@ def compute_cancellation_fee(booking: dict) -> dict:
     now = datetime.now(timezone.utc)
     # Sur ce que le client a paye, taxes du pilote comprises : un
     # dedommagement retenu est repute taxes incluses (LTA art. 182), le
-    # pilote inscrit en remet la part. La TVP percue par la plateforme ne
-    # porte que sur une vente faite : rendue en entier au client.
+    # pilote inscrit en remet la part ; pour une TPS/TVQ dont la plateforme
+    # est reputee fournisseur, c'est elle qui garde et remet la sienne
+    # (platform_tax_amount, LTA art. 182, LTVQ art. 318). La TVP ne porte que
+    # sur une vente faite : rendue en entier au client.
     total = booking_total(booking)
-    price = round(total - taxes.platform_collected(booking.get("taxes")), 2)
+    price = round(total - taxes.platform_collected(booking.get("taxes"), codes=("PST", "RST")), 2)
     start_dt = _parse_db_datetime(
         (booking.get("scheduled_at") or booking.get("mission_start_date") or "")
     )
@@ -2648,10 +2654,12 @@ def compute_cancellation_fee(booking: dict) -> dict:
             fee_pct = CANCELLATION_PILOT_FEE_PCT
             fee_amount = round(min(price * fee_pct / 100.0, CANCELLATION_PILOT_FEE_CAP), 2)
     refund_amount = round(max(0.0, total - fee_amount), 2)
+    platform_tax = round(sum(l["amount"] for l in taxes.deemed_tax_in(fee_amount, booking.get("taxes"))), 2)
     return {
         "is_late": is_late,
         "fee_pct": fee_pct,
         "fee_amount": fee_amount,
+        "platform_tax_amount": platform_tax,          # comprise dans fee_amount, gardee
         "service_fee_pct": 0.0,
         "service_fee_amount": 0.0,
         "within_grace": within_grace,
@@ -2729,7 +2737,7 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
         booking["status"] in ("funded", "in_progress")
     if not paid:
         # Rien n'a ete encaisse : aucune retenue possible, aucun remboursement.
-        calc.update({"fee_amount": 0.0, "service_fee_amount": 0.0,
+        calc.update({"fee_amount": 0.0, "service_fee_amount": 0.0, "platform_tax_amount": 0.0,
                      "service_fee_pct": 0.0, "refund_amount": 0.0})
 
     # 1) Refund Stripe partiel au client. Le reste (dedommagement pilote)
@@ -2760,7 +2768,8 @@ def cancel_booking_by_client(booking_id: int, by_user: int,
             try:
                 import payments
                 transfer_id = payments.release_to_pilot(
-                    booking_id=booking_id, pilot_amount=calc["fee_amount"],
+                    booking_id=booking_id,
+                    pilot_amount=round(calc["fee_amount"] - calc.get("platform_tax_amount", 0), 2),
                     currency=booking.get("currency", "EUR"),
                     pilot_account_id=pilot_acc, kind="cancel-compensation",
                     source_payment_intent=booking.get("stripe_payment_intent_id"),
@@ -4812,8 +4821,10 @@ def tax_summary(months: int = 12) -> list:
       actuel du pilote) ;
     - "pilot" : taxes des pilotes inscrits, encaissees puis reversees en
       entier, pour memoire (ce sont eux qui les remettent) ;
-    - "collected" : TVP percue sur les missions par la plateforme, a remettre
-      par L'Aube Etoilee, par province (code « PST-SK », « RST-MB »).
+    - "collected" : taxes percues sur les missions par la plateforme, a
+      remettre par L'Aube Etoilee : TVP par province (« PST-SK », « RST-MB »)
+      et TPS/TVH/TVQ dont elle est reputee fournisseur (mois du versement, ou
+      de l'annulation pour la part comprise dans un dedommagement).
     [{month, currency, commissions, fee: {...}, pilot: {...}, collected: {...}}]"""
     import taxes
     out: dict = {}
@@ -4837,8 +4848,15 @@ def tax_summary(months: int = 12) -> list:
         add(s["fee"], taxes.loads(r["fee_taxes"]))
         lines = taxes.loads(r["taxes"])
         add(s["pilot"], [l for l in lines if l.get("by") != "platform"])
-        add(s["collected"], [dict(l, code=f"{l['code']}-{_pst_province(l)}")
+        add(s["collected"], [dict(l, code=_collected_code(l))
                              for l in lines if l.get("by") == "platform"])
+    for r in db.fetchall(
+        "SELECT substr(cancelled_at, 1, 7) AS month, UPPER(currency) AS cur, cancellation_fee, taxes "
+        "FROM bookings WHERE status='cancelled' AND COALESCE(cancellation_fee, 0) > 0 "
+        "AND cancelled_at IS NOT NULL AND taxes LIKE '%platform%'"
+    ):
+        add(slot(r["month"], r["cur"])["collected"],
+            taxes.deemed_tax_in(r["cancellation_fee"], r["taxes"]))
     for r in db.fetchall(
         "SELECT substr(c.paid_at, 1, 7) AS month, UPPER(c.currency) AS cur, c.platform_fee, "
         "       u.country, u.city, u.lat, u.lng "
@@ -4854,12 +4872,15 @@ def tax_summary(months: int = 12) -> list:
     return [r for r in rows if r["month"] in keep]
 
 
-def _pst_province(line: dict) -> str:
-    """Province d'une ligne de TVP percue (RST = Manitoba ; PST : d'apres le
-    taux, 6 % Sask., 7 % C.-B.)."""
+def _collected_code(line: dict) -> str:
+    """Code d'une ligne percue par la plateforme pour le releve : TVP avec sa
+    province (RST = Manitoba ; PST : 6 % Sask., 7 % C.-B.), TPS/TVH/TVQ
+    telles quelles."""
     if line.get("code") == "RST":
-        return "MB"
-    return "SK" if float(line.get("rate") or 0) == 6.0 else "BC"
+        return "RST-MB"
+    if line.get("code") == "PST":
+        return "PST-SK" if float(line.get("rate") or 0) == 6.0 else "PST-BC"
+    return line.get("code") or ""
 
 
 def pst_exposure() -> list:

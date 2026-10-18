@@ -380,3 +380,123 @@ def test_formulaire_de_devis_et_cgu_annoncent_la_tvp(auth_client, client, make_u
     cgu = unescape(client.get("/cgu").data.decode())
     assert "TVP de la Saskatchewan n° 1234567, TVD du Manitoba n° 7654321" in cgu
     assert "(n° PST-1234-5678)" in cgu
+
+
+# ---------------------------------------------------------------------------
+# Quebec : lieu de fourniture et plateforme reputee fournisseur (2026-10-18)
+# ---------------------------------------------------------------------------
+# Verification des regles contre la LTA, le DORS/2010-117 et la LTVQ :
+# le lieu suit l'adresse du client (le bien pour une inspection), et la
+# plateforme percoit la TVQ d'un pilote hors Quebec non inscrit (art. 477.5.2).
+
+TORONTO = {"country": "Canada", "city": "Toronto", "lat": 43.65, "lng": -79.38}
+LAVAL = {"country": "Canada", "city": "Laval", "lat": 45.57, "lng": -73.69}
+PARIS = {"country": "France", "city": "Paris"}
+
+
+def _codes(res):
+    return [(l["code"], l["amount"], l.get("by")) for l in res["lines"]]
+
+
+def test_lieu_de_fourniture_adresse_du_client_ou_du_bien():
+    import taxes
+    qc_pilot = dict(LAVAL, gst_number=QC_GST, qst_number=QC_QST)
+    photo_qc = {"country": "Canada", "region": "Québec", "mission_type": "photo"}
+    roof_qc = {"country": "Canada", "region": "Québec", "mission_type": "toiture"}
+    photo_on = {"country": "Canada", "region": "Ontario", "mission_type": "video"}
+    # photo au Quebec pour un client de Toronto : TVH de l'Ontario, pas de TVQ
+    assert _codes(taxes.mission_taxes(300, qc_pilot, photo_qc, TORONTO)) == [("HST", 39.0, None)]
+    # inspection d'un immeuble au Quebec : TPS + TVQ, quel que soit le client
+    assert _codes(taxes.mission_taxes(300, qc_pilot, roof_qc, TORONTO)) == [
+        ("GST", 15.0, None), ("QST", 29.93, None)]
+    # video en Ontario pour un client de Laval : TPS + TVQ
+    assert _codes(taxes.mission_taxes(300, qc_pilot, photo_on, LAVAL)) == [
+        ("GST", 15.0, None), ("QST", 29.93, None)]
+    # client sans adresse au Canada : la ou le service est rendu
+    assert _codes(taxes.mission_taxes(300, qc_pilot, photo_on, PARIS)) == [("HST", 39.0, None)]
+
+
+def test_tvq_percue_par_la_plateforme_pour_un_pilote_hors_quebec():
+    import taxes
+    photo_qc = {"country": "Canada", "region": "Québec", "mission_type": "photo"}
+    # pilote de Toronto non inscrit : la plateforme ajoute la TVQ a son numero
+    on_small = dict(TORONTO)
+    res = taxes.mission_taxes(300, on_small, photo_qc, LAVAL)
+    assert _codes(res) == [("QST", 29.93, "platform")]
+    assert res["lines"][0]["number"] == "1230658818 TQ0001"
+    # inscrit a la TPS seulement : sa TPS, plus la TVQ de la plateforme
+    on_gst = dict(TORONTO, gst_number=QC_GST)
+    assert _codes(taxes.mission_taxes(300, on_gst, photo_qc, LAVAL)) == [
+        ("GST", 15.0, None), ("QST", 29.93, "platform")]
+    # inscrit aux deux : rien pour la plateforme
+    on_both = dict(TORONTO, gst_number=QC_GST, qst_number=QC_QST)
+    assert _codes(taxes.mission_taxes(300, on_both, photo_qc, LAVAL)) == [
+        ("GST", 15.0, None), ("QST", 29.93, None)]
+    # pilote quebecois non inscrit (petit fournisseur) : rien du tout
+    assert taxes.mission_taxes(300, dict(LAVAL), photo_qc, LAVAL)["lines"] == []
+    # pilote etranger non inscrit : TPS et TVQ percues par la plateforme
+    assert _codes(taxes.mission_taxes(300, PARIS, photo_qc, LAVAL)) == [
+        ("GST", 15.0, "platform"), ("QST", 29.93, "platform")]
+
+
+def test_commission_d_un_pilote_etranger():
+    import taxes
+    photo_qc = {"country": "Canada", "region": "Québec", "mission_type": "photo"}
+    photo_on = {"country": "Canada", "region": "Ontario", "mission_type": "photo"}
+    # non inscrit : la plateforme percoit les taxes de la mission, commission sans taxe
+    c = taxes.commission_taxes(60, PARIS, photo_qc, LAVAL)
+    assert c["lines"] == [] and not c["zero_rated"]
+    # inscrit a la TPS, mission en Ontario : TPS (service rendu au Quebec), TVQ detaxee
+    c = taxes.commission_taxes(60, dict(PARIS, gst_number=QC_GST), photo_on, TORONTO)
+    assert [(l["code"], l["amount"]) for l in c["lines"]] == [("GST", 2.86)]
+    # inscrit aux deux, mission au Quebec : TPS + TVQ comprises
+    c = taxes.commission_taxes(60, dict(PARIS, gst_number=QC_GST, qst_number=QC_QST), photo_qc, LAVAL)
+    assert [(l["code"], l["amount"]) for l in c["lines"]] == [("GST", 2.61), ("QST", 5.21)]
+    # mission hors du Canada : detaxee
+    assert taxes.commission_taxes(60, PARIS, {"country": "France"}, PARIS)["zero_rated"]
+    # pilote de Toronto (au Canada) : TVH de sa province, jamais de TVQ
+    c = taxes.commission_taxes(60, TORONTO, photo_qc, LAVAL)
+    assert [l["code"] for l in c["lines"]] == ["HST"]
+
+
+def test_tvq_de_la_plateforme_au_versement_et_a_l_annulation(make_user, monkeypatch):
+    import payments, services, taxes
+    p = make_user("qcp_on", role="pilot", country="Canada", city="Toronto", lat=43.65, lng=-79.38)
+    c = make_user("qcp_c", role="client", country="Canada", city="Laval", lat=45.57, lng=-73.69)
+    services.set_pilot_stripe_account(p["id"], f"acct_fake_{p['id']}", True, True)
+
+    def booking():
+        mid = services.create_mission(
+            c["id"], title="Chalet", description="Photos aeriennes d'un chalet", mission_type="photo",
+            country="Canada", region="Québec", city="Laval", currency="CAD")
+        bid_id = services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
+        return services.get_booking(services.accept_bid(mid, bid_id, c["id"]))
+
+    bk = booking()
+    assert bk["tax_amount"] == 29.93 and services.booking_amount_cents(bk) == 32993
+    assert [l["code"] for l in taxes.loads(bk["fee_taxes"])] == ["HST"]
+    assert services.pilot_net(bk) == 240.0          # la TVQ reste a la plateforme
+    services.mark_booking_funded(bk["id"], payment_intent_id="pi_fake_qcp")
+    sent = []
+    monkeypatch.setattr(payments, "release_to_pilot", lambda **kw: sent.append(kw) or "tr_fake_qcp")
+    assert services.confirm_completion(bk["id"], c["id"])
+    assert sent[-1]["pilot_amount"] == 240.0
+    month = services.get_booking(bk["id"])["released_at"][:7]
+    row = next(r for r in services.tax_summary() if r["month"] == month and r["currency"] == "CAD")
+    assert row["collected"].get("QST", 0) >= 29.93
+
+    # annulation tardive : dedommagement sur le total, TVQ comprise gardee par la plateforme
+    bk2 = booking()
+    services.mark_booking_funded(bk2["id"], payment_intent_id="pi_fake_qcp2")
+    import db
+    db.execute("UPDATE bookings SET paid_at='2020-01-01 00:00:00', scheduled_at='2020-01-01 00:00:00' "
+               "WHERE id=?", (bk2["id"],))
+    calc = services.compute_cancellation_fee(services.get_booking(bk2["id"]))
+    assert calc["fee_amount"] + calc["refund_amount"] == pytest.approx(329.93)
+    assert calc["platform_tax_amount"] == round(calc["fee_amount"] * 9.975 / 109.975, 2)
+    refunds = []
+    monkeypatch.setattr(payments, "refund_payment", lambda *a, **kw: refunds.append(kw) or True)
+    res = services.cancel_booking_by_client(bk2["id"], c["id"])
+    assert res["ok"], res
+    assert refunds[-1]["amount"] == calc["refund_amount"]
+    assert sent[-1]["pilot_amount"] == round(calc["fee_amount"] - calc["platform_tax_amount"], 2)

@@ -278,13 +278,13 @@ UPDATES_LANGS = ("fr", "en", "es")
 _UPDATES = [
     ("2026-10", {"fr": "Octobre 2026", "en": "October 2026", "es": "Octubre de 2026"}, [
         {"fr": "Pilotes au Canada inscrits à la TPS/TVH ou à la TVQ : indiquez vos numéros dans votre profil. "
-               "Vos taxes s'ajoutent à vos devis selon la province de la mission, figurent sur le devis PDF et le "
+               "Vos taxes s'ajoutent à vos devis selon la province du client (celle du bien pour une inspection), figurent sur le devis PDF et le "
                "reçu avec vos numéros, et vous sont versées en entier avec votre paiement.",
          "en": "Pilots in Canada registered for GST/HST or QST: enter your numbers in your profile. Your taxes are "
-               "added to your quotes according to the province of the job, appear on the PDF quote and the receipt "
+               "added to your quotes according to the client's province (the property's for an inspection), appear on the PDF quote and the receipt "
                "with your numbers, and are paid to you in full with your payout.",
          "es": "Pilotos en Canadá inscritos en la GST/HST o la QST: indiquen sus números en su perfil. Sus impuestos "
-               "se añaden a sus presupuestos según la provincia de la misión, figuran en el presupuesto PDF y en el "
+               "se añaden a sus presupuestos según la provincia del cliente (la del inmueble en una inspección), figuran en el presupuesto PDF y en el "
                "recibo con sus números, y se les abonan íntegramente con su pago."},
         {"fr": "Pilotes : « Mes statistiques » dans votre espace. Visites de votre fiche semaine par semaine, leur pays et leur provenance (Google, Facebook, recherche "
                "AubePilot, lien direct...), "

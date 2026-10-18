@@ -139,6 +139,12 @@
     par la plateforme mais leur sont reversées en entier : ce sont eux qui les remettent.
   </p>
   <p class="muted small" style="max-width: 76ch;">
+    TVQ (et TPS/TVH d'un pilote établi à l'étranger) d'une mission fournie au Québec par un pilote d'une autre
+    province ou de l'étranger non inscrit : la plateforme est réputée fournisseur, elle la perçoit et la remet,
+    et la commission ne la porte pas. Lieu de fourniture : adresse du client, ou lieu du bien pour une
+    inspection, un levé, une cartographie ou un suivi de chantier.
+  </p>
+  <p class="muted small" style="max-width: 76ch;">
     TVP de la Saskatchewan (6 %) et TVD du Manitoba (7 %) : la loi charge la plateforme de les percevoir
     sur la photo, la vidéo, la cartographie, le suivi de chantier et la surveillance qui s'y vendent, et de
     les remettre. Colombie-Britannique : TVP de 7 % comprise dans la commission des pilotes qui y sont établis,
@@ -158,7 +164,7 @@
   {% endif %}
   {% if tax_summary %}
   <table class="table-simple" style="width: 100%;">
-    <thead><tr><th style="text-align:start;">Mois</th><th>Devise</th><th>Commissions</th><th>dont TPS</th><th>dont TVH</th><th>dont TVQ</th><th>dont TVP C.-B.</th><th>TVP perçue (à remettre)</th><th>Taxes des pilotes (reversées)</th></tr></thead>
+    <thead><tr><th style="text-align:start;">Mois</th><th>Devise</th><th>Commissions</th><th>dont TPS</th><th>dont TVH</th><th>dont TVQ</th><th>dont TVP C.-B.</th><th>Perçues par la plateforme (à remettre)</th><th>Taxes des pilotes (reversées)</th></tr></thead>
     {% for r in tax_summary %}
     <tr>
       <td class="mono">{{ r.month }}</td><td>{{ r.currency }}</td>

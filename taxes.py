@@ -9,13 +9,26 @@ plateforme (3.) :
    elles sont reversees en entier au pilote, qui les declare et les remet.
    La commission se calcule sur le prix AVANT taxes. Un pilote non inscrit
    (petit fournisseur : au plus 30 000 $ de fournitures taxables sur quatre
-   trimestres civils) n'en facture pas : rien n'est ajoute.
-   Lieu de la fourniture : la province ou la mission a lieu (service lie a un
-   lieu, et presque toujours celle du client). Mission hors du Canada : rien.
+   trimestres civils, ou dans un seul trimestre) n'en facture pas.
+   Lieu de la fourniture (supply_province, DORS/2010-117 art. 13 et 14,
+   LTVQ art. 22.15.0.1 a 22.15.0.3) : en general la province de l'adresse
+   du CLIENT ; pour un service lie a un immeuble (inspection, leve,
+   cartographie, suivi de chantier : REAL_PROPERTY_TYPES), celle du bien ;
+   sans adresse canadienne du client, la ou le service est rendu. Mission
+   hors du Canada : rien.
+   Plateforme reputee fournisseur (ligne by="platform", numeros de L'Aube
+   Etoilee) : TVQ d'une fourniture faite au Quebec par un pilote qui n'y
+   reside pas et n'est pas inscrit a la TVQ (LTVQ art. 477.5.2), et TPS/TVH
+   d'un pilote etabli hors du Canada non inscrit (LTA art. 211.13). La
+   commission ne porte alors pas cette taxe.
 
 2. La COMMISSION, fournie par L'Aube Etoilee inc. (inscrite) au pilote.
-   Taxable pour un pilote etabli au Canada, selon sa province (adresse du
-   destinataire) ; detaxee pour un pilote a l'etranger (service exporte).
+   Pilote etabli au Canada : selon sa province (adresse du destinataire).
+   Pilote a l'etranger : detaxee si sa mission est hors du Canada ; sinon
+   le service (« obtenir des commandes ») n'est pas exporte (ann. VI,
+   partie V, art. 7 f) et 23 d) ; LTVQ art. 185) : TPS de 5 % s'il est
+   inscrit a la TPS (pas d'adresse canadienne : service rendu au Quebec),
+   et TVQ si la mission est au Quebec et qu'il est inscrit a la TVQ.
    TAXES COMPRISES dans le taux annonce, comme les frais Stripe : le pilote
    touche toujours le prix moins la commission (CGU art. 11 et 13), et la
    part de taxes qu'elle contient est calculee ici pour etre declaree.
@@ -72,6 +85,14 @@ PST_TAXABLE_TYPES = frozenset({
 })
 # Provinces ou la TVP d'une MISSION est percue par la plateforme.
 PST_MISSION_PROVINCES = ("SK", "MB")
+# Services lies a un immeuble : taxes de la province ou se trouve le bien
+# (DORS/2010-117 art. 14, LTVQ art. 22.15.0.3 ; ARC, memorandum 3-3-6-1 :
+# inspection, arpentage). Les autres suivent l'adresse du client.
+REAL_PROPERTY_TYPES = frozenset({
+    "inspection", "toiture", "ouvrage_art", "eolienne", "photovoltaique", "ligne_ht",
+    "pipeline", "ferroviaire", "industriel", "thermographie",
+    "mapping", "3d", "topographie", "volumes", "btp",
+})
 PROVINCES = ("AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT")
 
 
@@ -188,6 +209,38 @@ def person_province(person: dict) -> Optional[str]:
             or province_from_point(person.get("lat"), person.get("lng")))
 
 
+def supply_province(mission: dict, client: Optional[dict] = None,
+                    pilot: Optional[dict] = None) -> Optional[str]:
+    """Province ou la mission est fournie, pour les taxes : celle du bien
+    pour un service lie a un immeuble, sinon celle de l'adresse du client ;
+    a defaut, la ou la mission a lieu, puis la province du pilote. None
+    pour une mission hors du Canada."""
+    mission = mission or {}
+    if not is_canada(mission.get("country")):
+        return None
+    here = mission_province(mission)
+    if (mission.get("mission_type") or "") in REAL_PROPERTY_TYPES:
+        return here or person_province(client) or person_province(pilot)
+    return person_province(client) or here or person_province(pilot)
+
+
+def platform_deemed(pilot: dict, province: Optional[str]) -> tuple:
+    """(TPS/TVH, TVQ) : la plateforme est-elle reputee fournir la mission a
+    la place du pilote ? TPS/TVH : pilote etabli hors du Canada, sans numero
+    de TPS (LTA art. 211.13). TVQ : fourniture faite au Quebec par un pilote
+    etabli hors du Quebec, sans numero de TVQ (LTVQ art. 477.5.2), meme petit
+    fournisseur. Pays ou province du pilote inconnus : pas de presomption."""
+    pilot = pilot or {}
+    if not province or not (pilot.get("country") or "").strip():
+        return (False, False)
+    abroad = not is_canada(pilot.get("country"))
+    home = None if abroad else person_province(pilot)
+    gst = abroad and not pilot.get("gst_number")
+    qst = (province == "QC" and not pilot.get("qst_number")
+           and (abroad or (home is not None and home != "QC")))
+    return (gst, qst)
+
+
 # ---------------------------------------------------------------------------
 # Numeros d'inscription
 # ---------------------------------------------------------------------------
@@ -267,23 +320,30 @@ def mission_pst_due(province: Optional[str], mission_type) -> bool:
     return province in PST_MISSION_PROVINCES and (mission_type or "") in PST_TAXABLE_TYPES
 
 
-def mission_taxes(price, pilot: dict, mission: dict) -> dict:
+def mission_taxes(price, pilot: dict, mission: dict, client: Optional[dict] = None) -> dict:
     """Taxes ajoutees au prix du pilote pour cette mission.
 
     {"province", "lines": [{code, rate, amount, number[, by]}], "total"} :
-    celles du pilote inscrit (TPS/TVH, TVQ), puis la TVP percue par la
-    plateforme (by="platform") ou elle est inscrite. Mission hors du Canada :
-    aucune ligne. Province introuvable : celle du pilote ; a defaut, le
-    Quebec s'il est inscrit a la TVQ."""
+    celles du pilote inscrit (TPS/TVH, TVQ), puis celles que la plateforme
+    percoit elle-meme (by="platform") : TPS/TVH et TVQ dont elle est reputee
+    fournisseur (platform_deemed), TVP ou elle est inscrite. Province :
+    supply_province ; a defaut, le Quebec si le pilote est inscrit a la TVQ.
+    Mission hors du Canada : aucune ligne."""
+    from config import PLATFORM_GST_NUMBER, PLATFORM_QST_NUMBER
     gst = (pilot or {}).get("gst_number") or ""
     qst = (pilot or {}).get("qst_number") or ""
     price = float(price or 0)
     mission = mission or {}
     if price <= 0 or not is_canada(mission.get("country")):
         return {"province": None, "lines": [], "total": 0.0}
-    prov = mission_province(mission) or person_province(pilot) or ("QC" if qst else None)
+    prov = supply_province(mission, client, pilot) or ("QC" if qst else None)
     lines = [{"code": code, "rate": rate, "amount": _part(price, rate), "number": num}
              for code, rate, num in _rates(prov, gst, qst)]
+    deemed_gst, deemed_qst = platform_deemed(pilot, prov)
+    for code, rate, num in _rates(prov, PLATFORM_GST_NUMBER if deemed_gst else "",
+                                  PLATFORM_QST_NUMBER if deemed_qst else ""):
+        lines.append({"code": code, "rate": rate, "amount": _part(price, rate),
+                      "number": num, "by": "platform"})
     pst_number = platform_pst_number(prov)
     if pst_number and mission_pst_due(prov, mission.get("mission_type")):
         rate = PST_RATES[prov]
@@ -292,29 +352,65 @@ def mission_taxes(price, pilot: dict, mission: dict) -> dict:
     return {"province": prov, "lines": lines, "total": _cents(sum(l["amount"] for l in lines))}
 
 
-def platform_collected(lines) -> float:
-    """Part des lignes percue et remise par la plateforme (TVP) : elle reste
-    a L'Aube Etoilee au versement, hors du net du pilote."""
+def platform_collected(lines, codes=None) -> float:
+    """Part des lignes percue et remise par la plateforme (TVP, taxes dont
+    elle est reputee fournisseur) : elle reste a L'Aube Etoilee au
+    versement, hors du net du pilote. codes : limiter a ces codes."""
     return _cents(sum(float(l.get("amount") or 0) for l in loads(lines)
-                      if l.get("by") == "platform"))
+                      if l.get("by") == "platform" and (codes is None or l.get("code") in codes)))
 
 
-def commission_taxes(fee, pilot: dict, mission: Optional[dict] = None) -> dict:
+SALES_CODES = ("GST", "HST", "QST")      # TPS/TVH/TVQ (la TVP n'en fait pas partie)
+
+
+def deemed_tax_in(amount, lines) -> list:
+    """Taxes comprises dans un dedommagement d'annulation garde sur une
+    fourniture dont la plateforme est reputee fournisseur : fraction de
+    chaque loi, taux/(100 + taux) (LTA art. 182, LTVQ art. 318)."""
+    out = []
+    for l in loads(lines):
+        if l.get("by") == "platform" and l.get("code") in SALES_CODES:
+            r = Decimal(str(l["rate"]))
+            out.append({"code": l["code"], "rate": l["rate"], "number": l.get("number"),
+                        "amount": _cents(Decimal(str(amount)) * r / (100 + r))})
+    return out
+
+
+def commission_taxes(fee, pilot: dict, mission: Optional[dict] = None,
+                     client: Optional[dict] = None) -> dict:
     """Part de taxes COMPRISE dans la commission (fournie par la plateforme
-    au pilote). Pilote hors du Canada : detaxee (lignes vides, zero_rated).
-    Province du pilote, sinon celle de la mission, sinon le Quebec (province
-    de la plateforme). Pilote en C.-B. : TVP de 7 % en plus une fois la
+    au pilote), voir 2. ci-dessus. Pilote au Canada : province du pilote,
+    sinon celle de la mission, sinon le Quebec (province de la plateforme) ;
+    pas de TVQ si la plateforme est reputee fournir la mission au Quebec.
+    Pilote a l'etranger : detaxee (zero_rated) si la mission est hors du
+    Canada ; sinon TPS si inscrit, TVQ si mission au Quebec et inscrit a la
+    TVQ, rien s'il n'est inscrit nulle part (la plateforme percoit alors les
+    taxes de la mission). Pilote en C.-B. : TVP de 7 % en plus une fois la
     plateforme inscrite."""
     from config import PLATFORM_GST_NUMBER, PLATFORM_QST_NUMBER
     fee = float(fee or 0)
+    pilot = pilot or {}
     if fee <= 0:
         return {"province": None, "lines": [], "total": 0.0, "zero_rated": False}
-    if not is_canada((pilot or {}).get("country")):
-        return {"province": None, "lines": [], "total": 0.0, "zero_rated": True}
+    if not is_canada(pilot.get("country")):
+        where = supply_province(mission or {}, client, pilot)
+        if not where:
+            return {"province": None, "lines": [], "total": 0.0, "zero_rated": True}
+        rates = []
+        if pilot.get("gst_number"):
+            rates.append(("GST", GST_RATE, PLATFORM_GST_NUMBER))
+        if where == "QC" and pilot.get("qst_number"):
+            rates.append(("QST", QST_RATE, PLATFORM_QST_NUMBER))
+        return _included(fee, "QC", rates)
     prov = person_province(pilot) or mission_province(mission or {}) or "QC"
     rates = _rates(prov, PLATFORM_GST_NUMBER, PLATFORM_QST_NUMBER)
     if prov == "BC" and platform_pst_number("BC"):
         rates.append(("PST", PST_RATES["BC"], platform_pst_number("BC")))
+    return _included(fee, prov, rates)
+
+
+def _included(fee, prov, rates) -> dict:
+    """Taxes comprises dans `fee` aux taux `rates` [(code, taux, numero)]."""
     total_rate = sum(Decimal(str(r)) for _c, r, _n in rates)
     base = Decimal(str(fee)) * 100 / (100 + total_rate)
     lines = [{"code": code, "rate": rate, "amount": _part(base, rate), "number": num}

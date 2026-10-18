@@ -249,7 +249,7 @@
   {# Mentions pour le pilote inscrit qui reclame ses credits de taxe (CTI/RTI). #}
   <p class="muted small mono" style="margin-top: 6px;">
     {{ t('tax.fee_included') }} :
-    {% for l in ftax %}{{ tax_label(l.code) }} {{ '%.2f'|format(l.amount) }}{% if not loop.last %} · {% endif %}{% endfor %}
+    {% for l in ftax %}{{ tax_rates([l]) }} {{ '%.2f'|format(l.amount) }}{% if not loop.last %} · {% endif %}{% endfor %}
     — {{ t('tax.billed_by', name=platform_tax_ids.name) }} · {{ tax_label('GST') }} {{ platform_tax_ids.gst }} · {{ tax_label('QST') }} {{ platform_tax_ids.qst }}{% for l in ftax if l.code == 'PST' %} · {{ tax_label('PST') }} {{ l.number }}{% endfor %}
   </p>
   {% endif %}

@@ -267,8 +267,10 @@ traitement des paiements sont compris dans la commission. Les taxes de vente qui
 commission y sont aussi comprises : pour un Pilote établi au Canada, la TPS (ou la TVH de sa province)
 et, au Québec, la TVQ, que L'Aube Étoilée inc. (TPS {{ platform_tax_ids.gst }}, TVQ {{ platform_tax_ids.qst }})
 remet aux autorités fiscales ; pour un Pilote établi en Colombie-Britannique, la TVP de cette province
-aussi, dès que L'Aube Étoilée y est inscrite{% if platform_tax_ids.pst.BC %} (n° {{ platform_tax_ids.pst.BC }}){% endif %} ;
-pour un Pilote établi à l'étranger, la commission est détaxée. Leur montant figure sur la Réservation. La commission se calcule sur le prix du Devis avant les taxes du
+aussi, dès que L'Aube Étoilée y est inscrite{% if platform_tax_ids.pst.BC %} (n° {{ platform_tax_ids.pst.BC }}){% endif %}.
+Pour un Pilote établi à l'étranger, la commission est détaxée si la Mission a lieu hors du Canada ; au
+Canada, elle comprend la TPS s'il y est inscrit, et la TVQ si la Mission est fournie au Québec et qu'il
+est inscrit à la TVQ. Leur montant figure sur la Réservation. La commission se calcule sur le prix du Devis avant les taxes du
 Pilote.
 </p>
 
@@ -311,12 +313,17 @@ converties au taux appliqué par le prestataire de paiement.
 </p>
 <p>
 Un Pilote inscrit aux fichiers de la TPS/TVH, et de la TVQ au Québec, indique ses numéros dans son
-profil. Ses taxes, calculées selon la province où la Mission a lieu, s'ajoutent alors au prix de ses
+profil. Ses taxes, calculées selon le lieu de fourniture (en général la province de l'adresse du Client ;
+celle du bien pour une inspection, un levé, une cartographie ou un suivi de chantier), s'ajoutent alors au prix de ses
 Devis ; elles figurent sur le devis et sur la Réservation avec ses numéros, le Client les paie avec le
 prix, et elles sont versées en entier au Pilote avec son solde. Le Pilote reste le fournisseur de la
 prestation : il répond de l'exactitude de ses numéros, déclare et remet lui-même ces taxes, ainsi que
-toute autre taxe applicable à ses prestations (taxe d'un autre pays, par exemple), sauf la taxe de vente
-provinciale que la loi charge la plateforme de percevoir. En Saskatchewan (TVP) et au Manitoba (TVD), sur
+toute autre taxe applicable à ses prestations (taxe d'un autre pays, par exemple), sauf les taxes que la loi
+charge la plateforme de percevoir. Pour une prestation fournie au Québec par un Pilote établi hors du Québec
+qui n'est pas inscrit à la TVQ, AubePilot est réputée fournisseur pour la TVQ ; pour une prestation fournie
+au Canada par un Pilote établi à l'étranger qui n'est pas inscrit à la TPS/TVH, elle l'est aussi pour la
+TPS/TVH. AubePilot ajoute alors ces taxes au prix du Devis à ses propres numéros, les perçoit et les remet
+elle-même ; elles ne sont pas versées au Pilote et la commission ne les porte pas. En Saskatchewan (TVP) et au Manitoba (TVD), sur
 les prestations qui y sont taxables (photo, vidéo, cartographie notamment), AubePilot ajoute cette taxe au
 prix du Devis, la perçoit et la remet elle-même dès que L'Aube Étoilée est inscrite dans la
 province{% if platform_tax_ids.pst.SK or platform_tax_ids.pst.MB %} ({% if platform_tax_ids.pst.SK %}TVP de la Saskatchewan n° {{ platform_tax_ids.pst.SK }}{% endif %}{% if platform_tax_ids.pst.SK and platform_tax_ids.pst.MB %}, {% endif %}{% if platform_tax_ids.pst.MB %}TVD du Manitoba n° {{ platform_tax_ids.pst.MB }}{% endif %}){% endif %} ;

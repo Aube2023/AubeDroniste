@@ -1972,7 +1972,7 @@ def mission_detail(mission_id):
     )
 
 
-def _bid_tax_note(user, mission: dict) -> str:
+def _bid_tax_note(user, mission: dict, client: "dict | None" = None) -> str:
     """Phrase sous le prix du formulaire de devis : pour un pilote etabli au
     Canada, les taxes qui s'ajouteront pour le client (taxes.mission_taxes)
     ou le rappel qu'il n'a declare aucun numero ; pour tout pilote, la TVP
@@ -1981,7 +1981,9 @@ def _bid_tax_note(user, mission: dict) -> str:
         return ""
     lang = getattr(g, "lang", i18n.DEFAULT)
     party = services.pilot_tax_party(user["id"])
-    preview = taxes.mission_taxes(100, party, mission)
+    if client is None and mission.get("client_user_id"):
+        client = services.pilot_tax_party(mission["client_user_id"])
+    preview = taxes.mission_taxes(100, party, mission, client)
     own = [l for l in preview["lines"] if l.get("by") != "platform"]
     collected = [l for l in preview["lines"] if l.get("by") == "platform"]
     notes = []
@@ -4462,7 +4464,8 @@ def contact_quote(client_id, pilot_id):
         thread=services.contact_thread(client_id, pilot_id, user["id"])[-6:], seo=_NOINDEX,
         default_currency=_currency_for_country(user.get("country")),
         # Lieu pas encore choisi : estimation d'apres le client, recalculee au depot.
-        bid_tax_note=_bid_tax_note(user, {"country": client["country"], "city": client["city"]}),
+        bid_tax_note=_bid_tax_note(user, {"country": client["country"], "city": client["city"]},
+                                   client={"country": client["country"], "city": client["city"]}),
     )
 
 
