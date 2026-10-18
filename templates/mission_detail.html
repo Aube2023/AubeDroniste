@@ -42,7 +42,9 @@
 {% set can_bid = current_user and current_user.role in ('pilot', 'both') and current_user.id != mission.client_user_id and mission.status == 'open' %}
 {% set my_bid_rejected = my_bid and my_bid.status == 'rejected' %}
 
-{% if can_bid and pilot_pay_state in ('none', 'pending') %}
+{% if can_bid and payments_paused %}
+{% include "_pay_paused.html" %}
+{% elif can_bid and pilot_pay_state in ('none', 'pending') %}
 {% include "_pay_lock.html" %}
 {% elif can_bid %}
 <section class="card">
@@ -204,7 +206,9 @@
       </details>
       {% endif %}
 
-      {% if mission.status == 'open' and b.status == 'pending' %}
+      {% if mission.status == 'open' and b.status == 'pending' and payments_paused %}
+      <p class="muted small mt">{{ t('pay.paused_p') }}</p>
+      {% elif mission.status == 'open' and b.status == 'pending' %}
       <div class="actions-row mt">
         <form method="post" action="{{ url_for('bid_accept', mission_id=mission.id, bid_id=b.id) }}">
             {{ csrf_input() }}

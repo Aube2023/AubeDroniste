@@ -137,3 +137,40 @@ def test_paiement_client_bloque_si_verification_en_attente(auth_client, make_use
     assert "/stripe/fake-checkout" not in r.headers["Location"]
     assert db.fetchone("SELECT stripe_session_id FROM bookings WHERE id=?",
                        (booking_id,))["stripe_session_id"] is None
+
+
+# ---------------------------------------------------------------------------
+# Paiements en pause (config.PAYMENTS_PAUSED, 2026-10-18) : le temps de
+# valider les taxes du Quebec, ni devis, ni acceptation, ni paiement, ni
+# collecte. Le reste du site reste ouvert.
+# ---------------------------------------------------------------------------
+
+def test_pause_bloque_devis_acceptation_et_paiement(make_user, auth_client, monkeypatch, connect_on):
+    import config, db, services
+    p = _pilot(make_user, "ok")
+    mid, c = _mission(make_user)
+    bid_id = services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
+    other = _pilot(make_user, "ok")
+    bid2 = services.place_bid(mid, other["id"], price=320, currency="CAD", description=DESC)
+    booking_id = services.accept_bid(mid, bid_id, c["id"])
+
+    monkeypatch.setattr(config, "PAYMENTS_PAUSED", True)
+    # le pilote ne peut plus envoyer de devis : message a la place du formulaire
+    mid2, _c2 = _mission(make_user)
+    with pytest.raises(ValueError) as exc:
+        services.place_bid(mid2, p["id"], price=300, currency="CAD", description=DESC)
+    assert "en pause" in str(exc.value)
+    html = unescape(auth_client(p["id"]).get(f"/missions/{mid2}").data.decode())
+    assert "Paiements en pause" in html and 'name="price"' not in html
+    # le client ne peut pas payer la reservation deja creee
+    cc = auth_client(c["id"])
+    r = cc.get(f"/reservations/{booking_id}/payer", follow_redirects=True)
+    assert "Les devis et les paiements sont en pause" in unescape(r.data.decode())
+    assert services.get_booking(booking_id)["status"] == "pending_payment"
+    page = unescape(cc.get(f"/reservations/{booking_id}").data.decode())
+    assert f"/reservations/{booking_id}/payer" not in page
+    # ni accepter un autre devis
+    db.execute("UPDATE missions SET status='open' WHERE id=?", (mid,))
+    db.execute("UPDATE bids SET status='pending' WHERE id=?", (bid2,))
+    with pytest.raises(ValueError):
+        services.accept_bid(mid, bid2, c["id"])

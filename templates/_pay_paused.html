@@ -1,0 +1,7 @@
+{# Remplace un formulaire de devis quand les paiements sont en pause
+   (config.PAYMENTS_PAUSED). Le serveur refuse de toute facon le devis
+   (services.require_pilot_payment_ready). #}
+<section class="card" style="border-left: 3px solid var(--amber);">
+  <span class="eyebrow">{{ t('pay.paused_title') }}</span>
+  <p class="muted" style="margin: 6px 0 0;">{{ t('pay.paused_p') }}</p>
+</section>

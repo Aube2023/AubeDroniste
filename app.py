@@ -441,6 +441,7 @@ def _inject_globals():
         "stripe_pubkey": STRIPE_PUBLISHABLE_KEY,
         # Versements auto Connect actifs ? Sinon : « paiement en direct » (UI masquee)
         "stripe_connect_enabled": config.STRIPE_CONNECT_ENABLED and payments.is_available(),
+        "payments_paused": config.PAYMENTS_PAUSED,
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
@@ -3781,7 +3782,8 @@ def bid_withdraw(bid_id):
 @auth.login_required
 def bid_accept(mission_id, bid_id):
     try:
-        booking_id = services.accept_bid(mission_id, bid_id, g.user["id"])
+        booking_id = services.accept_bid(mission_id, bid_id, g.user["id"],
+                                         lang=getattr(g, "lang", i18n.DEFAULT))
     except (LookupError, ValueError) as exc:
         flash(str(exc), "error")
         return redirect(url_for("mission_detail", mission_id=mission_id))
@@ -4571,6 +4573,9 @@ def booking_pay(booking_id):
     if booking["status"] != "pending_payment":
         flash(f"Cette réservation n'est plus à payer (statut : {booking['status']}).", "info")
         return redirect(url_for("booking_detail", booking_id=booking_id))
+    if config.PAYMENTS_PAUSED:
+        flash(i18n.t("pay.paused_p", getattr(g, "lang", i18n.DEFAULT)), "info")
+        return redirect(url_for("booking_detail", booking_id=booking_id))
     if not payments.is_available():
         flash(
             "Le paiement en ligne est temporairement indisponible. "
@@ -4677,8 +4682,9 @@ def _campaign_can_open(profile) -> bool:
 def _contributions_open_for(profile) -> bool:
     """Les contributions en ligne, elles, attendent que le pilote puisse etre
     paye (Connect ouvert cote plateforme + versements actifs sur son compte) :
-    on n'encaisse pas un soutien qu'on ne saurait pas reverser."""
-    return bool(config.STRIPE_CONNECT_ENABLED and profile
+    on n'encaisse pas un soutien qu'on ne saurait pas reverser. Fermees aussi
+    quand les paiements sont en pause."""
+    return bool(config.STRIPE_CONNECT_ENABLED and not config.PAYMENTS_PAUSED and profile
                 and profile.get("stripe_payouts_enabled") and payments.is_available())
 
 

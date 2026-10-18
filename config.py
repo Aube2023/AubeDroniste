@@ -806,6 +806,11 @@ STRIPE_PAYMENTS_ENABLED = bool(STRIPE_SECRET_KEY) or STRIPE_FAKE_MODE
 # pret cote Stripe : l'UI d'encaissement Stripe reapparait, aucun autre change.
 STRIPE_CONNECT_ENABLED = os.environ.get("STRIPE_CONNECT_ENABLED", "").strip().lower() in ("1", "true", "yes", "on")
 
+# Interrupteur : devis, acceptation de devis, paiement des reservations et
+# collectes suspendus (2026-10-18, le temps de valider les taxes du Quebec).
+# Les versements deja dus aux pilotes et les remboursements continuent.
+PAYMENTS_PAUSED = os.environ.get("AUBEPILOT_PAYMENTS_PAUSED", "").strip().lower() in ("1", "true", "yes", "on")
+
 # Auto-libération si le client n'a pas validé après ce delai (jours)
 AUTO_RELEASE_DAYS = int(os.environ.get("AUBEPILOT_AUTO_RELEASE_DAYS", "7"))
 

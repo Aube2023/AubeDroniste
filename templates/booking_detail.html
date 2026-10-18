@@ -106,7 +106,10 @@
 
 {% if booking.status == 'pending_payment' and is_client %}
 <div class="card" style="border-left: 3px solid var(--amber);">
-  {% if not stripe_connect_enabled %}
+  {% if payments_paused %}
+  <span class="eyebrow">{{ t('pay.paused_title') }}</span>
+  <p class="muted" style="max-width: 60ch; margin: 6px 0 0;">{{ t('pay.paused_p') }}</p>
+  {% elif not stripe_connect_enabled %}
   {# Sans Connect, le bouton « Payer » se heurte a un mur : ne pas le montrer,
      et ne pas promettre un sequestre que la plateforme ne peut pas denouer. #}
   <span class="eyebrow">Paiement</span>

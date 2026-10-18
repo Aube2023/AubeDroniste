@@ -21,7 +21,9 @@
   </details>
   {% endif %}
 
-  {% if pilot_pay_state in ('none', 'pending') %}
+  {% if payments_paused %}
+  {% include "_pay_paused.html" %}
+  {% elif pilot_pay_state in ('none', 'pending') %}
   {% include "_pay_lock.html" %}
   {% else %}
   <form method="post" class="auth-form auth-steps" id="quote-form">

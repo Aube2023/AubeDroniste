@@ -2430,14 +2430,18 @@ def pilot_net(booking: dict) -> float:
                  - taxes.platform_collected(booking.get("taxes")), 2)
 
 
-def accept_bid(mission_id: int, bid_id: int, client_user_id: int) -> int:
+def accept_bid(mission_id: int, bid_id: int, client_user_id: int, lang: str = "fr") -> int:
     """Accepte une enchere : cree booking, ferme les autres encheres,
-    passe la mission en 'assigned'. Retourne booking_id.
+    passe la mission en 'assigned'. Retourne booking_id. Refuse
+    (ValueError) quand les paiements sont en pause.
 
     Atomic : si 2 clients du meme compte (ou refresh en double-clic)
     acceptent simultanement, l'UPDATE conditionnel ne reussit qu'une
     seule fois — le 2e appel leve ValueError.
     """
+    import config
+    if config.PAYMENTS_PAUSED:
+        raise ValueError(i18n.t("pay.paused_p", lang))
     bid = db.fetchone("SELECT * FROM bids WHERE id=? AND mission_id=?", (bid_id, mission_id))
     mission = db.fetchone(
         "SELECT * FROM missions WHERE id=? AND client_user_id=?",
@@ -4474,8 +4478,12 @@ def pilot_payment_state(profile: Optional[dict]) -> str:
 
 def require_pilot_payment_ready(pilot_user_id: int, lang: str = "fr"):
     """Verrou avant tout devis : un pilote dont Stripe ne peut pas encore
-    verser l'argent a sa banque ne s'engage sur aucune mission. ValueError
-    (message pret a afficher) sinon."""
+    verser l'argent a sa banque ne s'engage sur aucune mission ; aucun devis
+    non plus quand les paiements sont en pause (config.PAYMENTS_PAUSED).
+    ValueError (message pret a afficher) sinon."""
+    import config
+    if config.PAYMENTS_PAUSED:
+        raise ValueError(i18n.t("pay.paused_p", lang))
     state = pilot_payment_state(get_pilot_profile(pilot_user_id))
     if state in ("none", "pending"):
         raise ValueError(i18n.t(f"pay.bid_locked_{state}", lang))
