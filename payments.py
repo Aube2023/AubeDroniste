@@ -201,6 +201,25 @@ def fresh_onboarding_link(account_id: str) -> str:
     return link.url
 
 
+# Connexion au tableau de bord Express par courriel : repli quand Stripe
+# refuse le lien direct (onboarding pas fini, compte supprime...).
+EXPRESS_LOGIN_URL = "https://connect.stripe.com/express_login"
+
+
+def express_dashboard_link(account_id: str) -> Optional[str]:
+    """Lien a usage unique vers le tableau de bord Stripe Express du pilote :
+    solde en attente et disponible, versements vers sa banque avec leur date
+    d'arrivee. Le lien expire en quelques minutes, on le cree au clic.
+
+    Retourne None en mode fake (pas de tableau de bord a montrer)."""
+    if STRIPE_FAKE_MODE and account_id.startswith("acct_fake_"):
+        return None
+    s = _require_stripe_or_fake()
+    if s is None:
+        return None
+    return s.Account.create_login_link(account_id).url
+
+
 def get_pilot_status(account_id: Optional[str]) -> dict:
     """Retourne {charges_enabled, payouts_enabled, details_submitted}."""
     if not account_id:

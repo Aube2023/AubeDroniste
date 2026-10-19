@@ -152,6 +152,10 @@
       {% if profile.stripe_account_id %}{{ t('tpl.reprendre_l_onboarding') }}{% else %}{{ t('tpl.activer_mon_compte_stripe') }}{% endif %}
     </a>
   {% endif %}
+  {% if profile.stripe_account_id and profile.stripe_charges_enabled %}
+    <p class="muted small" style="margin: 14px 0 6px;">{{ t('pay.dashboard_p') }}</p>
+    <a href="{{ url_for('stripe_dashboard') }}" class="ghost">{{ t('pay.dashboard_cta') }}</a>
+  {% endif %}
 </section>
 {% else %}
 <section class="card" style="border-left: 3px solid var(--teal);">

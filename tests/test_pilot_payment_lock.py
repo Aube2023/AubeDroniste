@@ -174,3 +174,62 @@ def test_pause_bloque_devis_acceptation_et_paiement(make_user, auth_client, monk
     db.execute("UPDATE bids SET status='pending' WHERE id=?", (bid2,))
     with pytest.raises(ValueError):
         services.accept_bid(mid, bid2, c["id"])
+
+
+# ---------------------------------------------------------------------------
+# Tableau de bord Stripe Express (2026-10-18) : apres le 1er paiement reel, le
+# pilote ne savait pas si l'argent avait ete vire ni ou il en etait.
+# ---------------------------------------------------------------------------
+
+@pytest.fixture()
+def stripe_up(monkeypatch, connect_on):
+    import payments
+    monkeypatch.setattr(payments, "is_available", lambda: True)
+
+
+@pytest.mark.parametrize("state,shown", [("none", False), ("pending", True), ("ok", True)])
+def test_bouton_versements_sur_l_espace_pilote(auth_client, make_user, stripe_up, state, shown):
+    p = _pilot(make_user, state)
+    html = unescape(auth_client(p["id"]).get("/espace/pilote").data.decode())
+    assert ("Voir mon solde et mes versements" in html) is shown
+    assert ("/espace/pilote/stripe/versements" in html) is shown
+
+
+def test_versements_redirige_vers_stripe(auth_client, make_user, stripe_up, monkeypatch):
+    import payments
+    p = _pilot(make_user, "pending")
+    seen = []
+    monkeypatch.setattr(payments, "express_dashboard_link",
+                        lambda acct: seen.append(acct) or "https://connect.stripe.com/express/x1")
+    r = auth_client(p["id"]).get("/espace/pilote/stripe/versements")
+    assert r.status_code == 302
+    assert r.headers["Location"] == "https://connect.stripe.com/express/x1"
+    assert seen == [f"acct_fake_{p['id']}"]
+
+
+def test_versements_repli_sur_la_connexion_stripe(auth_client, make_user, stripe_up, monkeypatch):
+    import payments
+
+    def refuse(acct):
+        raise RuntimeError("Cannot create a login link for an account that has not completed onboarding.")
+    monkeypatch.setattr(payments, "express_dashboard_link", refuse)
+    p = _pilot(make_user, "pending")
+    r = auth_client(p["id"]).get("/espace/pilote/stripe/versements")
+    assert r.status_code == 302
+    assert r.headers["Location"] == payments.EXPRESS_LOGIN_URL
+
+
+def test_versements_mode_demo_et_sans_compte(auth_client, make_user, stripe_up, monkeypatch):
+    import payments
+    monkeypatch.setattr(payments, "STRIPE_FAKE_MODE", True)
+    p = _pilot(make_user, "ok")
+    r = auth_client(p["id"]).get("/espace/pilote/stripe/versements", follow_redirects=True)
+    assert "Mode démo : il n'y a pas de tableau de bord Stripe" in unescape(r.data.decode())
+    sans = _pilot(make_user, "none")
+    r = auth_client(sans["id"]).get("/espace/pilote/stripe/versements")
+    assert r.headers["Location"].endswith("/espace/pilote/stripe")
+
+
+def test_versements_reserve_aux_pilotes(auth_client, make_user, stripe_up):
+    c = make_user("lock_cli", role="client", country="Canada", city="Montréal")
+    assert auth_client(c["id"]).get("/espace/pilote/stripe/versements").status_code == 403

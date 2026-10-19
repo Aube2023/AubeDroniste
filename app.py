@@ -4536,6 +4536,33 @@ def stripe_onboard():
     return redirect(url)
 
 
+@app.route("/espace/pilote/stripe/versements")
+@auth.login_required
+def stripe_dashboard():
+    """Ouvre le tableau de bord Stripe Express du pilote : ou en est son argent
+    (en attente, disponible, verse a sa banque). Demande du 2026-10-18 apres
+    le 1er paiement reel : « comment savoir que ca a ete vire »."""
+    user = g.user
+    if user["role"] not in ("pilot", "both"):
+        abort(403)
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    profile = services.get_pilot_profile(user["id"])
+    account_id = profile.get("stripe_account_id") if profile else None
+    if not account_id:
+        return redirect(url_for("stripe_onboard"))
+    try:
+        url = payments.express_dashboard_link(account_id)
+    except Exception as exc:
+        # Onboarding pas termine : Stripe refuse le lien direct. La page de
+        # connexion par courriel de Stripe marche dans tous les cas.
+        log.warning("stripe login link failed for user=%s : %s", user["id"], exc)
+        return redirect(payments.EXPRESS_LOGIN_URL)
+    if not url:
+        flash(i18n.t("pay.dashboard_demo", lang), "info")
+        return redirect(url_for("pilot_edit"))
+    return redirect(url)
+
+
 @app.route("/stripe/return")
 @auth.login_required
 def stripe_return():
