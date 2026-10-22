@@ -84,6 +84,12 @@ REQUIRE_AUBEMAIL = os.environ.get(
 # AUBEPILOT_METEO_ENABLED=1 pour la rallumer (bouton, bulles, API, CSP, politique).
 METEO_ENABLED = os.environ.get("AUBEPILOT_METEO_ENABLED", "0").strip().lower() in ("1", "true", "yes", "on")
 
+# Titres des realisations traduits dans la langue du visiteur (MyMemory, cf.
+# autotranslate.py ; mentionne dans la politique de confidentialite, section 11).
+# AUBEPILOT_AUTO_TRANSLATE=0 : titres d'origine partout.
+AUTO_TRANSLATE_ENABLED = os.environ.get("AUBEPILOT_AUTO_TRANSLATE", "1").strip().lower() in ("1", "true", "yes", "on")
+MYMEMORY_URL = os.environ.get("AUBEPILOT_MYMEMORY_URL", "https://api.mymemory.translated.net/get").strip()
+
 # Fichiers
 MAX_UPLOAD_MB = 10
 ALLOWED_DOC_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}

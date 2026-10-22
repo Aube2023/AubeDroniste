@@ -344,18 +344,19 @@
           </video>
         {% else %}
           <img src="{{ thumb(it.stored_filename, 1280) }}" data-full="{{ url_for('media_file', filename=it.stored_filename) }}"
-               width="1280" height="800" alt="{{ it.title or t('tpl.work') }}" loading="lazy" decoding="async">
+               width="1280" height="800" alt="{{ it.title_shown or t('tpl.work') }}" loading="lazy" decoding="async">
         {% endif %}
       </div>
       {% if it.title or it.description %}
       <figcaption class="media-body">
-        {% if it.title %}<div class="media-title">{{ it.title }}</div>{% endif %}
-        {% if it.description %}<p class="muted small prewrap" style="margin: 4px 0 0;">{{ it.description }}</p>{% endif %}
+        {% if it.title_shown %}<div class="media-title" lang="{{ it.title_lang }}" dir="auto"{% if it.title_original %} title="{{ t('gallery.original', text=it.title_original) }}"{% endif %}>{{ it.title_shown }}</div>{% endif %}
+        {% if it.description %}<p class="muted small prewrap" lang="{{ it.src_lang }}" dir="auto" style="margin: 4px 0 0;">{{ it.description }}</p>{% endif %}
       </figcaption>
       {% endif %}
     </figure>
     {% endfor %}
   </div>
+  {% if portfolio|selectattr('title_original')|first %}<p class="muted small">{{ t('gallery.auto_note') }}</p>{% endif %}
 </section>
 {% endif %}
 

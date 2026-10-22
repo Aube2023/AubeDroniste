@@ -23,6 +23,7 @@
   <div class="media-grid gallery-grid">
     {% for it in items %}{% include "_gallery_item.html" %}{% endfor %}
   </div>
+  {% if items|selectattr('title_original')|first %}<p class="muted small">{{ t('gallery.auto_note') }}</p>{% endif %}
   {% else %}
   <div class="empty-state"><strong>{{ t('gallery.empty') }}</strong></div>
   {% endif %}

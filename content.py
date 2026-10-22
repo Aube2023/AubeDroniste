@@ -277,6 +277,12 @@ UPDATES_LANGS = ("fr", "en", "es")
 
 _UPDATES = [
     ("2026-10", {"fr": "Octobre 2026", "en": "October 2026", "es": "Octubre de 2026"}, [
+        {"fr": "Les titres des réalisations s'affichent dans votre langue, traduits automatiquement depuis celle "
+               "du pilote, dans la galerie, à l'accueil et sur les fiches. Le titre d'origine reste visible au survol.",
+         "en": "Gallery titles now show in your language, translated automatically from the pilot's, in the "
+               "gallery, on the home page and on pilot profiles. The original title shows on hover.",
+         "es": "Los títulos de los trabajos aparecen en su idioma, traducidos automáticamente del idioma del piloto, "
+               "en la galería, en la portada y en las fichas. El título original sigue visible al pasar el cursor."},
         {"fr": "Pilotes au Canada inscrits à la TPS/TVH ou à la TVQ : indiquez vos numéros dans votre profil. "
                "Vos taxes s'ajoutent à vos devis selon la province du client (celle du bien pour une inspection), figurent sur le devis PDF et le "
                "reçu avec vos numéros, et vous sont versées en entier avec votre paiement.",

@@ -13,6 +13,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 
+import autotranslate
 import db
 import i18n
 import thumbs
@@ -3989,7 +3990,7 @@ def public_portfolio(kind: str = "", limit: int = 120) -> list:
     `kind` : 'image', 'video' ou '' (tout)."""
     sql = (
         "SELECT i.id, i.title, i.kind, i.stored_filename, i.mime_type, "
-        "       u.id AS pilot_id, u.full_name, u.avatar_path, u.city, "
+        "       u.id AS pilot_id, u.full_name, u.avatar_path, u.city, u.lang AS src_lang, "
         "       COALESCE(p.kind, 'pro') AS pilot_kind, p.business_name "
         + _PUBLIC_PORTFOLIO_FROM
     )
@@ -4052,6 +4053,7 @@ def update_portfolio_item(item_id: int, pilot_user_id: int,
         (title.strip()[:200] or None, description.strip()[:2000] or None,
          item_id, pilot_user_id),
     )
+    autotranslate.prune()
     return cur.rowcount > 0
 
 
@@ -4063,6 +4065,7 @@ def delete_portfolio_item(item_id: int, pilot_user_id: int) -> Optional[dict]:
     if not item:
         return None
     db.execute("DELETE FROM pilot_portfolio_items WHERE id=?", (item_id,))
+    autotranslate.prune()
     return dict(item)
 
 
@@ -5323,6 +5326,7 @@ def delete_account(user_id: int) -> dict:
         db.execute("INSERT INTO audit_log (user_id, action, target, payload) "
                    "VALUES (?, 'account_deleted', ?, '{}')", (user_id, f"user:{user_id}"),
                    commit=False)
+    autotranslate.prune()   # titres de ses realisations traduits
     try:
         import auth
         auth.remove_local_password(user["username"])

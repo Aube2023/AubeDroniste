@@ -442,6 +442,16 @@ _ADD_TABLES = [
         found      INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )""",
+    # Titres des realisations traduits par MyMemory, cf. autotranslate.py.
+    # `text` = l'original quand MyMemory n'a rien (pour ne pas redemander).
+    """CREATE TABLE IF NOT EXISTS text_translations (
+        src_lang   TEXT NOT NULL,              -- langue du pilote (users.lang, sinon fr)
+        src_text   TEXT NOT NULL,              -- le titre tel qu'il l'a ecrit
+        lang       TEXT NOT NULL,              -- langue de la page
+        text       TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (src_lang, src_text, lang)
+    )""",
     # Reglages que l'app pose elle-meme (ex. secret d'un webhook Stripe qu'elle
     # a cree) : DATA_DIR est le seul endroit inscriptible en prod, l'env root
     # ne l'est pas. Une variable d'environnement du meme nom a priorite.

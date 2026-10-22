@@ -385,6 +385,17 @@ CREATE TABLE IF NOT EXISTS geocode_cache (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Titres des realisations traduits par MyMemory, cf. autotranslate.py.
+-- text = l'original quand MyMemory n'a rien (evite de redemander).
+CREATE TABLE IF NOT EXISTS text_translations (
+    src_lang   TEXT NOT NULL,              -- langue du pilote (users.lang, sinon fr)
+    src_text   TEXT NOT NULL,              -- le titre tel qu'il l'a ecrit
+    lang       TEXT NOT NULL,              -- langue de la page
+    text       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (src_lang, src_text, lang)
+);
+
 -- Messages du formulaire public /contact : stockes AVANT tout envoi de
 -- courriel, pour ne jamais perdre une demande si le SMTP est en panne.
 -- Traites depuis le back-office (/admin/messages) : reponse + archivage.

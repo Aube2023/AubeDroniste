@@ -110,6 +110,7 @@
   <div class="media-grid gallery-grid">
     {% for it in home_gallery %}{% include "_gallery_item.html" %}{% endfor %}
   </div>
+  {% if home_gallery|selectattr('title_original')|first %}<p class="muted small">{{ t('gallery.auto_note') }}</p>{% endif %}
 </section>
 {% endif %}
 

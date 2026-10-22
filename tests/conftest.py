@@ -37,6 +37,10 @@ os.environ.setdefault("AUBEPILOT_DATA", tempfile.mkdtemp(prefix="aubepilot-test-
 # on autorise donc les comptes purement locaux, sinon toute inscription echoue.
 os.environ.setdefault("AUBE_ALLOW_LOCAL_ACCOUNTS", "1")
 
+# Aucun appel a MyMemory pendant les tests : les titres des realisations
+# restent d'origine ; tests/test_autotranslate.py rallume la traduction.
+os.environ.setdefault("AUBEPILOT_AUTO_TRANSLATE", "0")
+
 # DB de test partagee dans un meme process : compteur global garantissant
 # l'unicite des usernames/emails crees (sinon UNIQUE users.email).
 _uid_seq = itertools.count(1)

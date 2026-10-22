@@ -1,6 +1,7 @@
-{# Une piece de la galerie publique : attend `it` (services.public_portfolio).
-   Les photos s'ouvrent dans la visionneuse (app.js, .media-frame img) ; le
-   nom mene a la fiche du pilote. #}
+{# Une piece de la galerie publique : attend `it` (services.public_portfolio,
+   passe par autotranslate.localize_titles). Les photos s'ouvrent dans la
+   visionneuse (app.js, .media-frame img) ; le nom mene a la fiche du pilote.
+   Titre traduit : l'original en infobulle. #}
 <figure class="media-figure gallery-item">
   <div class="media-frame">
     {% if it.kind == 'video' %}
@@ -9,11 +10,11 @@
       </video>
     {% else %}
       <img src="{{ thumb(it.stored_filename, 640) }}" data-full="{{ url_for('media_file', filename=it.stored_filename) }}"
-           width="640" height="400" alt="{{ it.title or t('tpl.work') }}" loading="lazy" decoding="async">
+           width="640" height="400" alt="{{ it.title_shown or t('tpl.work') }}" loading="lazy" decoding="async">
     {% endif %}
   </div>
   <figcaption class="media-body">
-    <div class="media-title"{% if it.title %} title="{{ it.title }}"{% endif %}>{{ it.title or '' }}</div>
+    <div class="media-title" lang="{{ it.title_lang }}" dir="auto"{% if it.title_original %} title="{{ t('gallery.original', text=it.title_original) }}"{% elif it.title_shown %} title="{{ it.title_shown }}"{% endif %}>{{ it.title_shown }}</div>
     <a class="gallery-pilot" href="{{ url_for('pilot_detail', user_id=it.pilot_id) }}">
       {% if it.avatar_path %}<img src="{{ thumb(it.avatar_path, 160) }}" alt="" width="28" height="28" loading="lazy" decoding="async">{% else %}<span class="gp-initial" aria-hidden="true">{{ it.pilot_name[:1] }}</span>{% endif %}
       <span class="gp-name">{{ it.pilot_name }}</span>{% if it.city %}<span class="gp-city">{{ it.city }}</span>{% endif %}

@@ -20,6 +20,7 @@ from flask import (
 )
 
 import auth
+import autotranslate
 import beacon
 import bots
 import config
@@ -788,7 +789,8 @@ def index():
         home_partners=services.list_partners(),
         latest_missions=services.latest_missions(8),
         latest_reviews=services.latest_reviews(3),
-        home_gallery=services.public_portfolio(kind="image", limit=6),
+        home_gallery=autotranslate.localize_titles(services.public_portfolio(kind="image", limit=6),
+                                                   getattr(g, "lang", i18n.DEFAULT)),
         country_breakdown=services.country_breakdown(12),
         faq_entries=content.faq(getattr(g, "lang", i18n.DEFAULT), featured_only=True),
         seo=seo.home(getattr(g, "lang", i18n.DEFAULT)),
@@ -1061,7 +1063,8 @@ def gallery():
     if kind:
         page_seo = seo.query_variant(page_seo)
     return render_template(
-        "gallery.html", items=services.public_portfolio(kind=kind), kind=kind,
+        "gallery.html", items=autotranslate.localize_titles(services.public_portfolio(kind=kind), lang),
+        kind=kind,
         counts=counts, seo=page_seo,
     )
 
@@ -1847,7 +1850,8 @@ def pilot_detail(user_id):
         contribution_min=int(config.CONTRIBUTION_MIN), contribution_max=int(config.CONTRIBUTION_MAX),
         masked_name=masked,
         packages=services.list_pilot_packages(user_id, only_active=True),
-        portfolio=services.list_portfolio_items(user_id),
+        portfolio=autotranslate.localize_titles(services.list_portfolio_items(user_id),
+                                                getattr(g, "lang", i18n.DEFAULT), profile.get("lang")),
         my_review_booking=services.reviewable_booking_for(viewer_id, user_id),
         seo=page_seo,
     )
