@@ -24,6 +24,14 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
 </section>
 {% endif %}
 
+{% if read_reveal %}
+<section class="bcn-secret">
+  <span class="eyebrow">{{ t('beacon.read_title') }}</span>
+  <p style="margin: 6px 0 0;">{{ t('beacon.read_reveal') }}</p>
+<pre>{{ read_reveal }}</pre>
+</section>
+{% endif %}
+
 <section class="card" style="padding:0;overflow:hidden;">
   <div style="padding:16px 18px 0;">
     <span class="eyebrow">{{ t('beacon.live_map') }}</span>
@@ -182,6 +190,16 @@ DEVICE_TOKEN={{ reveal.token }}</pre>
       <span class="muted small">{{ t('beacon.view_flight') }} →</span>
     </a>
   {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <span class="eyebrow">{{ t('beacon.read_title') }}</span>
+  <p class="muted small" style="margin:4px 0 10px;max-width:66ch;">{{ t('beacon.read_text') }}</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    {% if read_token %}<span class="muted small">{{ read_token.created_at[:16]|replace('T', ' ') }} UTC{% if read_token.last_used_at %} · {{ t('beacon.last_data') }} {{ read_token.last_used_at[:16]|replace('T', ' ') }} UTC{% endif %}</span>{% endif %}
+    <form method="post" action="{{ url_for('beacon_views.read_token_create', all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.read_replace') if read_token else t('beacon.read_create') }}</button></form>
+    {% if read_token %}<form method="post" action="{{ url_for('beacon_views.read_token_revoke', all=1 if show_all else None) }}">{{ csrf_input() }}<button class="ghost" type="submit">{{ t('beacon.read_revoke') }}</button></form>{% endif %}
   </div>
 </section>
 

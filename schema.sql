@@ -757,3 +757,11 @@ CREATE TABLE IF NOT EXISTS beacon_retired_uids (
     device_uid TEXT PRIMARY KEY,   -- AUBE-BCN-000001
     retired_at TEXT NOT NULL       -- suppression (ISO 8601 UTC)
 );
+
+CREATE TABLE IF NOT EXISTS beacon_read_tokens (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    token_hash    TEXT NOT NULL UNIQUE,   -- HMAC-SHA256 du jeton, jamais le jeton
+    created_at    TEXT NOT NULL,
+    last_used_at  TEXT                    -- dernière lecture (mis à jour au plus une fois par minute)
+);

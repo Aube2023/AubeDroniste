@@ -10,6 +10,8 @@
     POST /espace/pilote/aubebeacon/<id>/aubelink      associer à un drone AubeLink (champ aubelink_drone_id)
     POST /espace/pilote/aubebeacon/<id>/aubelink/retirer  dissocier du drone AubeLink
     GET  /espace/pilote/aubebeacon/vols/<id>          trace et statistiques d'un vol
+    POST /espace/pilote/aubebeacon/lecture/creer      jeton de lecture de la flotte (AubeControl), remplace l'ancien
+    POST /espace/pilote/aubebeacon/lecture/revoquer
 
 Les deux associations sont indépendantes : `associer` lie la balise à un
 drone du catalogue AubePilot (`pilot_drones`), `aubelink` à un drone du
@@ -45,6 +47,7 @@ from . import api as _api
 from . import aubelink as _aubelink
 from . import devices as _devices
 from . import flights as _flights
+from . import readtokens as _readtokens
 from . import realtime as _realtime
 from . import status as _status
 
@@ -53,6 +56,7 @@ log = logging.getLogger("aubepilot.beacon.views")
 bp = Blueprint("beacon_views", __name__, url_prefix="/espace/pilote/aubebeacon")
 
 REVEAL_KEY = "beacon_reveal"
+READ_REVEAL_KEY = "beacon_read_reveal"
 # Actions qui appellent AubeLink sans cache (lecture fraîche, PUT, DELETE) :
 # par IP et par route, inactif en test (cf. security.rate_limit).
 AUBELINK_ACTION_LIMIT = {"per_minute": 10, "per_hour": 120}
@@ -116,6 +120,7 @@ def devices_page():
         view["events"] = _devices.list_events(d["id"], limit=8)
         devices.append(view)
     reveal = session.pop(REVEAL_KEY, None)
+    read_reveal = session.pop(READ_REVEAL_KEY, None)
     aubelink = _aubelink.panels(rows, budget_s=AUBELINK_PAGE_BUDGET_S) if _aubelink.enabled() else None
     return render_template(
         "beacon_devices.html",
@@ -126,6 +131,8 @@ def devices_page():
         flights=[_api.flight_view(f) | {"device_uid": f["device_uid"], "device_label": f.get("device_label")}
                  for f in _flights.list_flights(scope, limit=20)],
         reveal=reveal,
+        read_token=_readtokens.get(user["id"]),
+        read_reveal=read_reveal,
         realtime=_api.realtime_info(),
         thresholds=_status.thresholds(),
         show_all=scope is None,
@@ -224,6 +231,25 @@ def device_rotate(device_id):
     token = _devices.rotate_token(device_id, device["owner_user_id"], user_id=user["id"], ip=_ip())
     security.audit(user["id"], "beacon_rotate_token", device["device_uid"])
     _reveal(device, token)
+    return _back()
+
+
+@bp.route("/lecture/creer", methods=["POST"])
+@auth.login_required
+def read_token_create():
+    """Jeton de lecture du pilote connecté (jamais celui d'un autre, même pour un administrateur)."""
+    user = _pilot_or_403()
+    session[READ_REVEAL_KEY] = _readtokens.create(user["id"])
+    security.audit(user["id"], "beacon_read_token_create", "")
+    return _back()
+
+
+@bp.route("/lecture/revoquer", methods=["POST"])
+@auth.login_required
+def read_token_revoke():
+    user = _pilot_or_403()
+    if _readtokens.revoke(user["id"]):
+        security.audit(user["id"], "beacon_read_token_revoke", "")
     return _back()
 
 

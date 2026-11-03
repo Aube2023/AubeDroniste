@@ -460,3 +460,75 @@ def test_page_vol(auth_client, client, beacon):
     assert "FINISHED" in html or "Termin" in html
     j = c.get(f"/api/v1/beacon/flights/{fid}/track").get_json()
     assert j["flight"]["points"] == 7 and len(j["track"]) >= 2
+
+
+# ---------------------------------------------------------------------------
+# Jeton de lecture de la flotte (AubeControl)
+# ---------------------------------------------------------------------------
+
+def _read(client, token, path="/api/v1/beacon/live"):
+    return client.get(path, headers={"Authorization": f"Bearer {token}"})
+
+
+def test_jeton_de_lecture_flotte(client, auth_client, beacon, make_user):
+    """Créé sur la page et montré une fois, gardé haché ; lit live et les traces
+    des seules balises du pilote (même administrateur, même ?all=1) ; remplacé
+    ou révoqué, l'ancien meurt ; n'ouvre ni le ticket temps réel ni la page."""
+    u, _, device, token = beacon
+    uid = device["device_uid"]
+    _fly(client, token, uid, datetime.now(timezone.utc) - timedelta(seconds=60), n=3)
+    _post(client, token, _packet(uid, "r-now", state="FLYING", alt_rel=42.0, speed=6.0))
+    other = _grant(make_user("bcn_autre", role="both"))
+    other_dev, other_tok = devices.create_device(other["id"], label="Autre")
+    _fly(client, other_tok, other_dev["device_uid"], datetime.now(timezone.utc) - timedelta(seconds=120), n=3)
+
+    c = auth_client(u["id"])
+    html = c.get("/espace/pilote/aubebeacon").get_data(as_text=True)
+    assert "beacon.read_" not in html and "AubeControl" in html
+    html = c.post("/espace/pilote/aubebeacon/lecture/creer", follow_redirects=True).get_data(as_text=True)
+    found = re.findall(r"apr_[A-Za-z0-9_-]{40,}", html)
+    assert len(found) == 1
+    read = found[0]
+    assert read not in c.get("/espace/pilote/aubebeacon").get_data(as_text=True)   # une seule fois
+    row = db.fetchone("SELECT token_hash, last_used_at FROM beacon_read_tokens WHERE owner_user_id=?", (u["id"],))
+    assert read not in row["token_hash"] and row["last_used_at"] is None
+
+    anon = client.application.test_client()          # sans session : le jeton seul
+    for path in ("/api/v1/beacon/live", "/api/v1/beacon/live?all=1"):
+        j = _read(anon, read, path).get_json()
+        assert [d["id"] for d in j["devices"]] == [device["id"]]
+    d = j["devices"][0]
+    assert d["flight"]["status"] == "ACTIVE" and d["position"]["relative_altitude_m"] == 42.0
+    assert "token" not in json.dumps(j)
+    assert db.fetchone("SELECT last_used_at FROM beacon_read_tokens WHERE owner_user_id=?", (u["id"],))["last_used_at"]
+    done = flights.list_flights(u["id"], limit=5)
+    ended = [f for f in done if f["status"] != "ACTIVE"][0]
+    assert _read(anon, read, f"/api/v1/beacon/flights/{ended['id']}/track").status_code == 200
+    theirs = flights.list_flights(other["id"], limit=5)
+    assert theirs and _read(anon, read, f"/api/v1/beacon/flights/{theirs[0]['id']}/track").status_code == 404
+    # rien d'autre : ni ticket, ni AubeLink, ni la page, ni l'envoi
+    assert _read(anon, read, "/api/v1/beacon/ws-ticket").status_code == 401
+    assert _read(anon, read, "/api/v1/beacon/aubelink").status_code == 401
+    assert anon.get("/espace/pilote/aubebeacon", headers={"Authorization": f"Bearer {read}"}).status_code in (302, 401)
+    assert _post(anon, read, _packet(uid, "r-x")).status_code == 401
+    # un jeton de balise n'est pas un jeton de lecture, un jeton inventé non plus
+    assert _read(anon, token).status_code == 401
+    r = _read(anon, "apr_" + "x" * 43)
+    assert r.status_code == 401 and r.get_json()["error"] == "bad_token"
+    # remplacé : l'ancien meurt ; révoqué : plus rien
+    html = c.post("/espace/pilote/aubebeacon/lecture/creer", follow_redirects=True).get_data(as_text=True)
+    new = re.findall(r"apr_[A-Za-z0-9_-]{40,}", html)[0]
+    assert new != read and _read(anon, read).status_code == 401 and _read(anon, new).status_code == 200
+    c.post("/espace/pilote/aubebeacon/lecture/revoquer")
+    assert _read(anon, new).status_code == 401
+    assert db.fetchone("SELECT COUNT(*) AS n FROM beacon_read_tokens WHERE owner_user_id=?", (u["id"],))["n"] == 0
+
+
+def test_jeton_de_lecture_compte_non_autorise(client, beacon, make_user):
+    """Un compte qui n'a pas accès à AubeBeacon ne lit rien, jeton ou pas (404)."""
+    from beacon import readtokens
+    pilot = make_user("bcn_ordinaire_lecture", role="both")
+    tok = readtokens.create(pilot["id"])
+    assert _read(client, tok).status_code == 404
+    db.execute("UPDATE users SET deleted_at=datetime('now') WHERE id=?", (pilot["id"],))
+    assert _read(client, tok).status_code == 401

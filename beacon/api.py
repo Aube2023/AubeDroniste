@@ -1,8 +1,8 @@
 """API AubeBeacon.
 
     POST /api/v1/telemetry                 ingestion (Authorization: Bearer <jeton de balise>)
-    GET  /api/v1/beacon/live               balises du compte + dernier point + vol en cours (session)
-    GET  /api/v1/beacon/flights/<id>/track trace simplifiée d'un vol (session)
+    GET  /api/v1/beacon/live               balises du compte + dernier point + vol en cours (session ou jeton de lecture)
+    GET  /api/v1/beacon/flights/<id>/track trace simplifiée d'un vol (session ou jeton de lecture)
     GET  /api/v1/beacon/ws-ticket          ticket de connexion au hub temps réel (session)
     GET  /api/v1/beacon/aubelink           drone AubeLink de chaque balise, alertes, messages (session)
 
@@ -28,6 +28,7 @@ from . import access as _access
 from . import aubelink as _aubelink
 from . import devices as _devices
 from . import flights as _flights
+from . import readtokens as _readtokens
 from . import realtime as _realtime
 from . import status as _status
 from . import telemetry as _telemetry
@@ -169,10 +170,29 @@ def _require_user() -> dict:
     return user
 
 
-def _scope(user: dict):
+def _require_reader() -> tuple:
+    """(compte, lu par jeton). Les deux lectures de la carte acceptent aussi le
+    jeton de lecture de la flotte (AubeControl) : en-tête Bearer apr_…, jamais
+    de cookie, donc pas de CSRF. Un jeton refusé répond 401 même si une session
+    existe : l'appelant saura que son jeton est mort."""
+    header = request.headers.get("Authorization", "")
+    if header.startswith("Bearer " + _readtokens.PREFIX):
+        user = _readtokens.authenticate(header[7:].strip())
+        if not user:
+            abort(_json_error(401, "bad_token", "read token refused"))
+        if not _access.allowed(user):
+            abort(_json_error(404, "not_found", "not found"))
+        if not _device_rate_ok("read:%d" % user["id"]):
+            abort(_json_error(429, "rate_limited", "too many reads"))
+        return user, True
+    return _require_user(), False
+
+
+def _scope(user: dict, by_token: bool = False):
     """(propriétaire filtré ou None pour tout voir). Un administrateur voit
-    tout avec ?all=1, sinon ses propres balises comme n'importe quel pilote."""
-    if user.get("is_admin") and request.args.get("all") == "1":
+    tout avec ?all=1, sinon ses propres balises comme n'importe quel pilote.
+    Par jeton de lecture : toujours ses propres balises."""
+    if not by_token and user.get("is_admin") and request.args.get("all") == "1":
         return None
     return user["id"]
 
@@ -227,11 +247,11 @@ def realtime_info() -> dict:
 @bp.route("/api/v1/beacon/live")
 def beacon_live():
     """Balises visibles par le compte, avec dernier point, vol en cours et sa trace."""
-    user = _require_user()
+    user, by_token = _require_reader()
     now_iso = _devices.now_iso()
     _flights.sweep_stale(now_iso)
     out = []
-    for d in _devices.list_devices(_scope(user)):
+    for d in _devices.list_devices(_scope(user, by_token)):
         v = device_view(d)
         flight = _flights.active_flight(d["id"])
         v["flight"] = flight_view(flight) if flight else None
@@ -243,8 +263,8 @@ def beacon_live():
 
 @bp.route("/api/v1/beacon/flights/<int:flight_id>/track")
 def beacon_flight_track(flight_id):
-    user = _require_user()
-    flight = _flights.get_flight(flight_id, None if user.get("is_admin") else user["id"])
+    user, by_token = _require_reader()
+    flight = _flights.get_flight(flight_id, None if (user.get("is_admin") and not by_token) else user["id"])
     if not flight:
         return _json_error(404, "not_found", "unknown flight")
     return jsonify({"flight": flight_view(flight), "track": _flights.track(flight_id)})
