@@ -86,5 +86,5 @@ def test_carte_annuaire_specialites_et_rayon(make_user, app_ctx, client):
     assert found and found[0]["specialties"] == ["photo", "mapping", "3d", "toiture", "btp"]  # ordre du catalogue
     html = client.get("/pilotes?q=Sam+Puces").get_data(as_text=True)
     assert 'class="spec-chip"' in html and "Photographie aérienne" in html
-    assert ">+2<" in html.replace(" ", "")                  # 5 spécialités : 3 puces + « +2 »
+    assert ">+3<" in html.replace(" ", "")                  # 5 spécialités : 2 puces + « +3 »
     assert "Rayon 120 km" in html
