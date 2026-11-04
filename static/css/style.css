@@ -2771,7 +2771,9 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
    s'empilait. display: contents place les enfants du bloc texte dans la grille,
    sans toucher aux deux gabarits (_pilot_card.html et index.html). */
 @media (min-width: 761px) {
-  .grid-cards:has(> .pilot-card) { gap: 14px; }
+  /* align-items: start : une carte riche (couverture, puces) n'etire plus ses
+     voisines de rangee, qui gardaient sinon un grand vide. */
+  .grid-cards:has(> .pilot-card) { gap: 14px; align-items: start; }
   .pilot-card .strip { padding: 7px 12px; }
   .pilot-card .callsign { font-size: 12px; }
   .pilot-card .body {
