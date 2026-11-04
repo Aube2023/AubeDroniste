@@ -2435,6 +2435,50 @@ html.in-app footer.footer, html.in-app .mobile-tabs { display: none !important; 
 html.in-app .page { padding-bottom: 24px !important; }
 html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav form { display: none !important; }
 
+/* En-tete sur ordinateur : un libelle ne passe jamais a la ligne. Si tout ne
+   tient pas sur une rangee (fenetre etroite, langue aux libelles longs), la
+   navigation descend d'un bloc sur sa propre rangee. */
+@media (min-width: 761px) {
+  .topbar { flex-wrap: wrap; row-gap: 10px; }
+  .topbar .lang-suggest { flex: 1 0 100%; }
+  .brand { flex: 0 0 auto; white-space: nowrap; }
+  .topnav { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; margin-inline-start: auto; }
+  .topnav > a, .topnav .ghost, .topnav .theme-toggle, .lang-menu > summary { white-space: nowrap; }
+}
+/* Fenetre moyenne : boutons plus petits et libelles secondaires retires (la zone
+   et le theme gardent leur infobulle ou leur aria-label). */
+@media (min-width: 761px) and (max-width: 1500px) {
+  .topbar { padding: 14px 20px; column-gap: 16px; }
+  .topnav { column-gap: 14px; }
+  .topnav .cta, .topnav .ghost { padding: 9px 14px; font-size: 14px; }
+  .zone-pill .zone-label,
+  .topnav .theme-toggle .label-dark,
+  .topnav .theme-toggle .label-light,
+  [data-theme="dark"] .topnav .theme-toggle .label-light { display: none; }
+  .topnav .theme-toggle { gap: 0; }
+}
+@media (min-width: 761px) and (max-width: 1240px) {
+  .account-chip .account-name { display: none; }
+}
+/* Tablette : deux rangees nettes, logo et compte en haut, liens en dessous.
+   ::after force le saut de rangee, display: contents place les enfants de la
+   navigation dans la grille flex de l'en-tete. */
+@media (min-width: 761px) and (max-width: 1120px) {
+  /* row-gap 5 px : le saut ::after est une rangee vide, l'ecart compte deux fois. */
+  .topbar { justify-content: flex-start; column-gap: 14px; row-gap: 5px; }
+  .topbar::after { content: ""; flex-basis: 100%; order: 1; }
+  html.in-app .topbar::after { display: none; }
+  .topnav { display: contents; }
+  .brand { margin-inline-end: auto; }
+  .topnav > a:not(.cta):not(.account-chip):not(.zone-pill) { order: 2; }
+  .topbar .lang-suggest { order: 3; }
+  .topnav > a:hover::after { bottom: -6px; }
+}
+/* Sous-titre du logo retire : en allemand, il poussait le bouton de theme a la ligne. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .brand small { display: none; }
+}
+
 @media (max-width: 760px) {
   /* Topbar une seule ligne : la navigation principale vit dans .mobile-tabs */
   .topbar {
