@@ -2810,41 +2810,73 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
 .pilot-card .map-pin:hover { opacity: 1; }
 .pilot-card.is-focused { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(var(--amber-rgb), .25); }
 
-/* Cartes plus compactes sur ordinateur : photo reduite a cote du nom, slogan et
-   puces sur toute la largeur de la carte au lieu d'une colonne etroite ou tout
-   s'empilait. display: contents place les enfants du bloc texte dans la grille,
-   sans toucher aux deux gabarits (_pilot_card.html et index.html). */
+/* Cartes uniformes sur ordinateur : meme hauteur pour toutes les rangees, meme
+   bandeau partout (couverture ou fond neutre), nom, badges et lieu sur une ligne
+   chacun, slogan sur deux lignes reservees, puces sur une ligne, pied cale en bas.
+   display: contents place les enfants du bloc texte dans la grille de .body. */
 @media (min-width: 761px) {
-  /* align-items: start : une carte riche (couverture, puces) n'etire plus ses
-     voisines de rangee, qui gardaient sinon un grand vide. */
-  .grid-cards:has(> .pilot-card) { gap: 14px; align-items: start; }
-  .pilot-card .strip { padding: 7px 12px; }
+  .grid-cards:has(> .pilot-card) { gap: 14px; grid-auto-rows: 1fr; }
+  .pilot-card, .pilot-card.has-cover { display: flex; flex-direction: column; min-width: 0; }
+  .pilot-card .strip { order: -2; flex: none; padding: 7px 12px; }
   .pilot-card .callsign { font-size: 12px; }
-  .pilot-card .body {
-    padding: 12px 12px 10px;
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 2px 10px;
+  .pilot-card .cover, .pilot-card:not(.has-cover)::before {
+    order: -1; flex: none; height: 64px; max-height: none; aspect-ratio: auto;
+    border-bottom: 1px solid var(--rule);
+  }
+  .pilot-card:not(.has-cover)::before {
+    content: "";
+    background: linear-gradient(120deg, rgba(var(--amber-rgb), .14), rgba(var(--amber-rgb), .03));
+  }
+  .pilot-card .body, .pilot-card.has-cover .body {
+    flex: 1 1 auto;
+    padding: 8px 12px 10px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 0 10px;
     align-content: start;
   }
   .pilot-card .body > div:not(.avatar) { display: contents; }
-  .pilot-card .body > .avatar { grid-row: 1 / span 2; align-self: start; }
-  .pilot-card .avatar { width: 44px; height: 44px; font-size: 22px; }
-  .pilot-card .name { grid-column: 2; font-size: 1rem; margin-bottom: 0; }
-  .pilot-card .loc { grid-column: 2; font-size: 10px; letter-spacing: .04em; }
+  .pilot-card .body > .avatar, .pilot-card.has-cover .body > .avatar {
+    grid-row: 1 / span 2; align-self: start;
+    width: 48px; height: 48px; font-size: 22px;
+    margin-top: -30px;
+    box-shadow: 0 0 0 3px var(--paper-2);
+    background: var(--paper);
+  }
+  .pilot-card .name { display: contents; font-size: 1rem; }
+  .pilot-card .name-text {
+    grid-column: 2; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pilot-card .card-badges {
+    grid-column: 2; min-width: 0; margin-top: 3px;
+    display: flex; align-items: center; gap: 4px; overflow: hidden;
+  }
+  .pilot-card .card-badges > * { flex: none; margin: 0; }
+  .pilot-card .loc {
+    grid-column: 1 / -1; margin-top: 7px;
+    font-size: 10px; letter-spacing: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pilot-card .loc-sep { display: none; }
+  .pilot-card .loc-activity { display: block; overflow: hidden; text-overflow: ellipsis; }
   .pilot-card .headline {
     grid-column: 1 / -1;
     margin-top: 6px; font-size: 13px; line-height: 1.3;
+    min-height: 2.6em;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
     overflow: hidden;
   }
-  .pilot-card .spec-chips { grid-column: 1 / -1; margin: 6px 0 0; gap: 4px; }
-  .pilot-card .spec-chip { font-size: 10.5px; padding: 2px 7px; }
-  .pilot-card .auth-chips { grid-column: 1 / -1; margin-top: 6px; gap: 4px; }
-  .pilot-card .auth-chip { padding: 3px 6px; letter-spacing: .08em; }
-  .pilot-card .foot { padding: 8px 12px; font-size: 11px; }
-  .pilot-card .cover { max-height: 72px; }
-  .pilot-card.has-cover .body { padding-top: 10px; }
-  .pilot-card.has-cover .body .avatar { margin-top: -28px; }
+  .pilot-card .spec-chips { grid-column: 1 / -1; margin: 6px 0 0; gap: 4px; flex-wrap: nowrap; }
+  .pilot-card .spec-chip {
+    flex: 0 1 auto; min-width: 0; font-size: 10px; padding: 2px 6px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* La premiere puce reste entiere : la seconde se raccourcit d'abord. */
+  .pilot-card .spec-chip + .spec-chip { flex-shrink: 100; min-width: 44px; }
+  .pilot-card .spec-chip.more { flex: none; min-width: 0; }
+  .pilot-card .auth-chips { grid-column: 1 / -1; margin-top: 6px; gap: 4px; flex-wrap: nowrap; overflow: hidden; }
+  .pilot-card .auth-chip { flex: none; padding: 3px 6px; letter-spacing: .08em; }
+  .pilot-card .foot { flex: none; padding: 8px 12px; font-size: 11px; }
 }
 .map-wrap .maplibregl-popup-content { border-radius: 10px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
 .map-wrap .maplibregl-ctrl-group { border-radius: 8px; }

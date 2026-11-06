@@ -84,9 +84,9 @@
         <div class="avatar">{{ masked[:1] }}</div>
         {% endif %}
         <div>
-          <div class="name">{{ masked }} <span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
+          <div class="name"><span class="name-text">{{ masked }}</span> <span class="card-badges"><span class="kind-badge kind-{{ p.kind or 'pro' }}">{{ kind_label(p.kind or 'pro', true) }}</span> {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</span></div>
           <div class="loc">{{ country_name(p.country) }}{% if p.city %} · <span class="loc-city">{{ p.city }}</span>{% endif %}{% if p.travel_radius_km and (p.kind or 'pro') not in ('school', 'shop') %} · <span class="loc-city loc-radius" title="{{ t('tpl.rayon_de_deplacement_km') }}">{{ t('tpl.rayon') }} {{ p.travel_radius_km }} km</span>{% endif %}</div>
-          {% if p.headline %}<div class="headline">« {{ p.headline }} »</div>{% endif %}
+          <div class="headline">« {{ p.headline or t('tpl.headline_default') }} »</div>
           {% include "_spec_chips.html" %}
         </div>
       </div>

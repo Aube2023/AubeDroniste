@@ -64,7 +64,7 @@
         <div class="avatar">{{ public_name(p)[:1] }}</div>
         {% endif %}
         <div>
-          <div class="name">{{ public_name(p) }} {% if p.is_verified %}<span class="badge verified">{{ t('common.verified') }}</span>{% endif %}</div>
+          <div class="name"><span class="name-text">{{ public_name(p) }}</span> {% if p.is_verified %}<span class="card-badges"><span class="badge verified">{{ t('common.verified') }}</span></span>{% endif %}</div>
           <div class="loc">{{ p.country }}{% if p.city %} · {{ p.city }}{% endif %}</div>
           {% if p.school_programs %}
           <div class="headline">{{ p.school_programs.replace('\r', '').split('\n')|reject('equalto', '')|join(' · ') }}</div>
