@@ -2872,8 +2872,8 @@ html.in-app .topnav > a:not(.account-chip):not(.zone-pill), html.in-app .topnav 
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   /* La premiere puce reste entiere : la seconde se raccourcit d'abord. */
-  .pilot-card .spec-chip + .spec-chip { flex-shrink: 100; min-width: 44px; }
-  .pilot-card .spec-chip.more { flex: none; min-width: 0; }
+  .pilot-card .spec-chip:first-child { flex-shrink: 0; max-width: 72%; }
+  .pilot-card .spec-chip.more { flex: none; }
   .pilot-card .auth-chips { grid-column: 1 / -1; margin-top: 6px; gap: 4px; flex-wrap: nowrap; overflow: hidden; }
   .pilot-card .auth-chip { flex: none; padding: 3px 6px; letter-spacing: .08em; }
   .pilot-card .foot { flex: none; padding: 8px 12px; font-size: 11px; }
