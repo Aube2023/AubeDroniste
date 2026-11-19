@@ -619,11 +619,14 @@ def parse_webhook(payload: bytes, signature: str, secret: Optional[str] = None):
 # Liste alignee sur la doc Stripe « Supported countries ». Un pilote hors de
 # cette liste est detecte (country_is_payable=False) au lieu de recevoir un
 # compte casse — on lui propose alors un versement manuel.
+# Inde retiree le 2026-11-19 : Stripe n'autorise pas les virements d'une
+# plateforme hors Inde vers un compte connecte indien (services sur invitation
+# en Inde ; cf. docs.stripe.com/connect/cross-border-payouts).
 _STRIPE_CONNECT_COUNTRIES = frozenset({
     "AU", "AT", "BE", "BG", "CA", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
     "DE", "GI", "GR", "HK", "HU", "IE", "IT", "JP", "LV", "LI", "LT", "LU",
     "MT", "MX", "NL", "NZ", "NO", "PL", "PT", "RO", "SG", "SK", "SI", "ES",
-    "SE", "CH", "TH", "AE", "GB", "US", "BR", "IN", "ID", "MY", "PH",
+    "SE", "CH", "TH", "AE", "GB", "US", "BR", "ID", "MY", "PH",
 })
 
 # Noms (FR + EN) -> code ISO2. Les codes ISO2 sont aussi acceptes directement.

@@ -600,6 +600,11 @@ LICENCE_VERIFY_HINTS = {
                    "validité (GVC : 5 ans)."),
     "CASA": ("https://www.casa.gov.au/drones/drone-registration", "RePL : vérifier le numéro ARN et le nom ; "
              "le ReOC est consultable dans la liste publique CASA."),
+    "DGCA_IN": ("https://digitalsky.dgca.gov.in/", "Remote Pilot Certificate (RPC) émis par la DGCA via "
+                "DigitalSky après formation dans une école agréée (RPTO). Pas de registre public : vérifier "
+                "le nom, le numéro RPC, l'école émettrice, la catégorie (Small / Medium), la sous-catégorie "
+                "(Rotorcraft / Aeroplane / Hybrid) et la validité (10 ans). En cas de doute, demander une "
+                "capture de la page RPC du compte DigitalSky du pilote."),
 }
 
 # Catalogue indicatif des intitules de brevet par autorite. Le pilote peut
@@ -734,11 +739,19 @@ LICENCE_TITLES_BY_AUTHORITY = {
         "Part 102 - certified UAV operations",
         "BVLOS Authorisation",
     ],
+    # Drone Rules 2021 : Remote Pilot Certificate (RPC) delivre par la DGCA
+    # via DigitalSky apres une formation dans une ecole agreee (RPTO). Le
+    # certificat precise la categorie (small 2-25 kg, medium 25-150 kg) et la
+    # sous-categorie (rotorcraft, aeroplane, hybrid).
     "DGCA_IN": [
-        "Small UAS Pilot (RPC) - sub-25 kg",
-        "Medium UAS Pilot (25-150 kg)",
-        "Large UAS Pilot (>150 kg)",
-        "BVLOS Permit",
+        "Remote Pilot Certificate (RPC) - Small, Rotorcraft",
+        "Remote Pilot Certificate (RPC) - Small, Aeroplane",
+        "Remote Pilot Certificate (RPC) - Small, Hybrid",
+        "Remote Pilot Certificate (RPC) - Medium, Rotorcraft",
+        "Remote Pilot Certificate (RPC) - Medium, Aeroplane",
+        "Remote Pilot Certificate (RPC) - Medium, Hybrid",
+        "Remote Pilot Certificate (RPC) - Small & Medium",
+        "Remote Pilot Instructor (RPI)",
     ],
     "CAAS_SG": [
         "UAPL (Unmanned Aircraft Pilot Licence)",

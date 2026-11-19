@@ -2280,7 +2280,7 @@ def login():
         username = auth.normalize_username(request.form.get("username") or "")
         password = request.form.get("password") or ""
         if not auth.authenticate(username, password):
-            flash("Identifiants invalides.", "error")
+            flash(i18n.t("login.bad_credentials", g.lang), "error")
             return render_template("login.html", next_url=next_url, seo=_login_seo())
         # Si le compte AubeMail existe mais pas encore le profil AubePilot,
         # on le cree a la volee — cas d'un user qui se cree sur AubeMail
@@ -5163,6 +5163,29 @@ def _inject_payments():
 # ---------------------------------------------------------------------------
 # Une URL par langue : /en/..., /es/..., pour chaque page publique
 # ---------------------------------------------------------------------------
+
+def _english_auth_alias(endpoint: str):
+    """/login, /signup… : les adresses que tapent les visiteurs anglophones.
+    Redirige vers la vraie page dans la langue du visiteur (cookie, puis
+    navigateur) ; un navigateur sans preference connue recoit l'anglais,
+    puisqu'il a tape une adresse en anglais. La chaine de requete suit
+    (?role=pilot, ?next=…)."""
+    lang = i18n.resolve_lang()
+    if lang == i18n.DEFAULT and request.cookies.get(i18n.COOKIE) != i18n.DEFAULT:
+        lang = "en"
+    target = url_for(endpoint, lang=lang)
+    if request.query_string:
+        target += "?" + request.query_string.decode("utf-8", "ignore")
+    return redirect(target, code=302)
+
+
+for _path in ("/login", "/log-in", "/signin", "/sign-in"):
+    app.add_url_rule(_path, "alias" + _path.replace("/", "_").replace("-", "_"),
+                     lambda: _english_auth_alias("login"))
+for _path in ("/signup", "/sign-up", "/register", "/join"):
+    app.add_url_rule(_path, "alias" + _path.replace("/", "_").replace("-", "_"),
+                     lambda: _english_auth_alias("register"))
+
 
 def _register_lang_routes():
     """Double chaque regle publique avec un prefixe <lang> (hors langue par

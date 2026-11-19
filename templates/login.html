@@ -45,8 +45,9 @@
     </fieldset>
 
     <button class="cta cta-big" type="submit" style="width: 100%; justify-content: center;">{{ t('login.btn') }}</button>
+    <p class="small muted" style="text-align: center; margin: 1.1rem 0 .5rem;">{{ t('login.alt') }}</p>
+    <a href="{{ url_for('register') }}" class="btn btn-ghost" style="width: 100%; justify-content: center; display: flex;">{{ t('login.alt_link') }}</a>
     <div class="form-foot">
-      <span class="small">{{ t('login.alt') }} <a href="{{ url_for('register') }}">{{ t('login.alt_link') }}</a></span>
       <span class="small muted">{{ t('login.pwd_hint') }}</span>
     </div>
   </form>
