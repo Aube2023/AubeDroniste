@@ -60,17 +60,21 @@ def test_devis_accepte_une_fois_verifie(make_user, connect_on):
     assert services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
 
 
-def test_aucun_verrou_si_connect_ferme_ou_pays_non_desservi(make_user, monkeypatch):
+def test_aucun_verrou_si_connect_ferme_mais_pays_non_desservi_bloque(make_user, monkeypatch):
+    import pytest
     import config, services
     monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", False)
     p = _pilot(make_user, "none")
     mid, _c = _mission(make_user)
     assert services.place_bid(mid, p["id"], price=300, currency="CAD", description=DESC)
-    # Connect ouvert, mais Stripe ne dessert pas le pays : rien a verifier
+    # Connect ouvert, mais Stripe ne verse pas dans ce pays depuis le Canada
+    # (2026-11-19) : pas de devis, la messagerie seulement.
     monkeypatch.setattr(config, "STRIPE_CONNECT_ENABLED", True)
-    far = make_user("lock_far", role="pilot", country="Iran", city="Téhéran")
-    assert services.pilot_payment_state(services.get_pilot_profile(far["id"])) == "na"
-    assert services.place_bid(mid, far["id"], price=300, currency="CAD", description=DESC)
+    for name, country in (("lock_far", "Iran"), ("lock_in", "Inde")):
+        far = make_user(name, role="pilot", country=country, city="Ville")
+        assert services.pilot_payment_state(services.get_pilot_profile(far["id"])) == "na"
+        with pytest.raises(ValueError, match="désactivés dans votre pays"):
+            services.place_bid(mid, far["id"], price=300, currency="CAD", description=DESC)
 
 
 def test_page_mission_remplace_le_formulaire_et_bandeau(auth_client, make_user, connect_on):

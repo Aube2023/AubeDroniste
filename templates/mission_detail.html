@@ -46,6 +46,10 @@
 {% include "_pay_paused.html" %}
 {% elif can_bid and pilot_pay_state in ('none', 'pending') %}
 {% include "_pay_lock.html" %}
+{% elif can_bid and stripe_connect_enabled and not pilot_country_payable %}
+<section class="card">
+  <p style="margin: 0;">{{ t('nav.payouts_country') }}</p>
+</section>
 {% elif can_bid %}
 <section class="card">
   {% if french_only %}

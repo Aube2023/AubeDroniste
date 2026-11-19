@@ -4518,7 +4518,7 @@ def stripe_onboard():
     except payments.StripeCountryUnsupportedError:
         # Pays non supporte par Stripe Connect : on ne cree pas de compte
         # casse. Le pilote peut proposer des devis, mais aucun outil de
-        # versement manuel n'existe : le client ne peut pas le payer en ligne.
+        # versement manuel n'existe : ni devis ni paiement, messagerie seulement.
         # Cf. payments.country_is_payable / bandeau base.html.
         flash(
             "Les paiements Stripe ne sont pas encore disponibles dans votre "
@@ -4628,6 +4628,18 @@ def booking_pay(booking_id):
             "reste enregistrée ici, avec le devis et la messagerie.",
             "info",
         )
+        return redirect(url_for("booking_detail", booking_id=booking_id))
+
+    # Pilote dans un pays ou Stripe ne verse pas depuis le Canada : aucun
+    # paiement en ligne. Le client est renvoye vers la conversation avec le
+    # pilote (messagerie de la plateforme), sans courriel « finalisez Stripe »
+    # au pilote, qui ne pourrait pas le faire.
+    pilot_profile = services.get_pilot_profile(booking["pilot_user_id"]) or {}
+    if not payments.country_is_payable(pilot_profile.get("country") or ""):
+        flash(i18n.t("pay.pilot_country_off", getattr(g, "lang", i18n.DEFAULT)), "info")
+        if booking.get("mission_id"):
+            return redirect(url_for("messages_thread", mission_id=booking["mission_id"],
+                                    peer_id=booking["pilot_user_id"]))
         return redirect(url_for("booking_detail", booking_id=booking_id))
 
     pilot_acc = services.get_pilot_stripe_account(booking["pilot_user_id"])

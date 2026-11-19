@@ -69,7 +69,7 @@
   "nav.zone": "Yankina",
   "nav.skip": "Tsallake zuwa abun ciki",
   "nav.lang_label": "Zaɓi harshe",
-  "nav.payouts_country": "Biyan kuɗi ta yanar gizo bai riga ya samu a ƙasarka ba. Bayananka suna bayyane kuma za ka iya aika tayin farashi, amma abokan ciniki ba za su iya biyan ka ta AubePilot ba tukuna.",
+  "nav.payouts_country": "An kashe biyan kuɗi na AubePilot a ƙasarku: za mu iya biyan kuɗin aiki ga matuƙa a Kanada, Amurka, Birtaniya, Turai da Switzerland kawai. Bayananku za su ci gaba da bayyana, amma babu abokin ciniki da zai iya biyan ku ta AubePilot.",
   "nav.payouts_activate": "Kunna biyan kuɗinka",
   "nav.payouts_activate_p": "domin a biya ka da zarar abokin ciniki ya tabbatar da aiki.",
   "nav.payouts_cta": "Saita Stripe →",

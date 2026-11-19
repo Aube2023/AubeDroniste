@@ -4496,7 +4496,15 @@ def require_pilot_payment_ready(pilot_user_id: int, lang: str = "fr"):
     import config
     if config.PAYMENTS_PAUSED:
         raise ValueError(i18n.t("pay.paused_p", lang))
-    state = pilot_payment_state(get_pilot_profile(pilot_user_id))
+    profile = get_pilot_profile(pilot_user_id)
+    # Pays ou Stripe ne verse pas depuis le Canada (2026-11-19) : pas de devis,
+    # donc pas de reservation impayable ; le pilote echange avec le client par
+    # la messagerie de la plateforme.
+    if config.STRIPE_CONNECT_ENABLED and profile is not None:
+        import payments
+        if not payments.country_is_payable(profile.get("country") or ""):
+            raise ValueError(i18n.t("nav.payouts_country", lang))
+    state = pilot_payment_state(profile)
     if state in ("none", "pending"):
         raise ValueError(i18n.t(f"pay.bid_locked_{state}", lang))
 

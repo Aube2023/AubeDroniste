@@ -30,7 +30,7 @@
   "nav.zone": "Meine Zone",
   "nav.skip": "Zum Inhalt springen",
   "nav.lang_label": "Sprache wählen",
-  "nav.payouts_country": "Online-Zahlungen sind in Ihrem Land noch nicht verfügbar. Ihr Profil ist sichtbar und Sie können Angebote senden, aber Kunden können Sie noch nicht über AubePilot bezahlen.",
+  "nav.payouts_country": "AubePilot-Zahlungen sind in Ihrem Land deaktiviert: Wir können Auftragserlöse nur an Piloten in Kanada, den USA, Großbritannien, Europa und der Schweiz auszahlen. Ihr Profil bleibt sichtbar, aber kein Kunde kann Sie über AubePilot bezahlen.",
   "nav.payouts_activate": "Zahlungen aktivieren",
   "nav.payouts_activate_p": "um bezahlt zu werden, sobald ein Kunde einen Auftrag bestätigt.",
   "nav.payouts_cta": "Stripe einrichten →",

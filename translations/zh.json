@@ -69,7 +69,7 @@
   "nav.zone": "我的区域",
   "nav.skip": "跳至正文",
   "nav.lang_label": "选择语言",
-  "nav.payouts_country": "在线支付在您所在的国家尚未开通。您的资料仍会展示，也可以发送报价，但客户暂时无法通过 AubePilot 向您付款。",
+  "nav.payouts_country": "您所在国家/地区已关闭 AubePilot 付款：我们只能向加拿大、美国、英国、欧洲和瑞士的飞手支付任务款项。您的资料仍然可见，但客户无法通过 AubePilot 向您付款。",
   "nav.payouts_activate": "开通收款",
   "nav.payouts_activate_p": "客户确认任务后即可收到款项。",
   "nav.payouts_cta": "设置 Stripe →",
