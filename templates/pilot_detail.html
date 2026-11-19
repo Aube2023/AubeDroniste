@@ -94,7 +94,11 @@
            propose ensuite un devis. Le formulaire de demande detaillee reste
            en second choix. #}
         <a href="{{ url_for('pilot_message', user_id=pilot.id) }}" class="cta">{% if is_school %}{{ t('tpl.contacter_cette_ecole') }}{% elif pilot.kind == 'company' %}{{ t('tpl.contacter_cette_entreprise') }}{% else %}{{ t('contact.cta') }}{% endif %}</a>
+        {% if pilot_unpayable %}
+        <p class="small muted" style="flex-basis:100%;margin:4px 0 0;">{{ t('pay.pilot_country_off_msg') }}</p>
+        {% else %}
         <a href="{{ url_for('mission_create', pilot=pilot.id) }}" class="ghost">{{ t('contact.request_quote') }}</a>
+        {% endif %}
         {% endif %}
         <a href="{{ url_for('missions_search') }}" class="ghost">{{ t('tpl.voir_les_missions_ouvertes') }}</a>
       </div>
@@ -445,7 +449,9 @@
       <footer class="pkg-foot">
         {% if p.price %}<div class="price big">{{ p.price|int }} <span class="cur">{{ p.currency }}</span></div>
         {% else %}<div class="price big" style="font-size: 1.1rem;">{{ t('tpl.sur_devis_2') }}</div>{% endif %}
-        {% if current_user and current_user.id != pilot.id %}
+        {% if pilot_unpayable and (not current_user or current_user.id != pilot.id) %}
+          <a class="cta" href="{{ url_for('pilot_message', user_id=pilot.id) }}">{{ t('contact.cta') }}</a>
+        {% elif current_user and current_user.id != pilot.id %}
           <a class="cta" href="{{ url_for('mission_create', package=p.id, pilot=pilot.id) }}">{% if is_school %}{{ t('tpl.s_inscrire') }}{% else %}{{ t('tpl.reserver') }}{% endif %}</a>
         {% elif not current_user %}
           <a class="ghost" href="{{ url_for('login', next=url_for('mission_create', package=p.id, pilot=pilot.id)) }}">{% if is_school %}{{ t('tpl.se_connecter_pour_s_inscrire') }}{% else %}{{ t('tpl.se_connecter_pour_reserver') }}{% endif %}</a>

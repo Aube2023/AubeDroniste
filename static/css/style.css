@@ -3112,3 +3112,49 @@ html[lang="bn"] .eyebrow { font-size: 12.5px; }
 .danger-zone[open] > form { margin-top: 12px; padding: 14px 16px; border-left: 3px solid var(--signal); background: var(--paper-2); border-radius: 0 10px 10px 0; }
 .danger-zone .small input { margin-top: 4px; }
 
+
+
+/* Ciel anime du bandeau d'accueil (2026-11-19) ------------------------- */
+.hero-band .sky { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hero-band .hero-inner { z-index: 1; }
+.drone-fly { position: absolute; left: 0; will-change: transform; }
+.drone-bob { width: 100%; height: 100%; animation: drone-bob 3.2s ease-in-out infinite alternate; }
+.fly-a { top: 10px; width: 172px; height: 80px; opacity: .95;
+  animation: drone-cross-a 26s linear infinite; }
+.fly-a .drone-bob { transform-origin: 50% 40%; }
+.fly-b { top: 22%; width: 84px; height: 39px; opacity: .3; filter: blur(.6px);
+  animation: drone-cross-b 41s linear infinite; animation-delay: -18s; }
+.drone3d { position: absolute; inset: 0; display: block;
+  background: url("../brand/drone-3d.webp") 0 0 / 600% 100% no-repeat;
+  animation: rotor-frames .16s steps(6) infinite;
+  filter: drop-shadow(0 14px 18px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(107,127,208,.22)); }
+.fly-b .drone3d { animation-duration: .2s; }
+.beam3d { position: absolute; left: 50%; top: 82%; width: 140%; height: 230%; display: block;
+  transform-origin: 50% 0; margin-left: -70%;
+  background: linear-gradient(180deg, rgba(139,156,240,.42), rgba(139,156,240,0) 85%);
+  clip-path: polygon(48% 0, 52% 0, 82% 100%, 18% 100%);
+  animation: beam-scan 4.6s ease-in-out infinite alternate; }
+@keyframes rotor-frames { from { background-position: 0 0; } to { background-position: 120% 0; } }
+@keyframes drone-cross-a {
+  0%   { transform: translateX(-180px) rotate(5deg); }
+  45%  { transform: translateX(42vw) translateY(10px) rotate(4deg); }
+  55%  { transform: translateX(52vw) translateY(10px) rotate(0deg); }   /* petit stationnaire */
+  62%  { transform: translateX(53vw) translateY(4px) rotate(0deg); }
+  100% { transform: translateX(calc(100vw + 40px)) translateY(-12px) rotate(6deg); }
+}
+@keyframes drone-cross-b {
+  0%   { transform: translateX(calc(100vw + 40px)) scaleX(-1) rotate(4deg); }
+  100% { transform: translateX(-120px) scaleX(-1) rotate(4deg); }
+}
+@keyframes drone-bob { from { transform: translateY(-5px); } to { transform: translateY(6px); } }
+@keyframes beam-scan { from { transform: skewX(-14deg); opacity: .35; } to { transform: skewX(14deg); opacity: .8; } }
+@media (max-width: 640px) {
+  .fly-a { top: 2%; width: 120px; height: 55px; opacity: .55; }
+  .fly-b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drone-fly, .drone-bob, .drone3d, .beam3d { animation: none; }
+  .fly-a { transform: translateX(78vw); }
+  .fly-b { display: none; }
+}
+@media (min-width: 641px) { .hero-band.hero-compact:has(.sky) { padding-top: 96px; } }

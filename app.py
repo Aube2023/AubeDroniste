@@ -1833,6 +1833,7 @@ def pilot_detail(user_id):
     return render_template(
         "pilot_detail.html",
         pilot=profile,
+        pilot_unpayable=_pilot_unpayable(user_id),
         reviews=services.reviews_for(user_id),
         reveal_identity=reveal,
         can_view_credentials=can_view_credentials,
@@ -3604,9 +3605,22 @@ def pilot_portfolio_delete(item_id):
 # Missions client
 # ---------------------------------------------------------------------------
 
+def _pilot_unpayable(pilot_id) -> bool:
+    """Pilote dans un pays ou Stripe ne verse pas (2026-11-19) : pas de
+    demande adressee ni de forfait, on s'ecrit par la messagerie."""
+    if not (pilot_id and config.STRIPE_CONNECT_ENABLED):
+        return False
+    prof = services.get_pilot_profile(pilot_id)
+    return bool(prof) and not payments.country_is_payable(prof.get("country") or "")
+
+
 @app.route("/missions/nouvelle", methods=["GET", "POST"])
 @auth.login_required
 def mission_create():
+    targeted = _to_int(request.form.get("targeted_pilot_id") if request.method == "POST" else request.args.get("pilot"))
+    if _pilot_unpayable(targeted):
+        flash(i18n.t("pay.pilot_country_off_msg", getattr(g, "lang", i18n.DEFAULT)), "info")
+        return redirect(url_for("pilot_message", user_id=targeted))
     if request.method == "POST":
         from_package_id = _to_int(request.form.get("from_package_id"))
         targeted_pilot_id = _to_int(request.form.get("targeted_pilot_id"))

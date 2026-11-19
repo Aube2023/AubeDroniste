@@ -4,6 +4,14 @@
 {# Hero : bandeau sombre pleine largeur, contenu centré, recherche en une ligne.
    Sobre et lisible dans les deux thèmes ; aucun décor ailleurs sur le site. #}
 <section class="hero hero-band hero-compact">
+  {# Ciel anime (2026-11-19) : un drone rendu dans Blender (static/brand/
+     drone-3d.webp, 6 images d'helices) traverse le bandeau, un second plus
+     petit au loin en sens inverse. Decor seulement, CSS pur, coupe si
+     l'utilisateur reduit les animations. Source : scripts/drone_3d_blender.py #}
+  <div class="sky" aria-hidden="true">
+    <div class="drone-fly fly-a"><div class="drone-bob"><i class="beam3d"></i><i class="drone3d"></i></div></div>
+    <div class="drone-fly fly-b"><div class="drone-bob"><i class="drone3d"></i></div></div>
+  </div>
   <div class="hero-inner">
     <h1>{{ t('home.h1_a') }}<br>{{ t('home.h1_b') }} <em>{{ t('home.h1_b_em') }}</em></h1>
     <p class="lead"><a class="hero-link" href="{{ url_for('pilots_search') }}">{{ t('home.lead_short') }}</a></p>

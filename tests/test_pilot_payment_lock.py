@@ -237,3 +237,23 @@ def test_versements_mode_demo_et_sans_compte(auth_client, make_user, stripe_up, 
 def test_versements_reserve_aux_pilotes(auth_client, make_user, stripe_up):
     c = make_user("lock_cli", role="client", country="Canada", city="Montréal")
     assert auth_client(c["id"]).get("/espace/pilote/stripe/versements").status_code == 403
+
+
+def test_client_renvoye_vers_la_messagerie_pour_un_pilote_non_desservi(auth_client, make_user, connect_on):
+    """Pilote en Inde (2026-11-19) : fiche sans « Demander un devis », forfaits
+    en « Envoyer un message », demande adressee renvoyee vers la messagerie."""
+    import services
+    far = make_user("lock_in2", role="pilot", country="Inde", city="Pune")
+    services.create_pilot_package(far["id"], title="Vidéo aérienne", description="Tournage 4K d'un bien",
+                                  price=100, currency="USD")
+    c = make_user("lock_cin", role="client", country="Canada", city="Montréal")
+    cl = auth_client(c["id"])
+    html = unescape(cl.get(f"/pilotes/{far['id']}").data.decode())
+    assert "AubePilot ne verse pas encore l'argent des missions dans son pays" in html
+    assert f"/missions/nouvelle?pilot={far['id']}" not in html
+    assert "package=" not in html
+    r = cl.get(f"/missions/nouvelle?pilot={far['id']}")
+    assert r.status_code == 302 and r.headers["Location"].endswith(f"/pilotes/{far['id']}/message")
+    ok = _pilot(make_user, "ok")
+    html = unescape(cl.get(f"/pilotes/{ok['id']}").data.decode())
+    assert f"/missions/nouvelle?pilot={ok['id']}" in html
