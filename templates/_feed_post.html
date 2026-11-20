@@ -1,0 +1,95 @@
+{# Une publication du fil : attend `post` (feed.list_posts / get_post) et
+   `full` (page de la publication : tous les commentaires). #}
+{% set is_pilot = post.role in ('pilot', 'both') %}
+{% set mine = current_user and current_user.id == post.author_user_id %}
+<article class="fpost" id="post-{{ post.id }}">
+  <header class="fpost-head">
+    {% if is_pilot %}<a href="{{ url_for('pilot_detail', user_id=post.author_id) }}" class="fpost-av">{% else %}<span class="fpost-av">{% endif %}
+      {% if post.avatar_path %}<img src="{{ thumb(post.avatar_path, 160) }}" alt="" width="46" height="46" loading="lazy" decoding="async">
+      {% else %}<span class="fpost-initial">{{ post.author_name[:1]|upper }}</span>{% endif %}
+    {% if is_pilot %}</a>{% else %}</span>{% endif %}
+    <div class="fpost-who">
+      <div class="fpost-name">
+        {% if is_pilot %}<a href="{{ url_for('pilot_detail', user_id=post.author_id) }}">{{ post.author_name }}</a>{% else %}{{ post.author_name }}{% endif %}
+        {% if is_pilot %}<span class="kind-badge kind-{{ post.kind or 'pro' }}">{{ kind_label(post.kind or 'pro', true) }}</span>{% endif %}
+        {% if post.is_verified %}<span class="badge verified">{{ t('tpl.verifie') }}</span>{% endif %}
+      </div>
+      <div class="fpost-meta">
+        {% if post.country %}{{ country_name(post.country) }}{% if post.city %} · {{ post.city }}{% endif %} · {% endif %}
+        <a href="{{ url_for('feed_post', post_id=post.id) }}" class="fpost-time"><time datetime="{{ post.created_at|replace(' ', 'T') }}Z">{{ post.created_at[:16] }}</time></a>
+      </div>
+    </div>
+    <details class="fpost-menu">
+      <summary aria-label="…">⋯</summary>
+      <div class="fpost-menu-box">
+        <button type="button" class="linkish" data-action="feed-share" data-url="{{ url_for('feed_post', post_id=post.id, _external=True) }}">🔗 {{ t('feed.copy_link') }}</button>
+        {% if mine or (current_user and current_user.is_admin) %}
+        <form method="post" action="{{ url_for('feed_delete', post_id=post.id) }}">{{ csrf_input() }}<button type="submit" class="linkish danger">{{ t('feed.delete') }}</button></form>
+        {% endif %}
+        {% if not mine %}{% with report_type='post', report_id=post.id %}{% include "_report_form.html" %}{% endwith %}{% endif %}
+      </div>
+    </details>
+  </header>
+
+  {% if post.body %}<div class="fpost-body" dir="auto">{{ post.body|urlize(48, true, target='_blank') }}</div>{% endif %}
+
+  {% if post.media_path %}
+  <div class="fpost-media">
+    {% if post.media_kind == 'video' %}
+      <video controls preload="metadata" playsinline><source src="{{ url_for('media_file', filename=post.media_path) }}" type="{{ post.media_mime }}"></video>
+    {% else %}
+      <div class="media-frame"><img src="{{ thumb(post.media_path, 1280) }}" data-full="{{ url_for('media_file', filename=post.media_path) }}" alt="" loading="lazy" decoding="async"></div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="fpost-stats">
+    <span class="js-likes" data-tpl="{{ t('feed.likes_n', n='__N__') }}"{% if not post.likes %} hidden{% endif %}>👍 {{ t('feed.likes_n', n=post.likes) }}</span>
+    {% if post.comment_count %}<a href="{{ url_for('feed_post', post_id=post.id) }}#comments">{{ t('feed.comments_n', n=post.comment_count) }}</a>{% endif %}
+  </div>
+
+  <div class="fpost-actions">
+    {% if current_user %}
+    <form method="post" action="{{ url_for('feed_like', post_id=post.id) }}" class="js-like-form">
+      {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}#post-{{ post.id }}">
+      <button type="submit" class="fpost-act{% if post.liked %} on{% endif %}" aria-pressed="{{ 'true' if post.liked else 'false' }}">👍 {{ t('feed.like') }}</button>
+    </form>
+    <button type="button" class="fpost-act" data-action="feed-comment" data-target="cbox-{{ post.id }}">💬 {{ t('feed.comment') }}</button>
+    {% else %}
+    <a class="fpost-act" href="{{ url_for('login', next=request.path) }}">👍 {{ t('feed.like') }}</a>
+    <a class="fpost-act" href="{{ url_for('login', next=request.path) }}">💬 {{ t('feed.comment') }}</a>
+    {% endif %}
+  </div>
+
+  <div class="fpost-comments" id="{{ 'comments' if full else 'c-' ~ post.id }}">
+    {% if not full and post.comment_count > (post.comments|length) %}
+    <a class="fpost-more-c" href="{{ url_for('feed_post', post_id=post.id) }}#comments">{{ t('feed.see_all', n=post.comment_count) }}</a>
+    {% endif %}
+    {% for c in post.comments %}
+    <div class="fcom" id="comment-{{ c.id }}">
+      {% if c.author_is_pilot %}<a href="{{ url_for('pilot_detail', user_id=c.author_id) }}" class="fcom-av">{% else %}<span class="fcom-av">{% endif %}
+        {% if c.avatar_path %}<img src="{{ thumb(c.avatar_path, 160) }}" alt="" width="32" height="32" loading="lazy" decoding="async">{% else %}<span class="fpost-initial">{{ c.author_name[:1]|upper }}</span>{% endif %}
+      {% if c.author_is_pilot %}</a>{% else %}</span>{% endif %}
+      <div class="fcom-bubble">
+        <div class="fcom-name">
+          {% if c.author_is_pilot %}<a href="{{ url_for('pilot_detail', user_id=c.author_id) }}">{{ c.author_name }}</a>{% else %}{{ c.author_name }} <span class="muted small">· {{ t('feed.client') }}</span>{% endif %}
+          <time class="fcom-time" datetime="{{ c.created_at|replace(' ', 'T') }}Z">{{ c.created_at[:16] }}</time>
+        </div>
+        <div class="fcom-body" dir="auto">{{ c.body|urlize(40, true, target='_blank') }}</div>
+        {% if current_user and (current_user.id in (c.author_user_id, post.author_user_id) or current_user.is_admin) %}
+        <form method="post" action="{{ url_for('feed_comment_delete', comment_id=c.id) }}" class="fcom-del">{{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}#post-{{ post.id }}"><button type="submit" class="linkish">{{ t('feed.delete') }}</button></form>
+        {% elif current_user %}
+        {% with report_type='comment', report_id=c.id %}{% include "_report_form.html" %}{% endwith %}
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% if current_user %}
+    <form method="post" action="{{ url_for('feed_comment', post_id=post.id) }}" class="fcom-form">
+      {{ csrf_input() }}<input type="hidden" name="next" value="{{ request.path }}">
+      <input type="text" name="body" id="cbox-{{ post.id }}" maxlength="1500" required placeholder="{{ t('feed.comment_ph') }}" autocomplete="off" dir="auto">
+      <button type="submit" class="cta fbtn-sm">{{ t('feed.comment_send') }}</button>
+    </form>
+    {% endif %}
+  </div>
+</article>

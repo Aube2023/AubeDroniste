@@ -529,6 +529,9 @@ END""",
 # unique reprise ici pour la prod existante et recopiee dans schema.sql.
 from beacon.schema import TABLES as _BEACON_TABLES  # noqa: E402
 _ADD_TABLES.extend(_BEACON_TABLES)
+# Fil des pilotes (/fil, 2026-11-20) : DDL dans feed.py.
+from feed import TABLES as _FEED_TABLES  # noqa: E402
+_ADD_TABLES.extend(_FEED_TABLES)
 
 
 def run_migrations():

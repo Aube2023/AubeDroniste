@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ t('feed.h1') }} | AubePilot{% endblock %}
+{% block content %}
+{# Fil des pilotes (2026-11-20) : publications, j'aime, commentaires (feed.py). #}
+<div class="feed-wrap">
+  <header class="feed-head">
+    <h1>{{ t('feed.h1') }}</h1>
+    <p class="muted">{{ t('feed.lead') }}</p>
+  </header>
+
+  {% if can_post %}
+  <form class="fcompose" method="post" action="{{ url_for('feed_index') }}" enctype="multipart/form-data">
+    {{ csrf_input() }}
+    <div class="fcompose-top">
+      {% if current_user.avatar_path %}<img class="fcompose-av" src="{{ thumb(current_user.avatar_path, 160) }}" alt="" width="46" height="46">
+      {% else %}<span class="fcompose-av fpost-initial">{{ (current_user.full_name or '?')[:1]|upper }}</span>{% endif %}
+      <textarea name="body" rows="3" maxlength="3000" placeholder="{{ t('feed.compose_ph') }}" dir="auto"></textarea>
+    </div>
+    <div class="fcompose-preview" hidden></div>
+    <div class="fcompose-bar">
+      <label class="fcompose-file">
+        <input type="file" name="media" accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm,.heic,.m4v">
+        <span>📷 {{ t('feed.add_media') }}</span>
+      </label>
+      <span class="muted small fcompose-hint">{{ t('feed.media_hint', mb=max_mb) }}</span>
+      <button type="submit" class="cta">{{ t('feed.publish') }}</button>
+    </div>
+  </form>
+  {% elif current_user %}
+  <p class="feed-note">{{ t('feed.pilots_only') }}</p>
+  {% else %}
+  <p class="feed-note">{{ t('feed.login_cta') }} <a href="{{ url_for('login', next=url_for('feed_index')) }}" class="cta fbtn-sm">{{ t('feed.login_link') }}</a></p>
+  {% endif %}
+
+  <nav class="dir-tabs feed-tabs">
+    <a href="{{ url_for('feed_index') }}" class="{{ '' if media_only else 'on' }}">{{ t('feed.filter_all') }}</a>
+    <a href="{{ url_for('feed_index', medias=1) }}" class="{{ 'on' if media_only else '' }}">{{ t('feed.filter_media') }}</a>
+  </nav>
+
+  {% for post in posts %}
+    {% set full = false %}{% include "_feed_post.html" %}
+  {% else %}
+    <p class="feed-empty">{{ t('feed.empty') }}</p>
+  {% endfor %}
+
+  {% if next_before %}
+  <p class="feed-more"><a class="ghost" href="{{ url_for('feed_index', avant=next_before, medias=1 if media_only else None) }}">{{ t('feed.more') }}</a></p>
+  {% endif %}
+</div>
+<span hidden id="feed-i18n" data-copied="{{ t('feed.copied') }}"></span>
+<script src="{{ url_for('static', filename='js/feed.js') }}" defer></script>
+{% endblock %}

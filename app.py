@@ -30,6 +30,7 @@ import adsb
 import geocode
 import geoip
 import i18n
+import feed
 import job_posts
 import meteo
 import payments
@@ -229,6 +230,7 @@ LANG_ENDPOINTS = {
     "opportunities": None, "jobs": None,
     "job_detail": None,
     "partners": None,
+    "feed_index": None, "feed_post": None,
     "contact_form": None, "contact_submit": None, "login": None, "register": None,
     "pilots_by_specialty": None, "pilots_by_country": None, "pilots_by_city": None,
     "faq": seo.FAQ_LANGS,
@@ -3389,7 +3391,7 @@ _MEDIA_BLOCKED_EXT = {"svg", "svgz", "html", "htm", "xhtml", "xml", "js", "mjs"}
 # d'un pilote a n'importe quel visiteur (contournement total du controle).
 _MEDIA_PUBLIC_RE = re.compile(
     r"^(?:avatar_[^/]+|cover_u\d+_[^/]+|u\d+_drone_[^/]+|portfolio_u\d+/[^/]+|partner_\d+_[^/]+"
-    r"|orglogo_u\d+_[^/]+)$"   # orglogo : logo d'entreprise des offres d'emploi (job_posts.py)
+    r"|orglogo_u\d+_[^/]+|feed_u\d+/[^/]+)$"   # orglogo : logo d'entreprise des offres d'emploi (job_posts.py)
 )
 
 
@@ -4172,6 +4174,16 @@ def report_content():
         if not m:
             abort(404)
         target_user_id, label = m["client_user_id"], f"mission #{m['id']} « {m['title']} »"
+    elif target_type == "post":   # publication du fil (feed.py)
+        fp = feed.raw_post(target_id)
+        if not fp:
+            abort(404)
+        target_user_id, label = fp["author_user_id"], f"publication du fil #{fp['id']}"
+    elif target_type == "comment":
+        fc = feed.raw_comment(target_id)
+        if not fc:
+            abort(404)
+        target_user_id, label = fc["author_user_id"], f"commentaire #{fc['id']} (publication #{fc['post_id']})"
     elif target_type == "job":   # offre d'emploi déposée par une entreprise
         post = job_posts.get(target_id)
         if not post:
@@ -5212,6 +5224,146 @@ for _path in ("/login", "/log-in", "/signin", "/sign-in"):
 for _path in ("/signup", "/sign-up", "/register", "/join"):
     app.add_url_rule(_path, "alias" + _path.replace("/", "_").replace("-", "_"),
                      lambda: _english_auth_alias("register"))
+
+
+# ---------------------------------------------------------------------------
+# Fil des pilotes (/fil, 2026-11-20) : publications, j'aime, commentaires.
+# Lecture publique ; publier = pilotes ; aimer/commenter = tout compte.
+# ---------------------------------------------------------------------------
+
+_FEED_IMG_EXT = {"jpg", "jpeg", "png", "webp", "heic"}
+
+
+def _save_feed_media(user_id: int, f):
+    """Enregistre la photo ou la video jointe. (chemin, type, mime) ou
+    ValueError('format'|'size')."""
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+    if ext not in ALLOWED_PORTFOLIO_EXT:
+        raise ValueError("format")
+    f.stream.seek(0, os.SEEK_END)
+    size = f.stream.tell()
+    f.stream.seek(0)
+    if size > MAX_PORTFOLIO_MB * 1024 * 1024:
+        raise ValueError("size")
+    kind = "image" if ext in _FEED_IMG_EXT else "video"
+    safe_base = "".join(c for c in f.filename if c.isalnum() or c in "._-")[:80] or "file"
+    folder = f"feed_u{user_id}"
+    os.makedirs(os.path.join(UPLOAD_DIR, folder), exist_ok=True)
+    stored = f"{folder}/{int(time.time())}_{secrets.token_hex(3)}_{safe_base}"
+    f.save(os.path.join(UPLOAD_DIR, stored))
+    mime = f.mimetype or "application/octet-stream"
+    if kind == "video":
+        stored, mime = _ensure_web_video(stored, mime)
+    return stored, kind, mime
+
+
+def _remove_feed_media(path):
+    if not path:
+        return
+    try:
+        os.remove(os.path.join(UPLOAD_DIR, path))
+    except OSError:
+        pass
+    thumbs.remove(path)
+
+
+@app.route("/fil", methods=["GET", "POST"])
+@security.rate_limit(per_minute=4, per_hour=30, methods=("POST",))
+def feed_index():
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    viewer = getattr(g, "user", None)
+    if request.method == "POST":
+        if not viewer:
+            return redirect(url_for("login", next=url_for("feed_index")))
+        if not feed.can_post(viewer):
+            abort(403)
+        body = (request.form.get("body") or "").strip()
+        media = (None, None, None)
+        f = request.files.get("media")
+        if f and f.filename:
+            try:
+                media = _save_feed_media(viewer["id"], f)
+            except ValueError as exc:
+                key = "feed.err_size" if str(exc) == "size" else "feed.err_format"
+                flash(i18n.t(key, lang, mb=MAX_PORTFOLIO_MB), "error")
+                return redirect(url_for("feed_index"))
+        try:
+            pid = feed.create_post(viewer["id"], body, *media)
+        except ValueError:
+            flash(i18n.t("feed.err_empty", lang), "error")
+            return redirect(url_for("feed_index"))
+        flash(i18n.t("feed.posted", lang), "success")
+        return redirect(url_for("feed_index") + f"#post-{pid}")
+    media_only = request.args.get("medias") == "1"
+    before = _to_int(request.args.get("avant"))
+    posts = feed.list_posts(viewer["id"] if viewer else None, before_id=before, media_only=media_only,
+                            limit=feed.PAGE + 1)
+    more = len(posts) > feed.PAGE
+    posts = posts[:feed.PAGE]
+    return render_template("feed.html", posts=posts, media_only=media_only,
+                           next_before=posts[-1]["id"] if (more and posts) else None,
+                           can_post=feed.can_post(viewer), max_mb=MAX_PORTFOLIO_MB)
+
+
+@app.route("/fil/<int:post_id>")
+def feed_post(post_id):
+    viewer = getattr(g, "user", None)
+    post = feed.get_post(post_id, viewer["id"] if viewer else None)
+    if not post:
+        abort(404)
+    return render_template("feed_post.html", post=post)
+
+
+@app.route("/fil/<int:post_id>/aimer", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=40, per_hour=400)
+def feed_like(post_id):
+    try:
+        liked, n = feed.toggle_like(post_id, g.user["id"])
+    except LookupError:
+        abort(404)
+    except PermissionError:
+        abort(403)
+    if request.headers.get("X-Requested-With") == "fetch":
+        return jsonify({"liked": liked, "likes": n})
+    return _back("feed_index")
+
+
+@app.route("/fil/<int:post_id>/commenter", methods=["POST"])
+@auth.login_required
+@security.rate_limit(per_minute=8, per_hour=120)
+def feed_comment(post_id):
+    lang = getattr(g, "lang", i18n.DEFAULT)
+    try:
+        cid = feed.add_comment(post_id, g.user["id"], request.form.get("body") or "")
+    except LookupError:
+        abort(404)
+    except PermissionError:
+        flash(i18n.t("feed.err_blocked", lang), "error")
+        return _back("feed_index")
+    except ValueError:
+        return _back("feed_index")
+    nxt = security.safe_next(request.form.get("next"), fallback=url_for("feed_post", post_id=post_id))
+    return redirect(nxt.split("#")[0] + f"#comment-{cid}")
+
+
+@app.route("/fil/<int:post_id>/supprimer", methods=["POST"])
+@auth.login_required
+def feed_delete(post_id):
+    p = feed.delete_post(post_id, g.user)
+    if not p:
+        abort(403)
+    _remove_feed_media(p.get("media_path"))
+    flash(i18n.t("feed.deleted", getattr(g, "lang", i18n.DEFAULT)), "info")
+    return redirect(url_for("feed_index"))
+
+
+@app.route("/fil/commentaire/<int:comment_id>/supprimer", methods=["POST"])
+@auth.login_required
+def feed_comment_delete(comment_id):
+    if not feed.delete_comment(comment_id, g.user):
+        abort(403)
+    return _back("feed_index")
 
 
 def _register_lang_routes():

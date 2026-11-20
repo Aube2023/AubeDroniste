@@ -2084,6 +2084,16 @@ except (OSError, ValueError) as _exc:
     import logging as _logging
     _logging.getLogger("aubepilot.i18n").error("translations/_auth.json illisible : %s", _exc)
 
+# Fil des pilotes /fil (2026-11-20) : meme forme.
+_FEED_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations", "_feed.json")
+try:
+    with open(_FEED_FILE, encoding="utf-8") as _f:
+        for _key, _entry in json.load(_f).items():
+            _T[_key] = dict(_entry)
+except (OSError, ValueError) as _exc:
+    import logging as _logging
+    _logging.getLogger("aubepilot.i18n").error("translations/_feed.json illisible : %s", _exc)
+
 # Bouton « Couper les animations » du pied de page (2026-11-19) : meme forme.
 _FX_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translations", "_fx.json")
 try:

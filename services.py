@@ -4293,7 +4293,7 @@ _BANNED_RX = [re.compile(p, re.IGNORECASE) for p in MESSAGE_BANNED_PATTERNS]
 # ---------------------------------------------------------------------------
 
 REPORT_REASONS = ("spam", "scam", "harassment", "inappropriate", "fake", "other")
-REPORT_TARGETS = ("user", "mission", "thread", "job")   # job : offre d'emploi déposée (job_posts.py)
+REPORT_TARGETS = ("user", "mission", "thread", "job", "post", "comment")   # job : offre d'emploi déposée (job_posts.py)
 
 
 def block_user(blocker_id: int, blocked_id: int) -> bool:
