@@ -1,0 +1,11 @@
+{# Choix de l'effet au survol des cartes pilote (2026-11-20), au-dessus des
+   grilles de pilotes. Meme reglage que le menu « Effets » du pied de page
+   (card-fx.js). Masque sur ecran tactile : les effets y sont absents. #}
+{% if animations_enabled %}
+<div class="fx-bar" role="group" aria-label="{{ t('fx.label') }}">
+  <span class="fx-bar-label">✨ {{ t('fx.label') }}</span>
+  {% for m, ico in (('drone', '🚁'), ('radar', '📡'), ('holo', '🪩'), ('trajet', '📍'), ('none', '⏸')) %}
+  <button type="button" data-action="pick-fx-btn" data-m="{{ m }}" aria-pressed="false"><span aria-hidden="true">{{ ico }}</span> {{ t('fx.' ~ m) }}</button>
+  {% endfor %}
+</div>
+{% endif %}

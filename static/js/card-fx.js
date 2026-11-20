@@ -10,16 +10,25 @@
     return root.getAttribute("data-fx") === "off" ? "none" : (root.getAttribute("data-card-fx") || "drone");
   }
   function sync() {
-    document.querySelectorAll('[data-action="pick-fx"]').forEach(function (sel) { sel.value = current(); });
+    var m = current();
+    document.querySelectorAll('[data-action="pick-fx"]').forEach(function (sel) { sel.value = m; });
+    document.querySelectorAll('[data-action="pick-fx-btn"]').forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.m === m ? "true" : "false");
+    });
   }
-  document.addEventListener("change", function (e) {
-    var sel = e.target.closest && e.target.closest('[data-action="pick-fx"]');
-    if (!sel) return;
-    var m = sel.value;
+  function choose(m) {
     if (m === "none") root.setAttribute("data-fx", "off");
     else { root.removeAttribute("data-fx"); root.setAttribute("data-card-fx", m); }
     try { localStorage.setItem("aube-card-fx", m); localStorage.removeItem("aube-fx"); } catch (err) {}
     sync();
+  }
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest && e.target.closest('[data-action="pick-fx"]');
+    if (sel) choose(sel.value);
+  });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest('[data-action="pick-fx-btn"]');
+    if (b) choose(b.dataset.m);
   });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", sync); else sync();
 

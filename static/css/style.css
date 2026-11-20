@@ -3238,3 +3238,12 @@ html[data-theme="light"] .fxd-holo { mix-blend-mode: multiply; background: radia
   .fxd-trajet .draw, .fxd-trajet .dot-b, .fxd-radar .lockon { animation: none; opacity: 1; }
   .pilot-card.holo-on { transform: none !important; }
 }
+/* Choix de l'effet au-dessus des grilles de pilotes (_fx_picker.html) */
+.fx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 14px; }
+.fx-bar-label { font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); margin-inline-end: 4px; }
+.fx-bar button { font: 500 13px/1 inherit; font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-2); color: var(--ink-soft);
+  cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.fx-bar button:hover { border-color: var(--amber); color: var(--ink); }
+.fx-bar button[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: #fff; }
+@media (hover: none), (pointer: coarse) { .fx-bar { display: none; } }

@@ -75,6 +75,7 @@
     <a href="{{ url_for('pilots_search', kind='school') }}">{{ t('tpl.ecoles') }} <span class="n">{{ kind_counts.school }}</span></a>
     <a href="{{ url_for('pilots_search', kind='shop') }}">{{ t('tpl.boutiques') }} <span class="n">{{ kind_counts.shop }}</span></a>
   </nav>
+  {% include "_fx_picker.html" %}
   <div class="grid-cards">
     {% for p in featured_pilots %}
     {% set masked = public_name(p) %}
