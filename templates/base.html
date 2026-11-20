@@ -50,6 +50,12 @@
     // worker part avec l'agent par defaut) : sans ce filet, la barre d'onglets
     // et le pied de page du site s'ajoutaient a ceux de l'app.
     if (/AubePilotMobile/i.test(navigator.userAgent)) document.documentElement.classList.add('in-app');
+    // Effets choisis par ce visiteur (menu « Effets » du pied de page)
+    try {
+      var fx = localStorage.getItem('aube-card-fx') || 'drone';
+      if (fx === 'none' || localStorage.getItem('aube-fx') === 'off') document.documentElement.setAttribute('data-fx', 'off');
+      document.documentElement.setAttribute('data-card-fx', fx === 'none' ? 'drone' : fx);
+    } catch (e) {}
     // Anti-FOUC : applique le thème avant le rendu
     (function () {
       try {
@@ -231,6 +237,8 @@
     <a href="{{ url_for('page_legal') }}" class="muted">{{ t('footer.legal') }}</a>
     <a href="{{ url_for('page_terms') }}" class="muted">{{ t('footer.terms') }}</a>
     <a href="mailto:support@aubemail.com" class="muted">{{ t('footer.rprp') }}</a>
+    {% if animations_enabled %}<label class="muted fx-pick">{{ t('fx.label') }}
+      <select data-action="pick-fx">{% for m in ('drone', 'radar', 'holo', 'trajet', 'none') %}<option value="{{ m }}">{{ t('fx.' ~ m) }}</option>{% endfor %}</select></label>{% endif %}
   </nav>
   <div class="footer-line">
     <div>
@@ -282,6 +290,7 @@
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/phone.js') }}"></script>
+{% if animations_enabled %}<script src="{{ url_for('static', filename='js/card-fx.js') }}" defer></script><script src="{{ url_for('static', filename='js/card-drone.js') }}" defer></script>{% endif %}
 <script nonce="{{ csp_nonce }}">
   // PWA : offline de secours + cache statiques (voir static/sw.js).
   // Pas dans l'application : elle a son propre ecran hors ligne, et le service

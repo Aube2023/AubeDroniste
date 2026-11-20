@@ -828,6 +828,10 @@ STRIPE_CONNECT_ENABLED = os.environ.get("STRIPE_CONNECT_ENABLED", "").strip().lo
 # Interrupteur : devis, acceptation de devis, paiement des reservations et
 # collectes suspendus (2026-10-18, le temps de valider les taxes du Quebec).
 # Les versements deja dus aux pilotes et les remboursements continuent.
+# Animations decoratives (drone du bandeau, drone au survol des cartes,
+# 2026-11-19). AUBEPILOT_ANIMATIONS=0 les coupe pour tout le site ; chaque
+# visiteur peut aussi les couper pour lui (bouton du pied de page).
+ANIMATIONS_ENABLED = os.environ.get("AUBEPILOT_ANIMATIONS", "1").strip().lower() not in ("0", "false", "no", "off")
 PAYMENTS_PAUSED = os.environ.get("AUBEPILOT_PAYMENTS_PAUSED", "").strip().lower() in ("1", "true", "yes", "on")
 
 # Auto-libération si le client n'a pas validé après ce delai (jours)

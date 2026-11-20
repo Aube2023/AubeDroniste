@@ -443,6 +443,7 @@ def _inject_globals():
         # Versements auto Connect actifs ? Sinon : « paiement en direct » (UI masquee)
         "stripe_connect_enabled": config.STRIPE_CONNECT_ENABLED and payments.is_available(),
         "payments_paused": config.PAYMENTS_PAUSED,
+        "animations_enabled": config.ANIMATIONS_ENABLED,
         # URLs cross-service ecosysteme
         "aubecrew_url": AUBECREW_URL,
         "aubemail_url": AUBEMAIL_URL,
